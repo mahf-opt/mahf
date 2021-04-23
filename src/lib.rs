@@ -1,7 +1,9 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub mod fitness;
+pub mod functions;
+pub mod modular;
+pub mod threads;
+pub mod tracking;
+
+// re-exports
+pub use rand;
+pub use rand_distr;

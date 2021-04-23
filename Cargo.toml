@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Leopold Luley <git@leopoldluley.de>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+num_cpus = "1.13.0"
+rand = "0.8.3"
+rand_distr = "0.4.0"
+rprompt = "1.0.5"
