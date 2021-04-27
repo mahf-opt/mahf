@@ -1,18 +1,18 @@
 use crate::{
     fitness::Fitness,
-    functions::Problem,
-    modular::{components::*, Individual, Solution, State},
+    modular::{components::*, Individual, State},
+    problem::Problem,
     tracking::Log,
 };
 use std::convert::TryFrom;
 
-pub fn run(
-    problem: &Problem,
+pub fn run<P: Problem>(
+    problem: &P,
     logger: &mut Log,
 
-    mut initialization: impl Initialization,
+    mut initialization: impl Initialization<P>,
     mut selection: impl Selection,
-    mut generation: impl Generation,
+    mut generation: impl Generation<P>,
     mut replacement: impl Replacement,
     mut termination: impl Termination,
 ) {
@@ -34,12 +34,18 @@ pub fn run(
 
     // Loop until Termination
     loop {
+        let parent_individuals = &mut Vec::new();
         let parents = &mut Vec::new();
         let offspring = &mut Vec::new();
         let evaluated_offspring = &mut Vec::new();
 
         // Selection
-        selection.select(state, population, parents);
+        selection.select(state, population, parent_individuals);
+        parents.extend(
+            parent_individuals
+                .drain(..)
+                .map(|i| i.solution::<P::Encoding>()),
+        );
 
         // Generation
         generation.generate(state, problem, parents, offspring);
@@ -50,7 +56,7 @@ pub fn run(
         // Replancement + Update
         replacement.replace(state, population, evaluated_offspring);
 
-        state.log_iteration(calculate_diversity(population));
+        state.log_iteration();
 
         if termination.terminate(state) {
             break;
@@ -58,45 +64,28 @@ pub fn run(
     }
 }
 
-fn calculate_diversity(x: &[Individual]) -> f64 {
-    if x.is_empty() {
-        return 0.0;
-    }
-
-    let m = x.len() as f64;
-    let d = x[0].solution.len();
-
-    (0..d)
-        .into_iter()
-        .map(|j| {
-            let xj = x.iter().map(|i| i.solution[j]).sum::<f64>() / m;
-            x.iter().map(|i| (i.solution[j] - xj).abs()).sum::<f64>() / m
-        })
-        .sum::<f64>()
-        / (d as f64)
-}
-
-trait Evaluator {
+trait Evaluator<P: Problem> {
     fn evaluate(
         &mut self,
         state: &mut State,
-        problem: &Problem,
-        offspring: &mut Vec<Solution>,
+        problem: &P,
+        offspring: &mut Vec<P::Encoding>,
         evaluated: &mut Vec<Individual>,
     );
 }
 
 struct SimpleEvaluator;
-impl Evaluator for SimpleEvaluator {
+impl<P: Problem> Evaluator<P> for SimpleEvaluator {
     fn evaluate(
         &mut self,
         state: &mut State,
-        problem: &Problem,
-        offspring: &mut Vec<Solution>,
+        problem: &P,
+        offspring: &mut Vec<P::Encoding>,
         evaluated: &mut Vec<Individual>,
     ) {
         for solution in offspring.drain(..) {
-            let fitness = Fitness::try_from((problem.function)(solution.as_slice())).unwrap();
+            let fitness = Fitness::try_from(problem.evaluate(&solution)).unwrap();
+            let solution = Box::new(solution);
             state.log_evaluation(fitness);
             evaluated.push(Individual { fitness, solution });
         }

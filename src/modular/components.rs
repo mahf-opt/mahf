@@ -1,10 +1,10 @@
 use crate::{
-    functions::Problem,
-    modular::{Individual, Solution, State},
+    modular::{Individual, State},
+    problem::Problem,
 };
 
-pub trait Initialization {
-    fn initialize(&mut self, problem: &Problem, population: &mut Vec<Solution>);
+pub trait Initialization<P: Problem> {
+    fn initialize(&mut self, problem: &P, population: &mut Vec<P::Encoding>);
 }
 
 pub trait Selection {
@@ -12,17 +12,17 @@ pub trait Selection {
         &mut self,
         state: &mut State,
         population: &'p [Individual],
-        selection: &mut Vec<&'p Solution>,
+        selection: &mut Vec<&'p Individual>,
     );
 }
 
-pub trait Generation {
+pub trait Generation<P: Problem> {
     fn generate(
         &mut self,
         state: &mut State,
-        problem: &Problem,
-        parents: &mut Vec<&Solution>,
-        offspring: &mut Vec<Solution>,
+        problem: &P,
+        parents: &mut Vec<&P::Encoding>,
+        offspring: &mut Vec<P::Encoding>,
     );
 }
 

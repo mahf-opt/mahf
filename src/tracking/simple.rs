@@ -10,7 +10,7 @@ pub fn write_log(
     data_dir: impl AsRef<Path>,
     heuristic: &str,
     function: &str,
-    dimension: u32,
+    dimension: usize,
     run: u32,
     log: &mut Log,
 ) -> io::Result<()> {

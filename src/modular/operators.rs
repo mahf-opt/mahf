@@ -1,8 +1,7 @@
 use crate::{
-    functions::Problem,
     modular::{components::*, Individual, Solution, State},
+    problem::{LimitedVectorProblem, Problem},
 };
-use core::iter::repeat_with;
 use rand::{seq::SliceRandom, Rng};
 use rand_distr::Distribution;
 
@@ -15,12 +14,15 @@ pub struct RandomSpreadInitialization {
     pub initial_population_size: u32,
 }
 
-impl Initialization for RandomSpreadInitialization {
-    fn initialize(&mut self, problem: &Problem, population: &mut Vec<Solution>) {
+impl<P> Initialization<P> for RandomSpreadInitialization
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+{
+    fn initialize(&mut self, problem: &P, population: &mut Vec<Solution>) {
         let rng = &mut rand::thread_rng();
         for _ in 0..self.initial_population_size {
-            let solution = repeat_with(|| rng.gen_range(problem.range.clone()))
-                .take(problem.dimension as usize)
+            let solution = (0..problem.dimension())
+                .map(|d| rng.gen_range(problem.range(d)))
                 .collect::<Solution>();
             population.push(solution);
         }
@@ -41,11 +43,11 @@ impl Selection for EsSelection {
         &mut self,
         _state: &mut State,
         population: &'p [Individual],
-        selection: &mut Vec<&'p Solution>,
+        selection: &mut Vec<&'p Individual>,
     ) {
         let rng = &mut rand::thread_rng();
         for _ in 0..self.lambda {
-            selection.push(population.choose(rng).unwrap().solution());
+            selection.push(population.choose(rng).unwrap());
         }
     }
 }
@@ -62,7 +64,7 @@ impl Selection for IwoSelection {
         &mut self,
         _state: &mut State,
         population: &'p [Individual],
-        selection: &mut Vec<&'p Solution>,
+        selection: &mut Vec<&'p Individual>,
     ) {
         #[rustfmt::skip]
         let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
@@ -82,7 +84,7 @@ impl Selection for IwoSelection {
             assert!(num_seeds <= self.max_number_of_seeds);
 
             for _ in 0..num_seeds {
-                selection.push(plant.solution());
+                selection.push(plant);
             }
         }
     }
@@ -97,11 +99,14 @@ pub struct FixedGeneration {
     pub deviation: f64,
 }
 
-impl Generation for FixedGeneration {
+impl<P> Generation<P> for FixedGeneration
+where
+    P: Problem<Encoding = Vec<f64>>,
+{
     fn generate(
         &mut self,
         _state: &mut State,
-        problem: &Problem,
+        _problem: &P,
         parents: &mut Vec<&Solution>,
         offspring: &mut Vec<Solution>,
     ) {
@@ -112,7 +117,8 @@ impl Generation for FixedGeneration {
             let solution = parent
                 .iter()
                 .map(|x| x + distribution.sample(rng))
-                .map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
+                // TODO: How should clamping work?
+                //.map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
                 .collect::<Solution>();
             offspring.push(solution);
         }
@@ -130,11 +136,14 @@ pub struct AdaptiveGeneration {
     pub modulation_index: u32,
 }
 
-impl Generation for AdaptiveGeneration {
+impl<P> Generation<P> for AdaptiveGeneration
+where
+    P: Problem<Encoding = Vec<f64>>,
+{
     fn generate(
         &mut self,
         state: &mut State,
-        problem: &Problem,
+        _problem: &P,
         parents: &mut Vec<&Solution>,
         offspring: &mut Vec<Solution>,
     ) {
@@ -149,7 +158,8 @@ impl Generation for AdaptiveGeneration {
             let solution = parent
                 .iter()
                 .map(|x| x + distribution.sample(rng))
-                .map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
+                // TODO: Clamping
+                //.map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
                 .collect::<Solution>();
             offspring.push(solution);
         }

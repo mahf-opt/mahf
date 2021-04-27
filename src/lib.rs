@@ -1,6 +1,7 @@
 pub mod fitness;
-pub mod functions;
 pub mod modular;
+pub mod problem;
+pub mod problems;
 pub mod threads;
 pub mod tracking;
 
