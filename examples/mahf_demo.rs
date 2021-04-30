@@ -1,4 +1,5 @@
 use mahf::{
+    heuristic::{self, Configuration},
     problem::Problem,
     problems::functions::BenchmarkFunction,
     threads::SyncThreadPool,
@@ -17,7 +18,7 @@ use std::{
 //                                //
 
 static DATA_DIR: &str = "data";
-static HEURISTICS: &[(&str, Heuristic)] = &[
+static HEURISTICS: &[(&str, ConfigBuilder)] = &[
     ("iwo", heuristics::iwo),
     ("es", heuristics::es),
     ("c1", heuristics::c1),
@@ -39,16 +40,14 @@ static RUNS: u32 = 50;
 //     Test Suite Heuristics      //
 //                                //
 
-type Heuristic = fn(problem: &BenchmarkFunction, logger: &mut Log);
+type ConfigBuilder = fn() -> Configuration<BenchmarkFunction>;
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{heuristic, operators::*, problems::functions::BenchmarkFunction, tracking::Log};
+    use mahf::{heuristic::Configuration, operators::*, problems::functions::BenchmarkFunction};
 
-    pub fn iwo(problem: &BenchmarkFunction, logger: &mut Log) {
-        heuristic::run(
-            problem,
-            logger,
+    pub fn iwo() -> Configuration<BenchmarkFunction> {
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
@@ -67,14 +66,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn es(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn es() -> Configuration<BenchmarkFunction> {
         let population_size = 5;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -86,14 +83,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn c1(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn c1() -> Configuration<BenchmarkFunction> {
         let population_size = 5;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -105,14 +100,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn c2(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn c2() -> Configuration<BenchmarkFunction> {
         let population_size = 25;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -131,14 +124,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn c3(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn c3() -> Configuration<BenchmarkFunction> {
         let population_size = 5;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -154,14 +145,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn c4(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn c4() -> Configuration<BenchmarkFunction> {
         let population_size = 25;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -176,14 +165,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn c5(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn c5() -> Configuration<BenchmarkFunction> {
         let population_size = 25;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -198,14 +185,12 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 
-    pub fn c6(problem: &BenchmarkFunction, logger: &mut Log) {
+    pub fn c6() -> Configuration<BenchmarkFunction> {
         let population_size = 5;
-        heuristic::run(
-            problem,
-            logger,
+        Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
@@ -221,7 +206,7 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
+        )
     }
 }
 
@@ -261,7 +246,7 @@ fn main() -> io::Result<()> {
 
     thread::spawn(move || {
         let mut pool = SyncThreadPool::new(num_cpus::get());
-        for (heuristic_name, heuristic) in HEURISTICS {
+        for (heuristic_name, configuration) in HEURISTICS {
             for function in FUNCTIONS {
                 for &dimension in DIMENSIONS {
                     let tx = tx.clone();
@@ -270,7 +255,7 @@ fn main() -> io::Result<()> {
                         for run in 0..RUNS {
                             let problem = function(dimension);
                             let function_name = problem.name();
-                            heuristic(&problem, logger);
+                            heuristic::run(&problem, logger, configuration());
                             let result = write_log(
                                 DATA_DIR,
                                 heuristic_name,

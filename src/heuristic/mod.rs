@@ -2,7 +2,6 @@ use crate::{fitness::Fitness, problem::Problem, tracking::Log};
 use std::convert::TryFrom;
 
 pub mod components;
-use components::*;
 
 mod state;
 pub use state::State;
@@ -10,19 +9,20 @@ pub use state::State;
 mod individual;
 pub use individual::Individual;
 
-pub fn run<P: Problem>(
-    problem: &P,
-    logger: &mut Log,
+mod config;
+pub use config::Configuration;
 
-    mut initialization: impl Initialization<P>,
-    mut selection: impl Selection,
-    mut generation: impl Generation<P>,
-    mut replacement: impl Replacement,
-    mut termination: impl Termination,
-) {
+pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<P>) {
     // This could be an additional component,
     // supporting parallel or GPU evaluation.
     let mut evaluator = SimpleEvaluator;
+    let Configuration {
+        mut initialization,
+        mut selection,
+        mut generation,
+        mut replacement,
+        mut termination,
+    } = components;
 
     let initial_population = &mut Vec::new();
     let population = &mut Vec::new();
