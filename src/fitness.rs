@@ -1,17 +1,32 @@
+//! Utility type to store an individuals fitness.
+
 use std::{convert::TryFrom, fmt};
 
+/// Fitness value of an [Individual](crate::heuristic::Individual)
+///
+/// [Fitness::try_from] can be used to construct a `Fitness` value.
 #[derive(Debug, Clone, Copy)]
 pub struct Fitness(f64);
 
 impl Fitness {
+    /// Returns the actual floating point value.
     pub fn into(self) -> f64 {
         self.0
+    }
+
+    /// Returns whether the fitness is finite
+    pub fn is_finite(&self) -> bool {
+        self.0.is_finite()
     }
 }
 
 impl TryFrom<f64> for Fitness {
     type Error = IllegalFitness;
 
+    /// Tries to convert a float into a `Fitness` value.
+    ///
+    /// See [IllegalFitness] for a list of illegal values.
+    /// All other values will return `Ok`.
     fn try_from(value: f64) -> Result<Self, IllegalFitness> {
         match value {
             _ if value.is_nan() => Err(IllegalFitness::NaN),
@@ -47,6 +62,9 @@ impl Ord for Fitness {
     }
 }
 
+/// Error type for illegal fitness values.
+///
+/// Currently, `NaN` and `-Inf` are considered illegal.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IllegalFitness {
     NaN,

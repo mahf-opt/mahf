@@ -1,3 +1,5 @@
+//! Tracking and logging.
+
 mod simple;
 pub use simple::write_log;
 

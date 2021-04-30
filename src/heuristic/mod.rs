@@ -1,3 +1,5 @@
+//! Framework for modular heuristics.
+
 use crate::{fitness::Fitness, problem::Problem, tracking::Log};
 use std::convert::TryFrom;
 
@@ -12,6 +14,7 @@ pub use individual::Individual;
 mod config;
 pub use config::Configuration;
 
+/// Run the provided [Configuration] in the framework.
 pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<P>) {
     // This could be an additional component,
     // supporting parallel or GPU evaluation.

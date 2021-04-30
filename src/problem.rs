@@ -1,3 +1,5 @@
+//! Traits to describe problems.
+
 use std::{any::Any, ops::Range};
 
 pub trait Problem {

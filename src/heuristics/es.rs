@@ -1,9 +1,15 @@
+//! Evolutionary Strategy
+
 use crate::{
     heuristic::Configuration,
     operators::*,
     problem::{LimitedVectorProblem, Problem, VectorProblem},
 };
 
+/// (μ+λ)-Evolutionary-Strategy
+///
+/// # References
+/// [doi.org/10.1023/A:1015059928466](https://doi.org/10.1023/A:1015059928466)
 pub fn mu_plus_lambda<P>(
     population_size: u32,
     lambda: u32,

@@ -1,11 +1,14 @@
+//! Initialization methods
+
 use crate::{
     heuristic::components::*,
     problem::{LimitedVectorProblem, Problem},
 };
 use rand::Rng;
 
+/// Uniformly distributes initial solutions in the search space.
 pub struct RandomSpread {
-    /// Size of the initial population
+    /// Size of the initial population.
     pub initial_population_size: u32,
 }
 impl<P> Initialization<P> for RandomSpread

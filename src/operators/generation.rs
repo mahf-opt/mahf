@@ -1,11 +1,16 @@
+//! Generation methods
+
 use crate::{
     heuristic::{components::*, State},
     problem::Problem,
 };
 use rand_distr::Distribution;
 
+/// Applies a fixed, component wise delta from a normal distribution.
+///
+/// Uses a `N(0, deviation)` normal distribution.
 pub struct Fixed {
-    /// Standard Deviation for the mutation
+    /// Standard Deviation for the mutation.
     pub deviation: f64,
 }
 impl<P> Generation<P> for Fixed
@@ -34,6 +39,12 @@ where
     }
 }
 
+/// Applies an adaptive, component wise delta from a normal distribution.
+///
+/// The actual deviation gets computed as follows:
+/// ```math
+/// final_deviation + (1 - progress)^modulation * (initial_deviation - final_deviation)
+/// ```
 pub struct Adaptive {
     /// Initial standard deviation for the mutation
     pub initial_deviation: f64,

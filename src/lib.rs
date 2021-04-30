@@ -1,5 +1,9 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+//! MAHF
+//!
+//! A framework for modular construction and evaluation of meta-heuristics.
+
 pub mod fitness;
 pub mod heuristic;
 pub mod heuristics;

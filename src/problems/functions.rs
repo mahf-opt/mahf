@@ -1,7 +1,10 @@
-//! Collection of test functions
+//! Collection of test functions from [benchmarkfcns.xyz](http://benchmarkfcns.xyz)
 
 use crate::problem::{LimitedVectorProblem, Problem, VectorProblem};
 
+/// Wraps the benchmark functions as [`Problem`]s.
+///
+/// All functions have been scaled to [-1, 1].
 pub struct BenchmarkFunction {
     name: &'static str,
     implementation: Function,
@@ -9,6 +12,7 @@ pub struct BenchmarkFunction {
 }
 
 impl BenchmarkFunction {
+    /// The [Sphere](http://benchmarkfcns.xyz/benchmarkfcns/spherefcn.html) function.
     pub fn sphere(dimension: usize) -> Self {
         BenchmarkFunction {
             name: "sphere",
@@ -17,6 +21,7 @@ impl BenchmarkFunction {
         }
     }
 
+    /// The [Rastrigin](http://benchmarkfcns.xyz/benchmarkfcns/rastriginfcn.html) function.
     pub fn rastrigin(dimension: usize) -> Self {
         BenchmarkFunction {
             name: "rstrigin",
@@ -25,6 +30,7 @@ impl BenchmarkFunction {
         }
     }
 
+    /// The [Ackley](http://benchmarkfcns.xyz/benchmarkfcns/ackleyfcn.html) function.
     pub fn ackley(dimension: usize) -> Self {
         BenchmarkFunction {
             name: "ackley",
@@ -60,10 +66,10 @@ impl LimitedVectorProblem for BenchmarkFunction {
     }
 }
 
-/// A benchmark function
+/// A benchmark function.
 pub type Function = fn(&[f64]) -> f64;
 
-/// The same functions scaled tp [-1.0, 1.0]
+/// The benchmark functions scaled to [-1.0, 1.0].
 pub mod scaled_implementations {
     use std::f64::consts::PI;
 

@@ -1,9 +1,20 @@
+//! Invasive Weed Optimization
+
 use crate::{
     heuristic::Configuration,
     operators::*,
     problem::{LimitedVectorProblem, Problem, VectorProblem},
 };
 
+/// Invasive Weed Optimization
+///
+/// # Requirements
+/// - initial_population_size <= max_population_size
+/// - min_number_of_seeds <= max_number_of_seeds
+/// - final_deviation <= initial_deviation
+///
+/// # References
+/// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
 pub fn iwo<P>(
     initial_population_size: u32,
     max_population_size: u32,
@@ -17,6 +28,10 @@ pub fn iwo<P>(
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
+    assert!(initial_population_size <= max_population_size);
+    assert!(min_number_of_seeds <= max_number_of_seeds);
+    assert!(final_deviation <= initial_deviation);
+
     Configuration::new(
         initialization::RandomSpread {
             initial_population_size,

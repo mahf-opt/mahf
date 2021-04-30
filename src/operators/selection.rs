@@ -1,8 +1,13 @@
+//! Selection methods
+
 use crate::heuristic::{components::*, Individual, State};
 use rand::seq::SliceRandom;
 
+/// Selects `lambda` random solutions.
+///
+/// Solutions can be selected multiple times in a single iteration.
 pub struct Es {
-    /// Offspring per iteration
+    /// Offspring per iteration.
     pub lambda: u32,
 }
 impl Selection for Es {
@@ -19,6 +24,25 @@ impl Selection for Es {
     }
 }
 
+/// Deterministically selects individuals as proposed for the IWO.
+///
+/// Each individual gets selected between `min_number_of_seeds` and
+/// `max_number_of_seeds` times.
+///
+/// - The worst solution gets selected exactly `min_number_of_seeds` times.
+/// - The best solution gets selected exactly `max_number_of_seeds` times.
+/// - All solutions between them get selected based on the linear interpolation
+///   between `min_number_of_seeds` and `max_number_of_seeds`.
+///
+/// # Problems
+/// - *Individuals with `Inf` fitness*. They will mess up this operator,
+///   as it does not allow interpolating between the best and worst fitness.
+/// - *Homogeneity*. If all individuals have the same fitness value,
+///   they will all be considered average and receive a 50% bonus.
+///   This case has not been accounted for in the reference paper.
+///
+/// # References
+/// See [crate::heuristics::iwo]
 pub struct Iwo {
     /// Minimum number of seeds per plant per iteration
     pub min_number_of_seeds: u32,

@@ -1,7 +1,10 @@
+//! Replacement methods
+
 use crate::heuristic::{components::*, Individual, State};
 
+/// Always keeps the fittest individuals.
 pub struct Fittest {
-    /// Limit to population growth
+    /// Limits the population growth.
     pub max_population_size: u32,
 }
 impl Replacement for Fittest {

@@ -1,5 +1,6 @@
 use crate::{heuristic::components::*, problem::Problem};
 
+/// A full set of components, effectively representing a heuristic.
 pub struct Configuration<P> {
     pub initialization: Box<dyn Initialization<P>>,
     pub selection: Box<dyn Selection>,
