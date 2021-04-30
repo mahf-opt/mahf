@@ -1,8 +1,5 @@
 use crate::{fitness::Fitness, tracking::Log};
-use std::{any::Any, convert::TryFrom};
-
-pub mod components;
-pub mod heuristic;
+use std::convert::TryFrom;
 
 pub struct State<'a> {
     pub evaluations: u32,
@@ -10,23 +7,6 @@ pub struct State<'a> {
     pub progress: f64,
     pub best_so_far: Fitness,
     logger: &'a mut Log,
-}
-
-pub type Solution = Vec<f64>;
-
-pub struct Individual {
-    solution: Box<dyn Any>,
-    fitness: Fitness,
-}
-
-impl Individual {
-    pub fn solution<E: Any>(&self) -> &E {
-        &self.solution.downcast_ref().unwrap()
-    }
-
-    pub fn fitness(&self) -> Fitness {
-        self.fitness
-    }
 }
 
 impl<'a> State<'a> {

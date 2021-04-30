@@ -43,10 +43,10 @@ type Heuristic = fn(problem: &BenchmarkFunction, logger: &mut Log);
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{modular, operators::*, problems::functions::BenchmarkFunction, tracking::Log};
+    use mahf::{heuristic, operators::*, problems::functions::BenchmarkFunction, tracking::Log};
 
     pub fn iwo(problem: &BenchmarkFunction, logger: &mut Log) {
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -72,7 +72,7 @@ mod heuristics {
 
     pub fn es(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 5;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -91,7 +91,7 @@ mod heuristics {
 
     pub fn c1(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 5;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -110,7 +110,7 @@ mod heuristics {
 
     pub fn c2(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 25;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -136,7 +136,7 @@ mod heuristics {
 
     pub fn c3(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 5;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -159,7 +159,7 @@ mod heuristics {
 
     pub fn c4(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 25;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -181,7 +181,7 @@ mod heuristics {
 
     pub fn c5(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 25;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {
@@ -203,7 +203,7 @@ mod heuristics {
 
     pub fn c6(problem: &BenchmarkFunction, logger: &mut Log) {
         let population_size = 5;
-        modular::heuristic::run(
+        heuristic::run(
             problem,
             logger,
             initialization::RandomSpread {

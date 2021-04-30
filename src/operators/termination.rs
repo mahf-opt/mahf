@@ -1,4 +1,4 @@
-use crate::modular::{components::*, State};
+use crate::heuristic::{components::*, State};
 
 pub struct FixedIterations {
     /// Maximum number of iterations

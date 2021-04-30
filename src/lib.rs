@@ -1,5 +1,5 @@
 pub mod fitness;
-pub mod modular;
+pub mod heuristic;
 pub mod operators;
 pub mod problem;
 pub mod problems;

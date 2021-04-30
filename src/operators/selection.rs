@@ -1,4 +1,4 @@
-use crate::modular::{components::*, Individual, State};
+use crate::heuristic::{components::*, Individual, State};
 use rand::seq::SliceRandom;
 
 pub struct Es {

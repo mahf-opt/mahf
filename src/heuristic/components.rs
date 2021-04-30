@@ -1,5 +1,5 @@
 use crate::{
-    modular::{Individual, State},
+    heuristic::{Individual, State},
     problem::Problem,
 };
 

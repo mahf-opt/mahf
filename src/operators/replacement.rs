@@ -1,4 +1,4 @@
-use crate::modular::{components::*, Individual, State};
+use crate::heuristic::{components::*, Individual, State};
 
 pub struct Fittest {
     /// Limit to population growth

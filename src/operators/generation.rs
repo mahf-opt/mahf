@@ -1,5 +1,5 @@
 use crate::{
-    modular::{components::*, Solution, State},
+    heuristic::{components::*, State},
     problem::Problem,
 };
 use rand_distr::Distribution;
@@ -16,8 +16,8 @@ where
         &mut self,
         _state: &mut State,
         _problem: &P,
-        parents: &mut Vec<&Solution>,
-        offspring: &mut Vec<Solution>,
+        parents: &mut Vec<&Vec<f64>>,
+        offspring: &mut Vec<Vec<f64>>,
     ) {
         let rng = &mut rand::thread_rng();
         let distribution = rand_distr::Normal::new(0.0, self.deviation).unwrap();
@@ -28,7 +28,7 @@ where
                 .map(|x| x + distribution.sample(rng))
                 // TODO: How should clamping work?
                 //.map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
-                .collect::<Solution>();
+                .collect::<Vec<f64>>();
             offspring.push(solution);
         }
     }
@@ -52,8 +52,8 @@ where
         &mut self,
         state: &mut State,
         _problem: &P,
-        parents: &mut Vec<&Solution>,
-        offspring: &mut Vec<Solution>,
+        parents: &mut Vec<&Vec<f64>>,
+        offspring: &mut Vec<Vec<f64>>,
     ) {
         let rng = &mut rand::thread_rng();
 
@@ -68,7 +68,7 @@ where
                 .map(|x| x + distribution.sample(rng))
                 // TODO: Clamping
                 //.map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
-                .collect::<Solution>();
+                .collect::<Vec<f64>>();
             offspring.push(solution);
         }
     }
