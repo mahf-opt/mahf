@@ -1,0 +1,38 @@
+use crate::{
+    heuristic::Configuration,
+    operators::*,
+    problem::{LimitedVectorProblem, Problem, VectorProblem},
+};
+
+pub fn iwo<P>(
+    initial_population_size: u32,
+    max_population_size: u32,
+    min_number_of_seeds: u32,
+    max_number_of_seeds: u32,
+    initial_deviation: f64,
+    final_deviation: f64,
+    modulation_index: u32,
+    max_iterations: u32,
+) -> Configuration<P>
+where
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+{
+    Configuration::new(
+        initialization::RandomSpread {
+            initial_population_size,
+        },
+        selection::Iwo {
+            min_number_of_seeds,
+            max_number_of_seeds,
+        },
+        generation::Adaptive {
+            initial_deviation,
+            final_deviation,
+            modulation_index,
+        },
+        replacement::Fittest {
+            max_population_size,
+        },
+        termination::FixedIterations { max_iterations },
+    )
+}
