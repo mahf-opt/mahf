@@ -43,32 +43,28 @@ type Heuristic = fn(problem: &BenchmarkFunction, logger: &mut Log);
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{
-        modular::{self, operators},
-        problems::functions::BenchmarkFunction,
-        tracking::Log,
-    };
+    use mahf::{modular, operators::*, problems::functions::BenchmarkFunction, tracking::Log};
 
     pub fn iwo(problem: &BenchmarkFunction, logger: &mut Log) {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            operators::IwoSelection {
+            selection::Iwo {
                 min_number_of_seeds: 4,
                 max_number_of_seeds: 6,
             },
-            operators::AdaptiveGeneration {
+            generation::Adaptive {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            operators::FittestReplacement {
+            replacement::Fittest {
                 max_population_size: 50,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -79,15 +75,15 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::EsSelection { lambda: 60 },
-            operators::FixedGeneration { deviation: 0.1 },
-            operators::FittestReplacement {
+            selection::Es { lambda: 60 },
+            generation::Fixed { deviation: 0.1 },
+            replacement::Fittest {
                 max_population_size: population_size,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -98,15 +94,15 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::EsSelection { lambda: 60 },
-            operators::FixedGeneration { deviation: 0.1 },
-            operators::FittestReplacement {
+            selection::Es { lambda: 60 },
+            generation::Fixed { deviation: 0.1 },
+            replacement::Fittest {
                 max_population_size: 50,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -117,22 +113,22 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::IwoSelection {
+            selection::Iwo {
                 min_number_of_seeds: 4,
                 max_number_of_seeds: 6,
             },
-            operators::AdaptiveGeneration {
+            generation::Adaptive {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            operators::FittestReplacement {
+            replacement::Fittest {
                 max_population_size: population_size,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -143,19 +139,19 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::EsSelection { lambda: 60 },
-            operators::AdaptiveGeneration {
+            selection::Es { lambda: 60 },
+            generation::Adaptive {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            operators::FittestReplacement {
+            replacement::Fittest {
                 max_population_size: 50,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -166,18 +162,18 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::IwoSelection {
+            selection::Iwo {
                 min_number_of_seeds: 4,
                 max_number_of_seeds: 6,
             },
-            operators::FixedGeneration { deviation: 0.1 },
-            operators::FittestReplacement {
+            generation::Fixed { deviation: 0.1 },
+            replacement::Fittest {
                 max_population_size: 50,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -188,18 +184,18 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::IwoSelection {
+            selection::Iwo {
                 min_number_of_seeds: 4,
                 max_number_of_seeds: 6,
             },
-            operators::FixedGeneration { deviation: 0.1 },
-            operators::FittestReplacement {
+            generation::Fixed { deviation: 0.1 },
+            replacement::Fittest {
                 max_population_size: population_size,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );
@@ -210,19 +206,19 @@ mod heuristics {
         modular::heuristic::run(
             problem,
             logger,
-            operators::RandomSpreadInitialization {
+            initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            operators::EsSelection { lambda: 60 },
-            operators::AdaptiveGeneration {
+            selection::Es { lambda: 60 },
+            generation::Adaptive {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            operators::FittestReplacement {
+            replacement::Fittest {
                 max_population_size: 50,
             },
-            operators::FixedIterationsTermination {
+            termination::FixedIterations {
                 max_iterations: 500,
             },
         );

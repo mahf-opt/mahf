@@ -3,7 +3,6 @@ use std::{any::Any, convert::TryFrom};
 
 pub mod components;
 pub mod heuristic;
-pub mod operators;
 
 pub struct State<'a> {
     pub evaluations: u32,
