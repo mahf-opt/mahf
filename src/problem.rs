@@ -3,7 +3,7 @@
 use std::{any::Any, ops::Range};
 
 pub trait Problem {
-    type Encoding: Any;
+    type Encoding: Any + Clone;
 
     fn evaluate(&self, solution: &Self::Encoding) -> f64;
 

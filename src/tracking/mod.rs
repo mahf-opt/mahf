@@ -97,7 +97,7 @@ impl Log {
         }
     }
 
-    fn finalize(&mut self) {
+    pub(crate) fn finalize(&mut self) {
         if let Some(evaluation) = self.pending_evaluation.take() {
             self.evaluations.push(evaluation);
         }

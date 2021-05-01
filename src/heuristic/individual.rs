@@ -21,8 +21,24 @@ impl Individual {
         &self.solution.downcast_ref().unwrap()
     }
 
+    /// Returns the individuals solution.
+    ///
+    /// # Panics
+    /// This will panic when `E` is not the right type.
+    pub fn into_solution<E: Any>(self) -> E {
+        *self.solution.downcast().unwrap()
+    }
+
     /// Returns the individuals fitness value.
     pub fn fitness(&self) -> Fitness {
         self.fitness
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn clone<E: Any + Clone>(&self) -> Self {
+        Individual {
+            solution: Box::new(self.solution::<E>().clone()),
+            fitness: self.fitness(),
+        }
     }
 }

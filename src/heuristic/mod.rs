@@ -15,7 +15,9 @@ mod config;
 pub use config::Configuration;
 
 /// Run the provided [Configuration] in the framework.
-pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<P>) {
+///
+/// Returns the best solution encountered during the entire run.
+pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<P>) -> P::Encoding {
     // This could be an additional component,
     // supporting parallel or GPU evaluation.
     let mut evaluator = SimpleEvaluator;
@@ -42,6 +44,8 @@ pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<
         state.log_evaluation(logger, evaluated.fitness());
     }
 
+    let mut best = find_best(population).clone::<P::Encoding>();
+
     // Loop until Termination
     loop {
         let parent_individuals = &mut Vec::new();
@@ -63,6 +67,9 @@ pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<
         // Evaluation
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);
         for evaluated in evaluated_offspring.iter() {
+            if evaluated.fitness() < best.fitness() {
+                best = evaluated.clone::<P::Encoding>();
+            }
             state.log_evaluation(logger, evaluated.fitness());
         }
 
@@ -74,6 +81,14 @@ pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<
             break;
         }
     }
+
+    logger.finalize();
+
+    best.into_solution()
+}
+
+fn find_best(population: &[Individual]) -> &Individual {
+    population.iter().min_by_key(|i| i.fitness()).unwrap()
 }
 
 trait Evaluator<P: Problem> {
