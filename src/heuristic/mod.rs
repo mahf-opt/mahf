@@ -34,10 +34,13 @@ pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<
     initialization.initialize(problem, initial_population);
 
     // State shared across components
-    let state = &mut State::new(logger);
+    let state = &mut State::new();
 
     // Initial evaluation
     evaluator.evaluate(state, problem, initial_population, population);
+    for evaluated in population.iter() {
+        state.log_evaluation(logger, evaluated.fitness());
+    }
 
     // Loop until Termination
     loop {
@@ -59,12 +62,14 @@ pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<
 
         // Evaluation
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);
+        for evaluated in evaluated_offspring.iter() {
+            state.log_evaluation(logger, evaluated.fitness());
+        }
 
         // Replancement + Update
         replacement.replace(state, population, evaluated_offspring);
 
-        state.log_iteration();
-
+        state.log_iteration(logger);
         if termination.terminate(state) {
             break;
         }
@@ -85,7 +90,7 @@ struct SimpleEvaluator;
 impl<P: Problem> Evaluator<P> for SimpleEvaluator {
     fn evaluate(
         &mut self,
-        state: &mut State,
+        _state: &mut State,
         problem: &P,
         offspring: &mut Vec<P::Encoding>,
         evaluated: &mut Vec<Individual>,
@@ -93,7 +98,6 @@ impl<P: Problem> Evaluator<P> for SimpleEvaluator {
         for solution in offspring.drain(..) {
             let fitness = Fitness::try_from(problem.evaluate(&solution)).unwrap();
             let solution = Box::new(solution);
-            state.log_evaluation(fitness);
             evaluated.push(Individual::new(solution, fitness));
         }
     }
