@@ -1,17 +1,11 @@
+use anyhow::Context;
 use mahf::{
     heuristic::{self, Configuration},
-    problem::Problem,
     problems::functions::BenchmarkFunction,
     threads::SyncThreadPool,
-    tracking::{trigger::*, write_log, Log},
+    tracking::{runtime_analysis::Experiment, trigger::*, Log},
 };
-use std::{
-    fs,
-    io::{self, Write},
-    path::Path,
-    sync::mpsc,
-    thread,
-};
+use std::{fs, io::Write, path::Path, sync::mpsc, thread};
 
 //                                //
 //    Test Suite Configuration    //
@@ -214,7 +208,7 @@ mod heuristics {
 //    Test Suite Implementation   //
 //                                //
 
-fn main() -> io::Result<()> {
+fn main() -> anyhow::Result<()> {
     if Path::new(DATA_DIR).exists() {
         println!("There already exists data from a previous run.");
         let reply = rprompt::prompt_reply_stdout("Remove old data (Y/n) ")?;
@@ -245,26 +239,35 @@ fn main() -> io::Result<()> {
     };
 
     thread::spawn(move || {
-        let mut pool = SyncThreadPool::new(num_cpus::get());
+        let mut pool = SyncThreadPool::default();
         for (heuristic_name, configuration) in HEURISTICS {
             for function in FUNCTIONS {
                 for &dimension in DIMENSIONS {
                     let tx = tx.clone();
                     pool.enqueue(move || {
-                        let logger = &mut Log::new(eval_trigger, iter_trigger);
-                        for run in 0..RUNS {
+                        let result: anyhow::Result<()> = (|| {
+                            let logger = &mut Log::new(eval_trigger, iter_trigger);
                             let problem = function(dimension);
-                            let function_name = problem.name();
-                            heuristic::run(&problem, logger, configuration());
-                            let result = write_log(
-                                DATA_DIR,
+                            let experiment_desc = format!(
+                                "{}_{}_{}",
                                 heuristic_name,
-                                function_name,
-                                dimension,
-                                run,
-                                logger,
+                                problem.name(),
+                                problem.dimension()
                             );
-                            tx.send(result).unwrap();
+                            let data_dir = Path::new(DATA_DIR).join(experiment_desc);
+                            let experiment =
+                                &mut Experiment::create(data_dir, &problem, &configuration())
+                                    .context("creating experiment")?;
+                            for _ in 0..RUNS {
+                                heuristic::run(&problem, logger, configuration());
+                                experiment.log_run(logger)?;
+                                let _ = tx.send(Ok(()));
+                            }
+                            Ok(())
+                        })();
+
+                        if result.is_err() {
+                            let _ = tx.send(result);
                         }
                     });
                 }

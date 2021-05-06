@@ -2,17 +2,22 @@ use crate::tracking::{EvaluationEntry, IterationEntry};
 
 #[derive(Debug, Clone, Copy)]
 pub struct EvalTrigger {
+    /// Logs every evaluation where `best` improves.
     pub improvement: bool,
+    /// Logs every nth evaluation.
     pub interval: Option<u32>,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct IterTrigger {
+    /// Logs every iteration where `best` improves.
     pub improvement: bool,
+    /// Logs every nth iteration.
     pub interval: Option<u32>,
 }
 
 impl Default for EvalTrigger {
+    /// A trigger which only logs improvements.
     fn default() -> Self {
         EvalTrigger {
             improvement: true,
@@ -22,6 +27,7 @@ impl Default for EvalTrigger {
 }
 
 impl Default for IterTrigger {
+    /// A trigger which only logs improvements.
     fn default() -> Self {
         IterTrigger {
             improvement: true,
@@ -31,6 +37,7 @@ impl Default for IterTrigger {
 }
 
 impl EvalTrigger {
+    /// Does not log anything.
     pub fn none() -> Self {
         EvalTrigger {
             improvement: false,
@@ -58,6 +65,7 @@ impl EvalTrigger {
 }
 
 impl IterTrigger {
+    /// Does not log anything.
     pub fn none() -> Self {
         IterTrigger {
             improvement: false,

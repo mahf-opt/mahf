@@ -1,17 +1,18 @@
 //! Framework components.
 
 use crate::{
+    dynser::Serialize,
     heuristic::{Individual, State},
     problem::Problem,
 };
 
 /// Initializes the population.
-pub trait Initialization<P: Problem> {
+pub trait Initialization<P: Problem>: Serialize {
     fn initialize(&mut self, problem: &P, population: &mut Vec<P::Encoding>);
 }
 
 /// Selects individuals for reproduction or modification.
-pub trait Selection {
+pub trait Selection: Serialize {
     fn select<'p>(
         &mut self,
         state: &mut State,
@@ -21,7 +22,7 @@ pub trait Selection {
 }
 
 /// Generates new solutions from the selected population.
-pub trait Generation<P: Problem> {
+pub trait Generation<P: Problem>: Serialize {
     fn generate(
         &mut self,
         state: &mut State,
@@ -32,7 +33,7 @@ pub trait Generation<P: Problem> {
 }
 
 /// Replaces old individuals with new ones.
-pub trait Replacement {
+pub trait Replacement: Serialize {
     fn replace(
         &mut self,
         state: &mut State,
@@ -42,6 +43,6 @@ pub trait Replacement {
 }
 
 /// Decides when to terminate.
-pub trait Termination {
+pub trait Termination: Serialize {
     fn terminate(&mut self, state: &mut State) -> bool;
 }

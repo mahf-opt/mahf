@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 /// Selects `lambda` random solutions.
 ///
 /// Solutions can be selected multiple times in a single iteration.
+#[derive(serde::Serialize)]
 pub struct Es {
     /// Offspring per iteration.
     pub lambda: u32,
@@ -43,6 +44,7 @@ impl Selection for Es {
 ///
 /// # References
 /// See [crate::heuristics::iwo]
+#[derive(serde::Serialize)]
 pub struct Iwo {
     /// Minimum number of seeds per plant per iteration
     pub min_number_of_seeds: u32,

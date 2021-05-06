@@ -3,6 +3,7 @@
 use crate::heuristic::{components::*, Individual, State};
 
 /// Always keeps the fittest individuals.
+#[derive(serde::Serialize)]
 pub struct Fittest {
     /// Limits the population growth.
     pub max_population_size: u32,

@@ -1,18 +1,20 @@
 //! Tracking and logging.
 
-mod simple;
-pub use simple::write_log;
+#![allow(dead_code, unused_variables, unused_imports)]
+
+pub mod parameter_study;
+pub mod runtime_analysis;
 
 pub mod trigger;
 use trigger::*;
 
-struct EvaluationEntry {
+pub struct EvaluationEntry {
     evaluation: u32,
     current_fx: f64,
     best_fx: f64,
 }
 
-struct IterationEntry {
+pub struct IterationEntry {
     iteration: u32,
     best_fx: f64,
     diversity: f64,
@@ -29,6 +31,9 @@ pub struct Log {
 }
 
 impl Default for Log {
+    /// Creates the default logger
+    ///
+    /// See [EvalTrigger::default] and [IterTrigger::default] for details.
     fn default() -> Self {
         Log {
             eval_trigger: EvalTrigger::default(),
@@ -43,6 +48,7 @@ impl Default for Log {
 }
 
 impl Log {
+    /// Create a logger with custom triggers.
     pub fn new(eval_trigger: EvalTrigger, iter_trigger: IterTrigger) -> Self {
         Log {
             eval_trigger,
@@ -55,6 +61,7 @@ impl Log {
         }
     }
 
+    /// Create a logger which logs only the final entries.
     pub fn none() -> Self {
         Log {
             eval_trigger: EvalTrigger::none(),
@@ -67,6 +74,7 @@ impl Log {
         }
     }
 
+    /// Log an evaluation
     pub fn log_evaluation(&mut self, evaluation: u32, current_fx: f64, best_fx: f64) {
         let entry = EvaluationEntry {
             evaluation,
@@ -82,6 +90,7 @@ impl Log {
         }
     }
 
+    /// Log an iteration.
     pub fn log_iteration(&mut self, iteration: u32, best_fx: f64, diversity: f64) {
         let entry = IterationEntry {
             iteration,
@@ -97,6 +106,7 @@ impl Log {
         }
     }
 
+    /// Ensures that the last iteration / evaluation gets logged.
     pub(crate) fn finalize(&mut self) {
         if let Some(evaluation) = self.pending_evaluation.take() {
             self.evaluations.push(evaluation);
@@ -106,7 +116,8 @@ impl Log {
         }
     }
 
-    fn clear(&mut self) {
+    /// Removes all log entries.
+    pub fn clear(&mut self) {
         self.evaluations.clear();
         self.pending_evaluation = None;
         self.iterations.clear();

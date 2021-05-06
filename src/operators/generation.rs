@@ -5,10 +5,12 @@ use crate::{
     problem::Problem,
 };
 use rand_distr::Distribution;
+use serde::Serialize;
 
 /// Applies a fixed, component wise delta from a normal distribution.
 ///
 /// Uses a `N(0, deviation)` normal distribution.
+#[derive(Serialize)]
 pub struct Fixed {
     /// Standard Deviation for the mutation.
     pub deviation: f64,
@@ -45,6 +47,7 @@ where
 /// ```math
 /// final_deviation + (1 - progress)^modulation * (initial_deviation - final_deviation)
 /// ```
+#[derive(Serialize)]
 pub struct Adaptive {
     /// Initial standard deviation for the mutation
     pub initial_deviation: f64,

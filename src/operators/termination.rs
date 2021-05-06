@@ -5,6 +5,7 @@ use crate::heuristic::{components::*, State};
 /// Terminates after a fixed number of iterations.
 ///
 /// Supports measuring time to completion.
+#[derive(serde::Serialize)]
 pub struct FixedIterations {
     /// Maximum number of iterations.
     pub max_iterations: u32,
@@ -19,6 +20,7 @@ impl Termination for FixedIterations {
 /// Terminates after a fixed number of evaluations.
 ///
 /// Supports measuring time to completion.
+#[derive(serde::Serialize)]
 pub struct FixedEvaluationsTermination {
     /// Maximum number of evaluations.
     pub max_evaluations: u32,

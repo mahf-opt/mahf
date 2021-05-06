@@ -1,11 +1,22 @@
-use crate::{heuristic::components::*, problem::Problem};
+use crate::{dynser, heuristic::components::*, problem::Problem};
+use serde::Serialize;
 
 /// A full set of components, effectively representing a heuristic.
-pub struct Configuration<P> {
+#[derive(Serialize)]
+pub struct Configuration<P: 'static> {
+    #[serde(with = "dynser")]
     pub initialization: Box<dyn Initialization<P>>,
+
+    #[serde(with = "dynser")]
     pub selection: Box<dyn Selection>,
+
+    #[serde(with = "dynser")]
     pub generation: Box<dyn Generation<P>>,
+
+    #[serde(with = "dynser")]
     pub replacement: Box<dyn Replacement>,
+
+    #[serde(with = "dynser")]
     pub termination: Box<dyn Termination>,
 }
 

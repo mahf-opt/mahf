@@ -7,6 +7,7 @@ use crate::{
 use rand::Rng;
 
 /// Uniformly distributes initial solutions in the search space.
+#[derive(serde::Serialize)]
 pub struct RandomSpread {
     /// Size of the initial population.
     pub initial_population_size: u32,

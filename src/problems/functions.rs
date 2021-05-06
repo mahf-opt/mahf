@@ -5,10 +5,23 @@ use crate::problem::{LimitedVectorProblem, Problem, VectorProblem};
 /// Wraps the benchmark functions as [`Problem`]s.
 ///
 /// All functions have been scaled to [-1, 1].
+#[derive(serde::Serialize)]
 pub struct BenchmarkFunction {
     name: &'static str,
-    implementation: Function,
     dimension: usize,
+
+    #[serde(skip)]
+    implementation: Function,
+}
+
+impl BenchmarkFunction {
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+    pub fn dimension(&self) -> usize {
+        self.dimension
+    }
 }
 
 impl BenchmarkFunction {
