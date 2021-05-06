@@ -209,17 +209,25 @@ mod heuristics {
 //                                //
 
 fn main() -> anyhow::Result<()> {
-    if Path::new(DATA_DIR).exists() {
+    let mut data_dir = DATA_DIR;
+    if Path::new(data_dir).exists() {
         println!("There already exists data from a previous run.");
-        let reply = rprompt::prompt_reply_stdout("Remove old data (Y/n) ")?;
+        println!("Options: y -> delete existing data");
+        println!("         r -> rename data directory");
+        println!("         n -> cancel execution");
+        let reply = rprompt::prompt_reply_stdout("(Y/r/n) ")?;
 
         #[allow(clippy::wildcard_in_or_patterns)]
         match reply.as_str() {
             "" | "y" | "Y" => {
-                fs::remove_dir_all(DATA_DIR)?;
+                fs::remove_dir_all(data_dir)?;
                 println!("Old data has been removed.");
             }
-            "n" | _ => {
+            "r" | "R" => {
+                let reply = rprompt::prompt_reply_stdout("New data name: ")?;
+                data_dir = &*Box::leak(reply.into_boxed_str());
+            }
+            "n" | "N" | _ => {
                 println!("Execution canceled.");
                 return Ok(());
             }
@@ -254,7 +262,7 @@ fn main() -> anyhow::Result<()> {
                                 problem.name(),
                                 problem.dimension()
                             );
-                            let data_dir = Path::new(DATA_DIR).join(experiment_desc);
+                            let data_dir = Path::new(data_dir).join(experiment_desc);
                             let experiment =
                                 &mut Experiment::create(data_dir, &problem, &configuration())
                                     .context("creating experiment")?;
