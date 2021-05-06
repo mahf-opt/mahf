@@ -5,14 +5,15 @@ use crate::{
     heuristic::{Individual, State},
     problem::Problem,
 };
+use std::any::Any;
 
 /// Initializes the population.
-pub trait Initialization<P: Problem>: Serialize {
+pub trait Initialization<P: Problem>: Any + Serialize {
     fn initialize(&mut self, problem: &P, population: &mut Vec<P::Encoding>);
 }
 
 /// Selects individuals for reproduction or modification.
-pub trait Selection: Serialize {
+pub trait Selection: Any + Serialize {
     fn select<'p>(
         &mut self,
         state: &mut State,
@@ -22,7 +23,7 @@ pub trait Selection: Serialize {
 }
 
 /// Generates new solutions from the selected population.
-pub trait Generation<P: Problem>: Serialize {
+pub trait Generation<P: Problem>: Any + Serialize {
     fn generate(
         &mut self,
         state: &mut State,
@@ -33,7 +34,7 @@ pub trait Generation<P: Problem>: Serialize {
 }
 
 /// Replaces old individuals with new ones.
-pub trait Replacement: Serialize {
+pub trait Replacement: Any + Serialize {
     fn replace(
         &mut self,
         state: &mut State,
@@ -43,6 +44,6 @@ pub trait Replacement: Serialize {
 }
 
 /// Decides when to terminate.
-pub trait Termination: Serialize {
+pub trait Termination: Any + Serialize {
     fn terminate(&mut self, state: &mut State) -> bool;
 }
