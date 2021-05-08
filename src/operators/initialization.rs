@@ -17,7 +17,7 @@ impl<P> Initialization<P> for RandomSpread
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
-    fn initialize(&mut self, problem: &P, population: &mut Vec<Vec<f64>>) {
+    fn initialize(&self, problem: &P, population: &mut Vec<Vec<f64>>) {
         let rng = &mut rand::thread_rng();
         for _ in 0..self.initial_population_size {
             let solution = (0..problem.dimension())

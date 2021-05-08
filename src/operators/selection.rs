@@ -14,7 +14,7 @@ pub struct Es {
 }
 impl Selection for Es {
     fn select<'p>(
-        &mut self,
+        &self,
         _state: &mut State,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
@@ -54,7 +54,7 @@ pub struct Iwo {
 }
 impl Selection for Iwo {
     fn select<'p>(
-        &mut self,
+        &self,
         _state: &mut State,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,

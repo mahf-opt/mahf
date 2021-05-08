@@ -20,7 +20,7 @@ where
     P: Problem<Encoding = Vec<f64>>,
 {
     fn generate(
-        &mut self,
+        &self,
         _state: &mut State,
         _problem: &P,
         parents: &mut Vec<&Vec<f64>>,
@@ -63,7 +63,7 @@ where
     P: Problem<Encoding = Vec<f64>>,
 {
     fn generate(
-        &mut self,
+        &self,
         state: &mut State,
         _problem: &P,
         parents: &mut Vec<&Vec<f64>>,

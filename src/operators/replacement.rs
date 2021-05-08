@@ -11,7 +11,7 @@ pub struct Fittest {
 }
 impl Replacement for Fittest {
     fn replace(
-        &mut self,
+        &self,
         _state: &mut State,
         population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,

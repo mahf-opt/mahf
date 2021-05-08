@@ -17,16 +17,20 @@ pub use config::Configuration;
 /// Run the provided [Configuration] in the framework.
 ///
 /// Returns the best solution encountered during the entire run.
-pub fn run<P: Problem>(problem: &P, logger: &mut Log, components: Configuration<P>) -> P::Encoding {
+pub fn run<P: Problem>(
+    problem: &P,
+    logger: &mut Log,
+    components: &Configuration<P>,
+) -> P::Encoding {
     // This could be an additional component,
     // supporting parallel or GPU evaluation.
     let mut evaluator = SimpleEvaluator;
     let Configuration {
-        mut initialization,
-        mut selection,
-        mut generation,
-        mut replacement,
-        mut termination,
+        initialization,
+        selection,
+        generation,
+        replacement,
+        termination,
     } = components;
 
     let initial_population = &mut Vec::new();
