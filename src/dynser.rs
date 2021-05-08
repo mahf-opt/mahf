@@ -7,6 +7,7 @@
 use std::marker;
 
 #[derive(serde::Serialize)]
+#[allow(clippy::borrowed_box)]
 pub struct DynSerializable<'a, T: Serialize + ?Sized + 'static>(
     #[serde(with = "crate::dynser")] pub &'a Box<T>,
 );
