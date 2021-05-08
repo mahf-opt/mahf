@@ -4,6 +4,7 @@
 
 pub mod parameter_study;
 pub mod runtime_analysis;
+mod serialize;
 
 pub mod trigger;
 use trigger::*;

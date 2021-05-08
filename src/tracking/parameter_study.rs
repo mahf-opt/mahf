@@ -1,6 +1,10 @@
 //! Logging for Parameter Studies
 
-use crate::{fitness::Fitness, heuristic::Configuration, tracking::Log};
+use crate::{
+    fitness::Fitness,
+    heuristic::Configuration,
+    tracking::{serialize::collect_names, Log},
+};
 use anyhow::{bail, Context};
 use std::{
     any::TypeId,
