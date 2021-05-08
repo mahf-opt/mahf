@@ -1,28 +1,24 @@
-use super::{error::*, noop};
+use super::{error::*, value, SerializedComponent};
 use serde::{ser, Serialize};
-use std::fmt;
+use std::collections::HashMap;
+use std::{fmt, mem};
 
-/// A Serializer which collects a structs field names.
-struct Serializer {
-    names: StructNames,
+pub struct Serializer {
+    component: SerializedComponent,
+    value_serializer: value::Serializer,
 }
 
-#[derive(Debug, Default)]
-pub struct StructNames {
-    pub name: &'static str,
-    pub fields: Vec<&'static str>,
-}
+impl Serializer {
+    pub fn new() -> Self {
+        Serializer {
+            component: SerializedComponent::default(),
+            value_serializer: value::Serializer::new(),
+        }
+    }
 
-/// Collects the structs field names.
-pub fn collect_names<T>(structure: &T) -> Result<StructNames>
-where
-    T: Serialize,
-{
-    let mut serializer = Serializer {
-        names: StructNames::default(),
-    };
-    structure.serialize(&mut serializer)?;
-    Ok(serializer.names)
+    pub fn take_component(&mut self) -> SerializedComponent {
+        mem::take(&mut self.component)
+    }
 }
 
 impl<'a> ser::Serializer for &'a mut Serializer {
@@ -142,11 +138,11 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
-        unimplemented!()
+        Ok(self)
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple> {
-        unimplemented!()
+        Ok(self)
     }
 
     fn serialize_tuple_struct(
@@ -154,7 +150,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         _name: &'static str,
         len: usize,
     ) -> Result<Self::SerializeTupleStruct> {
-        unimplemented!()
+        Ok(self)
     }
 
     fn serialize_tuple_variant(
@@ -164,15 +160,15 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        unimplemented!()
+        Ok(self)
     }
 
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
-        unimplemented!()
+        Ok(self)
     }
 
     fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
-        self.names.name = name;
+        self.component.name = name;
         Ok(self)
     }
 
@@ -183,7 +179,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        unimplemented!()
+        Ok(self)
     }
 }
 
@@ -278,11 +274,13 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T>(&mut self, key: &'static str, _value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
     where
         T: ?Sized + Serialize,
     {
-        self.names.fields.push(key);
+        self.component
+            .fields
+            .insert(key, value.serialize(&mut self.value_serializer)?);
         Ok(())
     }
 

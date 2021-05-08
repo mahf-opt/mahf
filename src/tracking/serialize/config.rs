@@ -1,22 +1,20 @@
-use super::{error::*, value};
+use super::{component, error::*, SerializedComponent, SerializedConfiguration};
+use crate::heuristic::Configuration;
 use serde::{ser, Serialize};
 use std::fmt;
 
 pub struct Serializer {
-    value_serializer: super::value::Serializer,
-    values: Vec<String>,
+    config: SerializedConfiguration,
+    component_serializer: component::Serializer,
 }
 
-pub fn collect_values<T>(structure: &T) -> Result<Vec<String>>
-where
-    T: Serialize,
-{
+pub fn serialize_config<P>(config: &Configuration<P>) -> Result<SerializedConfiguration> {
     let mut serializer = Serializer {
-        value_serializer: value::Serializer::new(),
-        values: Vec::new(),
+        config: SerializedConfiguration::default(),
+        component_serializer: component::Serializer::new(),
     };
-    structure.serialize(&mut serializer)?;
-    Ok(serializer.values)
+    config.serialize(&mut serializer)?;
+    Ok(serializer.config)
 }
 
 impl<'a> ser::Serializer for &'a mut Serializer {
@@ -165,7 +163,8 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
 
-    fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
+    fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
+        assert_eq!(name, "Configuration");
         Ok(self)
     }
 
@@ -275,8 +274,16 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        self.values
-            .push(value.serialize(&mut self.value_serializer)?);
+        value.serialize(&mut self.component_serializer)?;
+        let component = self.component_serializer.take_component();
+        match key {
+            "initialization" => self.config.initialization = component,
+            "selection" => self.config.selection = component,
+            "generation" => self.config.generation = component,
+            "replacement" => self.config.replacement = component,
+            "termination" => self.config.termination = component,
+            _ => unreachable!(),
+        }
         Ok(())
     }
 

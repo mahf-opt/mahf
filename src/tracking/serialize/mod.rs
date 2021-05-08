@@ -1,85 +1,61 @@
 #![allow(clippy::new_without_default)]
 
+use crate::heuristic::Configuration;
+use std::collections::HashMap;
+
 pub mod error;
 
-mod names;
+mod component;
+mod config;
 mod noop;
 mod value;
-mod values;
 
-pub use names::collect_names;
-pub use values::collect_values;
+//pub use names::collect_names;
+//pub use values::collect_values;
+pub use config::serialize_config;
 
-pub fn validate_serializability<T>(structure: &T) -> bool
-where
-    T: serde::Serialize,
-{
-    collect_values(structure).is_ok()
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct SerializedComponent {
+    pub name: &'static str,
+    pub fields: HashMap<&'static str, String>,
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct SerializedConfiguration {
+    pub initialization: SerializedComponent,
+    pub selection: SerializedComponent,
+    pub generation: SerializedComponent,
+    pub replacement: SerializedComponent,
+    pub termination: SerializedComponent,
+}
+
+pub fn validate_serializability<P>(config: &Configuration<P>) -> bool {
+    serialize_config(config).is_ok()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{collect_names, collect_values, validate_serializability};
+    use super::{serialize_config, validate_serializability};
+    use crate::heuristics::es;
+    use crate::problems::functions::BenchmarkFunction;
     use serde::Serialize;
 
-    #[derive(Default, Serialize)]
-    struct Simple {
-        a: usize,
-        b: &'static str,
-        c: f64,
-    }
+    #[test]
+    pub fn serializing_es_config() {
+        let instance = es::mu_plus_lambda::<BenchmarkFunction>(0, 0, 0.0, 42);
 
-    #[derive(Default, Serialize)]
-    struct TooComplex {
-        tuple: (i32, i32),
+        let config = serialize_config(&instance);
+        assert!(config.is_ok());
+
+        let config = config.unwrap();
+        let term = config.termination;
+        assert_eq!(term.name, "FixedIterations");
+        assert_eq!(term.fields.get("max_iterations"), Some(&String::from("42")));
     }
 
     #[test]
-    pub fn simple_names_work() {
-        let instance = Simple::default();
-
-        let names = collect_names(&instance);
-        assert!(names.is_ok());
-
-        let names = names.unwrap();
-        assert_eq!(names.name, "Simple");
-        assert_eq!(names.fields, &["a", "b", "c"]);
-    }
-
-    #[test]
-    pub fn simple_values_work() {
-        let instance = Simple {
-            a: 42,
-            b: "42x",
-            c: 42.42,
-        };
-
-        let values = collect_values(&instance);
-        assert!(values.is_ok());
-
-        let values = values.unwrap();
-        assert_eq!(values, &["42", "42x", "42.42"]);
-    }
-
-    #[test]
-    pub fn too_complex_names_work() {
-        let instance = TooComplex::default();
-
-        let names = collect_names(&instance);
-        assert!(names.is_ok());
-    }
-
-    #[test]
-    pub fn too_complex_values_fails() {
-        let instance = TooComplex::default();
-
-        let values = collect_values(&instance);
-        assert!(values.is_err());
-    }
-
-    #[test]
-    pub fn validate_serializability_works() {
-        assert_eq!(validate_serializability(&Simple::default()), true);
-        assert_eq!(validate_serializability(&TooComplex::default()), false);
+    pub fn validate_es_config() {
+        let instance = es::mu_plus_lambda::<BenchmarkFunction>(0, 0, 0.0, 42);
+        assert!(validate_serializability(&instance));
     }
 }

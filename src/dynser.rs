@@ -6,6 +6,11 @@
 
 use std::marker;
 
+#[derive(serde::Serialize)]
+pub struct DynSerializable<'a, T: Serialize + ?Sized + 'static>(
+    #[serde(with = "crate::dynser")] pub &'a Box<T>,
+);
+
 /// Any trait with this as a supertrait can be serialized as a trait object.
 ///
 /// It is automatically implemented for all `T: serde::Serialize`, i.e. you should not implement it manually.

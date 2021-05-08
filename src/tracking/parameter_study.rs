@@ -1,15 +1,20 @@
 //! Logging for Parameter Studies
 
 use crate::{
+    dynser::DynSerializable,
     fitness::Fitness,
     heuristic::Configuration,
-    tracking::{serialize::collect_names, Log},
+    tracking::serialize::SerializedConfiguration,
+    tracking::{
+        serialize::{serialize_config, validate_serializability},
+        Log,
+    },
 };
 use anyhow::{bail, Context};
 use std::{
     any::TypeId,
     fs::{self, File},
-    io::{self, BufWriter},
+    io::{self, BufWriter, Write},
     path::{Path, PathBuf},
 };
 
@@ -54,11 +59,11 @@ impl Study {
             .open(output)
             .context("opening output file")?;
 
-        let output = BufWriter::new(file);
+        let mut output = BufWriter::new(file);
         let config_type = ConfigurationType::from(sample);
 
-        // TODO: write header
-        // requires extracting names of the components parameters
+        let config = serialize_config(sample).context("serializing sample config")?;
+        write_header(&mut output, &config).context("writing header")?;
 
         Ok(Study {
             config_type,
@@ -66,21 +71,74 @@ impl Study {
         })
     }
 
-    pub fn log_run<P>(&mut self, config: Configuration<P>, summary: Summary) -> io::Result<()> {
-        // TODO: write entry
-        // requires extracting the components parameters
+    pub fn log_run<P>(
+        &mut self,
+        output: &mut impl Write,
+        config: &Configuration<P>,
+        summary: &Summary,
+    ) -> anyhow::Result<()> {
+        let fitness = summary.average_best();
+        let evaluations = summary.average_evaluations();
+
+        write!(output, "{},{}", fitness, evaluations)?;
+
+        let config = serialize_config(config)?;
+        let values = collect_values(&config);
+        for value in values {
+            write!(output, ",{}", value)?;
+        }
+
+        writeln!(output)?;
         Ok(())
     }
+}
+
+fn write_header(output: &mut impl Write, config: &SerializedConfiguration) -> io::Result<()> {
+    let headers = collect_headers(&config);
+
+    write!(output, "fitness,evaluations")?;
+
+    for header in headers {
+        write!(output, ",{}", header)?;
+    }
+
+    writeln!(output)
+}
+
+fn collect_headers(c: &SerializedConfiguration) -> Vec<String> {
+    let mut headers = Vec::new();
+
+    headers.extend(c.initialization.fields.keys().map(|k| format!("i.{}", k)));
+    headers.extend(c.selection.fields.keys().map(|k| format!("s.{}", k)));
+    headers.extend(c.generation.fields.keys().map(|k| format!("g.{}", k)));
+    headers.extend(c.replacement.fields.keys().map(|k| format!("r.{}", k)));
+    headers.extend(c.termination.fields.keys().map(|k| format!("t.{}", k)));
+
+    headers
+}
+
+fn collect_values(c: &SerializedConfiguration) -> Vec<&str> {
+    let mut values = Vec::new();
+
+    values.extend(c.initialization.fields.values().map(|v| v.as_str()));
+    values.extend(c.selection.fields.values().map(|v| v.as_str()));
+    values.extend(c.generation.fields.values().map(|v| v.as_str()));
+    values.extend(c.replacement.fields.values().map(|v| v.as_str()));
+    values.extend(c.termination.fields.values().map(|v| v.as_str()));
+
+    values
 }
 
 #[derive(Default)]
 pub struct Summary {
     entries: Vec<SummaryEntry>,
 }
+
 struct SummaryEntry {
     best: f64,
     evaluations: usize,
 }
+
 impl Summary {
     pub fn new() -> Self {
         Self::default()
