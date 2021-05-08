@@ -1,11 +1,12 @@
 //! Termination methods
 
 use crate::heuristic::{components::*, State};
+use serde::{Deserialize, Serialize};
 
 /// Terminates after a fixed number of iterations.
 ///
 /// Supports measuring time to completion.
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct FixedIterations {
     /// Maximum number of iterations.
     pub max_iterations: u32,
@@ -20,7 +21,7 @@ impl Termination for FixedIterations {
 /// Terminates after a fixed number of evaluations.
 ///
 /// Supports measuring time to completion.
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct FixedEvaluationsTermination {
     /// Maximum number of evaluations.
     pub max_evaluations: u32,

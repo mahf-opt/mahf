@@ -5,9 +5,10 @@ use crate::{
     problem::{LimitedVectorProblem, Problem},
 };
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 /// Uniformly distributes initial solutions in the search space.
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct RandomSpread {
     /// Size of the initial population.
     pub initial_population_size: u32,

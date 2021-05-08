@@ -1,9 +1,10 @@
 //! Replacement methods
 
 use crate::heuristic::{components::*, Individual, State};
+use serde::{Deserialize, Serialize};
 
 /// Always keeps the fittest individuals.
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Fittest {
     /// Limits the population growth.
     pub max_population_size: u32,

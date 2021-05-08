@@ -2,11 +2,12 @@
 
 use crate::heuristic::{components::*, Individual, State};
 use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 
 /// Selects `lambda` random solutions.
 ///
 /// Solutions can be selected multiple times in a single iteration.
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Es {
     /// Offspring per iteration.
     pub lambda: u32,
@@ -44,7 +45,7 @@ impl Selection for Es {
 ///
 /// # References
 /// See [crate::heuristics::iwo]
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Iwo {
     /// Minimum number of seeds per plant per iteration
     pub min_number_of_seeds: u32,
