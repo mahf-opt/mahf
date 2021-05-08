@@ -82,12 +82,15 @@ pub fn main() -> anyhow::Result<()> {
                             pool.enqueue(move || {
                                 let logger = &mut Log::none();
                                 let mut summary = Summary::new();
+
                                 let config = mu_plus_lambda(mu, lambda, sigma, GENERATIONS);
+
                                 for _ in 0..RUNS {
                                     heuristic::run(&function, logger, &config);
                                     summary.add_run(logger);
                                     logger.clear();
                                 }
+
                                 let config = serialize_config(&config).unwrap();
                                 let _ = tx.send((config, summary));
                             });

@@ -255,6 +255,7 @@ fn main() -> anyhow::Result<()> {
                     pool.enqueue(move || {
                         let result: anyhow::Result<()> = (|| {
                             let logger = &mut Log::new(eval_trigger, iter_trigger);
+
                             let problem = function(dimension);
                             let experiment_desc = format!(
                                 "{}_{}_{}",
@@ -262,15 +263,20 @@ fn main() -> anyhow::Result<()> {
                                 problem.name(),
                                 problem.dimension()
                             );
+
                             let data_dir = Path::new(data_dir).join(experiment_desc);
-                            let experiment =
-                                &mut Experiment::create(data_dir, &problem, &configuration())
-                                    .context("creating experiment")?;
+
+                            let config = configuration();
+                            let experiment = &mut Experiment::create(data_dir, &problem, &config)
+                                .context("creating experiment")?;
+
                             for _ in 0..RUNS {
-                                heuristic::run(&problem, logger, configuration());
+                                heuristic::run(&problem, logger, &config);
                                 experiment.log_run(logger)?;
+                                logger.clear();
                                 let _ = tx.send(Ok(()));
                             }
+
                             Ok(())
                         })();
 
