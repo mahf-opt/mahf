@@ -2,10 +2,11 @@ use anyhow::Context;
 use mahf::{
     heuristic::{self, Configuration},
     problems::functions::BenchmarkFunction,
+    prompt,
     threads::SyncThreadPool,
     tracking::{runtime_analysis::Experiment, trigger::*, Log},
 };
-use std::{fs, io::Write, path::Path, sync::mpsc, thread};
+use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 
 //                                //
 //    Test Suite Configuration    //
@@ -209,30 +210,13 @@ mod heuristics {
 //                                //
 
 fn main() -> anyhow::Result<()> {
-    let mut data_dir = DATA_DIR;
-    if Path::new(data_dir).exists() {
-        println!("There already exists data from a previous run.");
-        println!("Options: y -> delete existing data");
-        println!("         r -> rename data directory");
-        println!("         n -> cancel execution");
-        let reply = rprompt::prompt_reply_stdout("(Y/r/n) ")?;
-
-        #[allow(clippy::wildcard_in_or_patterns)]
-        match reply.as_str() {
-            "" | "y" | "Y" => {
-                fs::remove_dir_all(data_dir)?;
-                println!("Old data has been removed.");
-            }
-            "r" | "R" => {
-                let reply = rprompt::prompt_reply_stdout("New data name: ")?;
-                data_dir = &*Box::leak(reply.into_boxed_str());
-            }
-            "n" | "N" | _ => {
-                println!("Execution canceled.");
-                return Ok(());
-            }
-        }
+    let data_dir = prompt::data_dir(DATA_DIR)?;
+    if data_dir.is_none() {
+        println!("Execution was canceled.");
+        return Ok(());
     }
+    let data_dir = PathBuf::from(data_dir.unwrap());
+    fs::create_dir_all(&data_dir)?;
 
     let total_runs = HEURISTICS.len() * FUNCTIONS.len() * DIMENSIONS.len() * (RUNS as usize);
     let (tx, rx) = mpsc::channel();
@@ -252,6 +236,7 @@ fn main() -> anyhow::Result<()> {
             for function in FUNCTIONS {
                 for &dimension in DIMENSIONS {
                     let tx = tx.clone();
+                    let data_dir = data_dir.clone();
                     pool.enqueue(move || {
                         let result: anyhow::Result<()> = (|| {
                             let logger = &mut Log::new(eval_trigger, iter_trigger);
@@ -264,7 +249,7 @@ fn main() -> anyhow::Result<()> {
                                 problem.dimension()
                             );
 
-                            let data_dir = Path::new(data_dir).join(experiment_desc);
+                            let data_dir = data_dir.join(experiment_desc);
 
                             let config = configuration();
                             let experiment = &mut Experiment::create(data_dir, &problem, &config)

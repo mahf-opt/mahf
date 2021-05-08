@@ -2,6 +2,7 @@ use mahf::{
     heuristic::{self},
     heuristics::es::mu_plus_lambda,
     problems::functions::BenchmarkFunction,
+    prompt,
     threads::SyncThreadPool,
     tracking::{
         parameter_study::{Study, Summary},
@@ -9,7 +10,7 @@ use mahf::{
         Log,
     },
 };
-use std::{fs, io::Write, path::Path, sync::mpsc, thread};
+use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 
 static DATA_DIR: &str = "data/parameter_study";
 
@@ -31,31 +32,12 @@ static DIMENSIONS: &[usize] = &[10, 20, 30];
 static NUM_CONFIGS: usize = MU_OPTIONS.len() * LAMBDA_OPTIONS.len() * SIGMA_OPTIONS.len();
 
 pub fn main() -> anyhow::Result<()> {
-    let mut data_dir = DATA_DIR;
-    if Path::new(data_dir).exists() {
-        println!("There already exists data from a previous run.");
-        println!("Options: y -> delete existing data");
-        println!("         r -> rename data directory");
-        println!("         n -> cancel execution");
-        let reply = rprompt::prompt_reply_stdout("(Y/r/n) ")?;
-
-        #[allow(clippy::wildcard_in_or_patterns)]
-        match reply.as_str() {
-            "" | "y" | "Y" => {
-                fs::remove_dir_all(data_dir)?;
-                println!("Old data has been removed.");
-            }
-            "r" | "R" => {
-                let reply = rprompt::prompt_reply_stdout("New data name: ")?;
-                data_dir = &*Box::leak(reply.into_boxed_str());
-            }
-            "n" | "N" | _ => {
-                println!("Execution canceled.");
-                return Ok(());
-            }
-        }
+    let data_dir = prompt::data_dir(DATA_DIR)?;
+    if data_dir.is_none() {
+        println!("Execution was canceled.");
+        return Ok(());
     }
-    let data_dir = Path::new(data_dir);
+    let data_dir = PathBuf::from(data_dir.unwrap());
     fs::create_dir_all(&data_dir)?;
 
     let (tx, rx) = mpsc::channel();
