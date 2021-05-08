@@ -11,7 +11,7 @@ use std::{fs, io::Write, path::Path, sync::mpsc, thread};
 //    Test Suite Configuration    //
 //                                //
 
-static DATA_DIR: &str = "data";
+static DATA_DIR: &str = "data/mahf_demo";
 static HEURISTICS: &[(&str, ConfigBuilder)] = &[
     ("iwo", heuristics::iwo),
     ("es", heuristics::es),

@@ -71,24 +71,22 @@ impl Study {
         })
     }
 
-    pub fn log_run<P>(
+    pub fn log_run(
         &mut self,
-        output: &mut impl Write,
-        config: &Configuration<P>,
+        config: &SerializedConfiguration,
         summary: &Summary,
     ) -> anyhow::Result<()> {
         let fitness = summary.average_best();
         let evaluations = summary.average_evaluations();
 
-        write!(output, "{},{}", fitness, evaluations)?;
+        write!(self.output, "{},{}", fitness, evaluations)?;
 
-        let config = serialize_config(config)?;
         let values = collect_values(&config);
         for value in values {
-            write!(output, ",{}", value)?;
+            write!(self.output, ",{}", value)?;
         }
 
-        writeln!(output)?;
+        writeln!(self.output)?;
         Ok(())
     }
 }
@@ -145,8 +143,9 @@ impl Summary {
     }
 
     pub fn add_run(&mut self, log: &Log) {
-        let best = log.evaluations.last().unwrap().best_fx;
-        let evaluations = log.evaluations.len();
+        let last = log.evaluations.last().unwrap();
+        let best = last.best_fx;
+        let evaluations = last.evaluation as usize;
         self.entries.push(SummaryEntry { best, evaluations });
     }
 
