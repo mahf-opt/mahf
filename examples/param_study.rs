@@ -6,7 +6,6 @@ use mahf::{
     threads::SyncThreadPool,
     tracking::{
         parameter_study::{Study, Summary},
-        serialize::serialize_config,
         Log,
     },
 };
@@ -73,7 +72,6 @@ pub fn main() -> anyhow::Result<()> {
                                     logger.clear();
                                 }
 
-                                let config = serialize_config(&config).unwrap();
                                 let _ = tx.send((config, summary));
                             });
                         }

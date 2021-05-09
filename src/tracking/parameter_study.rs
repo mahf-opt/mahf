@@ -71,7 +71,16 @@ impl Study {
         })
     }
 
-    pub fn log_run(
+    pub fn log_run<P>(
+        &mut self,
+        config: &Configuration<P>,
+        summary: &Summary,
+    ) -> anyhow::Result<()> {
+        let config = serialize_config(config)?;
+        self.log_serialized_run(&config, summary)
+    }
+
+    pub fn log_serialized_run(
         &mut self,
         config: &SerializedConfiguration,
         summary: &Summary,
