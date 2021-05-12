@@ -1,5 +1,5 @@
 use crate::fitness::Fitness;
-use std::any::Any;
+use std::{any::Any, convert::TryFrom};
 
 /// An encoded solution with its associated fitness value.
 pub struct Individual {
@@ -10,6 +10,15 @@ pub struct Individual {
 impl Individual {
     /// Constructs a new `Individual`.
     pub fn new(solution: Box<dyn Any>, fitness: Fitness) -> Self {
+        Individual { solution, fitness }
+    }
+
+    /// Construct a pseudo individual.
+    ///
+    /// Should only be used for testing.
+    pub fn new_test_unit(fitness: f64) -> Self {
+        let solution = Box::new(());
+        let fitness = Fitness::try_from(fitness).unwrap();
         Individual { solution, fitness }
     }
 

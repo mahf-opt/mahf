@@ -58,6 +58,13 @@ pub struct Adaptive {
     /// Modulation index for the standard deviation.
     pub modulation_index: u32,
 }
+impl Adaptive {
+    fn deviation(&self, progress: f64) -> f64 {
+        self.final_deviation
+            + (1.0 - progress).powi(self.modulation_index as i32)
+                * (self.initial_deviation - self.final_deviation)
+    }
+}
 impl<P> Generation<P> for Adaptive
 where
     P: Problem<Encoding = Vec<f64>>,
@@ -71,9 +78,7 @@ where
     ) {
         let rng = &mut rand::thread_rng();
 
-        let deviation = self.final_deviation
-            + (1.0 - state.progress).powi(self.modulation_index as i32)
-                * (self.initial_deviation - self.final_deviation);
+        let deviation = self.deviation(state.progress);
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
         for parent in parents {
@@ -85,5 +90,21 @@ where
                 .collect::<Vec<f64>>();
             offspring.push(solution);
         }
+    }
+}
+#[cfg(test)]
+mod adaptive {
+    use super::*;
+
+    #[test]
+    fn deviation_is_falling() {
+        let comp = Adaptive {
+            initial_deviation: 10.0,
+            final_deviation: 1.0,
+            modulation_index: 1,
+        };
+        float_eq::assert_float_eq!(comp.deviation(0.0), 10.0, ulps <= 1);
+        float_eq::assert_float_eq!(comp.deviation(0.5), 5.5, ulps <= 1);
+        float_eq::assert_float_eq!(comp.deviation(1.0), 1.0, ulps <= 1);
     }
 }
