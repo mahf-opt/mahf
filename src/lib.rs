@@ -4,7 +4,6 @@
 //!
 //! A framework for modular construction and evaluation of meta-heuristics.
 
-pub mod dynser;
 pub mod fitness;
 pub mod heuristic;
 pub mod heuristics;

@@ -4,7 +4,11 @@ use mahf::{
     problems::functions::BenchmarkFunction,
     prompt,
     threads::SyncThreadPool,
-    tracking::{runtime_analysis::Experiment, trigger::*, Log},
+    tracking::{
+        runtime_analysis::Experiment,
+        trigger::{EvalTrigger, IterTrigger},
+        Log,
+    },
 };
 use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 

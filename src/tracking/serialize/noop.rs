@@ -1,6 +1,7 @@
-use super::error::*;
+#![allow(unused_variables)]
+
+use super::error::{Error, Result};
 use serde::{ser, Serialize};
-use std::fmt;
 
 pub struct Serializer;
 

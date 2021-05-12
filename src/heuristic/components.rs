@@ -1,10 +1,10 @@
 //! Framework components.
 
 use crate::{
-    dynser::Serialize,
     heuristic::{Individual, State},
     problem::Problem,
 };
+use erased_serde::Serialize as DynSerialize;
 use std::any::Any;
 
 /// Defines the traits required by any component.
@@ -15,14 +15,20 @@ use std::any::Any;
 /// All components must allow downcasting and thus require [Any].
 ///
 /// # Serialize
-/// [Serialize] allows serializing dynamic components for the purpose of logging.
+/// [DynSerialize] allows serializing dynamic components for the purpose of logging.
 ///
 /// # Send
 /// Most of the time, execution should be multi threaded and having
 /// components implement [Send] makes this much easier.
 ///
-pub trait Component: Any + Serialize + Send {}
-impl<T> Component for T where T: Any + Serialize + Send {}
+pub trait Component: Any + DynSerialize + Send {}
+impl<T> Component for T where T: Any + DynSerialize + Send {}
+
+erased_serde::serialize_trait_object!(<P> Initialization<P>);
+erased_serde::serialize_trait_object!(Selection);
+erased_serde::serialize_trait_object!(<P> Generation<P>);
+erased_serde::serialize_trait_object!(Replacement);
+erased_serde::serialize_trait_object!(Termination);
 
 /// Initializes the population.
 pub trait Initialization<P: Problem>: Component {

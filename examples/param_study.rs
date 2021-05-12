@@ -1,5 +1,5 @@
 use mahf::{
-    heuristic::{self},
+    heuristic,
     heuristics::es::mu_plus_lambda,
     problems::functions::BenchmarkFunction,
     prompt,

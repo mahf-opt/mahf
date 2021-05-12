@@ -38,7 +38,6 @@ mod tests {
     use super::{serialize_config, validate_serializability};
     use crate::heuristics::es;
     use crate::problems::functions::BenchmarkFunction;
-    use serde::Serialize;
 
     #[test]
     pub fn serializing_es_config() {

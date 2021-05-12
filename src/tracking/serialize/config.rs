@@ -1,7 +1,14 @@
-use super::{component, error::*, SerializedComponent, SerializedConfiguration};
-use crate::heuristic::Configuration;
+#![allow(unused_variables)]
+
+use crate::{
+    heuristic::Configuration,
+    tracking::serialize::{
+        component,
+        error::{Error, Result},
+        SerializedConfiguration,
+    },
+};
 use serde::{ser, Serialize};
-use std::fmt;
 
 pub struct Serializer {
     config: SerializedConfiguration,

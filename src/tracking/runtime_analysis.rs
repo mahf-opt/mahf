@@ -11,9 +11,12 @@
 use anyhow::Context;
 use serde::Serialize;
 
-use crate::{heuristic::Configuration, problem::Problem, tracking::*};
+use crate::{
+    heuristic::Configuration,
+    problem::Problem,
+    tracking::{EvaluationEntry, IterationEntry, Log},
+};
 use std::{
-    fmt,
     fs::{self, File},
     io::{self, BufWriter, Write},
     path::Path,

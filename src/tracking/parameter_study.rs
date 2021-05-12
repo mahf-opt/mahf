@@ -1,12 +1,9 @@
 //! Logging for Parameter Studies
 
 use crate::{
-    dynser::DynSerializable,
-    fitness::Fitness,
     heuristic::Configuration,
-    tracking::serialize::SerializedConfiguration,
     tracking::{
-        serialize::{serialize_config, validate_serializability},
+        serialize::{serialize_config, SerializedConfiguration},
         Log,
     },
 };
@@ -15,7 +12,7 @@ use std::{
     any::TypeId,
     fs::{self, File},
     io::{self, BufWriter, Write},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 #[derive(PartialEq)]
@@ -76,6 +73,9 @@ impl Study {
         config: &Configuration<P>,
         summary: &Summary,
     ) -> anyhow::Result<()> {
+        if self.config_type != ConfigurationType::from(config) {
+            bail!("tried to log a run with different configuration type");
+        }
         let config = serialize_config(config)?;
         self.log_serialized_run(&config, summary)
     }

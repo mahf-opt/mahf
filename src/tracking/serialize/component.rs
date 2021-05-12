@@ -1,7 +1,11 @@
-use super::{error::*, value, SerializedComponent};
+#![allow(unused_variables)]
+
+use crate::tracking::serialize::{
+    error::{Error, Result},
+    value, SerializedComponent,
+};
 use serde::{ser, Serialize};
-use std::collections::HashMap;
-use std::{fmt, mem};
+use std::mem;
 
 pub struct Serializer {
     component: SerializedComponent,
