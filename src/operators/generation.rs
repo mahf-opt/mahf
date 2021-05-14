@@ -3,6 +3,7 @@
 use crate::{
     heuristic::{components::*, State},
     problem::Problem,
+    random::Random,
 };
 use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
@@ -23,10 +24,10 @@ where
         &self,
         _state: &mut State,
         _problem: &P,
+        rng: &mut Random,
         parents: &mut Vec<&Vec<f64>>,
         offspring: &mut Vec<Vec<f64>>,
     ) {
-        let rng = &mut rand::thread_rng();
         let distribution = rand_distr::Normal::new(0.0, self.deviation).unwrap();
 
         for parent in parents {
@@ -73,11 +74,10 @@ where
         &self,
         state: &mut State,
         _problem: &P,
+        rng: &mut Random,
         parents: &mut Vec<&Vec<f64>>,
         offspring: &mut Vec<Vec<f64>>,
     ) {
-        let rng = &mut rand::thread_rng();
-
         let deviation = self.deviation(state.progress);
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 

@@ -1,6 +1,6 @@
 //! Framework for modular heuristics.
 
-use crate::{fitness::Fitness, problem::Problem, tracking::Log};
+use crate::{fitness::Fitness, problem::Problem, random::RandomConfig, tracking::Log};
 use std::convert::TryFrom;
 
 pub mod components;
@@ -21,10 +21,11 @@ pub fn run<P: Problem>(
     problem: &P,
     logger: &mut Log,
     components: &Configuration<P>,
+    rng: Option<RandomConfig>,
+    evaluator: Option<Box<dyn Evaluator<P>>>,
 ) -> P::Encoding {
-    // This could be an additional component,
-    // supporting parallel or GPU evaluation.
-    let mut evaluator = SimpleEvaluator;
+    let evaluator = &mut evaluator.unwrap_or_else(|| Box::new(SimpleEvaluator));
+    let rng = &mut rng.unwrap_or_default().into();
     let Configuration {
         initialization,
         selection,
@@ -37,7 +38,7 @@ pub fn run<P: Problem>(
     let population = &mut Vec::new();
 
     // Initialisation
-    initialization.initialize(problem, initial_population);
+    initialization.initialize(problem, rng, initial_population);
 
     // State shared across components
     let state = &mut State::new();
@@ -58,7 +59,7 @@ pub fn run<P: Problem>(
         let evaluated_offspring = &mut Vec::new();
 
         // Selection
-        selection.select(state, population, parent_individuals);
+        selection.select(state, rng, population, parent_individuals);
         parents.extend(
             parent_individuals
                 .drain(..)
@@ -66,7 +67,7 @@ pub fn run<P: Problem>(
         );
 
         // Generation
-        generation.generate(state, problem, parents, offspring);
+        generation.generate(state, problem, rng, parents, offspring);
 
         // Evaluation
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);
@@ -78,7 +79,7 @@ pub fn run<P: Problem>(
         }
 
         // Replancement + Update
-        replacement.replace(state, population, evaluated_offspring);
+        replacement.replace(state, rng, population, evaluated_offspring);
 
         state.log_iteration(logger);
         if termination.terminate(state) {
@@ -95,7 +96,7 @@ fn find_best(population: &[Individual]) -> &Individual {
     population.iter().min_by_key(|i| i.fitness()).unwrap()
 }
 
-trait Evaluator<P: Problem> {
+pub trait Evaluator<P: Problem> {
     fn evaluate(
         &mut self,
         state: &mut State,

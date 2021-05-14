@@ -260,7 +260,7 @@ fn main() -> anyhow::Result<()> {
                                 .context("creating experiment")?;
 
                             for _ in 0..RUNS {
-                                heuristic::run(&problem, logger, &config);
+                                heuristic::run(&problem, logger, &config, None, None);
                                 experiment.log_run(logger)?;
                                 logger.clear();
                                 let _ = tx.send(Ok(()));
