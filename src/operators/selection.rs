@@ -1,7 +1,9 @@
 //! Selection methods
 
-use crate::heuristic::{components::*, Individual, State};
-use crate::random::Random;
+use crate::{
+    heuristic::{components::*, Individual, State},
+    random::Random,
+};
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 

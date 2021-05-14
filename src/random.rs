@@ -64,6 +64,12 @@ impl RngCore for Random {
     }
 }
 
+impl Default for Random {
+    fn default() -> Self {
+        Random::from(RandomConfig::default())
+    }
+}
+
 impl Default for RandomConfig {
     fn default() -> Self {
         RandomConfig::Automatic

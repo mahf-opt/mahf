@@ -3,6 +3,7 @@ use mahf::{
     heuristic::{self, Configuration},
     problems::functions::BenchmarkFunction,
     prompt,
+    random::Random,
     threads::SyncThreadPool,
     tracking::{
         runtime_analysis::Experiment,
@@ -255,9 +256,11 @@ fn main() -> anyhow::Result<()> {
 
                             let data_dir = data_dir.join(experiment_desc);
 
+                            let random = Random::default();
                             let config = configuration();
-                            let experiment = &mut Experiment::create(data_dir, &problem, &config)
-                                .context("creating experiment")?;
+                            let experiment =
+                                &mut Experiment::create(data_dir, &problem, &random, &config)
+                                    .context("creating experiment")?;
 
                             for _ in 0..RUNS {
                                 heuristic::run(&problem, logger, &config, None, None);
