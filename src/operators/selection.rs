@@ -2,18 +2,19 @@
 
 use crate::heuristic::{components::*, Individual, State};
 use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 
 /// Selects `lambda` random solutions.
 ///
 /// Solutions can be selected multiple times in a single iteration.
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Es {
     /// Offspring per iteration.
     pub lambda: u32,
 }
 impl Selection for Es {
     fn select<'p>(
-        &mut self,
+        &self,
         _state: &mut State,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
@@ -22,6 +23,21 @@ impl Selection for Es {
         for _ in 0..self.lambda {
             selection.push(population.choose(rng).unwrap());
         }
+    }
+}
+#[cfg(test)]
+mod es {
+    use super::*;
+    use crate::operators::testing::new_test_population;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new();
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = Es { lambda: 4 };
+        let mut selection = Vec::new();
+        comp.select(&mut state, &population, &mut selection);
+        assert_eq!(selection.len(), comp.lambda as usize);
     }
 }
 
@@ -44,7 +60,7 @@ impl Selection for Es {
 ///
 /// # References
 /// See [crate::heuristics::iwo]
-#[derive(serde::Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Iwo {
     /// Minimum number of seeds per plant per iteration
     pub min_number_of_seeds: u32,
@@ -53,7 +69,7 @@ pub struct Iwo {
 }
 impl Selection for Iwo {
     fn select<'p>(
-        &mut self,
+        &self,
         _state: &mut State,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
@@ -62,6 +78,11 @@ impl Selection for Iwo {
         let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
         #[rustfmt::skip]
         let worst: f64 = population.iter().map(Individual::fitness).max().unwrap().into();
+
+        assert!(
+            worst.is_finite(),
+            "selection::Iwo does not work with Inf fitness values"
+        );
 
         for plant in population.iter() {
             let bonus: f64 = (plant.fitness().into() - worst) / (best - worst);
@@ -73,11 +94,35 @@ impl Selection for Iwo {
                 } else {
                     (bonus * bonus_seeds).floor() as u32
                 };
-            assert!(num_seeds <= self.max_number_of_seeds);
 
             for _ in 0..num_seeds {
                 selection.push(plant);
             }
         }
+    }
+}
+#[cfg(test)]
+mod iwo {
+    use super::*;
+    use crate::operators::testing::{collect_population_fitness, new_test_population};
+
+    #[test]
+    fn selects_right_children() {
+        let comp = Iwo {
+            min_number_of_seeds: 1,
+            max_number_of_seeds: 3,
+        };
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let mut selection = Vec::new();
+        comp.select(&mut State::new(), &population, &mut selection);
+        let selection = collect_population_fitness(&selection);
+
+        assert!(selection.len() > (comp.min_number_of_seeds as usize * population.len()));
+        assert!(selection.len() < (comp.max_number_of_seeds as usize * population.len()));
+
+        // I(1.0) should have 3 seed
+        // I(2.0) should have (1 + 3/2) seeds
+        // I(3.0) should have 1 seeds
+        assert_eq!(selection, vec![1.0, 1.0, 1.0, 2.0, 2.0, 3.0]);
     }
 }

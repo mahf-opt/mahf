@@ -1,9 +1,8 @@
 //! Tracking and logging.
 
-#![allow(dead_code, unused_variables, unused_imports)]
-
 pub mod parameter_study;
 pub mod runtime_analysis;
+pub mod serialize;
 
 pub mod trigger;
 use trigger::*;
