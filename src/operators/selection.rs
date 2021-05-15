@@ -1,6 +1,9 @@
 //! Selection methods
 
-use crate::heuristic::{components::*, Individual, State};
+use crate::{
+    heuristic::{components::*, Individual, State},
+    random::Random,
+};
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
@@ -16,10 +19,10 @@ impl Selection for Es {
     fn select<'p>(
         &self,
         _state: &mut State,
+        rng: &mut Random,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
-        let rng = &mut rand::thread_rng();
         for _ in 0..self.lambda {
             selection.push(population.choose(rng).unwrap());
         }
@@ -33,10 +36,11 @@ mod es {
     #[test]
     fn selects_right_number_of_children() {
         let mut state = State::new();
+        let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = Es { lambda: 4 };
         let mut selection = Vec::new();
-        comp.select(&mut state, &population, &mut selection);
+        comp.select(&mut state, &mut rng, &population, &mut selection);
         assert_eq!(selection.len(), comp.lambda as usize);
     }
 }
@@ -71,6 +75,7 @@ impl Selection for Iwo {
     fn select<'p>(
         &self,
         _state: &mut State,
+        _rng: &mut Random,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
@@ -113,8 +118,9 @@ mod iwo {
             max_number_of_seeds: 3,
         };
         let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let mut rng = Random::testing();
         let mut selection = Vec::new();
-        comp.select(&mut State::new(), &population, &mut selection);
+        comp.select(&mut State::new(), &mut rng, &population, &mut selection);
         let selection = collect_population_fitness(&selection);
 
         assert!(selection.len() > (comp.min_number_of_seeds as usize * population.len()));

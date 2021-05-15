@@ -11,6 +11,7 @@ pub mod operators;
 pub mod problem;
 pub mod problems;
 pub mod prompt;
+pub mod random;
 pub mod threads;
 pub mod tracking;
 

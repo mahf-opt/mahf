@@ -8,14 +8,14 @@
 //!   - configuration.ron
 //!
 
-use anyhow::Context;
-use serde::Serialize;
-
 use crate::{
     heuristic::Configuration,
     problem::Problem,
+    random::{Random, RandomConfig},
     tracking::{EvaluationEntry, IterationEntry, Log},
 };
+use anyhow::Context;
+use serde::Serialize;
 use std::{
     fs::{self, File},
     io::{self, BufWriter, Write},
@@ -33,6 +33,7 @@ impl Experiment {
     pub fn create<P: Problem + Serialize>(
         data_dir: impl AsRef<Path>,
         problem: &P,
+        random: &Random,
         config: &Configuration<P>,
     ) -> Result<Self, anyhow::Error> {
         if data_dir.as_ref().exists() {
@@ -41,7 +42,8 @@ impl Experiment {
 
         fs::create_dir_all(&data_dir).context("creating data directory")?;
 
-        write_configuration(&data_dir, problem, config).context("writing configuration file")?;
+        write_configuration(&data_dir, random, problem, config)
+            .context("writing configuration file")?;
 
         let dir = data_dir.as_ref();
         let mut evaluations_file =
@@ -85,16 +87,19 @@ impl Experiment {
 #[serde(rename = "Experiment")]
 struct ExperimentConfiguration<'a, P: Serialize + 'static> {
     problem: &'a P,
+    random: RandomConfig,
     heuristic: &'a Configuration<P>,
 }
 
 fn write_configuration<P: Serialize>(
     data_dir: impl AsRef<Path>,
+    random: &Random,
     problem: &P,
     config: &Configuration<P>,
 ) -> anyhow::Result<()> {
     let cfg = ExperimentConfiguration {
         problem,
+        random: random.config(),
         heuristic: config,
     };
     let cfg_string = to_pretty_ron(&cfg).context("serializing configuration")?;

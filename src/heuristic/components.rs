@@ -3,6 +3,7 @@
 use crate::{
     heuristic::{Individual, State},
     problem::Problem,
+    random::Random,
 };
 use erased_serde::Serialize as DynSerialize;
 use std::any::Any;
@@ -32,7 +33,7 @@ erased_serde::serialize_trait_object!(Termination);
 
 /// Initializes the population.
 pub trait Initialization<P: Problem>: Component {
-    fn initialize(&self, problem: &P, population: &mut Vec<P::Encoding>);
+    fn initialize(&self, problem: &P, rng: &mut Random, population: &mut Vec<P::Encoding>);
 }
 
 /// Selects individuals for reproduction or modification.
@@ -40,6 +41,7 @@ pub trait Selection: Component {
     fn select<'p>(
         &self,
         state: &mut State,
+        rng: &mut Random,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     );
@@ -51,6 +53,7 @@ pub trait Generation<P: Problem>: Component {
         &self,
         state: &mut State,
         problem: &P,
+        rng: &mut Random,
         parents: &mut Vec<&P::Encoding>,
         offspring: &mut Vec<P::Encoding>,
     );
@@ -61,6 +64,7 @@ pub trait Replacement: Component {
     fn replace(
         &self,
         state: &mut State,
+        rng: &mut Random,
         population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,
     );

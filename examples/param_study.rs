@@ -67,7 +67,7 @@ pub fn main() -> anyhow::Result<()> {
                                 let config = mu_plus_lambda(mu, lambda, sigma, GENERATIONS);
 
                                 for _ in 0..RUNS {
-                                    heuristic::run(&function, logger, &config);
+                                    heuristic::run(&function, logger, &config, None, None);
                                     summary.add_run(logger);
                                     logger.clear();
                                 }
