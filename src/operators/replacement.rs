@@ -31,7 +31,7 @@ mod fittest {
     #[test]
     fn keeps_right_individuals() {
         let mut state = State::new();
-        let mut rng = Random::test_rng();
+        let mut rng = Random::testing();
         let comp = Fittest {
             max_population_size: 3,
         };

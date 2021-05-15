@@ -1,6 +1,6 @@
 //! Framework for modular heuristics.
 
-use crate::{fitness::Fitness, problem::Problem, random::RandomConfig, tracking::Log};
+use crate::{fitness::Fitness, problem::Problem, random::Random, tracking::Log};
 use std::convert::TryFrom;
 
 pub mod components;
@@ -21,11 +21,11 @@ pub fn run<P: Problem>(
     problem: &P,
     logger: &mut Log,
     components: &Configuration<P>,
-    rng: Option<RandomConfig>,
+    rng: Option<Random>,
     evaluator: Option<Box<dyn Evaluator<P>>>,
 ) -> P::Encoding {
     let evaluator = &mut evaluator.unwrap_or_else(|| Box::new(SimpleEvaluator));
-    let rng = &mut rng.unwrap_or_default().into();
+    let rng = &mut rng.unwrap_or_default();
     let Configuration {
         initialization,
         selection,

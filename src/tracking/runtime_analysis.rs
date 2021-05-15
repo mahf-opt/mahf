@@ -11,7 +11,7 @@
 use crate::{
     heuristic::Configuration,
     problem::Problem,
-    random::{Random, RandomDescription},
+    random::{Random, RandomConfig},
     tracking::{EvaluationEntry, IterationEntry, Log},
 };
 use anyhow::Context;
@@ -87,7 +87,7 @@ impl Experiment {
 #[serde(rename = "Experiment")]
 struct ExperimentConfiguration<'a, P: Serialize + 'static> {
     problem: &'a P,
-    random: RandomDescription,
+    random: RandomConfig,
     heuristic: &'a Configuration<P>,
 }
 

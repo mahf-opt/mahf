@@ -36,7 +36,7 @@ mod es {
     #[test]
     fn selects_right_number_of_children() {
         let mut state = State::new();
-        let mut rng = Random::test_rng();
+        let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = Es { lambda: 4 };
         let mut selection = Vec::new();
@@ -118,7 +118,7 @@ mod iwo {
             max_number_of_seeds: 3,
         };
         let population = new_test_population(&[1.0, 2.0, 3.0]);
-        let mut rng = Random::test_rng();
+        let mut rng = Random::testing();
         let mut selection = Vec::new();
         comp.select(&mut State::new(), &mut rng, &population, &mut selection);
         let selection = collect_population_fitness(&selection);

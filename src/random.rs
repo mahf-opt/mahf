@@ -3,18 +3,12 @@ use serde::Serialize;
 use std::any::type_name;
 
 pub struct Random {
-    config: RandomDescription,
+    config: RandomConfig,
     inner: Box<dyn RngCore>,
 }
 
-pub enum RandomConfig {
-    Automatic,
-    Seeded(u64),
-    Custom(Random),
-}
-
 #[derive(Debug, Clone, Copy, Serialize)]
-pub struct RandomDescription {
+pub struct RandomConfig {
     pub name: &'static str,
     pub seed: u64,
 }
@@ -25,7 +19,7 @@ impl Random {
         RNG: RngCore + SeedableRng + 'static,
     {
         Random {
-            config: RandomDescription {
+            config: RandomConfig {
                 name: type_name::<RNG>(),
                 seed,
             },
@@ -33,15 +27,15 @@ impl Random {
         }
     }
 
-    pub fn std_rng(seed: u64) -> Self {
+    pub fn seeded(seed: u64) -> Self {
         Random::new::<rand::rngs::StdRng>(seed)
     }
 
-    pub fn test_rng() -> Self {
-        Random::std_rng(0)
+    pub fn testing() -> Self {
+        Random::seeded(0)
     }
 
-    pub fn config(&self) -> RandomDescription {
+    pub fn config(&self) -> RandomConfig {
         self.config
     }
 }
@@ -66,22 +60,6 @@ impl RngCore for Random {
 
 impl Default for Random {
     fn default() -> Self {
-        Random::from(RandomConfig::default())
-    }
-}
-
-impl Default for RandomConfig {
-    fn default() -> Self {
-        RandomConfig::Automatic
-    }
-}
-
-impl From<RandomConfig> for Random {
-    fn from(config: RandomConfig) -> Self {
-        match config {
-            RandomConfig::Automatic => Random::std_rng(rand::thread_rng().next_u64()),
-            RandomConfig::Seeded(seed) => Random::std_rng(seed),
-            RandomConfig::Custom(rng) => rng,
-        }
+        Random::seeded(rand::thread_rng().next_u64())
     }
 }
