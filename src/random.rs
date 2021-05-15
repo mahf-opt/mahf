@@ -1,12 +1,20 @@
+//! Abstractions for the [rand] crate.
+
 use rand::{RngCore, SeedableRng};
 use serde::Serialize;
 use std::any::type_name;
 
+/// A random number generator.
+///
+/// This can only be backed by seedable rngs to allow reconstruction.
 pub struct Random {
     config: RandomConfig,
     inner: Box<dyn RngCore>,
 }
 
+/// Describes a [Random] generator.
+///
+/// Useful for debugging and logging.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct RandomConfig {
     pub name: &'static str,
@@ -14,6 +22,7 @@ pub struct RandomConfig {
 }
 
 impl Random {
+    /// Create a new random generator with the given seed.
     pub fn new<RNG>(seed: u64) -> Self
     where
         RNG: RngCore + SeedableRng + 'static,
@@ -27,14 +36,19 @@ impl Random {
         }
     }
 
+    /// Create a standard random generator with the given seed.
     pub fn seeded(seed: u64) -> Self {
         Random::new::<rand::rngs::StdRng>(seed)
     }
 
+    /// Create a random generator for testing.
+    ///
+    /// This always uses the same seed.
     pub fn testing() -> Self {
         Random::seeded(0)
     }
 
+    /// Returns the generators configuration.
     pub fn config(&self) -> RandomConfig {
         self.config
     }
@@ -59,6 +73,9 @@ impl RngCore for Random {
 }
 
 impl Default for Random {
+    /// Creates a standard generator with a random seed.
+    ///
+    /// The seed will be generated with [rand::thread_rng].
     fn default() -> Self {
         Random::seeded(rand::thread_rng().next_u64())
     }
