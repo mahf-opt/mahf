@@ -1,0 +1,50 @@
+// Grammar for parsing Symmetrical TSP Optimal Tour files from tsplib. (.opt.tour files)
+
+// Allow arbitrary whitespace/tabs in the file.
+WHITESPACE = _{ " " | "\t" }
+// Allow comments of format /* COMMENT */. Note that blank lines are still not allowed.
+// The comment must end the line before the next parsed line.
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" ~ NEWLINE? }
+
+// NAME : berlin52.opt.tour
+name = { (!NEWLINE ~ ANY)* }
+name_line = _{ "NAME" ~ ":" ~ name ~ NEWLINE }
+
+// COMMENT: ...
+comment = _{ (!NEWLINE ~ ANY)* }
+comments = _{ ("COMMENT" ~ ":" ~ comment ~ NEWLINE)* }
+
+// TYPE: TOUR
+type_line = _{ "TYPE" ~ ":" ~ "TOUR" ~ NEWLINE }
+
+// DIMENSION: 52
+dimension = @{ ASCII_DIGIT+ }
+dimension_line = _{ "DIMENSION" ~ ":" ~ dimension ~ NEWLINE }
+
+// BEST_SOLUTION: xyz
+best_solution = @{ (ASCII_DIGIT | "." | "+" | "-" |"e" )+ }
+best_solution_line = _{ ("BEST_SOLUTION" ~ ":" ~ best_solution ~ NEWLINE)? }
+
+// TOUR_SECTION
+TOUR_SECTION_DELIMITER = _{ "TOUR_SECTION" ~ NEWLINE }
+
+// 1
+index = @{ ASCII_DIGIT+ }
+tour_section_nodes = { ( index ~ NEWLINE )+ }
+
+node_section = _{ (TOUR_SECTION_DELIMITER ~ tour_section_nodes)? }
+
+// EOF
+eof = _{ ("-1" ~ NEWLINE)? ~ "EOF"? ~ NEWLINE* }
+
+opt = {
+    name_line ~
+    comments ~
+    type_line ~
+    dimension_line ~
+    best_solution_line ~
+    node_section ~
+    eof
+}
+
+file = { SOI ~ opt ~ EOI }

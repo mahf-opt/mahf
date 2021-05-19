@@ -1,0 +1,52 @@
+// Grammar for parsing Symmetrical TSP files from tsplib. (.tsplib files)
+
+// Allow arbitrary whitespace/tabs in the file.
+WHITESPACE = _{ " " | "\t" }
+// Allow comments of format /* COMMENT */. Note that blank lines are still not allowed.
+// The comment must end the line before the next parsed line.
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" ~ NEWLINE? }
+
+// NAME: berlin52
+name = { (!NEWLINE ~ ANY)* }
+name_line = _{ "NAME" ~ ":" ~ name ~ NEWLINE }
+
+// COMMENT: 52 locations in Berlin (Groetschel)
+comment = _{ (!NEWLINE ~ ANY)* }
+comments = _{ ("COMMENT" ~ ":" ~ comment ~ NEWLINE)* }
+
+// TYPE: TSP
+type_line = _{ "TYPE" ~ ":" ~ "TSP" ~ NEWLINE }
+
+// DIMENSION: 52
+dimension = @{ ASCII_DIGIT+ }
+dimension_line = _{ "DIMENSION" ~ ":" ~ dimension ~ NEWLINE }
+
+// EDGE_WEIGHT_TYPE: EUC_2D
+edge_weight_type = @{ ( !NEWLINE ~ ANY )+ }
+edge_weight_types = { "EUC_2D" | "EUC_3D" | "MAN_2D" | "MAN_3D" | "MAX_2D" | "MAX_3D" }
+edge_weight_type_line = _{ "EDGE_WEIGHT_TYPE" ~ ":" ~ (&edge_weight_types ~ edge_weight_type ~ NEWLINE) }
+
+// NODE_COORD_SECTION
+NODE_COORD_SECTION_DELIMITER = _{ "NODE_COORD_SECTION" ~ NEWLINE }
+
+// 1 565.0 575.0
+coord = @{ (ASCII_DIGIT | "." | "+" | "-" |"e" )+ }
+index = @{ ASCII_DIGIT+ }
+coords = { index ~ coord ~ coord }
+node_coord_section_coords = { ( coords ~ NEWLINE )+ }
+
+// EOF
+EOF = _{ "EOF"? ~ NEWLINE* }
+
+tsp = {
+    name_line ~
+    comments ~
+    type_line ~
+    dimension_line ~
+    edge_weight_type_line ~
+    NODE_COORD_SECTION_DELIMITER ~
+    node_coord_section_coords ~
+    EOF
+}
+
+file = { SOI ~ tsp ~ EOI }
