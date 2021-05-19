@@ -2,22 +2,25 @@
 
 use crate::{
     problem::Problem,
-    problems::tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
+    problems::{
+        tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
+        Optimum,
+    },
 };
 use anyhow::{anyhow, Error, Result};
 use pest_consume::Parser;
 
-type Optimum = crate::problems::Optimum<Route>;
-
 // Converts the parsing-tree for symmetric TSP that was constructed by `pest`
 // into rust-usable data types using the `pest_consume` package.
+#[allow(clippy::upper_case_acronyms)]
 mod parser {
     // Parser for .tsp files
     pub(super) mod tsp {
+        use crate::problems::tsp::{distances, Coordinates, DistanceMeasure, SymmetricTsp};
         use pest_consume::{match_nodes, Error, Parser};
+
         type Result<T> = std::result::Result<T, Error<Rule>>;
         type Node<'i> = pest_consume::Node<'i, Rule, ()>;
-        use crate::problems::tsp::{distances, Coordinates, DistanceMeasure, SymmetricTsp};
 
         #[derive(Parser)]
         #[grammar = "problems/tsp/grammars/symmetric.tsp.pest"]
@@ -56,9 +59,11 @@ mod parser {
             fn name(input: Node) -> Result<String> {
                 Ok(input.as_str().to_string())
             }
+
             fn dimension(input: Node) -> Result<usize> {
                 input.as_str().parse().map_err(|e| input.error(e))
             }
+
             fn edge_weight_type(input: Node) -> Result<DistanceMeasure> {
                 Ok(match input.as_str() {
                     "EUC_2D" => distances::euclidean_distance,
@@ -67,52 +72,59 @@ mod parser {
                     _ => unreachable!(),
                 })
             }
+
             fn index(input: Node) -> Result<usize> {
                 input.as_str().parse().map_err(|e| input.error(e))
             }
+
             fn coord(input: Node) -> Result<f64> {
                 input.as_str().parse().map_err(|e| input.error(e))
             }
+
             fn coords(input: Node) -> Result<Coordinates> {
                 Ok(match_nodes!(input.into_children();
                     [index(_i), coord(x), coord(y)] => vec![x, y],
                 ))
             }
+
             fn node_coord_section_coords(input: Node) -> Result<Vec<Coordinates>> {
                 Ok(match_nodes!(input.into_children();
                     [coords(c)..] => c.collect(),
                 ))
             }
+
             #[allow(non_snake_case, unused_variables)]
             fn EOI(input: Node) -> Result<()> {
                 Ok(())
             }
         }
     }
+
     // Parser for .opt.tour files
     pub(super) mod opt {
+        use crate::{
+            fitness::Fitness,
+            problems::tsp::{symmetric::Optimum, Route},
+        };
+        use pest_consume::{match_nodes, Error, Parser};
         use std::convert::TryFrom;
 
-        use pest_consume::{match_nodes, Error, Parser};
         type Result<T> = std::result::Result<T, Error<Rule>>;
         type Node<'i> = pest_consume::Node<'i, Rule, ()>;
-        use crate::problems::tsp::Route;
-        use crate::{fitness::Fitness, problems::tsp::symmetric::Optimum};
 
         #[derive(Parser)]
-        // Use the Grammar for symmetric tsp opt tour
         #[grammar = "problems/tsp/grammars/symmetric.opt.tour.pest"]
         pub struct TspOptParser;
 
         #[pest_consume::parser]
         impl TspOptParser {
-            pub fn file(input: Node) -> Result<Optimum> {
+            pub fn file(input: Node) -> Result<Optimum<Route>> {
                 Ok(match_nodes!(input.into_children();
                     [opt(opt), _] => opt,
                 ))
             }
 
-            fn opt(input: Node) -> Result<Optimum> {
+            fn opt(input: Node) -> Result<Optimum<Route>> {
                 Ok(match_nodes!(input.clone().into_children();
                     // Only fitness value
                     [
@@ -146,9 +158,11 @@ mod parser {
             fn name(input: Node) -> Result<String> {
                 Ok(input.as_str().to_string())
             }
+
             fn dimension(input: Node) -> Result<usize> {
                 input.as_str().parse().map_err(|e| input.error(e))
             }
+
             fn best_solution(input: Node) -> Result<Fitness> {
                 input
                     .as_str()
@@ -156,6 +170,7 @@ mod parser {
                     .map_err(|e| input.error(e))
                     .map(|f: f64| Fitness::try_from(f).unwrap())
             }
+
             fn index(input: Node) -> Result<usize> {
                 let i: usize = input.as_str().parse().map_err(|e| input.error(e))?;
                 if i == 0 {
@@ -164,11 +179,13 @@ mod parser {
                     Ok(i - 1)
                 }
             }
+
             fn tour_section_nodes(input: Node) -> Result<Route> {
                 Ok(match_nodes!(input.into_children();
                     [index(i)..] => i.collect::<Vec<_>>().into(),
                 ))
             }
+
             #[allow(non_snake_case, unused_variables)]
             fn EOI(input: Node) -> Result<()> {
                 Ok(())
@@ -233,6 +250,7 @@ impl Instances {
         }
         Ok(tsp)
     }
+
     /// Loads the built-in instance. This method should by design never panic.
     pub fn load(&self) -> SymmetricTsp {
         self.try_load().expect("Error while constructing instance")
@@ -241,10 +259,15 @@ impl Instances {
 
 /// Represents an instance of the symmetric travelling salesman problem.
 pub struct SymmetricTsp {
+    /// Name of the instance
     pub name: String,
+    /// Dimension of the instance
     pub dimension: Dimension,
-    pub best_solution: Option<Optimum>,
+    /// Best possible solution
+    pub best_solution: Option<Optimum<Route>>,
+    /// The cities coordinates
     pub positions: Vec<Coordinates>,
+    /// How distance should be computed
     distance_measure: DistanceMeasure,
 }
 
@@ -252,7 +275,12 @@ impl Problem for SymmetricTsp {
     type Encoding = Route;
 
     fn evaluate(&self, solution: &Self::Encoding) -> f64 {
-        solution.edges().iter().map(|e| self.distance(*e)).sum()
+        solution
+            .iter()
+            .copied()
+            .zip(solution.iter().copied().skip(1))
+            .map(|edge| self.distance(edge))
+            .sum()
     }
 
     fn name(&self) -> &str {
@@ -276,6 +304,7 @@ impl SymmetricTsp {
             .unwrap();
         let mut tsp = parser::tsp::TspParser::file(input)
             .map_err(|e| Error::new(e).context("tsp data type conversions failed"))?;
+
         if let Some(opt) = opt {
             let opt_input = parser::opt::TspOptParser::parse(parser::opt::Rule::file, opt)
                 .map_err(|e| Error::new(e).context("error while parsing .opt.tour file"))?
@@ -290,23 +319,23 @@ impl SymmetricTsp {
             }
             tsp.best_solution = Some(opt);
         }
+
         Ok(tsp)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use float_eq::assert_float_eq;
-
     use super::*;
+    use float_eq::assert_float_eq;
 
     #[test]
     fn loading_berlin52() {
-        let opt_tour = Route::from(vec![
+        let opt_tour = vec![
             0, 48, 31, 44, 18, 40, 7, 8, 9, 42, 32, 50, 10, 51, 13, 12, 46, 25, 26, 27, 11, 24, 3,
             5, 14, 4, 23, 47, 37, 36, 39, 38, 35, 34, 33, 43, 45, 15, 28, 49, 19, 22, 29, 1, 6, 41,
             20, 16, 2, 17, 30, 21,
-        ]);
+        ];
         let tsp = Instances::BERLIN52.load();
         let best_solution = tsp.best_solution.unwrap();
 
@@ -325,7 +354,7 @@ mod tests {
         assert_float_eq!(
             tsp.evaluate(best.solution.as_ref().unwrap()),
             best.fitness.into(),
-            abs <= 10.0
+            abs <= 50.0
         );
     }
 }
