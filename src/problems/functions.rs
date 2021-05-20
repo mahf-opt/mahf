@@ -383,6 +383,138 @@ impl BenchmarkFunction {
             rnd: rng.gen::<f64>(),
         }
     }
+
+    /// The [Ackley Nr. 2](http://benchmarkfcns.xyz/benchmarkfcns/ackleyn2fcn.html) function.
+    pub fn ackley_n2(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "ackleyN2",
+            implementation: scaled_implementations::ackley_n2,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Ackley Nr. 3](http://benchmarkfcns.xyz/benchmarkfcns/ackleyn3fcn.html) function.
+    pub fn ackley_n3(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "ackleyN3",
+            implementation: scaled_implementations::ackley_n3,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Adjiman](http://benchmarkfcns.xyz/benchmarkfcns/adjimanfcn.html) function.
+    pub fn adjiman(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "adjiman",
+            implementation: scaled_implementations::adjiman,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Bartels Conn](http://benchmarkfcns.xyz/benchmarkfcns/bartelsconnfcn.html) function.
+    pub fn bartels_conn(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "bartelsConn",
+            implementation: scaled_implementations::bartels_conn,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Beale](http://benchmarkfcns.xyz/benchmarkfcns/bealefcn.html) function.
+    pub fn beale(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "beale",
+            implementation: scaled_implementations::beale,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Bird](http://benchmarkfcns.xyz/benchmarkfcns/birdfcn.html) function.
+    pub fn bird(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "bird",
+            implementation: scaled_implementations::bird,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Bohachevsky Nr. 1](http://benchmarkfcns.xyz/benchmarkfcns/bohachevskyn1fcn.html) function.
+    pub fn bohachevsky_n1(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "bohachevskyN1",
+            implementation: scaled_implementations::bohachevsky_n1,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Bohachevsky Nr. 2](http://benchmarkfcns.xyz/benchmarkfcns/bohachevskyn2fcn.html) function.
+    pub fn bohachevsky_n2(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "bohachevskyN2",
+            implementation: scaled_implementations::bohachevsky_n2,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Booth](http://benchmarkfcns.xyz/benchmarkfcns/boothfcn.html) function.
+    pub fn booth(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "booth",
+            implementation: scaled_implementations::booth,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Brent](http://benchmarkfcns.xyz/benchmarkfcns/brentfcn.html) function.
+    pub fn brent(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "brent",
+            implementation: scaled_implementations::brent,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
+
+    /// The [Bukin Nr. 6](http://benchmarkfcns.xyz/benchmarkfcns/bukinn6fcn.html) function.
+    pub fn bukin_n6(dimension: usize, mut rng: Option<Random>) -> Self {
+        assert_eq!(dimension, 2);
+        BenchmarkFunction {
+            name: "bukinN6",
+            implementation: scaled_implementations::bukin_n6,
+            dimension,
+            rng,
+            rnd: rng.gen::<f64>(),
+        }
+    }
 }
 
 impl Problem for BenchmarkFunction {
@@ -481,7 +613,7 @@ pub mod scaled_implementations {
             for j in x.len() - 1 {
                 i = i * 35.0;
                 j = j * 35.0;
-                sum += (-0.2).exp() * (j.powi(2) + i.powi(2)).sqrt() + 3 * ((2 * j).cos() + (2 * i).sin());
+                sum += (-0.2).exp() * (j.powi(2) + i.powi(2)).sqrt() + 3.0 * ((2.0 * j).cos() + (2.0 * i).sin());
             }
         }
         sum
@@ -495,7 +627,7 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn alpine_n1(x: &[f64], rnd: &Option<f64>) -> f64 {
         x.iter()
-            .map(|xi| (xi * 10).abs())
+            .map(|xi| (xi * 10.0).abs())
             .map(|xi| xi * xi.sin() + 0.1 * xi)
             .sum::<f64>()
     }
@@ -508,7 +640,7 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn alpine_n2(x: &[f64], rnd: &Option<f64>) -> f64 {
         - x.iter()
-            .map(|xi| (xi * 10).abs())
+            .map(|xi| (xi * 10.0).abs())
             .map(|xi| xi.sqrt() * xi.sin())
             .product()
     }
@@ -525,7 +657,7 @@ pub mod scaled_implementations {
             for j in x.len() - 1 {
                 i = i * 4.0;
                 j = j * 4.0;
-                sum += (j.powi(2)).powi(i.powi(2) + 1) + (i.powi(2)).powi(j.powi(2) + 1);
+                sum += (j.powi(2)).powi(i.powi(2) + 1.0) + (i.powi(2)).powi(j.powi(2) + 1.0);
             }
         }
         sum
@@ -553,12 +685,12 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn griewank(x: &[f64], rnd: &Option<f64>) -> f64 {
         let sum = x.iter()
-            .map(|xi| xi * 600)
-            .map(|xi| xi.powi(2) / 4000)
+            .map(|xi| xi * 600.0)
+            .map(|xi| xi.powi(2) / 4000.0)
             .sum();
         let prod = x.iter()
             .enumerate()
-            .map(|(i, &xi)| xi * 600)
+            .map(|(i, &xi)| xi * 600.0)
             .map(|(i, &xi)| (xi / i).cos())
             .product();
         1 + sum + prod
@@ -574,17 +706,17 @@ pub mod scaled_implementations {
         let n = x.len();
         let alpha = 1 / 8;
         let norm = x.iter()
-            .map(|xi| xi * 2)
+            .map(|xi| xi * 2.0)
             .map(|xi| xi.powi(2))
             .sum::<f64>()
             .sqrt();
 
         let sum = x.iter()
-            .map(|xi| xi * 2)
+            .map(|xi| xi * 2.0)
             .map(|xi| xi)
             .sum::<f64>();
 
-        ((norm - n).powi(2)).powi(alpha) + (1 / n) * (0.5 * norm + sum) + 0.5
+        ((norm - n).powi(2)).powi(alpha) + (1.0 / n) * (0.5 * norm + sum) + 0.5
     }
 
     /// Periodic function
@@ -596,17 +728,17 @@ pub mod scaled_implementations {
     pub fn periodic(x: &[f64], rnd: &Option<f64>) -> f64 {
         let sum = x
             .iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| xi.powi(2))
             .sum::<f64>();
 
         let sine_sum = x
             .iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| (xi.sin()).powi(2))
             .sum::<f64>();
 
-        1 + sine_sum - 0.1 * (sum).exp()
+        1.0 + sine_sum - 0.1 * (sum).exp()
     }
 
     /// Powell Sum function
@@ -631,7 +763,7 @@ pub mod scaled_implementations {
     pub fn qing(x: &[f64], rnd: &Option<f64>) -> f64 {
         x.iter()
             .enumerate()
-            .map(|(i, xi)| xi * 500)
+            .map(|(i, xi)| xi * 500.0)
             .map(|(i, xi)| (xi.powi(2) - i).powi(2) )
             .sum::<f64>()
     }
@@ -665,7 +797,7 @@ pub mod scaled_implementations {
 
         let sum = x[1..].iter()
             .enumerate()
-            .map(|(i, xi)| xi * 5)
+            .map(|(i, xi)| xi * 5.0)
             .map(|(i, xi)| xi.powi(2))
             .sum::<f64>();
 
@@ -701,11 +833,11 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn salomon(x: &[f64], rnd: &Option<f64>) -> f64 {
         let sum = x.iter()
-            .map(|xi| xi * 100)
+            .map(|xi| xi * 100.0)
             .map(|xi| xi.powi(2))
             .sum::<f64>();
 
-        1 - (2 * PI * sum.sqrt()).cos() + 0.1 * sum.sqrt()
+        1.0 - (2.0 * PI * sum.sqrt()).cos() + 0.1 * sum.sqrt()
     }
 
     /// Schwefel 2.20 function
@@ -716,7 +848,7 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn schwefel_220(x: &[f64], rnd: &Option<f64>) -> f64 {
         x.iter()
-            .map(|xi| xi * 100)
+            .map(|xi| xi * 100.0)
             .map(|xi| xi.abs())
             .sum()
     }
@@ -744,12 +876,12 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn schwefel_222(x: &[f64], rnd: &Option<f64>) -> f64 {
         let sum = x.iter()
-            .map(|xi| xi * 100)
+            .map(|xi| xi * 100.0)
             .map(|xi| xi.abs())
             .sum::<f64>();
 
         let prod = x.iter()
-            .map(|xi| xi * 100)
+            .map(|xi| xi * 100.0)
             .map(|xi| xi.abs())
             .product::<f64>();
 
@@ -764,7 +896,7 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn schwefel_223(x: &[f64], rnd: &Option<f64>) -> f64 {
         x.iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| xi.powi(10))
             .sum::<f64>()
 
@@ -778,7 +910,7 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn schwefel(x: &[f64], rnd: &Option<f64>) -> f64 {
         let sum = x.iter()
-            .map(|xi| xi * 500)
+            .map(|xi| xi * 500.0)
             .map(|xi| xi * ((xi.abs()).sqrt()).sin())
             .sum::<f64>();
 
@@ -830,7 +962,7 @@ pub mod scaled_implementations {
         for i in x.len() {
             let mut sum = 0.0;
             for j in 1..=5 {
-                i = i * 10;
+                i = i * 10.0;
                 sum += ((j + 1) * i + j).cos();
             }
             prod = prod * sum
@@ -846,8 +978,8 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn styblinksi_tank(x: &[f64], rnd: &Option<f64>) -> f64 {
         0.5 * x.iter()
-            .map(|xi| xi * 5)
-            .map(|xi| xi.powi(4) - 16 * xi.powi(2) + 5 * xi)
+            .map(|xi| xi * 5.0)
+            .map(|xi| xi.powi(4) - 16.0 * xi.powi(2) + 5.0 * xi)
             .sum()
     }
 
@@ -860,7 +992,7 @@ pub mod scaled_implementations {
     pub fn sum_squares(x: &[f64], rnd: &Option<f64>) -> f64 {
         x.iter()
             .enumerate()
-            .map(|(i, xi)| xi * 10)
+            .map(|(i, xi)| xi * 10.0)
             .map(|(i, xi)| i * xi.powi(2))
             .sum()
     }
@@ -874,7 +1006,7 @@ pub mod scaled_implementations {
     pub fn yang_n1(x: &[f64], rnd: &Option<f64>) -> f64 {
         x.iter()
             .enumerate()
-            .map(|(i, xi)| xi * 5)
+            .map(|(i, xi)| xi * 5.0)
             .map(|(i, xi)| rnd * (xi.abs()).powi(i))
             .sum()
     }
@@ -887,12 +1019,12 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn yang_n2(x: &[f64], rnd: &Option<f64>) -> f64 {
         let sum = x.iter()
-          .map(|xi| xi * 2 * PI)
+          .map(|xi| xi * 2.0 * PI)
           .map(|xi| xi.abs())
           .sum::<f64>();
 
         let exp_sum = x.iter()
-            .map(|xi| xi * 2 * PI)
+            .map(|xi| xi * 2.0 * PI)
             .map(|xi| (xi.powi(2)).sin())
             .sum::<f64>();
 
@@ -910,21 +1042,21 @@ pub mod scaled_implementations {
         let m = 5.0;
 
         let beta_sum = x.iter()
-            .map(|xi| xi * 2 * PI)
+            .map(|xi| xi * 2.0 * PI)
             .map(|xi| (xi / beta).powi(2 * m))
             .sum::<f64>();
 
         let sum = x.iter()
-            .map(|xi| xi * 2 * PI)
+            .map(|xi| xi * 2.0 * PI)
             .map(|xi| xi.powi(2))
             .sum::<f64>();
 
         let prod = x.iter()
-            .map(|xi| xi * 2 * PI)
+            .map(|xi| xi * 2.0 * PI)
             .map(|xi| (xi.cos()).powi(2))
             .sum::<f64>();
 
-        (beta_sum).exp() - 2 * (sum).exp() * prod
+        (beta_sum).exp() - 2.0 * (sum).exp() * prod
     }
 
     /// Xin-She Yang Nr. 4 function
@@ -935,17 +1067,17 @@ pub mod scaled_implementations {
     //TODO: Unit test!
     pub fn yang_n4(x: &[f64], rnd: &Option<f64>) -> f64 {
         let inner_exp_sum = x.iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| xi.powi(2))
             .sum::<f64>();
 
         let outer_exp_sum = x.iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| ((xi.abs()).sin()).powi(2))
             .sum::<f64>();
 
         let sum = x.iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| (xi.sin()).powi(2))
             .sum::<f64>();
 
@@ -961,15 +1093,153 @@ pub mod scaled_implementations {
     pub fn zakharov(x: &[f64], rnd: &Option<f64>) -> f64 {
         let i_sum = x.iter()
             .enumerate()
-            .map(|(i, xi)| xi * 10)
+            .map(|(i, xi)| xi * 10.0)
             .map(|(i, xi)| 0.5 * i * xi)
             .sum::<f64>();
 
         let sum = x.iter()
-            .map(|xi| xi * 10)
+            .map(|xi| xi * 10.0)
             .map(|xi| xi.powi(2))
             .sum::<f64>();
 
         sum + (i_sum).powi(2) + (i_sum).powi(4)
+    }
+
+    /// Ackley Nr. 2 function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: -200 at (0,0), here on input domain [-32,32]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn ackley_n2(x: &[f64], rnd: &Option<f64>) -> f64 {
+        - 200.0 * (- 0.2 * ((x[0] * 32.0).powi(2) + (x[1] * 32.0).powi(2)).sqrt()).exp()
+    }
+
+    /// Ackley Nr. 3 function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: −195.629028238419 at (±0.682584587365898,−0.36075325513719), here on input domain [-32,32]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn ackley_n3(x: &[f64], rnd: &Option<f64>) -> f64 {
+        - 200.0 * (- 0.2 * ((x[0] * 32.0).powi(2) + (x[1] * 32.0).powi(2)).sqrt()).exp() +
+            5.0 * ((3 * (x[0] * 32.0)).cos() + (3.0 * (x[1] * 32.0).sin())).exp()
+    }
+
+    /// Adjiman function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: −2.02181 at (0,0), here on input domain [-1,1]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn adjiman(x: &[f64], rnd: &Option<f64>) -> f64 {
+        x[0].cos() + x[1].sin() - (x[0] / (x[1].powi(2) + 1.0))
+    }
+
+    /// Bartels Conn function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: 1 at (0,0), here on input domain [-500,500]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn bartels_conn(x: &[f64], rnd: &Option<f64>) -> f64 {
+        (x[0].powi(2) + x[1].powi(2) + (x[0] * x[1])).abs() + (x[0].sin()).abs() + (x[1].cos()).abs()
+    }
+
+    /// Beale function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: 0 at (3,0.5), here on input domain [-4.5,4.5]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn beale(x: &[f64], rnd: &Option<f64>) -> f64 {
+        (1.5 - x[0] + (x[0] * x[1])).powi(2) +
+            (2.25 - x[0] + (x[0] * x[1].powi(2))).powi(2) +
+            (2.625 - x[0] + (x[0] * x[1].powi(3))).powi(2)
+    }
+
+    /// Bird function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: −106.764537 at (4.70104,3.15294) and (−1.58214,−3.13024), here on input domain [-2 * Pi,2 * Pi]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn bird(x: &[f64], rnd: &Option<f64>) -> f64 {
+        let a = x[0] * 2.0 * PI;
+        let b = x[1] * 2.0 * PI;
+        a.sin() * ((1.0 - b.cos()).powi(2)).exp() + b.cos() * ((1.0 - a.sin()).powi(2)).exp() + (a - b).powi(2)
+    }
+
+    /// Bohachevsky Nr. 1 function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: 0 at (0,0), here on input domain [-100,100]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn bohachevsky_n1(x: &[f64], rnd: &Option<f64>) -> f64 {
+        let a = x[0] * 100.0;
+        let b = x[1] * 100.0;
+        a.powi(2) + (2.0 * b.powi(2)) - (0.3 * (3.0 * PI * a).cos()) - (0.4 * (4.0 * PI * b).cos()) + 0.7
+    }
+
+    /// Bohachevsky Nr. 2 function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: 0 at (0,0), here on input domain [-100,100]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn bohachevsky_n2(x: &[f64], rnd: &Option<f64>) -> f64 {
+        let a = x[0] * 100.0;
+        let b = x[1] * 100.0;
+        a.powi(2) + (2.0 * b.powi(2)) - (0.3 * (3.0 * PI * a).cos() * (4.0 * PI * b).cos()) + 0.3
+    }
+
+    /// Booth function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: 0 at (1,3), here on input domain [-10,10]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    pub fn booth(x: &[f64], rnd: &Option<f64>) -> f64 {
+        let a = x[0] * 10.0;
+        let b = x[1] * 10.0;
+        (a + (2.0 * b) - 7.0).powi(2) + ((2.0 * a) + b - 5.0).powi(2)
+    }
+
+    /// Brent function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: e^(-200) at (-10,-10), here on input domain [-20,0]
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    //TODO: For functions with range not symmetric around 0, look for better scaling options!
+    pub fn brent(x: &[f64], rnd: &Option<f64>) -> f64 {
+        let a = - (x[0] * 20.0).abs();
+        let b = - (x[1] * 20.0).abs();
+        (a + 10.0).powi(2) + (b + 10.0).powi(2) + (- a.powi(2) - b.powi(2)).exp()
+    }
+
+    /// Bukin Nr. 6 function
+    ///
+    /// Scaled to [-1.0, 1.0]
+    ///
+    /// Optimum: 0 at (-10,1), here on input domain [-15,0] for x and [-3,3] for y (usually [-15,-5] for x and [-3,3] for y)
+    /// Defined only on 2-dimensional space.
+    //TODO: Unit test!
+    //TODO: For functions with range not symmetric around 0, look for better scaling options!
+    pub fn bukin_n6(x: &[f64], rnd: &Option<f64>) -> f64 {
+        let a = x[0] * 15;
+        let b = x[1] * 3;
+        100.0 * ((b - 0.01 * a.powi(2)).abs()).sqrt() + 0.01 * (a + 10.0).abs()
     }
 }
