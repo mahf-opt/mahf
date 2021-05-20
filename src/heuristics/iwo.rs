@@ -36,11 +36,11 @@ where
         initialization::RandomSpread {
             initial_population_size,
         },
-        selection::Iwo {
-            min_number_of_seeds,
-            max_number_of_seeds,
+        selection::FitnessProportional {
+            min_offspring: min_number_of_seeds,
+            max_offspring: max_number_of_seeds,
         },
-        generation::Adaptive {
+        generation::AdaptiveDeviationDelta {
             initial_deviation,
             final_deviation,
             modulation_index,

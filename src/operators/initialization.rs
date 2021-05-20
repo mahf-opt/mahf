@@ -5,6 +5,7 @@ use crate::{
     problem::{LimitedVectorProblem, Problem},
     random::Random,
 };
+use rand::distributions::uniform::SampleUniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -14,15 +15,16 @@ pub struct RandomSpread {
     /// Size of the initial population.
     pub initial_population_size: u32,
 }
-impl<P> Initialization<P> for RandomSpread
+impl<P, D> Initialization<P> for RandomSpread
 where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    D: SampleUniform + PartialOrd,
+    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
 {
-    fn initialize(&self, problem: &P, rng: &mut Random, population: &mut Vec<Vec<f64>>) {
+    fn initialize(&self, problem: &P, rng: &mut Random, population: &mut Vec<Vec<D>>) {
         for _ in 0..self.initial_population_size {
             let solution = (0..problem.dimension())
                 .map(|d| rng.gen_range(problem.range(d)))
-                .collect::<Vec<f64>>();
+                .collect::<Vec<D>>();
             population.push(solution);
         }
     }

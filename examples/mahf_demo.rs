@@ -51,11 +51,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Adaptive {
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -75,8 +75,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Fixed { deviation: 0.1 },
+            selection::FullyRandom { offspring: 60 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: population_size,
             },
@@ -92,8 +92,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Fixed { deviation: 0.1 },
+            selection::FullyRandom { offspring: 60 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: 50,
             },
@@ -109,11 +109,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Adaptive {
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -133,8 +133,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Adaptive {
+            selection::FullyRandom { offspring: 60 },
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -154,11 +154,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Fixed { deviation: 0.1 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: 50,
             },
@@ -174,11 +174,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Fixed { deviation: 0.1 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: population_size,
             },
@@ -194,8 +194,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Adaptive {
+            selection::FullyRandom { offspring: 60 },
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,

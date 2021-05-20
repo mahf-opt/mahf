@@ -12,11 +12,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// Uses a `N(0, deviation)` normal distribution.
 #[derive(Serialize, Deserialize)]
-pub struct Fixed {
+pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.
     pub deviation: f64,
 }
-impl<P> Generation<P> for Fixed
+impl<P> Generation<P> for FixedDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
 {
@@ -49,7 +49,7 @@ where
 /// final_deviation + (1 - progress)^modulation * (initial_deviation - final_deviation)
 /// ```
 #[derive(Serialize, Deserialize)]
-pub struct Adaptive {
+pub struct AdaptiveDeviationDelta {
     /// Initial standard deviation for the mutation
     pub initial_deviation: f64,
     /// Final standard deviation for the mutation
@@ -59,14 +59,14 @@ pub struct Adaptive {
     /// Modulation index for the standard deviation.
     pub modulation_index: u32,
 }
-impl Adaptive {
+impl AdaptiveDeviationDelta {
     fn deviation(&self, progress: f64) -> f64 {
         self.final_deviation
             + (1.0 - progress).powi(self.modulation_index as i32)
                 * (self.initial_deviation - self.final_deviation)
     }
 }
-impl<P> Generation<P> for Adaptive
+impl<P> Generation<P> for AdaptiveDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
 {
@@ -93,12 +93,12 @@ where
     }
 }
 #[cfg(test)]
-mod adaptive {
+mod adaptive_deviation_delta {
     use super::*;
 
     #[test]
     fn deviation_is_falling() {
-        let comp = Adaptive {
+        let comp = AdaptiveDeviationDelta {
             initial_deviation: 10.0,
             final_deviation: 1.0,
             modulation_index: 1,
