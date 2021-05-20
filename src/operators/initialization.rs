@@ -1,7 +1,7 @@
 //! Initialization methods
 
 use crate::{
-    heuristic::components::*,
+    heuristic::{components::*, State},
     problem::{LimitedVectorProblem, Problem},
     random::Random,
 };
@@ -20,7 +20,13 @@ where
     D: SampleUniform + PartialOrd,
     P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
 {
-    fn initialize(&self, problem: &P, rng: &mut Random, population: &mut Vec<Vec<D>>) {
+    fn initialize(
+        &self,
+        _state: &mut State,
+        problem: &P,
+        rng: &mut Random,
+        population: &mut Vec<Vec<D>>,
+    ) {
         for _ in 0..self.initial_population_size {
             let solution = (0..problem.dimension())
                 .map(|d| rng.gen_range(problem.range(d)))

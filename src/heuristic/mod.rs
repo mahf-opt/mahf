@@ -37,11 +37,11 @@ pub fn run<P: Problem>(
     let initial_population = &mut Vec::new();
     let population = &mut Vec::new();
 
-    // Initialisation
-    initialization.initialize(problem, rng, initial_population);
-
     // State shared across components
     let state = &mut State::new();
+
+    // Initialisation
+    initialization.initialize(state, problem, rng, initial_population);
 
     // Initial evaluation
     evaluator.evaluate(state, problem, initial_population, population);
