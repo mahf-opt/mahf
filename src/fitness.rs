@@ -20,6 +20,13 @@ impl Fitness {
     }
 }
 
+impl Default for Fitness {
+    /// Returns Inf fitness
+    fn default() -> Self {
+        Fitness(f64::INFINITY)
+    }
+}
+
 impl TryFrom<f64> for Fitness {
     type Error = IllegalFitness;
 

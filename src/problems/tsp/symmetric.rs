@@ -1,6 +1,9 @@
 //! This module contains instances of the symmetric traveling salesman problem.
 
+use std::convert::TryFrom;
+
 use crate::{
+    fitness::Fitness,
     problem::Problem,
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
@@ -289,10 +292,33 @@ impl Problem for SymmetricTsp {
 }
 
 impl SymmetricTsp {
+    pub fn best_fitness(&self) -> Option<f64> {
+        self.best_solution.as_ref().map(|o| o.fitness.into())
+    }
+
     /// Returns the weight/distance of the given edge.
     pub fn distance(&self, edge: Edge) -> f64 {
         let (a, b) = edge;
         (self.distance_measure)(&self.positions[a], &self.positions[b]).into()
+    }
+
+    /// Greedily constructs a Route, always taking the shortest edge.
+    pub fn greedy_route(&self) -> Route {
+        let mut route = Vec::with_capacity(self.dimension);
+        let mut remaining = (1..self.dimension).into_iter().collect::<Vec<usize>>();
+        route.push(0);
+        while !remaining.is_empty() {
+            let last = *route.last().unwrap();
+            let next_index = remaining
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, &r)| Fitness::try_from(self.distance((last, r))).unwrap())
+                .unwrap()
+                .0;
+            let next = remaining.remove(next_index);
+            route.push(next);
+        }
+        route
     }
 
     /// This method constructs a TSP instance from a string representation (`data`) and an optional solution (`opt`).

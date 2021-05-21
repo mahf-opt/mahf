@@ -73,6 +73,10 @@ impl Log {
         }
     }
 
+    pub fn final_best_fx(&self) -> f64 {
+        self.evaluations.last().unwrap().best_fx
+    }
+
     /// Log an evaluation
     pub fn log_evaluation(&mut self, evaluation: u32, current_fx: f64, best_fx: f64) {
         let entry = EvaluationEntry {

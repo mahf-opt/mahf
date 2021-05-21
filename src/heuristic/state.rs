@@ -1,4 +1,4 @@
-use crate::{fitness::Fitness, tracking::Log};
+use crate::{fitness::Fitness, heuristic::custom_state::CustomState, tracking::Log};
 use std::convert::TryFrom;
 
 /// Tracks various aspects of the current execution.
@@ -13,6 +13,8 @@ pub struct State {
     pub progress: f64,
     /// Best fitness reached so far.
     pub best_so_far: Fitness,
+    /// Custom state
+    pub custom: CustomState,
 }
 
 impl State {
@@ -22,6 +24,7 @@ impl State {
             iterations: 0,
             progress: 0.0,
             best_so_far: Fitness::try_from(f64::INFINITY).unwrap(),
+            custom: CustomState::new(),
         }
     }
 
