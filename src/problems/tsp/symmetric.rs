@@ -1,7 +1,5 @@
 //! This module contains instances of the symmetric traveling salesman problem.
 
-use std::convert::TryFrom;
-
 use crate::{
     fitness::Fitness,
     problem::Problem,
@@ -12,6 +10,7 @@ use crate::{
 };
 use anyhow::{anyhow, Error, Result};
 use pest_consume::Parser;
+use std::convert::TryFrom;
 
 // Converts the parsing-tree for symmetric TSP that was constructed by `pest`
 // into rust-usable data types using the `pest_consume` package.
