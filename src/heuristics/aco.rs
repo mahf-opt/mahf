@@ -1,3 +1,5 @@
+//! Ant Colony Optimization
+
 use crate::{
     fitness::Fitness,
     heuristic::{components::*, Configuration, Individual, State},
@@ -15,7 +17,7 @@ use std::{
 ///
 /// # References
 /// Dorigo, Marco & Birattari, Mauro & Stützle, Thomas. (2006). Ant Colony Optimization. Computational Intelligence Magazine, IEEE. 1. 28-39. 10.1109/MCI.2006.329691.
-pub fn aco(
+pub fn ant_stystem(
     number_of_ants: usize,
     alpha: f64,
     beta: f64,

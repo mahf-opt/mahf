@@ -11,7 +11,7 @@ fn main() {
     let heuristic_length = tsp.evaluate(&tsp.greedy_route());
     let default_pheromones = (tsp.dimension as f64 * heuristic_length).powi(-1);
 
-    let config = &aco::aco(
+    let config = &aco::ant_stystem(
         number_of_ants,
         alpha,
         beta,
