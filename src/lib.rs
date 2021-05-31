@@ -11,6 +11,7 @@ pub mod heuristics;
 pub mod operators;
 pub mod problem;
 pub mod problems;
+pub mod random;
 pub mod threads;
 pub mod tracking;
 
