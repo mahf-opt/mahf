@@ -24,8 +24,8 @@ pub struct RandomConfig {
 impl Random {
     /// Create a new random generator with the given seed.
     pub fn new<RNG>(seed: u64) -> Self
-        where
-            RNG: RngCore + SeedableRng + 'static,
+    where
+        RNG: RngCore + SeedableRng + 'static,
     {
         Random {
             config: RandomConfig {

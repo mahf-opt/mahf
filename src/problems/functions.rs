@@ -7,7 +7,7 @@ use rand::Rng;
 /// Wraps the benchmark functions as [`Problem`]s.
 ///
 /// All functions have been scaled to [-1, 1].
-#[derive(serde::Serialize)]
+#[derive(Clone, Copy, serde::Serialize)]
 pub struct BenchmarkFunction {
     name: &'static str,
     dimension: usize,

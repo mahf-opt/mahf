@@ -23,8 +23,8 @@ where
         initialization::RandomSpread {
             initial_population_size: population_size,
         },
-        selection::Es { lambda },
-        generation::Fixed { deviation },
+        selection::FullyRandom { offspring: lambda },
+        generation::FixedDeviationDelta { deviation },
         replacement::Fittest {
             max_population_size: population_size,
         },

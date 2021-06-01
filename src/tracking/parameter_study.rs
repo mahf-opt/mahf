@@ -1,12 +1,18 @@
 //! Logging for Parameter Studies
 
-use crate::{fitness::Fitness, heuristic::Configuration, tracking::Log};
+use crate::{
+    heuristic::Configuration,
+    tracking::{
+        serialize::{serialize_config, SerializedConfiguration},
+        Log,
+    },
+};
 use anyhow::{bail, Context};
 use std::{
     any::TypeId,
     fs::{self, File},
-    io::{self, BufWriter},
-    path::{Path, PathBuf},
+    io::{self, BufWriter, Write},
+    path::Path,
 };
 
 #[derive(PartialEq)]
@@ -50,11 +56,11 @@ impl Study {
             .open(output)
             .context("opening output file")?;
 
-        let output = BufWriter::new(file);
+        let mut output = BufWriter::new(file);
         let config_type = ConfigurationType::from(sample);
 
-        // TODO: write header
-        // requires extracting names of the components parameters
+        let config = serialize_config(sample).context("serializing sample config")?;
+        write_header(&mut output, &config).context("writing header")?;
 
         Ok(Study {
             config_type,
@@ -62,29 +68,93 @@ impl Study {
         })
     }
 
-    pub fn log_run<P>(&mut self, config: Configuration<P>, summary: Summary) -> io::Result<()> {
-        // TODO: write entry
-        // requires extracting the components parameters
+    pub fn log_run<P>(
+        &mut self,
+        config: &Configuration<P>,
+        summary: &Summary,
+    ) -> anyhow::Result<()> {
+        if self.config_type != ConfigurationType::from(config) {
+            bail!("tried to log a run with different configuration type");
+        }
+        let config = serialize_config(config)?;
+        self.log_serialized_run(&config, summary)
+    }
+
+    pub fn log_serialized_run(
+        &mut self,
+        config: &SerializedConfiguration,
+        summary: &Summary,
+    ) -> anyhow::Result<()> {
+        let fitness = summary.average_best();
+        let evaluations = summary.average_evaluations();
+
+        write!(self.output, "{},{}", fitness, evaluations)?;
+
+        let values = collect_values(&config);
+        for value in values {
+            write!(self.output, ",{}", value)?;
+        }
+
+        writeln!(self.output)?;
         Ok(())
     }
+}
+
+fn write_header(output: &mut impl Write, config: &SerializedConfiguration) -> io::Result<()> {
+    let headers = collect_headers(&config);
+
+    write!(output, "fitness,evaluations")?;
+
+    for header in headers {
+        write!(output, ",{}", header)?;
+    }
+
+    writeln!(output)
+}
+
+fn collect_headers(c: &SerializedConfiguration) -> Vec<String> {
+    let mut headers = Vec::new();
+
+    headers.extend(c.initialization.fields.keys().map(|k| format!("i.{}", k)));
+    headers.extend(c.selection.fields.keys().map(|k| format!("s.{}", k)));
+    headers.extend(c.generation.fields.keys().map(|k| format!("g.{}", k)));
+    headers.extend(c.replacement.fields.keys().map(|k| format!("r.{}", k)));
+    headers.extend(c.termination.fields.keys().map(|k| format!("t.{}", k)));
+
+    headers
+}
+
+fn collect_values(c: &SerializedConfiguration) -> Vec<&str> {
+    let mut values = Vec::new();
+
+    values.extend(c.initialization.fields.values().map(|v| v.as_str()));
+    values.extend(c.selection.fields.values().map(|v| v.as_str()));
+    values.extend(c.generation.fields.values().map(|v| v.as_str()));
+    values.extend(c.replacement.fields.values().map(|v| v.as_str()));
+    values.extend(c.termination.fields.values().map(|v| v.as_str()));
+
+    values
 }
 
 #[derive(Default)]
 pub struct Summary {
     entries: Vec<SummaryEntry>,
 }
+
 struct SummaryEntry {
     best: f64,
     evaluations: usize,
 }
+
 impl Summary {
     pub fn new() -> Self {
         Self::default()
     }
 
     pub fn add_run(&mut self, log: &Log) {
-        let best = log.evaluations.last().unwrap().best_fx;
-        let evaluations = log.evaluations.len();
+        let last = log.evaluations.last().unwrap();
+        let best = last.best_fx;
+        let evaluations = last.evaluation as usize;
         self.entries.push(SummaryEntry { best, evaluations });
     }
 

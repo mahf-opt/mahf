@@ -2,16 +2,22 @@ use anyhow::Context;
 use mahf::{
     heuristic::{self, Configuration},
     problems::functions::BenchmarkFunction,
+    prompt,
+    random::Random,
     threads::SyncThreadPool,
-    tracking::{runtime_analysis::Experiment, trigger::*, Log},
+    tracking::{
+        runtime_analysis::Experiment,
+        trigger::{EvalTrigger, IterTrigger},
+        Log,
+    },
 };
-use std::{fs, io::Write, path::Path, sync::mpsc, thread};
+use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 
 //                                //
 //    Test Suite Configuration    //
 //                                //
 
-static DATA_DIR: &str = "data";
+static DATA_DIR: &str = "data/mahf_demo";
 static HEURISTICS: &[(&str, ConfigBuilder)] = &[
     ("iwo", heuristics::iwo),
     ("es", heuristics::es),
@@ -45,11 +51,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Adaptive {
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -69,8 +75,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Fixed { deviation: 0.1 },
+            selection::FullyRandom { offspring: 60 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: population_size,
             },
@@ -86,8 +92,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Fixed { deviation: 0.1 },
+            selection::FullyRandom { offspring: 60 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: 50,
             },
@@ -103,11 +109,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Adaptive {
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -127,8 +133,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Adaptive {
+            selection::FullyRandom { offspring: 60 },
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -148,11 +154,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Fixed { deviation: 0.1 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: 50,
             },
@@ -168,11 +174,11 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Iwo {
-                min_number_of_seeds: 4,
-                max_number_of_seeds: 6,
+            selection::FitnessProportional {
+                min_offspring: 4,
+                max_offspring: 6,
             },
-            generation::Fixed { deviation: 0.1 },
+            generation::FixedDeviationDelta { deviation: 0.1 },
             replacement::Fittest {
                 max_population_size: population_size,
             },
@@ -188,8 +194,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::Es { lambda: 60 },
-            generation::Adaptive {
+            selection::FullyRandom { offspring: 60 },
+            generation::AdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
@@ -209,30 +215,13 @@ mod heuristics {
 //                                //
 
 fn main() -> anyhow::Result<()> {
-    let mut data_dir = DATA_DIR;
-    if Path::new(data_dir).exists() {
-        println!("There already exists data from a previous run.");
-        println!("Options: y -> delete existing data");
-        println!("         r -> rename data directory");
-        println!("         n -> cancel execution");
-        let reply = rprompt::prompt_reply_stdout("(Y/r/n) ")?;
-
-        #[allow(clippy::wildcard_in_or_patterns)]
-        match reply.as_str() {
-            "" | "y" | "Y" => {
-                fs::remove_dir_all(data_dir)?;
-                println!("Old data has been removed.");
-            }
-            "r" | "R" => {
-                let reply = rprompt::prompt_reply_stdout("New data name: ")?;
-                data_dir = &*Box::leak(reply.into_boxed_str());
-            }
-            "n" | "N" | _ => {
-                println!("Execution canceled.");
-                return Ok(());
-            }
-        }
+    let data_dir = prompt::data_dir(DATA_DIR)?;
+    if data_dir.is_none() {
+        println!("Execution was canceled.");
+        return Ok(());
     }
+    let data_dir = PathBuf::from(data_dir.unwrap());
+    fs::create_dir_all(&data_dir)?;
 
     let total_runs = HEURISTICS.len() * FUNCTIONS.len() * DIMENSIONS.len() * (RUNS as usize);
     let (tx, rx) = mpsc::channel();
@@ -252,9 +241,11 @@ fn main() -> anyhow::Result<()> {
             for function in FUNCTIONS {
                 for &dimension in DIMENSIONS {
                     let tx = tx.clone();
+                    let data_dir = data_dir.clone();
                     pool.enqueue(move || {
                         let result: anyhow::Result<()> = (|| {
                             let logger = &mut Log::new(eval_trigger, iter_trigger);
+
                             let problem = function(dimension);
                             let experiment_desc = format!(
                                 "{}_{}_{}",
@@ -262,15 +253,22 @@ fn main() -> anyhow::Result<()> {
                                 problem.name(),
                                 problem.dimension()
                             );
-                            let data_dir = Path::new(data_dir).join(experiment_desc);
+
+                            let data_dir = data_dir.join(experiment_desc);
+
+                            let random = Random::default();
+                            let config = configuration();
                             let experiment =
-                                &mut Experiment::create(data_dir, &problem, &configuration())
+                                &mut Experiment::create(data_dir, &problem, &random, &config)
                                     .context("creating experiment")?;
+
                             for _ in 0..RUNS {
-                                heuristic::run(&problem, logger, configuration());
+                                heuristic::run(&problem, logger, &config, None, None);
                                 experiment.log_run(logger)?;
+                                logger.clear();
                                 let _ = tx.send(Ok(()));
                             }
+
                             Ok(())
                         })();
 
