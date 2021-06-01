@@ -1,6 +1,6 @@
 //! Collection of test functions from [benchmarkfcns.xyz](http://benchmarkfcns.xyz)
 
-use crate::{problem::{LimitedVectorProblem, Problem, VectorProblem}, random::Random, random};
+use crate::{problem::{LimitedVectorProblem, Problem, VectorProblem}, random::Random};
 
 use rand::Rng;
 
@@ -791,7 +791,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-5.12,5.12]
     pub fn sphere(x: &[f64], _rnd: &f64) -> f64 {
         x.iter().map(|xi| xi * 5.12).map(|xi| xi * xi).sum()
     }
@@ -800,7 +800,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-5.12,5.12]
     pub fn rastrigin(x: &[f64], _rnd: &f64) -> f64 {
         let n = x.len() as f64;
         10.0 * n
@@ -814,7 +814,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-32,32]
     pub fn ackley(x: &[f64], _rnd: &f64) -> f64 {
         let a = 20.;
         let b = 0.2;
@@ -840,7 +840,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: on 2-dimensional space -4.590101633799122 at (−1.51,−0.755)
+    /// Optimum: on 2-dimensional space -4.590101633799122 at (−1.51,−0.755), here on input domain [-35,35]
     //TODO: Unit test!
     pub fn ackley_n4(x: &[f64], _rnd: &f64) -> f64 {
         let mut sum = 0.0;
@@ -856,7 +856,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [0,10]
     //TODO: Unit test!
     pub fn alpine_n1(x: &[f64], _rnd: &f64) -> f64 {
         x.iter()
@@ -869,7 +869,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: -2.808^n at (7.917,...,7.917) (minimisation by negation)
+    /// Optimum: -2.808^n at (7.917,...,7.917) (minimisation by negation), here on input domain [0,10]
     //TODO: Unit test!
     pub fn alpine_n2(x: &[f64], _rnd: &f64) -> f64 {
         - x.iter()
@@ -882,7 +882,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0), on input domain [-4,4] (usually [-1,4])
+    /// Optimum: 0 at (0,...,0), here on input domain [-4,4] (usually [-1,4])
     //TODO: Unit test!
     pub fn brown(x: &[f64], _rnd: &f64) -> f64 {
         let mut sum = 0.0;
@@ -911,7 +911,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-600,600]
     //TODO: Unit test!
     pub fn griewank(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x.iter()
@@ -932,11 +932,11 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (-1,...,-1)
+    /// Optimum: 0 at (-1,...,-1), here on input domain [-2,2]
     //TODO: Unit test!
     pub fn happy_cat(x: &[f64], _rnd: &f64) -> f64 {
         let n = x.len() as f64;
-        let alpha = 1 / 8;
+        let alpha = 1.0 / 8.0;
         let norm = x.iter()
             .map(|xi| xi * 2.0)
             .map(|xi| xi.powi(2))
@@ -945,17 +945,16 @@ pub mod scaled_implementations {
 
         let sum = x.iter()
             .map(|xi| xi * 2.0)
-            .map(|xi| xi)
             .sum::<f64>();
 
-        ((norm - n).powi(2)).powi(alpha) + (1.0 / n) * (0.5 * norm + sum) + 0.5
+        ((norm - n).powi(2)).powf(alpha) + (1.0 / n) * (0.5 * norm + sum) + 0.5
     }
 
     /// Periodic function
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0.9 at (0,...,0)
+    /// Optimum: 0.9 at (0,...,0), here on input domain [-10,10]
     //TODO: Unit test!
     pub fn periodic(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x
@@ -982,7 +981,7 @@ pub mod scaled_implementations {
     pub fn powell_sum(x: &[f64], _rnd: &f64) -> f64 {
         x.iter()
             .enumerate()
-            .map(|(i, xi)| (xi.abs()).powi(((i + 1) as i32)))
+            .map(|(i, xi)| (xi.abs()).powi((i + 1) as i32))
             .sum::<f64>()
     }
 
@@ -990,7 +989,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (+-(i).sqrt(),...,+-(i).sqrt())
+    /// Optimum: 0 at (+-(i).sqrt(),...,+-(i).sqrt()), here on input domain [-500,500]
     //TODO: Unit test!
     pub fn qing(x: &[f64], _rnd: &f64) -> f64 {
         x.iter()
@@ -1004,10 +1003,10 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 + rnd at (0,...,0)
+    /// Optimum: 0 + rnd at (0,...,0), here on input domain [-1.28,1.28]
     //TODO: Unit test!
     pub fn quartic(x: &[f64], rnd: &f64) -> f64 {
-        let mut sum = x.iter()
+        let sum = x.iter()
             .map(| xi| xi * 1.28)
             .enumerate()
             .map(|(i, xi)| i as f64 * xi.powi(4))
@@ -1020,7 +1019,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: -5 at (-5,0,...,0) for input domain [-5,5]
+    /// Optimum: -5 at (-5,0,...,0), here on input domain [-5,5]
     //TODO: Unit test!
     pub fn ridge(x: &[f64], _rnd: &f64) -> f64 {
         let d = 1.0;
@@ -1039,7 +1038,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (1,...1), on the input domain [-10,10] (usually on [-5,10])
+    /// Optimum: 0 at (1,...1), here on input domain [-10,10] (usually on [-5,10])
     //TODO: Unit test!
     pub fn rosenbrock(x: &[f64], _rnd: &f64) -> f64 {
         let a = 1.0;
@@ -1056,7 +1055,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...0)
+    /// Optimum: 0 at (0,...0), here on input domain [-100,100]
     //TODO: Unit test!
     pub fn salomon(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x.iter()
@@ -1071,7 +1070,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...0)
+    /// Optimum: 0 at (0,...0), here on input domain [-100,100]
     //TODO: Unit test!
     pub fn schwefel_220(x: &[f64], _rnd: &f64) -> f64 {
         x.iter()
@@ -1084,10 +1083,10 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...0)
+    /// Optimum: 0 at (0,...0), here on input domain [-100,100]
     //TODO: Unit test!
     pub fn schwefel_221(x: &[f64], _rnd: &f64) -> f64 {
-        let mut max_elem = x.iter()
+        let max_elem = x.iter()
             .map(|xi| (xi * 100.0).abs())
             .fold(f64::NEG_INFINITY, f64::max);
             //.max_by(|a, b| a.total_cmp(b));
@@ -1099,7 +1098,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...0)
+    /// Optimum: 0 at (0,...0), here on input domain [-100,100]
     //TODO: Unit test!
     pub fn schwefel_222(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x.iter()
@@ -1119,7 +1118,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...0)
+    /// Optimum: 0 at (0,...0), here on input domain [-10,10]
     //TODO: Unit test!
     pub fn schwefel_223(x: &[f64], _rnd: &f64) -> f64 {
         x.iter()
@@ -1133,7 +1132,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (420.9687,...420.9687)
+    /// Optimum: 0 at (420.9687,...420.9687), here on input domain [-500,500]
     //TODO: Unit test!
     pub fn schwefel(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x.iter()
@@ -1148,7 +1147,8 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: ~ -29.6733337
+    /// Optimum: ~ -29.6733337, here on input domain [-10,10]
+    //TODO: Add position of optimum!
     //TODO: Unit test!
     pub fn shubert_n3(x: &[f64], _rnd: &f64) -> f64 {
         let mut sum = 0.0;
@@ -1164,7 +1164,8 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: ~ -25.740858
+    /// Optimum: ~ -25.740858, here on input domain [-10,10]
+    //TODO: Add position of optimum!
     //TODO: Unit test!
     pub fn shubert_n4(x: &[f64], _rnd: &f64) -> f64 {
         let mut sum = 0.0;
@@ -1189,7 +1190,7 @@ pub mod scaled_implementations {
             for j in 1..=5 {
                 sum += ((j as f64 + 1.0) * (x[i-1] * 10.0) + j as f64).cos();
             }
-            prod = prod * sum
+            prod *= sum
         }
         prod
     }
@@ -1198,10 +1199,10 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: -39.16599 * n at (-2.903534,...,-2.903534)
+    /// Optimum: -39.16599 * n at (-2.903534,...,-2.903534), here on input domain [-5,5]
     //TODO: Unit test!
     pub fn styblinksi_tank(x: &[f64], _rnd: &f64) -> f64 {
-        let mut sum = x.iter()
+        let sum = x.iter()
             .map(|xi| xi * 5.0)
             .map(|xi| xi.powi(4) - 16.0 * xi.powi(2) + 5.0 * xi)
             .sum::<f64>();
@@ -1213,7 +1214,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-10,10]
     //TODO: Unit test!
     pub fn sum_squares(x: &[f64], _rnd: &f64) -> f64 {
         x.iter()
@@ -1227,7 +1228,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-5,5]
     //TODO: Unit test!
     pub fn yang_n1(x: &[f64], rnd: &f64) -> f64 {
         x.iter()
@@ -1241,7 +1242,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0)
+    /// Optimum: 0 at (0,...,0), here on input domain [-2PI,2PI]
     //TODO: Unit test!
     pub fn yang_n2(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x.iter()
@@ -1261,7 +1262,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: -1 at (0,...,0)
+    /// Optimum: -1 at (0,...,0), here on input domain [-2PI,2PI]
     //TODO: Unit test!
     pub fn yang_n3(x: &[f64], _rnd: &f64) -> f64 {
         let beta = 15.0;
@@ -1289,7 +1290,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: -1 at (0,...,0)
+    /// Optimum: -1 at (0,...,0), here on input domain [-10,10]
     //TODO: Unit test!
     pub fn yang_n4(x: &[f64], _rnd: &f64) -> f64 {
         let inner_exp_sum = x.iter()

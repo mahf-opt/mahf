@@ -28,7 +28,7 @@ static HEURISTICS: &[(&str, ConfigBuilder)] = &[
     ("c5", heuristics::c5),
     ("c6", heuristics::c6),
 ];
-static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
+static FUNCTIONS: &[fn(usize, Option<Random>) -> BenchmarkFunction] = &[
     BenchmarkFunction::sphere,
     BenchmarkFunction::rastrigin,
     BenchmarkFunction::ackley,
@@ -246,7 +246,7 @@ fn main() -> anyhow::Result<()> {
                         let result: anyhow::Result<()> = (|| {
                             let logger = &mut Log::new(eval_trigger, iter_trigger);
 
-                            let problem = function(dimension);
+                            let problem = function(dimension, None);
                             let experiment_desc = format!(
                                 "{}_{}_{}",
                                 heuristic_name,

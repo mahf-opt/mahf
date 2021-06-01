@@ -8,6 +8,7 @@ use mahf::{
         parameter_study::{Study, Summary},
         Log,
     },
+    random::Random,
 };
 use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 
@@ -20,7 +21,7 @@ static MU_OPTIONS: &[u32] = &[5, 10, 15, 20, 25];
 static LAMBDA_OPTIONS: &[u32] = &[20, 30, 40, 50, 60];
 static SIGMA_OPTIONS: &[f64] = &[1.0, 0.8, 0.5, 0.1, 0.01];
 
-static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
+static FUNCTIONS: &[fn(usize, Option<Random>) -> BenchmarkFunction] = &[
     BenchmarkFunction::sphere,
     BenchmarkFunction::rastrigin,
     BenchmarkFunction::ackley,
@@ -43,7 +44,7 @@ pub fn main() -> anyhow::Result<()> {
 
     for &function in FUNCTIONS {
         for &dimension in DIMENSIONS {
-            let function = function(dimension);
+            let function = function(dimension, None);
             let fn_name = function.name();
             let output = data_dir.join(format!("{}_{}.csv", fn_name, dimension));
 
