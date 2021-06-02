@@ -1,4 +1,4 @@
-use crate::{fitness::Fitness, heuristic::custom_state::CustomState, tracking::Log};
+use crate::{fitness::Fitness, heuristic::custom_state::CustomStateMap, tracking::Log};
 use std::convert::TryFrom;
 
 /// Tracks various aspects of the current execution.
@@ -14,7 +14,7 @@ pub struct State {
     /// Best fitness reached so far.
     pub best_so_far: Fitness,
     /// Custom state
-    pub custom: CustomState,
+    pub custom: CustomStateMap,
 }
 
 impl State {
@@ -24,7 +24,7 @@ impl State {
             iterations: 0,
             progress: 0.0,
             best_so_far: Fitness::try_from(f64::INFINITY).unwrap(),
-            custom: CustomState::new(),
+            custom: CustomStateMap::new(),
         }
     }
 
@@ -34,12 +34,12 @@ impl State {
         if fitness < self.best_so_far {
             self.best_so_far = fitness;
         }
-        logger.log_evaluation(self.evaluations, fitness.into(), self.best_so_far.into());
+        logger.log_evaluation(self, fitness.into());
     }
 
     /// Logs an iteration and increments [State::iterations].
     pub(crate) fn log_iteration(&mut self, logger: &mut Log) {
         self.iterations += 1;
-        logger.log_iteration(self.iterations, self.best_so_far.into(), 0.0);
+        logger.log_iteration(self);
     }
 }

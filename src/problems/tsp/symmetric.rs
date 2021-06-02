@@ -260,6 +260,7 @@ impl Instances {
 }
 
 /// Represents an instance of the symmetric travelling salesman problem.
+#[derive(serde::Serialize)]
 pub struct SymmetricTsp {
     /// Name of the instance
     pub name: String,
@@ -268,8 +269,10 @@ pub struct SymmetricTsp {
     /// Best possible solution
     pub best_solution: Option<Optimum<Route>>,
     /// The cities coordinates
+    #[serde(skip)]
     pub positions: Vec<Coordinates>,
     /// How distance should be computed
+    #[serde(skip)]
     distance_measure: DistanceMeasure,
 }
 

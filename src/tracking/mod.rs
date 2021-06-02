@@ -1,5 +1,7 @@
 //! Tracking and logging.
 
+use crate::heuristic::State;
+
 pub mod parameter_study;
 pub mod runtime_analysis;
 pub mod serialize;
@@ -7,16 +9,23 @@ pub mod serialize;
 pub mod trigger;
 use trigger::*;
 
+pub struct CustomLog {
+    pub name: &'static str,
+    pub value: f64,
+}
+
 pub struct EvaluationEntry {
     evaluation: u32,
     current_fx: f64,
     best_fx: f64,
+    custom: Vec<CustomLog>,
 }
 
 pub struct IterationEntry {
     iteration: u32,
     best_fx: f64,
     diversity: f64,
+    custom: Vec<CustomLog>,
 }
 
 pub struct Log {
@@ -78,11 +87,12 @@ impl Log {
     }
 
     /// Log an evaluation
-    pub fn log_evaluation(&mut self, evaluation: u32, current_fx: f64, best_fx: f64) {
+    pub fn log_evaluation(&mut self, state: &State, current_fx: f64) {
         let entry = EvaluationEntry {
-            evaluation,
             current_fx,
-            best_fx,
+            evaluation: state.evaluations,
+            best_fx: state.best_so_far.into(),
+            custom: state.custom.collect_evaluation_log(),
         };
         let prev = self.evaluations.last();
         if self.eval_trigger.accepts(prev, &entry) {
@@ -94,11 +104,12 @@ impl Log {
     }
 
     /// Log an iteration.
-    pub fn log_iteration(&mut self, iteration: u32, best_fx: f64, diversity: f64) {
+    pub fn log_iteration(&mut self, state: &State) {
         let entry = IterationEntry {
-            iteration,
-            best_fx,
-            diversity,
+            iteration: state.iterations,
+            best_fx: state.best_so_far.into(),
+            diversity: 0.0,
+            custom: state.custom.collect_iteration_log(),
         };
         let prev = self.iterations.last();
         if self.iter_trigger.accepts(prev, &entry) {

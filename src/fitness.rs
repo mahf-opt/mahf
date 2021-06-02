@@ -5,7 +5,7 @@ use std::{convert::TryFrom, fmt};
 /// Fitness value of an [Individual](crate::heuristic::Individual)
 ///
 /// [Fitness::try_from] can be used to construct a `Fitness` value.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize)]
 pub struct Fitness(f64);
 
 impl Fitness {

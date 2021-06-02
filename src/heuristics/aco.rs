@@ -2,10 +2,11 @@
 
 use crate::{
     fitness::Fitness,
-    heuristic::{components::*, Configuration, Individual, State},
+    heuristic::{components::*, Configuration, CustomState, Individual, State},
     operators::*,
     problems::tsp::{Route, SymmetricTsp},
     random::Random,
+    tracking::CustomLog,
 };
 use rand::distributions::{weighted::WeightedIndex, Distribution};
 use std::{
@@ -34,9 +35,45 @@ pub fn ant_stystem(
             alpha,
             beta,
         },
-        AcoReplacement {
+        AsReplacement {
             evaporation,
             decay_coefficient,
+        },
+        termination::FixedIterations { max_iterations },
+    )
+}
+
+/// Ant Colony Optimization - Ant System
+///
+/// # References
+/// Dorigo, Marco & Birattari, Mauro & Stützle, Thomas. (2006). Ant Colony Optimization. Computational Intelligence Magazine, IEEE. 1. 28-39. 10.1109/MCI.2006.329691.
+pub fn min_max_ant_stystem(
+    number_of_ants: usize,
+    alpha: f64,
+    beta: f64,
+    default_pheromones: f64,
+    evaporation: f64,
+    max_pheromones: f64,
+    min_pheromones: f64,
+    max_iterations: u32,
+) -> Configuration<SymmetricTsp> {
+    assert!(
+        min_pheromones < max_pheromones,
+        "min_pheromones must be less than max_pheromones"
+    );
+
+    Configuration::new(
+        AcoInitialization { default_pheromones },
+        AcoSelection,
+        AcoGeneration {
+            number_of_ants,
+            alpha,
+            beta,
+        },
+        MinMaxReplacement {
+            evaporation,
+            max_pheromones,
+            min_pheromones,
         },
         termination::FixedIterations { max_iterations },
     )
@@ -52,6 +89,35 @@ impl PheromoneMatrix {
             dimension,
             inner: vec![initial_value; dimension * dimension],
         }
+    }
+}
+impl CustomState for PheromoneMatrix {
+    fn iteration_log(&self) -> Vec<CustomLog> {
+        let mut min = self.inner[0];
+        let mut max = self.inner[0];
+        let mut sum = 0.0;
+
+        for &x in &self.inner {
+            min = f64::min(min, x);
+            max = f64::max(max, x);
+            sum += x;
+        }
+        let avg = sum / (self.inner.len() as f64);
+
+        vec![
+            CustomLog {
+                name: "avg_pheromone",
+                value: avg,
+            },
+            CustomLog {
+                name: "min_pheromone",
+                value: min,
+            },
+            CustomLog {
+                name: "max_pheromone",
+                value: max,
+            },
+        ]
     }
 }
 impl Index<usize> for PheromoneMatrix {
@@ -174,11 +240,11 @@ impl Generation<SymmetricTsp> for AcoGeneration {
 }
 
 #[derive(serde::Serialize)]
-pub struct AcoReplacement {
+pub struct AsReplacement {
     pub evaporation: f64,
     pub decay_coefficient: f64,
 }
-impl Replacement for AcoReplacement {
+impl Replacement for AsReplacement {
     fn replace(
         &self,
         state: &mut State,
@@ -200,6 +266,45 @@ impl Replacement for AcoReplacement {
                 pm[a][b] += delta;
                 pm[b][a] += delta;
             }
+        }
+
+        population.clear();
+        population.extend(offspring.drain(..));
+    }
+}
+
+#[derive(serde::Serialize)]
+pub struct MinMaxReplacement {
+    pub evaporation: f64,
+    pub max_pheromones: f64,
+    pub min_pheromones: f64,
+}
+impl Replacement for MinMaxReplacement {
+    fn replace(
+        &self,
+        state: &mut State,
+        _rng: &mut Random,
+        population: &mut Vec<Individual>,
+        offspring: &mut Vec<Individual>,
+    ) {
+        let pm = state.custom.get_mut::<PheromoneMatrix>();
+
+        // Evaporation
+        *pm *= 1.0 - self.evaporation;
+
+        // Update pheromones for probabilistic routes
+        let individual = offspring
+            .iter()
+            .skip(1)
+            .min_by_key(|i| i.fitness())
+            .unwrap();
+
+        let fitness = individual.fitness().into();
+        let route = individual.solution::<Route>();
+        let delta = 1.0 / fitness;
+        for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
+            pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);
+            pm[b][a] = (pm[b][a] + delta).clamp(self.min_pheromones, self.max_pheromones);
         }
 
         population.clear();
