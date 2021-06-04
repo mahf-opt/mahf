@@ -2,7 +2,7 @@
 
 use crate::{
     fitness::Fitness,
-    problem::Problem,
+    problem::{Problem, VectorProblem},
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Optimum,
@@ -290,6 +290,14 @@ impl Problem for SymmetricTsp {
 
     fn name(&self) -> &str {
         "SymmetricTsp"
+    }
+}
+
+impl VectorProblem for SymmetricTsp {
+    type T = usize;
+
+    fn dimension(&self) -> usize {
+        self.dimension
     }
 }
 

@@ -9,6 +9,20 @@ use rand::distributions::uniform::SampleUniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize)]
+pub struct Noop;
+impl<P: Problem> Initialization<P> for Noop {
+    fn initialize(
+        &self,
+        _state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _population: &mut Vec<P::Encoding>,
+    ) {
+        // Noop
+    }
+}
+
 /// Uniformly distributes initial solutions in the search space.
 #[derive(Serialize, Deserialize)]
 pub struct RandomSpread {
