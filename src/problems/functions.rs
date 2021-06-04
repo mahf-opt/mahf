@@ -25,6 +25,8 @@ impl BenchmarkFunction {
     pub fn dimension(&self) -> usize {
         self.dimension
     }
+
+    pub fn random_number(&self) -> f64 { self.rnd }
 }
 
 impl BenchmarkFunction {
@@ -816,7 +818,7 @@ pub mod scaled_implementations {
     ///
     /// Optimum: 0 at (0,...,0), here on input domain [-32,32]
     pub fn ackley(x: &[f64], _rnd: &f64) -> f64 {
-        let a = 20.;
+        let a = 20.0;
         let b = 0.2;
         let c = 2.0 * PI;
 
@@ -832,7 +834,7 @@ pub mod scaled_implementations {
             .map(|xi| (c * xi).cos())
             .sum::<f64>();
 
-        a + (1.0f64).exp() + (-a) * ((-b) * (n_inverse * squared_sum).sqrt()).exp()
+        a + (1.0_f64).exp() + (-a) * ((-b) * (n_inverse * squared_sum).sqrt()).exp()
             - (n_inverse * cosine_sum).exp()
     }
 
@@ -842,6 +844,7 @@ pub mod scaled_implementations {
     ///
     /// Optimum: on 2-dimensional space -4.590101633799122 at (−1.51,−0.755), here on input domain [-35,35]
     //TODO: Unit test!
+    //TODO: Try to find optimum for other dimensions!
     pub fn ackley_n4(x: &[f64], _rnd: &f64) -> f64 {
         let mut sum = 0.0;
         for i in 1..=(x.len() - 1) {
@@ -897,7 +900,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum:  at (0,...,0)
+    /// Optimum: - 1.0 at (0,...,0)
     //TODO: Unit test!
     pub fn exponential(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x
@@ -922,10 +925,10 @@ pub mod scaled_implementations {
         let prod = x.iter()
             .map(|&xi| xi * 600.0)
             .enumerate()
-            .map(|(i, xi)| (xi / (i as f64)).cos())
+            .map(|(i, xi)| (xi / ((i as f64) + 1.0 )).cos())
             .product::<f64>();
 
-        1.0 + sum + prod
+        1.0 + sum - prod
     }
 
     /// Happy Cat function
@@ -940,8 +943,7 @@ pub mod scaled_implementations {
         let norm = x.iter()
             .map(|xi| xi * 2.0)
             .map(|xi| xi.powi(2))
-            .sum::<f64>()
-            .sqrt();
+            .sum::<f64>();
 
         let sum = x.iter()
             .map(|xi| xi * 2.0)
@@ -955,6 +957,7 @@ pub mod scaled_implementations {
     /// Scaled to [-1.0, 1.0]
     ///
     /// Optimum: 0.9 at (0,...,0), here on input domain [-10,10]
+    /// On http://benchmarkfcns.xyz/benchmarkfcns/periodicfcn.html, there is a typo in the mathematical definition!
     //TODO: Unit test!
     pub fn periodic(x: &[f64], _rnd: &f64) -> f64 {
         let sum = x
@@ -969,7 +972,7 @@ pub mod scaled_implementations {
             .map(|xi| (xi.sin()).powi(2))
             .sum::<f64>();
 
-        1.0 + sine_sum - 0.1 * (sum).exp()
+        1.0 + sine_sum - 0.1 * (- sum).exp()
     }
 
     /// Powell Sum function
@@ -995,7 +998,7 @@ pub mod scaled_implementations {
         x.iter()
             .map(|xi| xi * 500.0)
             .enumerate()
-            .map(|(i, xi)| (xi.powi(2) - (i as f64)).powi(2) )
+            .map(|(i, xi)| (xi.powi(2) - (i as f64 + 1.0)).powi(2) )
             .sum::<f64>()
     }
 
@@ -1009,7 +1012,7 @@ pub mod scaled_implementations {
         let sum = x.iter()
             .map(| xi| xi * 1.28)
             .enumerate()
-            .map(|(i, xi)| i as f64 * xi.powi(4))
+            .map(|(i, xi)| (i as f64 + 1.0) * xi.powi(4))
             .sum::<f64>();
 
         sum + rnd
@@ -1024,7 +1027,7 @@ pub mod scaled_implementations {
     pub fn ridge(x: &[f64], _rnd: &f64) -> f64 {
         let d = 1.0;
         let alpha = 0.5;
-        let first = x[0];
+        let first = x[0] * 5.0;
 
         let sum = x[1..].iter()
             .map(|xi| xi * 5.0)
@@ -1046,7 +1049,7 @@ pub mod scaled_implementations {
         let mut sum = 0.0;
 
         for i in 1..=(x.len() - 1) {
-            sum += b * ((x[i] * 10.0) + (x[i-1] * 10.0).powi(2)).powi(2) + (a - (x[i-1] * 10.0)).powi(2);
+            sum += b * ((x[i] * 10.0) - (x[i-1] * 10.0).powi(2)).powi(2) + (a - (x[i-1] * 10.0)).powi(2);
         }
         sum
     }
