@@ -29,7 +29,7 @@ pub fn ant_stystem(
 ) -> Configuration<SymmetricTsp> {
     Configuration::new(
         AcoInitialization { default_pheromones },
-        AcoSelection,
+        selection::FullyRandom { offspring: 0 },
         AcoGeneration {
             number_of_ants,
             alpha,
@@ -64,7 +64,7 @@ pub fn min_max_ant_stystem(
 
     Configuration::new(
         AcoInitialization { default_pheromones },
-        AcoSelection,
+        selection::FullyRandom { offspring: 0 },
         AcoGeneration {
             number_of_ants,
             alpha,
@@ -166,20 +166,6 @@ impl Initialization<SymmetricTsp> for AcoInitialization {
 }
 
 #[derive(serde::Serialize)]
-pub struct AcoSelection;
-impl Selection for AcoSelection {
-    fn select<'p>(
-        &self,
-        _state: &mut State,
-        _rng: &mut Random,
-        _population: &'p [Individual],
-        _selection: &mut Vec<&'p Individual>,
-    ) {
-        // Nothing to do
-    }
-}
-
-#[derive(serde::Serialize)]
 pub struct AcoGeneration {
     pub number_of_ants: usize,
     pub alpha: f64,
@@ -226,9 +212,10 @@ impl Generation<SymmetricTsp> for AcoGeneration {
                     .iter()
                     .map(|&r| problem.distance((last, r)) as f64);
                 let pheromones = remaining.iter().map(|&r| pm[last][r]);
-                let weights = pheromones
-                    .zip(distances)
-                    .map(|(m, d)| m.powf(self.alpha) * (1.0 / d).powf(self.beta));
+                let weights = pheromones.zip(distances).map(|(m, d)| {
+                    // TODO: This should not be zero.
+                    m.powf(self.alpha) * (1.0 / d).powf(self.beta) + 0.000000000000001
+                });
                 let dist = WeightedIndex::new(weights).unwrap();
                 let next_index = dist.sample(rng);
                 let next = remaining.remove(next_index);
@@ -249,7 +236,7 @@ impl Replacement for AsReplacement {
         &self,
         state: &mut State,
         _rng: &mut Random,
-        population: &mut Vec<Individual>,
+        _population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,
     ) {
         let pm = state.custom.get_mut::<PheromoneMatrix>();
@@ -267,9 +254,6 @@ impl Replacement for AsReplacement {
                 pm[b][a] += delta;
             }
         }
-
-        population.clear();
-        population.extend(offspring.drain(..));
     }
 }
 
@@ -284,7 +268,7 @@ impl Replacement for MinMaxReplacement {
         &self,
         state: &mut State,
         _rng: &mut Random,
-        population: &mut Vec<Individual>,
+        _population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,
     ) {
         let pm = state.custom.get_mut::<PheromoneMatrix>();
@@ -306,8 +290,5 @@ impl Replacement for MinMaxReplacement {
             pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);
             pm[b][a] = (pm[b][a] + delta).clamp(self.min_pheromones, self.max_pheromones);
         }
-
-        population.clear();
-        population.extend(offspring.drain(..));
     }
 }
