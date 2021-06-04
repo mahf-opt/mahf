@@ -1,7 +1,8 @@
 //! This module contains instances of the symmetric traveling salesman problem.
 
 use crate::{
-    problem::Problem,
+    fitness::Fitness,
+    problem::{Problem, VectorProblem},
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Optimum,
@@ -9,6 +10,7 @@ use crate::{
 };
 use anyhow::{anyhow, Error, Result};
 use pest_consume::Parser;
+use std::convert::TryFrom;
 
 // Converts the parsing-tree for symmetric TSP that was constructed by `pest`
 // into rust-usable data types using the `pest_consume` package.
@@ -258,6 +260,7 @@ impl Instances {
 }
 
 /// Represents an instance of the symmetric travelling salesman problem.
+#[derive(serde::Serialize)]
 pub struct SymmetricTsp {
     /// Name of the instance
     pub name: String,
@@ -266,8 +269,10 @@ pub struct SymmetricTsp {
     /// Best possible solution
     pub best_solution: Option<Optimum<Route>>,
     /// The cities coordinates
+    #[serde(skip)]
     pub positions: Vec<Coordinates>,
     /// How distance should be computed
+    #[serde(skip)]
     distance_measure: DistanceMeasure,
 }
 
@@ -288,11 +293,42 @@ impl Problem for SymmetricTsp {
     }
 }
 
+impl VectorProblem for SymmetricTsp {
+    type T = usize;
+
+    fn dimension(&self) -> usize {
+        self.dimension
+    }
+}
+
 impl SymmetricTsp {
+    pub fn best_fitness(&self) -> Option<f64> {
+        self.best_solution.as_ref().map(|o| o.fitness.into())
+    }
+
     /// Returns the weight/distance of the given edge.
     pub fn distance(&self, edge: Edge) -> f64 {
         let (a, b) = edge;
         (self.distance_measure)(&self.positions[a], &self.positions[b]).into()
+    }
+
+    /// Greedily constructs a Route, always taking the shortest edge.
+    pub fn greedy_route(&self) -> Route {
+        let mut route = Vec::with_capacity(self.dimension);
+        let mut remaining = (1..self.dimension).into_iter().collect::<Vec<usize>>();
+        route.push(0);
+        while !remaining.is_empty() {
+            let last = *route.last().unwrap();
+            let next_index = remaining
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, &r)| Fitness::try_from(self.distance((last, r))).unwrap())
+                .unwrap()
+                .0;
+            let next = remaining.remove(next_index);
+            route.push(next);
+        }
+        route
     }
 
     /// This method constructs a TSP instance from a string representation (`data`) and an optional solution (`opt`).

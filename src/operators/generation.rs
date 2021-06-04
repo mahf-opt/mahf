@@ -2,11 +2,54 @@
 
 use crate::{
     heuristic::{components::*, State},
-    problem::Problem,
+    problem::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };
-use rand_distr::Distribution;
+use rand::{prelude::SliceRandom, Rng};
+use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize)]
+pub struct RandomSpread;
+impl<P, D> Generation<P> for RandomSpread
+where
+    D: SampleUniform + PartialOrd,
+    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+{
+    fn generate(
+        &self,
+        _state: &mut State,
+        problem: &P,
+        rng: &mut Random,
+        _parents: &mut Vec<&Vec<D>>,
+        offspring: &mut Vec<Vec<D>>,
+    ) {
+        let solution = (0..problem.dimension())
+            .map(|d| rng.gen_range(problem.range(d)))
+            .collect::<Vec<D>>();
+        offspring.push(solution);
+    }
+}
+
+#[derive(Serialize)]
+pub struct RandomPermutation;
+impl<P> Generation<P> for RandomPermutation
+where
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+{
+    fn generate(
+        &self,
+        _state: &mut State,
+        problem: &P,
+        rng: &mut Random,
+        _parents: &mut Vec<&Vec<usize>>,
+        offspring: &mut Vec<Vec<usize>>,
+    ) {
+        let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
+        solution.shuffle(rng);
+        offspring.push(solution);
+    }
+}
 
 /// Applies a fixed, component wise delta from a normal distribution.
 ///
