@@ -1,7 +1,7 @@
 use mahf::{
     heuristic,
-    heuristics::aco,
-    problem::Problem,
+    heuristics::{aco, rs},
+    problem::VectorProblem,
     problems::tsp,
     random::Random,
     tracking::{
@@ -16,44 +16,47 @@ fn main() -> anyhow::Result<()> {
 
     let max_iterations = 100;
     let number_of_ants = 50;
-    let alpha = 3.0;
-    let beta = 1.0;
-    let heuristic_length = tsp.evaluate(&tsp.greedy_route());
-    println!("heuristic_length: {}", heuristic_length);
-    let default_pheromones = (tsp.dimension as f64 * heuristic_length).powi(-1);
-    println!("default_pheromones: {}", default_pheromones);
+    let alpha = 1.0;
 
     let configs = &[
-        (
-            "as",
+        ("as", {
+            let heuristic_length = 1.0; // tsp.evaluate(&tsp.greedy_route());
+            let default_pheromones = (tsp.dimension as f64 * heuristic_length).powi(-1);
+
             &aco::ant_stystem(
                 number_of_ants,
                 alpha,
-                beta,
+                1.0,
                 default_pheromones,
                 0.5,
                 heuristic_length,
                 max_iterations,
-            ),
-        ),
-        (
-            "mmas",
+            )
+        }),
+        ("mmas", {
+            let t_max = 1.0 / (0.2 * tsp.best_fitness().unwrap());
+            let p_dec = (0.01f64).powf(1.0 / tsp.dimension() as f64);
+            let t_min = t_max * (1.0 - p_dec) / (tsp.dimension() as f64 / 2.0) * p_dec;
+
             &aco::min_max_ant_stystem(
                 number_of_ants,
                 alpha,
-                beta,
-                default_pheromones,
-                0.1,
-                100.0,
+                2.0,
                 0.0,
+                0.02,
+                t_max,
+                t_min,
                 max_iterations,
-            ),
-        ),
+            )
+        }),
+        ("rs", {
+            &rs::random_permutation_search(max_iterations * number_of_ants as u32)
+        }),
     ];
 
     for (name, config) in configs {
         let data_dir = format!("data/aco/{}", name);
-        let random = Random::seeded(0);
+        let random = Random::default();
         let mut experiment = Experiment::create(&data_dir, tsp, &random, &config)?;
         let logger = &mut Log::new(
             EvalTrigger {
