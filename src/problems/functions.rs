@@ -1231,9 +1231,9 @@ pub mod scaled_implementations {
         let prod = x.iter()
             .map(|xi| xi * 2.0 * PI)
             .map(|xi| (xi.cos()).powi(2))
-            .sum::<f64>();
+            .product::<f64>();
 
-        (beta_sum).exp() - 2.0 * (sum).exp() * prod
+        (- beta_sum).exp() - 2.0 * (- sum).exp() * prod
     }
 
     /// Xin-She Yang Nr. 4 function
@@ -1309,11 +1309,13 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: −2.02181 at (0,0), here on input domain [-1,1]
+    /// Optimum: −2.02181 at (2, 0.10578), here on input domain [-2,2] for x and [-1,1] for y
     /// Defined only on 2-dimensional space.
     //TODO: Unit test!
     pub fn adjiman(x: &[f64]) -> f64 {
-        x[0].cos() + x[1].sin() - (x[0] / (x[1].powi(2) + 1.0))
+        let a = x[0] * 2.0;
+        let b = x[1];
+        a.cos() * b.sin() - (a / (b.powi(2) + 1.0))
     }
 
     /// Bartels Conn function
@@ -1335,9 +1337,11 @@ pub mod scaled_implementations {
     /// Defined only on 2-dimensional space.
     //TODO: Unit test!
     pub fn beale(x: &[f64]) -> f64 {
-        (1.5 - x[0] + (x[0] * x[1])).powi(2) +
-            (2.25 - x[0] + (x[0] * x[1].powi(2))).powi(2) +
-            (2.625 - x[0] + (x[0] * x[1].powi(3))).powi(2)
+        let a = x[0] * 4.5;
+        let b = x[1] * 4.5;
+        (1.5 - a + (a * b)).powi(2) +
+            (2.25 - a + (a * b.powi(2))).powi(2) +
+            (2.625 - a + (a * b.powi(3))).powi(2)
     }
 
     /// Bird function
@@ -1501,7 +1505,7 @@ pub mod scaled_implementations {
         (1.0 + (a + b + 1.0).powi(2) *
             (19.0 - 14.0 * a + 3.0 * a.powi(2) - 14.0 * b + 6.0 * a * b + 3.0 * b.powi(2))) *
             (30.0 + (2.0 * a - 3.0 * b).powi(2) *
-                (18.0 - 32.0 * a + 12.0 * a.powi(2) + 4.0 * b - 36.0 * a * b + 27.0 * b.powi(2)))
+                (18.0 - 32.0 * a + 12.0 * a.powi(2) + 48.0 * b - 36.0 * a * b + 27.0 * b.powi(2)))
     }
 
     /// Gramacy & Lee function
@@ -1546,7 +1550,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0.673667521146855 at (1.393249070031784,0) and (0,1.393249070031784), here on input domain [0,10]
+    /// Optimum: - 0.673667521146855 at (1.393249070031784,0) and (0,1.393249070031784), here on input domain [0,10]
     /// Defined only on 2-dimensional space.
     //TODO: Unit test!
     pub fn keane(x: &[f64]) -> f64 {
