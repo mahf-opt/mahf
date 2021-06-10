@@ -6,6 +6,10 @@ fn r1st_tol() -> f64 {
     1.0
 }
 
+fn scale_domain(value: &f64, min: f64, max: f64) -> f64 {
+    2.0 * (value - min) / (max - min) - 1.0
+}
+
 #[cfg(test)]
 mod bmf_tests {
     use crate::problems::functions::BenchmarkFunction;
@@ -14,7 +18,7 @@ mod bmf_tests {
     use rand::Rng;
     use float_eq::*;
     use std::f64::consts::PI;
-    use crate::problems::bmf::tests::{abs_tol, r1st_tol};
+    use crate::problems::bmf::tests::{abs_tol, r1st_tol, scale_domain};
 
 
     #[test]
@@ -23,7 +27,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::sphere(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -43,7 +48,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::rastrigin(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -63,7 +69,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::ackley(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value: f64 = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -85,7 +92,9 @@ mod bmf_tests {
         let dimension = 10;
         let problem1 = BenchmarkFunction::ackley_n4(dimension_known);
         let problem2 = BenchmarkFunction::ackley_n4(dimension);
-        let optimum_position = vec![-1.51 / 35.0, -0.755 / 35.0];
+        let x1 = scale_domain(&-1.51, problem1.domain()[0], problem1.domain()[1]);
+        let x2 = scale_domain(&-0.755, problem1.domain()[0], problem1.domain()[1]);
+        let optimum_position = vec![x1, x2];
         // Optimum only known for 2 dimensions!
         let optimum_value = -4.590101633799122;
         let optimum_fitness = problem1.evaluate(&optimum_position);
@@ -106,7 +115,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::alpine_n1(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -126,7 +136,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::alpine_n2(dimension);
-        let optimum_position = vec![7.917 / 10.0; dimension];
+        let xi = scale_domain(&7.917, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -(2.808_f64).powi(dimension as i32);
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -146,7 +157,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::brown(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -166,7 +178,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::exponential(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -186,7 +199,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::griewank(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -206,7 +220,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::happy_cat(dimension);
-        let optimum_position = vec![-1.0 / 2.0; dimension];
+        let xi = scale_domain(&-1.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -226,7 +241,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::periodic(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.9;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -246,7 +262,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::powell_sum(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -286,8 +303,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::ridge(dimension);
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
         let mut optimum_position = vec![-5.0 / 5.0];
-        let mut opt_rest = vec![0.0; dimension - 1];
+        let mut opt_rest = vec![xi; dimension - 1];
         optimum_position.append(&mut opt_rest);
         let optimum_value = -5.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
@@ -308,7 +326,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::rosenbrock(dimension);
-        let optimum_position = vec![1.0 / 10.0; dimension];
+        let xi = scale_domain(&1.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -328,7 +347,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::salomon(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -348,7 +368,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::schwefel_220(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -368,7 +389,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::schwefel_221(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -388,7 +410,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::schwefel_222(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -408,7 +431,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::schwefel_223(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -428,7 +452,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::schwefel(dimension);
-        let optimum_position = vec![420.9687 / 500.0; dimension];
+        let xi = scale_domain(&420.9687, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -450,7 +475,8 @@ mod bmf_tests {
         let dimension = 10;
         let problem = BenchmarkFunction::shubert_n3(dimension);
         // several optima, unknown
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -29.6733337;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -471,7 +497,8 @@ mod bmf_tests {
         let dimension = 10;
         let problem = BenchmarkFunction::shubert_n4(dimension);
         // several optima, unknown
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -25.740858;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -492,7 +519,8 @@ mod bmf_tests {
         let dimension = 2;
         let problem = BenchmarkFunction::shubert(dimension);
         // several optima, unknown
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -186.7309;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -512,7 +540,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::styblinksi_tank(dimension);
-        let optimum_position = vec![-2.903534 / 5.0; dimension];
+        let xi = scale_domain(&-2.903534, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -39.16599 * dimension as f64;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -532,7 +561,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::sum_squares(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -552,7 +582,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::yang_n2(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -572,7 +603,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::yang_n3(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -592,7 +624,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::yang_n4(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -612,7 +645,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 10;
         let problem = BenchmarkFunction::zakharov(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -633,7 +667,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::ackley_n2(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -200.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -653,7 +688,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::ackley_n3(dimension);
-        let optimum_position = vec![0.0, - 0.4 / 32.0];
+        let x1 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&- 0.4, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = -219.1418;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -673,7 +710,10 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::adjiman(dimension);
-        let optimum_position = vec![2.0 / 2.0, 0.10578];
+        // domain for x and y differs
+        let x1 = scale_domain(&2.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&0.10578, -1.0, 1.0);
+        let optimum_position = vec![x1, x2];
         let optimum_value = -2.02181;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -693,7 +733,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::bartels_conn(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -713,7 +754,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::beale(dimension);
-        let optimum_position = vec![3.0 / 4.5, 0.5 / 4.5];
+        let x1 = scale_domain(&3.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&0.5, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -733,8 +776,12 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::bird(dimension);
-        let optimum_position1 = vec![4.70104 / (2.0 * PI), 3.15294 / (2.0 * PI)];
-        let optimum_position2 = vec![-1.58214 / (2.0 * PI), -3.13024 / (2.0 * PI)];
+        let x1 = scale_domain(&4.70104, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&3.15294, problem.domain()[0], problem.domain()[1]);
+        let x3 = scale_domain(&-1.58214, problem.domain()[0], problem.domain()[1]);
+        let x4 = scale_domain(&-3.13024, problem.domain()[0], problem.domain()[1]);
+        let optimum_position1 = vec![x1, x2];
+        let optimum_position2 = vec![x3, x4];
         let optimum_value = -106.764537;
         let optimum_fitness1 = problem.evaluate(&optimum_position1);
         let optimum_fitness2 = problem.evaluate(&optimum_position2);
@@ -756,7 +803,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::bohachevsky_n1(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -776,7 +824,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::bohachevsky_n2(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -796,7 +845,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::booth(dimension);
-        let optimum_position = vec![1.0 / 10.0, 3.0 / 10.0];
+        let x1 = scale_domain(&1.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&3.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -816,7 +867,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::brent(dimension);
-        let optimum_position = vec![-10.0 / 20.0; dimension];
+        let xi = scale_domain(&-10.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = (-200.0_f64).exp();
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -836,7 +888,10 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::bukin_n6(dimension);
-        let optimum_position = vec![-10.0 / 15.0, 1.0 / 3.0];
+        // x and y have different domains
+        let x1 = scale_domain(&-10.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&1.0, -3.0, 3.0);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -856,7 +911,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::cross_in_tray(dimension);
-        let optimum_position = vec![1.349406685353340 / 10.0, 1.349406608602084 / 10.0];
+        let x1 = scale_domain(&1.349406685353340, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&1.349406608602084, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = -2.06261218;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -876,7 +933,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::deckkers_aarts(dimension);
-        let optimum_position = vec![0.0, 15.0 / 20.0];
+        let x1 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&15.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = -24771.09375;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -896,7 +955,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::drop_wave(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -916,7 +976,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::easom(dimension);
-        let optimum_position = vec![PI / 100.0; dimension];
+        let xi = scale_domain(&PI, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -936,7 +997,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::egg_crate(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -956,7 +1018,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::goldstein_price(dimension);
-        let optimum_position = vec![0.0, -1.0 / 2.0];
+        let x1 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&-1.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 3.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -976,7 +1040,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 1;
         let problem = BenchmarkFunction::gramacy_lee(dimension);
-        let optimum_position = vec![0.548563444114526 / 2.5];
+        let xi = scale_domain(&0.548563444114526, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi];
         let optimum_value = -0.869011134989500;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -996,7 +1061,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::himmelblau(dimension);
-        let optimum_position = vec![3.0 / 6.0, 2.0 / 6.0];
+        let x1 = scale_domain(&3.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&2.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1016,7 +1083,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::holder_table(dimension);
-        let optimum_position = vec![8.05502 / 10.0, 9.66459 / 10.0];
+        let x1 = scale_domain(&8.05502, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&9.66459, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = -19.2085;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1036,7 +1105,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::keane(dimension);
-        let optimum_position = vec![1.393249070031784 / 10.0, 0.0];
+        let x1 = scale_domain(&1.393249070031784, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = - 0.673667521146855;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1056,7 +1127,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::leon(dimension);
-        let optimum_position = vec![1.0 / 10.0; dimension];
+        let xi = scale_domain(&1.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1076,7 +1148,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::levi_n13(dimension);
-        let optimum_position = vec![1.0 / 10.0; dimension];
+        let xi = scale_domain(&1.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1096,7 +1169,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::matyas(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1116,7 +1190,10 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::mccormick(dimension);
-        let optimum_position = vec![-0.547 / 4.0,-1.547 / 4.0];
+        // different domains for x and y
+        let x1 = scale_domain(&-0.547, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&-1.547, -3.0, 3.0);
+        let optimum_position = vec![x1, x2];
         let optimum_value = -1.9133;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1136,7 +1213,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::schaffer_n1(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1156,7 +1234,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::schaffer_n2(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1176,7 +1255,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::schaffer_n3(dimension);
-        let optimum_position = vec![0.0, 1.253115 / 100.0];
+        let x1 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&1.253115, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 0.00156685;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1196,7 +1277,9 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::schaffer_n4(dimension);
-        let optimum_position = vec![0.0, 1.253115 / 100.0];
+        let x1 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&1.253115, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![x1, x2];
         let optimum_value = 0.292579;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1216,7 +1299,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::three_hump_camel(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
@@ -1236,7 +1320,8 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 3;
         let problem = BenchmarkFunction::wolfe(dimension);
-        let optimum_position = vec![0.0; dimension];
+        let xi = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
+        let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
         //assert_eq!(optimum_fitness, optimum_value);
