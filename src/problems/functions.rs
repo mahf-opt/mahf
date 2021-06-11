@@ -1,8 +1,7 @@
 //! Collection of test functions from [benchmarkfcns.xyz](http://benchmarkfcns.xyz) without Quartic function and Xin-She Yang Nr. 1 function
 
-use crate::{problem::{LimitedVectorProblem, Problem, VectorProblem}, random::Random};
+use crate::{problem::{LimitedVectorProblem, Problem, VectorProblem}};
 
-use rand::Rng;
 use std::f64::consts::PI;
 
 /// Wraps the benchmark functions as [`Problem`]s.
