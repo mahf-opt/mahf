@@ -1,14 +1,13 @@
 use mahf::{
     heuristic,
     heuristics::es::mu_plus_lambda,
-    problems::functions::BenchmarkFunction,
+    problems::bmf::BenchmarkFunction,
     prompt,
     threads::SyncThreadPool,
     tracking::{
         parameter_study::{Study, Summary},
         Log,
     },
-    random::Random,
 };
 use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 

@@ -2,7 +2,6 @@
 
 use crate::fitness::Fitness;
 
-pub mod functions;
 pub mod tsp;
 pub mod bmf;
 

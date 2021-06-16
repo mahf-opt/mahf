@@ -1,7 +1,7 @@
 use anyhow::Context;
 use mahf::{
     heuristic::{self, Configuration},
-    problems::functions::BenchmarkFunction,
+    problems::bmf::BenchmarkFunction,
     prompt,
     random::Random,
     threads::SyncThreadPool,
@@ -44,7 +44,7 @@ type ConfigBuilder = fn() -> Configuration<BenchmarkFunction>;
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{heuristic::Configuration, operators::*, problems::functions::BenchmarkFunction};
+    use mahf::{heuristic::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn iwo() -> Configuration<BenchmarkFunction> {
         Configuration::new(

@@ -1,22 +1,7 @@
 //! Collection of test functions from [benchmarkfcns.xyz](http://benchmarkfcns.xyz) without Quartic function and Xin-She Yang Nr. 1 function
 
-use crate::{problem::{LimitedVectorProblem, Problem, VectorProblem}};
-
+use crate::problems::bmf::BenchmarkFunction;
 use std::f64::consts::PI;
-
-/// Wraps the benchmark functions as [`Problem`]s.
-///
-/// All functions have been scaled to [-1, 1].
-#[derive(Clone, Copy, serde::Serialize)]
-pub struct BenchmarkFunction {
-    name: &'static str,
-    dimension: usize,
-    #[serde(skip)]
-    domain: [f64;2],
-
-    #[serde(skip)]
-    implementation: Function,
-}
 
 impl BenchmarkFunction {
     pub fn name(&self) -> &'static str {
@@ -736,35 +721,6 @@ impl BenchmarkFunction {
     }
 }
 
-impl Problem for BenchmarkFunction {
-    type Encoding = Vec<f64>;
-
-    fn evaluate(&self, solution: &Self::Encoding) -> f64 {
-        (self.implementation)(solution)
-    }
-
-    fn name(&self) -> &str {
-        self.name
-    }
-}
-
-impl VectorProblem for BenchmarkFunction {
-    type T = f64;
-
-    fn dimension(&self) -> usize {
-        self.dimension
-    }
-
-}
-
-impl LimitedVectorProblem for BenchmarkFunction {
-    fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
-        0.0..1.0
-    }
-}
-
-/// A benchmark function.
-pub type Function = fn(&[f64]) -> f64;
 
 /// The benchmark functions scaled to [-1.0, 1.0].
 pub mod scaled_implementations {
@@ -797,9 +753,9 @@ pub mod scaled_implementations {
         let n = x.len() as f64;
         10.0 * n
             + x.iter()
-                .map(|xi| scale_domain(xi, -5.12, 5.12))
-                .map(|xi| xi * xi - 10.0 * (2.0 * PI * xi).cos())
-                .sum::<f64>()
+            .map(|xi| scale_domain(xi, -5.12, 5.12))
+            .map(|xi| xi * xi - 10.0 * (2.0 * PI * xi).cos())
+            .sum::<f64>()
     }
 
     /// Ackley function
@@ -1053,7 +1009,7 @@ pub mod scaled_implementations {
         let max_elem = x.iter()
             .map(|xi| (scale_domain(xi, -100.0, 100.0)).abs())
             .fold(f64::NEG_INFINITY, f64::max);
-            //.max_by(|a, b| a.total_cmp(b));
+        //.max_by(|a, b| a.total_cmp(b));
 
         max_elem
     }
@@ -1108,8 +1064,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: ~ -29.6733337, here on input domain [-10,10]
-    //TODO: Add position of optimum!
+    /// Optimum: ~ -24.062499 at some points (-6.774576,-6.774576), ..., (5.791794,5.791794) here on input domain [-10,10]
     pub fn shubert_n3(x: &[f64]) -> f64 {
         let mut sum = 0.0;
         for i in 1..=(x.len()) {
@@ -1117,15 +1072,14 @@ pub mod scaled_implementations {
                 sum += j as f64 * ((j as f64 + 1.0) * (scale_domain(&x[i-1], -10.0, 10.0)) + j as f64).sin();
             }
         }
-        sum
+        - sum
     }
 
     /// Shubert Nr. 4 function
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: ~ -25.740858, here on input domain [-10,10]
-    //TODO: Add position of optimum!
+    /// Optimum: ~ -25.740858 at (-6.774576 + PI,-6.774576 + PI), here on input domain [-10,10]
     pub fn shubert_n4(x: &[f64]) -> f64 {
         let mut sum = 0.0;
         for i in 1..=(x.len()) {
@@ -1140,8 +1094,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: ~ -186.7309 (18 optima), here on input domain [-10,10]
-    //TODO: Add position of optimum!
+    /// Optimum: ~ -186.7309 (18 optima), e.g. (−7.0835, 4.8580), here on input domain [-10,10]
     pub fn shubert(x: &[f64]) -> f64 {
         let mut prod = 1.0;
         for i in 1..=(x.len()) {
@@ -1188,9 +1141,9 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,...,0), here on input domain [-2PI,2PI]
     pub fn yang_n2(x: &[f64]) -> f64 {
         let sum = x.iter()
-          .map(|xi| scale_domain(xi, -2.0 * PI, 2.0 * PI))
-          .map(|xi| xi.abs())
-          .sum::<f64>();
+            .map(|xi| scale_domain(xi, -2.0 * PI, 2.0 * PI))
+            .map(|xi| xi.abs())
+            .sum::<f64>();
 
         let exp_sum = x.iter()
             .map(|xi| scale_domain(xi, -2.0 * PI, 2.0 * PI))
@@ -1278,6 +1231,7 @@ pub mod scaled_implementations {
     /// Optimum: -200 at (0,0), here on input domain [-32,32]
     /// Defined only on 2-dimensional space.
     pub fn ackley_n2(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -32.0, 32.0);
         let b = scale_domain(&x[1], -32.0, 32.0);
         - 200.0 * (- 0.2 * (a.powi(2) + b.powi(2)).sqrt()).exp()
@@ -1290,6 +1244,7 @@ pub mod scaled_implementations {
     /// Optimum: −195.629028238419 at (±0.682584587365898,−0.36075325513719), here on input domain [-32,32]
     /// Defined only on 2-dimensional space.
     pub fn ackley_n3(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -32.0, 32.0);
         let b = scale_domain(&x[1], -32.0, 32.0);
         - 200.0 * (- 0.2 * (a.powi(2) + b.powi(2)).sqrt()).exp() +
@@ -1303,6 +1258,7 @@ pub mod scaled_implementations {
     /// Optimum: −2.02181 at (2, 0.10578), here on input domain [-2,2] for x and [-1,1] for y
     /// Defined only on 2-dimensional space.
     pub fn adjiman(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -2.0, 2.0);
         let b = scale_domain(&x[1], -1.0, 1.0);
         a.cos() * b.sin() - (a / (b.powi(2) + 1.0))
@@ -1315,6 +1271,7 @@ pub mod scaled_implementations {
     /// Optimum: 1 at (0,0), here on input domain [-500,500]
     /// Defined only on 2-dimensional space.
     pub fn bartels_conn(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -500.0, 500.0);
         let b = scale_domain(&x[1], -500.0, 500.0);
         (a.powi(2) + b.powi(2) + (a * b)).abs() + (a.sin()).abs() + (b.cos()).abs()
@@ -1327,6 +1284,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (3,0.5), here on input domain [-4.5,4.5]
     /// Defined only on 2-dimensional space.
     pub fn beale(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -4.5, 4.5);
         let b = scale_domain(&x[1], -4.5, 4.5);
         (1.5 - a + (a * b)).powi(2) +
@@ -1341,6 +1299,7 @@ pub mod scaled_implementations {
     /// Optimum: −106.764537 at (4.70104,3.15294) and (−1.58214,−3.13024), here on input domain [-2 * Pi,2 * Pi]
     /// Defined only on 2-dimensional space.
     pub fn bird(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -2.0 * PI, 2.0 * PI);
         let b = scale_domain(&x[1], -2.0 * PI, 2.0 * PI);
         a.sin() * ((1.0 - b.cos()).powi(2)).exp() + b.cos() * ((1.0 - a.sin()).powi(2)).exp() + (a - b).powi(2)
@@ -1353,6 +1312,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn bohachevsky_n1(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         a.powi(2) + (2.0 * b.powi(2)) - (0.3 * (3.0 * PI * a).cos()) - (0.4 * (4.0 * PI * b).cos()) + 0.7
@@ -1365,6 +1325,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn bohachevsky_n2(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         a.powi(2) + (2.0 * b.powi(2)) - (0.3 * (3.0 * PI * a).cos() * (4.0 * PI * b).cos()) + 0.3
@@ -1377,6 +1338,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (1,3), here on input domain [-10,10]
     /// Defined only on 2-dimensional space.
     pub fn booth(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -10.0, 10.0);
         let b = scale_domain(&x[1], -10.0, 10.0);
         (a + (2.0 * b) - 7.0).powi(2) + ((2.0 * a) + b - 5.0).powi(2)
@@ -1389,6 +1351,7 @@ pub mod scaled_implementations {
     /// Optimum: e^(-200) at (-10,-10), here on input domain [-20,0]
     /// Defined only on 2-dimensional space.
     pub fn brent(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -20.0, 0.0);
         let b = scale_domain(&x[1], -20.0, 0.0);
         (a + 10.0).powi(2) + (b + 10.0).powi(2) + (- a.powi(2) - b.powi(2)).exp()
@@ -1402,6 +1365,7 @@ pub mod scaled_implementations {
     /// Defined only on 2-dimensional space.
     //TODO: For functions with range not symmetric around 0, look for better scaling options!
     pub fn bukin_n6(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -15.0, -5.0);
         let b = scale_domain(&x[1], -3.0, 3.0);
         100.0 * ((b - 0.01 * a.powi(2)).abs()).sqrt() + 0.01 * (a + 10.0).abs()
@@ -1415,6 +1379,7 @@ pub mod scaled_implementations {
     /// Optimum: - 2.06261218 at (±1.349406685353340,±1.349406608602084), here on input domain [-10,10]
     /// Defined only on 2-dimensional space.
     pub fn cross_in_tray(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -10.0, 10.0);
         let b = scale_domain(&x[1], -10.0, 10.0);
         - 0.0001 * (( a.sin() * b.sin() * ((100.0 - ((a.powi(2) + b.powi(2)).sqrt() / PI)).abs()).exp()).abs() + 1.0).powf(0.1)
@@ -1427,6 +1392,7 @@ pub mod scaled_implementations {
     /// Optimum: −24771.09375 at (0,±15), here on input domain [-20,20]
     /// Defined only on 2-dimensional space.
     pub fn deckkers_aarts(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -20.0, 20.0);
         let b = scale_domain(&x[1], -20.0, 20.0);
         (10.0_f64).powi(5) * a.powi(2) + b.powi(2) - ( a.powi(2) + b.powi(2) ).powi(2) +
@@ -1440,6 +1406,7 @@ pub mod scaled_implementations {
     /// Optimum: -1 at (0,0), here on input domain [-5.2,5.2]
     /// Defined only on 2-dimensional space.
     pub fn drop_wave(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -5.2, 5.2);
         let b = scale_domain(&x[1], -5.2, 5.2);
         - ( 1.0 + (12.0 * (a.powi(2) + b.powi(2)).sqrt()).cos() ) /
@@ -1453,6 +1420,7 @@ pub mod scaled_implementations {
     /// Optimum: -1 at (π,π), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn easom(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         - a.cos() * b.cos() * (- (a - PI).powi(2) - (b - PI).powi(2)).exp()
@@ -1465,6 +1433,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-5,5]
     /// Defined only on 2-dimensional space.
     pub fn egg_crate(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -5.0, 5.0);
         let b = scale_domain(&x[1], -5.0, 5.0);
         a.powi(2) + b.powi(2) + 25.0 * ((a.sin()).powi(2) + (b.sin()).powi(2))
@@ -1477,6 +1446,7 @@ pub mod scaled_implementations {
     /// Optimum: 3 at (0,-1), here on input domain [-2,2]
     /// Defined only on 2-dimensional space.
     pub fn goldstein_price(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -2.0, 2.0);
         let b = scale_domain(&x[1], -2.0, 2.0);
         (1.0 + (a + b + 1.0).powi(2) *
@@ -1492,6 +1462,7 @@ pub mod scaled_implementations {
     /// Optimum: −0.869011134989500 at 0.548563444114526, here on input domain [0.5,2.5]
     /// Defined only on 1-dimensional space.
     pub fn gramacy_lee(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 1);
         let a = scale_domain(&x[0], 0.5, 2.5);
         ((10.0 * PI * a).sin()) / (2.0 * a) + (a - 1.0).powi(4)
     }
@@ -1503,6 +1474,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (3,2), (−2.805118,3.283186), (−3.779310,−3.283186), (3.584458,−1.848126) here on input domain [-6,6]
     /// Defined only on 2-dimensional space.
     pub fn himmelblau(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -6.0, 6.0);
         let b = scale_domain(&x[1], -6.0, 6.0);
         (a.powi(2) + b - 11.0).powi(2) + (a + b.powi(2) - 7.0).powi(2)
@@ -1515,6 +1487,7 @@ pub mod scaled_implementations {
     /// Optimum: −19.2085 at (±8.05502,±9.66459), here on input domain [-10,10]
     /// Defined only on 2-dimensional space.
     pub fn holder_table(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -10.0, 10.0);
         let b = scale_domain(&x[1], -10.0, 10.0);
         - (a.sin() * b.cos() * ((1.0 - (a.powi(2) + b.powi(2)).sqrt() / PI).abs()).exp()).abs()
@@ -1527,6 +1500,7 @@ pub mod scaled_implementations {
     /// Optimum: - 0.673667521146855 at (1.393249070031784,0) and (0,1.393249070031784), here on input domain [0,10]
     /// Defined only on 2-dimensional space.
     pub fn keane(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], 0.0, 10.0);
         let b = scale_domain(&x[1], 0.0, 10.0);
         - (((a - b).sin()).powi(2) * ((a + b).sin()).powi(2)) / ((a.powi(2) + b.powi(2)).sqrt())
@@ -1539,6 +1513,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (1,1), here on input domain [0,10]
     /// Defined only on 2-dimensional space.
     pub fn leon(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], 0.0, 10.0);
         let b = scale_domain(&x[1], 0.0, 10.0);
         100.0 * (b - a.powi(3)).powi(2) + (1.0 - a).powi(2)
@@ -1551,6 +1526,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (1,1), here on input domain [-10,10]
     /// Defined only on 2-dimensional space.
     pub fn levi_n13(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -10.0, 10.0);
         let b = scale_domain(&x[1], -10.0, 10.0);
         ((3.0 * PI * a).sin()).powi(2) + (a - 1.0).powi(2) * (1.0 + ((3.0 * PI * b).sin()).powi(2)) +
@@ -1564,6 +1540,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-10,10]
     /// Defined only on 2-dimensional space.
     pub fn matyas(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -10.0, 10.0);
         let b = scale_domain(&x[1], -10.0, 10.0);
         0.26 * (a.powi(2) + b.powi(2)) - 0.48 * a * b
@@ -1576,6 +1553,7 @@ pub mod scaled_implementations {
     /// Optimum: −1.9133 at (−0.547,−1.547), here on input domain [-1.5,4] for x and [-3,3] for y
     /// Defined only on 2-dimensional space.
     pub fn mccormick(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -1.5, 4.0);
         let b = scale_domain(&x[1], -3.0, 3.0);
         (a + b).sin() + (a - b).powi(2) - 1.5 * a + 2.5 * b + 1.0
@@ -1588,6 +1566,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn schaffer_n1(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         0.5 + ((((a.powi(2) + b.powi(2)).powi(2)).sin()).powi(2) - 0.5) /
@@ -1601,6 +1580,7 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn schaffer_n2(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         0.5 + (((a.powi(2) - b.powi(2)).sin()).powi(2) - 0.5) /
@@ -1614,6 +1594,7 @@ pub mod scaled_implementations {
     /// Optimum: 0.00156685 at (0,1.253115), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn schaffer_n3(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         0.5 + (((((a.powi(2) + b.powi(2)).abs()).cos()).sin()).powi(2) - 0.5) /
@@ -1627,6 +1608,7 @@ pub mod scaled_implementations {
     /// Optimum: 0.292579 at (0,1.253115), here on input domain [-100,100]
     /// Defined only on 2-dimensional space.
     pub fn schaffer_n4(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -100.0, 100.0);
         let b = scale_domain(&x[1], -100.0, 100.0);
         0.5 + (((((a.powi(2) + b.powi(2)).abs()).sin()).cos()).powi(2) - 0.5) /
@@ -1640,9 +1622,10 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0), here on input domain [-5,5]
     /// Defined only on 2-dimensional space.
     pub fn three_hump_camel(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -5.0, 5.0);
         let b = scale_domain(&x[1], -5.0, 5.0);
-       1.0 * a.powi(2) - 1.05 * a.powi(4) + (a.powi(6) / 6.0) + a * b + b.powi(2)
+        1.0 * a.powi(2) - 1.05 * a.powi(4) + (a.powi(6) / 6.0) + a * b + b.powi(2)
     }
 
     /// Wolfe function
@@ -1652,59 +1635,10 @@ pub mod scaled_implementations {
     /// Optimum: 0 at (0,0,0), here on input domain [0,2]
     /// Defined only on 3-dimensional space.
     pub fn wolfe(x: &[f64]) -> f64 {
+        debug_assert_eq!(x.len(), 3);
         let a = scale_domain(&x[0], 0.0, 2.0);
         let b = scale_domain(&x[1], 0.0, 2.0);
         let c = scale_domain(&x[2], 0.0, 2.0);
         4.0 / 3.0 * (a.powi(2) + b.powi(2) - a * b).powf(0.75) + c
     }
 }
-
-/*
-/// The [Quartic](http://benchmarkfcns.xyz/benchmarkfcns/quarticfcn.html) function.
-pub fn quartic(dimension: usize, rng: Option<Random>) -> Self {
-    BenchmarkFunction {
-        name: "quartic",
-        implementation: scaled_implementations::quartic,
-        dimension,
-
-    }
-}
-
-    /// Quartic function
-    ///
-    /// Scaled to [-1.0, 1.0]
-    ///
-    /// Optimum: 0 + rnd at (0,...,0), here on input domain [-1.28,1.28]
-    pub fn quartic(x: &[f64], rnd: &f64) -> f64 {
-        let sum = x.iter()
-            .map(| xi| xi * 1.28)
-            .enumerate()
-            .map(|(i, xi)| (i as f64 + 1.0) * xi.powi(4))
-            .sum::<f64>();
-
-        sum + rnd
-    }
-
-   /// The [Xin-She Yang Nr. 1](http://benchmarkfcns.xyz/benchmarkfcns/xinsheyangn1fcn.html) function.
-    pub fn yang_n1(dimension: usize, rng: Option<Random>) -> Self {
-        BenchmarkFunction {
-            name: "yangN1",
-            implementation: scaled_implementations::yang_n1,
-            dimension,
-
-        }
-    }
-
-    /// Xin-She Yang Nr. 1 function
-    ///
-    /// Scaled to [-1.0, 1.0]
-    ///
-    /// Optimum: 0 at (0,...,0), here on input domain [-5,5]
-    pub fn yang_n1(x: &[f64], rnd: &f64) -> f64 {
-        x.iter()
-            .map(|xi| xi * 5.0)
-            .enumerate()
-            .map(|(i, xi)| rnd * (xi.abs()).powi(i as i32 + 1))
-            .sum::<f64>()
-    }
- */
