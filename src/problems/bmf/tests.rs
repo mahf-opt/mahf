@@ -1313,8 +1313,16 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::cross_in_tray(dimension);
-        let x1 = scale_domain(&1.349_406_685_353_34, problem.domain()[0], problem.domain()[1]);
-        let x2 = scale_domain(&1.349_406_608_602_084, problem.domain()[0], problem.domain()[1]);
+        let x1 = scale_domain(
+            &1.349_406_685_353_34,
+            problem.domain()[0],
+            problem.domain()[1],
+        );
+        let x2 = scale_domain(
+            &1.349_406_608_602_084,
+            problem.domain()[0],
+            problem.domain()[1],
+        );
         let optimum_position = vec![x1, x2];
         let optimum_value = -2.06261218;
         let optimum_fitness = problem.evaluate(&optimum_position);
