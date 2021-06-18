@@ -5,7 +5,9 @@ use std::convert::TryFrom;
 
 pub mod components;
 
+mod custom_state;
 mod state;
+pub use custom_state::CustomState;
 pub use state::State;
 
 mod individual;
@@ -37,11 +39,11 @@ pub fn run<P: Problem>(
     let initial_population = &mut Vec::new();
     let population = &mut Vec::new();
 
-    // Initialisation
-    initialization.initialize(problem, rng, initial_population);
-
     // State shared across components
     let state = &mut State::new();
+
+    // Initialisation
+    initialization.initialize(state, problem, rng, initial_population);
 
     // Initial evaluation
     evaluator.evaluate(state, problem, initial_population, population);
@@ -49,7 +51,7 @@ pub fn run<P: Problem>(
         state.log_evaluation(logger, evaluated.fitness());
     }
 
-    let mut best = find_best(population).clone::<P::Encoding>();
+    let mut best: Option<Individual> = find_best(population).map(Individual::clone::<P::Encoding>);
 
     // Loop until Termination
     loop {
@@ -72,8 +74,8 @@ pub fn run<P: Problem>(
         // Evaluation
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);
         for evaluated in evaluated_offspring.iter() {
-            if evaluated.fitness() < best.fitness() {
-                best = evaluated.clone::<P::Encoding>();
+            if evaluated.fitness() < best.as_ref().map(Individual::fitness).unwrap_or_default() {
+                best = Some(evaluated.clone::<P::Encoding>());
             }
             state.log_evaluation(logger, evaluated.fitness());
         }
@@ -89,11 +91,11 @@ pub fn run<P: Problem>(
 
     logger.finalize();
 
-    best.into_solution()
+    best.unwrap().into_solution()
 }
 
-fn find_best(population: &[Individual]) -> &Individual {
-    population.iter().min_by_key(|i| i.fitness()).unwrap()
+fn find_best(population: &[Individual]) -> Option<&Individual> {
+    population.iter().min_by_key(|i| i.fitness())
 }
 
 pub trait Evaluator<P: Problem> {

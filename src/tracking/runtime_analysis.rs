@@ -27,6 +27,7 @@ pub struct Experiment {
     evaluations_file: File,
     iterations_file: File,
     summary_file: File,
+    wrote_header: bool,
 }
 
 impl Experiment {
@@ -46,17 +47,13 @@ impl Experiment {
             .context("writing configuration file")?;
 
         let dir = data_dir.as_ref();
-        let mut evaluations_file =
+        let evaluations_file =
             open_new_file(dir.join("evaluations.csv")).context("opening evaluations file")?;
-        let mut iterations_file =
+        let iterations_file =
             open_new_file(dir.join("iterations.csv")).context("opening iterations file")?;
         let mut summary_file =
             open_new_file(dir.join("summary.csv")).context("opening summary file")?;
 
-        writeln!(evaluations_file, "evaluation,current_fx,best_fx")
-            .context("writing evaluations header")?;
-        writeln!(iterations_file, "iteration,best_fx,diversity")
-            .context("writing iterations header")?;
         writeln!(summary_file, "run,iterations,evaluations,best")
             .context("writing summary header")?;
 
@@ -65,6 +62,7 @@ impl Experiment {
             evaluations_file,
             iterations_file,
             summary_file,
+            wrote_header: false,
         })
     }
 
@@ -74,6 +72,25 @@ impl Experiment {
         let eval_buf = &mut BufWriter::new(&mut self.evaluations_file);
         let iter_buf = &mut BufWriter::new(&mut self.iterations_file);
         let summ_buf = &mut self.summary_file;
+
+        if !self.wrote_header {
+            self.wrote_header = true;
+
+            if let Some(entry) = log.evaluations.get(0) {
+                write!(eval_buf, "evaluation,current_fx,best_fx")?;
+                for custom in &entry.custom {
+                    write!(eval_buf, ",{}", custom.name)?;
+                }
+                writeln!(eval_buf)?;
+            }
+            if let Some(entry) = log.iterations.get(0) {
+                write!(iter_buf, "iteration,best_fx,diversity")?;
+                for custom in &entry.custom {
+                    write!(iter_buf, ",{}", custom.name)?;
+                }
+                writeln!(iter_buf)?;
+            }
+        }
 
         write_evaluations(eval_buf, &log.evaluations).context("writing evaluations")?;
         write_iterations(iter_buf, &log.iterations).context("writing iterations")?;
@@ -117,12 +134,17 @@ fn write_evaluations(output: &mut impl Write, log: &[EvaluationEntry]) -> io::Re
             evaluation,
             current_fx,
             best_fx,
+            ref custom,
         } = entry;
-        writeln!(
+        write!(
             output,
             "{},{:+1.5e},{:+1.5e}",
             evaluation, current_fx, best_fx
         )?;
+        for item in custom {
+            write!(output, ",{:+1.5e}", item.value)?;
+        }
+        writeln!(output)?;
     }
 
     Ok(())
@@ -134,12 +156,17 @@ fn write_iterations(output: &mut impl Write, log: &[IterationEntry]) -> io::Resu
             iteration,
             best_fx,
             diversity,
+            ref custom,
         } = entry;
-        writeln!(
+        write!(
             output,
             "{},{:+1.5e},{:+1.5e}",
             iteration, best_fx, diversity
         )?;
+        for item in custom {
+            write!(output, ",{:+1.5e}", item.value)?;
+        }
+        writeln!(output)?;
     }
 
     Ok(())

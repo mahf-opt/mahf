@@ -26,5 +26,8 @@ ehthumbs_vista.db
 ## R
 .Rhistory
 
+## Jupyter
+.ipynb_checkpoints
+
 ## Examples
 /data

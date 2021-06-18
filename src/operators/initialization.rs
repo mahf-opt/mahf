@@ -1,13 +1,27 @@
 //! Initialization methods
 
 use crate::{
-    heuristic::components::*,
+    heuristic::{components::*, State},
     problem::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::distributions::uniform::SampleUniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize)]
+pub struct Noop;
+impl<P: Problem> Initialization<P> for Noop {
+    fn initialize(
+        &self,
+        _state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _population: &mut Vec<P::Encoding>,
+    ) {
+        // Noop
+    }
+}
 
 /// Uniformly distributes initial solutions in the search space.
 #[derive(Serialize, Deserialize)]
@@ -20,7 +34,13 @@ where
     D: SampleUniform + PartialOrd,
     P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
 {
-    fn initialize(&self, problem: &P, rng: &mut Random, population: &mut Vec<Vec<D>>) {
+    fn initialize(
+        &self,
+        _state: &mut State,
+        problem: &P,
+        rng: &mut Random,
+        population: &mut Vec<Vec<D>>,
+    ) {
         for _ in 0..self.initial_population_size {
             let solution = (0..problem.dimension())
                 .map(|d| rng.gen_range(problem.range(d)))
