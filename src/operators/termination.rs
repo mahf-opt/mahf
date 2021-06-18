@@ -28,9 +28,9 @@ mod fixed_iterations {
             max_iterations: 200,
         };
         state.iterations = 100;
-        assert_eq!(comp.terminate(&mut state), false);
+        assert!(!comp.terminate(&mut state));
         state.iterations = 200;
-        assert_eq!(comp.terminate(&mut state), true);
+        assert!(comp.terminate(&mut state));
     }
 
     #[test]
@@ -73,9 +73,9 @@ mod fixed_evaluations {
             max_evaluations: 200,
         };
         state.evaluations = 100;
-        assert_eq!(comp.terminate(&mut state), false);
+        assert!(!comp.terminate(&mut state));
         state.evaluations = 200;
-        assert_eq!(comp.terminate(&mut state), true);
+        assert!(comp.terminate(&mut state));
     }
 
     #[test]

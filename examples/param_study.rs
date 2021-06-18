@@ -27,7 +27,7 @@ static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
 ];
 static DIMENSIONS: &[usize] = &[10, 20, 30];
 
-#[allow(clippy::clippy::identity_op)]
+#[allow(clippy::identity_op)]
 static NUM_CONFIGS: usize = MU_OPTIONS.len() * LAMBDA_OPTIONS.len() * SIGMA_OPTIONS.len();
 
 pub fn main() -> anyhow::Result<()> {
