@@ -11,14 +11,13 @@ fn scale_domain(value: &f64, min: f64, max: f64) -> f64 {
 }
 
 mod bmf_tests {
-    use crate::problems::bmf::*;
-    use crate::problem::{Problem, LimitedVectorProblem};
-    use crate::random::Random;
-    use rand::Rng;
-    use float_eq::*;
-    use std::f64::consts::PI;
+    use crate::problem::{LimitedVectorProblem, Problem};
     use crate::problems::bmf::tests::{abs_tol, r1st_tol, scale_domain};
-
+    use crate::problems::bmf::*;
+    use crate::random::Random;
+    use float_eq::*;
+    use rand::Rng;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_sphere() {
@@ -30,14 +29,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -50,14 +60,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -70,14 +91,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value: f64 = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -92,7 +124,12 @@ mod bmf_tests {
         // Optimum only known for 2 dimensions!
         let optimum_value = -4.590101633799122;
         let optimum_fitness = problem1.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let dimension = 10;
@@ -101,7 +138,13 @@ mod bmf_tests {
             .map(|dimension| rng.gen_range(problem2.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem2.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -114,14 +157,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -134,14 +188,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -(2.808_f64).powi(dimension as i32);
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -154,14 +219,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -174,14 +250,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -194,14 +281,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -214,14 +312,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -234,14 +343,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.9;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -254,14 +374,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -270,17 +401,34 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 5;
         let problem = BenchmarkFunction::qing(dimension);
-        let optimum_position = vec![(1.0_f64).sqrt() / 500.0, (2.0_f64).sqrt() / 500.0, (3.0_f64).sqrt() / 500.0, (4.0_f64).sqrt() / 500.0, (5.0_f64).sqrt() / 500.0];
+        let optimum_position = vec![
+            (1.0_f64).sqrt() / 500.0,
+            (2.0_f64).sqrt() / 500.0,
+            (3.0_f64).sqrt() / 500.0,
+            (4.0_f64).sqrt() / 500.0,
+            (5.0_f64).sqrt() / 500.0,
+        ];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -295,14 +443,25 @@ mod bmf_tests {
         optimum_position.append(&mut opt_rest);
         let optimum_value = -5.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -315,14 +474,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -335,14 +505,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -355,14 +536,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -375,14 +567,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -395,14 +598,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -415,14 +629,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -435,15 +660,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        //TODO: function needs high tolerance level - check!
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= 0.00_1, r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= 0.00_1,
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -457,14 +692,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -24.062499;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -474,18 +720,29 @@ mod bmf_tests {
         let dimension = 2;
         let problem = BenchmarkFunction::shubert_n4(dimension);
         // several optima, positions of shubert_n3 + PI as cos instead of sin
-        let xi = scale_domain(&(-6.774576+PI), problem.domain()[0], problem.domain()[1]);
+        let xi = scale_domain(&(-6.774576 + PI), problem.domain()[0], problem.domain()[1]);
         let optimum_position = vec![xi; dimension];
         let optimum_value = -25.740858;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -499,14 +756,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = -186.7309;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -519,14 +787,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -39.16599 * dimension as f64;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -539,14 +818,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -559,14 +849,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -579,14 +880,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -599,14 +911,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -619,14 +942,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     // from here on: non-n-dimensional functions
@@ -640,14 +974,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -200.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -657,18 +1002,29 @@ mod bmf_tests {
         let dimension = 2;
         let problem = BenchmarkFunction::ackley_n3(dimension);
         let x1 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
-        let x2 = scale_domain(&- 0.4, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&-0.4, problem.domain()[0], problem.domain()[1]);
         let optimum_position = vec![x1, x2];
         let optimum_value = -219.1418;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -683,14 +1039,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = -2.02181;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -703,14 +1070,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -724,14 +1102,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -770,14 +1159,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -790,14 +1190,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -811,14 +1222,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -831,14 +1253,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = (-200.0_f64).exp();
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -853,14 +1286,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -869,19 +1313,30 @@ mod bmf_tests {
         let rng = &mut Random::default();
         let dimension = 2;
         let problem = BenchmarkFunction::cross_in_tray(dimension);
-        let x1 = scale_domain(&1.349406685353340, problem.domain()[0], problem.domain()[1]);
-        let x2 = scale_domain(&1.349406608602084, problem.domain()[0], problem.domain()[1]);
+        let x1 = scale_domain(&1.349_406_685_353_34, problem.domain()[0], problem.domain()[1]);
+        let x2 = scale_domain(&1.349_406_608_602_084, problem.domain()[0], problem.domain()[1]);
         let optimum_position = vec![x1, x2];
         let optimum_value = -2.06261218;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -895,14 +1350,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = -24771.09375;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -915,14 +1381,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -935,14 +1412,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = -1.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -955,14 +1443,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -976,14 +1475,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 3.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -996,14 +1506,25 @@ mod bmf_tests {
         let optimum_position = vec![xi];
         let optimum_value = -0.869011134989500;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1017,14 +1538,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1038,14 +1570,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = -19.2085;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1057,16 +1600,27 @@ mod bmf_tests {
         let x1 = scale_domain(&1.393249070031784, problem.domain()[0], problem.domain()[1]);
         let x2 = scale_domain(&0.0, problem.domain()[0], problem.domain()[1]);
         let optimum_position = vec![x1, x2];
-        let optimum_value = - 0.673667521146855;
+        let optimum_value = -0.673667521146855;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1079,14 +1633,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1099,14 +1664,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1119,14 +1695,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1141,14 +1728,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = -1.9133;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1161,14 +1759,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1181,14 +1790,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1202,14 +1822,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 0.00156685;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1223,14 +1854,25 @@ mod bmf_tests {
         let optimum_position = vec![x1, x2];
         let optimum_value = 0.292579;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1243,14 +1885,25 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 
     #[test]
@@ -1263,13 +1916,24 @@ mod bmf_tests {
         let optimum_position = vec![xi; dimension];
         let optimum_value = 0.0;
         let optimum_fitness = problem.evaluate(&optimum_position);
-        assert_float_eq!(optimum_value, optimum_fitness, abs <= abs_tol(), r1st <= r1st_tol());
+        assert_float_eq!(
+            optimum_value,
+            optimum_fitness,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
 
         // test for random values
         let random_position = (0..problem.dimension())
             .map(|dimension| rng.gen_range(problem.range(dimension)))
             .collect::<Vec<f64>>();
         let random_fitness = problem.evaluate(&random_position);
-        assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}", random_position, random_fitness, optimum_value);
+        assert!(
+            random_fitness >= optimum_value,
+            "position {:?}, random {:?}, optimum {:?}",
+            random_position,
+            random_fitness,
+            optimum_value
+        );
     }
 }

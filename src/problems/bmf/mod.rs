@@ -1,12 +1,10 @@
 //! Collection of benchmark functions with corresponding tests.
 
+pub mod implementations;
 #[cfg(test)]
 pub mod tests;
-pub mod implementations;
 
-
-use crate::{problem::{LimitedVectorProblem, Problem, VectorProblem}};
-
+use crate::problem::{LimitedVectorProblem, Problem, VectorProblem};
 
 /// Wraps the benchmark functions as [`Problem`]s.
 ///
@@ -16,7 +14,7 @@ pub struct BenchmarkFunction {
     name: &'static str,
     dimension: usize,
     #[serde(skip)]
-    domain: [f64;2],
+    domain: [f64; 2],
 
     #[serde(skip)]
     implementation: Function,
@@ -40,7 +38,6 @@ impl VectorProblem for BenchmarkFunction {
     fn dimension(&self) -> usize {
         self.dimension
     }
-
 }
 
 impl LimitedVectorProblem for BenchmarkFunction {

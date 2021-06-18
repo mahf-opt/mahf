@@ -2,8 +2,8 @@
 
 use crate::fitness::Fitness;
 
-pub mod tsp;
 pub mod bmf;
+pub mod tsp;
 
 /// Represents the (global) optimum of the search space.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
