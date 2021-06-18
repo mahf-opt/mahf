@@ -2,7 +2,7 @@
 
 use crate::fitness::Fitness;
 
-pub mod functions;
+pub mod bmf;
 pub mod tsp;
 
 /// Represents the (global) optimum of the search space.

@@ -37,7 +37,7 @@ pub fn validate_serializability<P>(config: &Configuration<P>) -> bool {
 mod tests {
     use super::{serialize_config, validate_serializability};
     use crate::heuristics::es;
-    use crate::problems::functions::BenchmarkFunction;
+    use crate::problems::bmf::BenchmarkFunction;
 
     #[test]
     pub fn serializing_es_config() {

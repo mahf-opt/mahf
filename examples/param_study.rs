@@ -1,7 +1,7 @@
 use mahf::{
     heuristic,
     heuristics::es::mu_plus_lambda,
-    problems::functions::BenchmarkFunction,
+    problems::bmf::BenchmarkFunction,
     prompt,
     threads::SyncThreadPool,
     tracking::{
