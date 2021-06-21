@@ -64,7 +64,7 @@ impl BenchmarkFunction {
             name: "alpineN1",
             implementation: scaled_implementations::alpine_n1,
             dimension,
-            domain: [0.0, 10.0],
+            domain: [-10.0, 10.0],
         }
     }
 
@@ -258,11 +258,11 @@ impl BenchmarkFunction {
         }
     }
 
-    /// The [Styblinski-Tank](http://benchmarkfcns.xyz/benchmarkfcns/styblinskitankfcn.html) function.
-    pub fn styblinksi_tank(dimension: usize) -> Self {
+    /// The [Styblinski-Tang](http://benchmarkfcns.xyz/benchmarkfcns/styblinskitankfcn.html) function.
+    pub fn styblinski_tang(dimension: usize) -> Self {
         BenchmarkFunction {
-            name: "styblinskiTank",
-            implementation: scaled_implementations::styblinksi_tank,
+            name: "styblinskiTang",
+            implementation: scaled_implementations::styblinski_tang,
             dimension,
             domain: [-5.0, 5.0],
         }
@@ -747,11 +747,11 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,...,0), here on input domain [0,10]
+    /// Optimum: 0 at (0,...,0), here on input domain [-10,10]
     pub fn alpine_n1(x: &[f64]) -> f64 {
         x.iter()
-            .map(|xi| scale_domain(xi, 0.0, 10.0))
-            .map(|xi| xi * xi.sin() + 0.1 * xi)
+            .map(|xi| scale_domain(xi, -10.0, 10.0))
+            .map(|xi| (xi * xi.sin() + 0.1 * xi).abs())
             .sum::<f64>()
     }
 
@@ -1059,12 +1059,12 @@ pub mod scaled_implementations {
         prod
     }
 
-    /// Styblinski-Tank function
+    /// Styblinski-Tang function
     ///
     /// Scaled to [-1.0, 1.0]
     ///
     /// Optimum: -39.16599 * n at (-2.903534,...,-2.903534), here on input domain [-5,5]
-    pub fn styblinksi_tank(x: &[f64]) -> f64 {
+    pub fn styblinski_tang(x: &[f64]) -> f64 {
         let sum = x
             .iter()
             .map(|xi| scale_domain(xi, -5.0, 5.0))
@@ -1597,7 +1597,7 @@ pub mod scaled_implementations {
         debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -5.0, 5.0);
         let b = scale_domain(&x[1], -5.0, 5.0);
-        1.0 * a.powi(2) - 1.05 * a.powi(4) + (a.powi(6) / 6.0) + a * b + b.powi(2)
+        2.0 * a.powi(2) - 1.05 * a.powi(4) + (a.powi(6) / 6.0) + a * b + b.powi(2)
     }
 
     /// Wolfe function
