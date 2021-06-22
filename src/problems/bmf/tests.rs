@@ -923,8 +923,18 @@ mod bmf_tests {
         let optimum_position2 = vec![x3, x4];
         let optimum_fitness1 = problem.evaluate(&optimum_position1);
         let optimum_fitness2 = problem.evaluate(&optimum_position2);
-        assert_float_eq!(problem.known_optimum(), optimum_fitness1, r1st <= r1st_tol());
-        assert_float_eq!(problem.known_optimum(), optimum_fitness2, r1st <= r1st_tol());
+        assert_float_eq!(
+            problem.known_optimum(),
+            optimum_fitness1,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
+        assert_float_eq!(
+            problem.known_optimum(),
+            optimum_fitness2,
+            abs <= abs_tol(),
+            r1st <= r1st_tol()
+        );
     }
 
     proptest! {
