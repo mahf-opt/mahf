@@ -131,7 +131,7 @@ mod parser {
                     // Only fitness value
                     [
                         name(_name),
-                        dimension(dimension),
+                        dimension(_dimension),
                         best_solution(fitness),
                     ] => {
                         Optimum {
@@ -184,7 +184,7 @@ mod parser {
 
             fn tour_section_nodes(input: Node) -> Result<Route> {
                 Ok(match_nodes!(input.into_children();
-                    [index(i)..] => i.collect::<Vec<_>>().into(),
+                    [index(i)..] => i.collect::<Vec<_>>(),
                 ))
             }
 
