@@ -88,7 +88,7 @@ impl TryFrom<&str> for BenchmarkFunction {
             "shubert_n3" => Ok(BenchmarkFunction::shubert_n3(dimension)),
             "shubert_n4" => Ok(BenchmarkFunction::shubert_n4(dimension)),
             "shubert" => Ok(BenchmarkFunction::shubert(dimension)),
-            "styblinksi_tank" => Ok(BenchmarkFunction::styblinksi_tank(dimension)),
+            "styblinski_tang" => Ok(BenchmarkFunction::styblinski_tang(dimension)),
             "sum_squares" => Ok(BenchmarkFunction::sum_squares(dimension)),
             "yang_n2" => Ok(BenchmarkFunction::yang_n2(dimension)),
             "yang_n3" => Ok(BenchmarkFunction::yang_n3(dimension)),
