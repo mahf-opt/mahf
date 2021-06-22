@@ -151,10 +151,7 @@ mod bmf_tests {
             let problem = BenchmarkFunction::alpine_n1(x.len());
             let optimum_value = 0.0;
             let random_fitness = problem.evaluate(&x);
-            prop_assert!(random_fitness >= optimum_value, "position {:?}, random {:?}, optimum {:?}",
-            x,
-            random_fitness,
-            optimum_value);
+            prop_assert!(random_fitness >= optimum_value);
         }
     }
 
