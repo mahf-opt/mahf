@@ -131,7 +131,7 @@ mod parser {
                     // Only fitness value
                     [
                         name(_name),
-                        dimension(dimension),
+                        dimension(_dimension),
                         best_solution(fitness),
                     ] => {
                         Optimum {
