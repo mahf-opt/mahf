@@ -15,6 +15,10 @@ impl BenchmarkFunction {
     pub fn domain(&self) -> [f64; 2] {
         self.domain
     }
+
+    pub fn known_optimum(&self) -> f64 {
+        self.known_optimum
+    }
 }
 
 impl BenchmarkFunction {
@@ -25,6 +29,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::sphere,
             dimension,
             domain: [-5.12, 5.12],
+            known_optimum: 0.0,
         }
     }
 
@@ -35,6 +40,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::rastrigin,
             dimension,
             domain: [-5.12, 5.12],
+            known_optimum: 0.0,
         }
     }
 
@@ -45,6 +51,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::ackley,
             dimension,
             domain: [-32.0, 32.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -55,6 +62,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::ackley_n4,
             dimension,
             domain: [-35.0, 35.0],
+            known_optimum: -4.590101633799122,
         }
     }
 
@@ -65,6 +73,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::alpine_n1,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -75,6 +84,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::alpine_n2,
             dimension,
             domain: [0.0, 10.0],
+            known_optimum: -(2.808_f64).powi(dimension as i32),
         }
     }
 
@@ -85,6 +95,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::brown,
             dimension,
             domain: [-1.0, 4.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -95,6 +106,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::exponential,
             dimension,
             domain: [-1.0, 1.0],
+            known_optimum: -1.0,
         }
     }
 
@@ -105,6 +117,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::griewank,
             dimension,
             domain: [-600.0, 600.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -115,6 +128,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::happy_cat,
             dimension,
             domain: [-2.0, 2.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -125,6 +139,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::periodic,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.9,
         }
     }
 
@@ -135,6 +150,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::powell_sum,
             dimension,
             domain: [-1.0, 1.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -145,6 +161,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::qing,
             dimension,
             domain: [-500.0, 500.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -155,6 +172,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::ridge,
             dimension,
             domain: [-5.0, 5.0],
+            known_optimum: -5.0,
         }
     }
 
@@ -165,6 +183,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::rosenbrock,
             dimension,
             domain: [-5.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -175,6 +194,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::salomon,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -185,6 +205,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schwefel_220,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -195,6 +216,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schwefel_221,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -205,6 +227,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schwefel_222,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -215,6 +238,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schwefel_223,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -225,6 +249,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schwefel,
             dimension,
             domain: [-500.0, 500.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -235,6 +260,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::shubert_n3,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: -24.062499,
         }
     }
 
@@ -245,6 +271,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::shubert_n4,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: -25.740858,
         }
     }
 
@@ -255,6 +282,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::shubert,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: -186.7309,
         }
     }
 
@@ -265,6 +293,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::styblinski_tang,
             dimension,
             domain: [-5.0, 5.0],
+            known_optimum: -39.15699 * dimension as f64,
         }
     }
 
@@ -275,6 +304,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::sum_squares,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -285,6 +315,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::yang_n2,
             dimension,
             domain: [-2.0 * PI, 2.0 * PI],
+            known_optimum: 0.0,
         }
     }
 
@@ -295,6 +326,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::yang_n3,
             dimension,
             domain: [-2.0 * PI, 2.0 * PI],
+            known_optimum: -1.0,
         }
     }
 
@@ -305,6 +337,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::yang_n4,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: -1.0,
         }
     }
 
@@ -315,6 +348,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::zakharov,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -326,6 +360,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::ackley_n2,
             dimension,
             domain: [-32.0, 32.0],
+            known_optimum: -200.0,
         }
     }
 
@@ -337,6 +372,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::ackley_n3,
             dimension,
             domain: [-32.0, 32.0],
+            known_optimum: -219.1418,
         }
     }
 
@@ -349,6 +385,7 @@ impl BenchmarkFunction {
             dimension,
             //TODO: find better solution when domains different for x and y
             domain: [-2.0, 2.0],
+            known_optimum: -2.02181,
         }
     }
 
@@ -360,6 +397,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::bartels_conn,
             dimension,
             domain: [-500.0, 500.0],
+            known_optimum: 1.0,
         }
     }
 
@@ -371,6 +409,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::beale,
             dimension,
             domain: [-4.5, 4.5],
+            known_optimum: 0.0,
         }
     }
 
@@ -382,6 +421,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::bird,
             dimension,
             domain: [-2.0 * PI, 2.0 * PI],
+            known_optimum: -106.764537,
         }
     }
 
@@ -393,6 +433,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::bohachevsky_n1,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -404,6 +445,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::bohachevsky_n2,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -415,6 +457,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::booth,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -426,6 +469,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::brent,
             dimension,
             domain: [-20.0, 0.0],
+            known_optimum: (-200.0_f64).exp(),
         }
     }
 
@@ -437,6 +481,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::bukin_n6,
             dimension,
             domain: [-15.0, -5.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -448,6 +493,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::cross_in_tray,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: -2.06261218,
         }
     }
 
@@ -459,6 +505,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::deckkers_aarts,
             dimension,
             domain: [-20.0, 20.0],
+            known_optimum: -24771.09375,
         }
     }
 
@@ -470,6 +517,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::drop_wave,
             dimension,
             domain: [-5.2, 5.2],
+            known_optimum: -1.0,
         }
     }
 
@@ -481,6 +529,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::easom,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: -1.0,
         }
     }
 
@@ -492,6 +541,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::egg_crate,
             dimension,
             domain: [-5.0, 5.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -503,6 +553,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::goldstein_price,
             dimension,
             domain: [-2.0, 2.0],
+            known_optimum: 3.0,
         }
     }
 
@@ -514,6 +565,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::gramacy_lee,
             dimension,
             domain: [0.5, 2.5],
+            known_optimum: -0.869011134989500,
         }
     }
 
@@ -525,6 +577,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::himmelblau,
             dimension,
             domain: [-6.0, 6.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -536,6 +589,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::holder_table,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: -19.2085,
         }
     }
 
@@ -547,6 +601,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::keane,
             dimension,
             domain: [0.0, 10.0],
+            known_optimum: -0.673667521146855,
         }
     }
 
@@ -558,6 +613,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::leon,
             dimension,
             domain: [0.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -569,6 +625,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::levi_n13,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -580,6 +637,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::matyas,
             dimension,
             domain: [-10.0, 10.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -591,6 +649,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::mccormick,
             dimension,
             domain: [-1.5, 4.0],
+            known_optimum: -1.9133,
         }
     }
 
@@ -602,6 +661,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schaffer_n1,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -613,6 +673,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schaffer_n2,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -624,6 +685,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schaffer_n3,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.00156685,
         }
     }
 
@@ -635,6 +697,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::schaffer_n4,
             dimension,
             domain: [-100.0, 100.0],
+            known_optimum: 0.292579,
         }
     }
 
@@ -646,6 +709,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::three_hump_camel,
             dimension,
             domain: [-5.0, 5.0],
+            known_optimum: 0.0,
         }
     }
 
@@ -657,6 +721,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::wolfe,
             dimension,
             domain: [0.0, 2.0],
+            known_optimum: 0.0,
         }
     }
 }
@@ -728,7 +793,6 @@ pub mod scaled_implementations {
     /// Scaled to [-1.0, 1.0]
     ///
     /// Optimum: on 2-dimensional space -4.590101633799122 at (−1.51,−0.755), here on input domain [-35,35]
-    //TODO: Try to find optimum for other dimensions!
     pub fn ackley_n4(x: &[f64]) -> f64 {
         let mut sum = 0.0;
         for i in 1..=(x.len() - 1) {
@@ -1329,7 +1393,6 @@ pub mod scaled_implementations {
     ///
     /// Optimum: 0 at (-10,1), here on input domain [-15,-5] for x and [-3,3] for y
     /// Defined only on 2-dimensional space.
-    //TODO: For functions with range not symmetric around 0, look for better scaling options!
     pub fn bukin_n6(x: &[f64]) -> f64 {
         debug_assert_eq!(x.len(), 2);
         let a = scale_domain(&x[0], -15.0, -5.0);
