@@ -60,10 +60,6 @@ impl TryFrom<&str> for BenchmarkFunction {
         let name = parts.next().ok_or_else(err)?;
         let dimension = parts.next().ok_or_else(err)?.parse::<usize>()?;
 
-        if parts.next().is_some() {
-            return Err(err());
-        }
-
         match name {
             "sphere" => Ok(BenchmarkFunction::sphere(dimension)),
             "rastrigin" => Ok(BenchmarkFunction::rastrigin(dimension)),
@@ -128,5 +124,17 @@ impl TryFrom<&str> for BenchmarkFunction {
             "wolfe" => Ok(BenchmarkFunction::wolfe(dimension)),
             _ => Err(anyhow!("Unknown benchmark funktion {}", name)),
         }
+    }
+}
+
+#[cfg(test)]
+mod try_from_tests {
+    use super::*;
+
+    #[test]
+    fn try_from_sphere() {
+        let bmf = BenchmarkFunction::try_from("sphere<20>").unwrap();
+        assert_eq!(bmf.name, "sphere");
+        assert_eq!(bmf.dimension, 20);
     }
 }
