@@ -19,6 +19,9 @@ pub struct BenchmarkFunction {
     domain: [f64; 2],
 
     #[serde(skip)]
+    known_optimum: f64,
+
+    #[serde(skip)]
     implementation: Function,
 }
 

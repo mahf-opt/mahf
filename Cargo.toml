@@ -19,3 +19,6 @@ ron = "0.6.4"
 rprompt = "1.0.5"
 ryu = "1.0.5"
 serde = { version = "1.0.125", features = ["derive"] }
+
+[dev-dependencies]
+proptest = "1.0.0"
