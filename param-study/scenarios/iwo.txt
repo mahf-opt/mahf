@@ -1,0 +1,12 @@
+algo = cargo run -- iwo
+execdir = .
+deterministic = 0
+run_obj = approx
+overall_obj = mean
+cutoff_time = 5
+cutoff_length = max
+tunerTimeout = 30
+paramfile = params/iwo.txt
+outdir = output/iwo
+instance_file = problems/bmf-train.txt
+test_instance_file = problems/bmf-train.txt

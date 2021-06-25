@@ -7,13 +7,11 @@ use mahf::{
 };
 use std::convert::TryFrom;
 
+use crate::util::{print_result, ArgsIter, BaseParams};
+
 #[derive(Debug, Default)]
 struct Parameters {
-    instance: String,
-    instance_information: String,
-    cutoff_time: f64,
-    cutoff_length: u32,
-    seed: u64,
+    base: BaseParams,
 
     initial_population_size: u32,
     max_population_size: u32,
@@ -25,15 +23,9 @@ struct Parameters {
     max_iterations: u32,
 }
 
-fn parameters() -> Parameters {
+fn parameters(base_params: BaseParams, args: &mut ArgsIter) -> Parameters {
     let mut params = Parameters::default();
-    let mut args = std::env::args().skip(1);
-
-    params.instance = args.next().unwrap();
-    params.instance_information = args.next().unwrap();
-    params.cutoff_time = args.next().unwrap().parse().unwrap();
-    params.cutoff_length = args.next().unwrap().parse().unwrap();
-    params.seed = args.next().unwrap().parse().unwrap();
+    params.base = base_params;
 
     while let Some(param) = args.next() {
         let value = args.next().unwrap();
@@ -54,19 +46,8 @@ fn parameters() -> Parameters {
     params
 }
 
-fn print_result(sat: bool, runtime: f64, runlength: u32, best: f64, seed: u64) {
-    println!(
-        "Result for ParamILS: {}, {}, {}, {}, {}",
-        if sat { "SAT" } else { "TIMEOUT" },
-        runtime,
-        runlength,
-        best,
-        seed
-    );
-}
-
-fn main() {
-    let params = parameters();
+pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
+    let params = parameters(base_params, args);
 
     if !(params.initial_population_size <= params.max_population_size
         && params.min_number_of_seeds <= params.max_number_of_seeds
@@ -74,15 +55,15 @@ fn main() {
     {
         print_result(
             false,
-            params.cutoff_time,
-            params.cutoff_length,
+            params.base.cutoff_time,
+            params.base.cutoff_length,
             1000.0,
-            params.seed,
+            params.base.seed,
         );
         return;
     }
 
-    let problem = BenchmarkFunction::try_from(params.instance.as_str()).unwrap();
+    let problem = BenchmarkFunction::try_from(params.base.instance.as_str()).unwrap();
 
     let config = Configuration::new(
         initialization::RandomSpread {
@@ -106,15 +87,15 @@ fn main() {
     );
 
     let logger = &mut Log::none();
-    let rng = Random::seeded(params.seed);
+    let rng = Random::seeded(params.base.seed);
 
     heuristic::run(&problem, logger, &config, Some(rng), None);
 
     print_result(
         false,
-        params.cutoff_time,
+        params.base.cutoff_time,
         logger.final_iteration().iteration,
         logger.final_best_fx(),
-        params.seed,
+        params.base.seed,
     );
 }

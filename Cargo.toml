@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Leopold Luley <git@leopoldluley.de>"]
 edition = "2018"
 
+[workspace]
+members = ["param-study"]
+
 [dependencies]
 anyhow = "1.0.40"
 erased-serde = "0.3.13"
