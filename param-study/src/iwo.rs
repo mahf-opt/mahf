@@ -8,12 +8,10 @@ use mahf::{
 };
 use std::{convert::TryFrom, time::Instant};
 
-use crate::util::{print_result, ArgsIter, BaseParams};
+use crate::util::{print_result, ArgsIter, Setup};
 
 #[derive(Debug, Default)]
 struct Parameters {
-    base: BaseParams,
-
     initial_population_size: u32,
     max_population_size: u32,
     min_number_of_seeds: u32,
@@ -24,9 +22,8 @@ struct Parameters {
     max_iterations: u32,
 }
 
-fn parameters(base_params: BaseParams, args: &mut ArgsIter) -> Parameters {
+fn parameters(args: &mut ArgsIter) -> Parameters {
     let mut params = Parameters::default();
-    params.base = base_params;
 
     while let Some(param) = args.next() {
         let value = args.next().unwrap();
@@ -47,8 +44,8 @@ fn parameters(base_params: BaseParams, args: &mut ArgsIter) -> Parameters {
     params
 }
 
-pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
-    let params = parameters(base_params, args);
+pub fn run(setup: &Setup, args: &mut ArgsIter) {
+    let params = parameters(args);
 
     if !(params.initial_population_size <= params.max_population_size
         && params.min_number_of_seeds <= params.max_number_of_seeds
@@ -58,7 +55,7 @@ pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
         return;
     }
 
-    let problem = BenchmarkFunction::try_from(params.base.instance.as_str()).unwrap();
+    let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
     let config = Configuration::new(
         initialization::RandomSpread {
@@ -77,12 +74,12 @@ pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
             max_population_size: params.max_population_size,
         },
         termination::FixedIterations {
-            max_iterations: params.base.cutoff_length,
+            max_iterations: setup.cutoff_length,
         },
     );
 
     let logger = &mut Log::none();
-    let rng = Random::seeded(params.base.seed);
+    let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
     heuristic::run(&problem, logger, &config, Some(rng), None);
@@ -95,6 +92,6 @@ pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
         runtime.as_secs_f64(),
         logger.final_iteration().iteration,
         1.0 - (problem.known_optimum() + 10.0) / (logger.final_best_fx() + 10.0),
-        params.base.seed,
+        setup.seed,
     );
 }

@@ -1,7 +1,7 @@
 pub type ArgsIter = std::iter::Skip<std::env::Args>;
 
 #[derive(Debug, Default)]
-pub struct BaseParams {
+pub struct Setup {
     pub instance: String,
     pub instance_information: String,
     pub cutoff_time: f64,
@@ -10,12 +10,12 @@ pub struct BaseParams {
 }
 
 /// Returns the base params and an iterator for the remaining params.
-pub fn get_parameters() -> (String, BaseParams, ArgsIter) {
+pub fn get_parameters() -> (String, Setup, ArgsIter) {
     let mut args = std::env::args().skip(1);
 
     let heuristic = args.next().unwrap();
 
-    let base = BaseParams {
+    let base = Setup {
         instance: args.next().unwrap(),
         instance_information: args.next().unwrap(),
         cutoff_time: args.next().unwrap().parse().unwrap(),
