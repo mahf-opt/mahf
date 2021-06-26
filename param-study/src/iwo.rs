@@ -1,11 +1,12 @@
 use mahf::{
+    float_eq::float_eq,
     heuristic::{self, Configuration},
     operators::*,
     problems::bmf::BenchmarkFunction,
     random::Random,
     tracking::Log,
 };
-use std::convert::TryFrom;
+use std::{convert::TryFrom, time::Instant};
 
 use crate::util::{print_result, ArgsIter, BaseParams};
 
@@ -53,13 +54,7 @@ pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
         && params.min_number_of_seeds <= params.max_number_of_seeds
         && params.final_deviation <= params.initial_deviation)
     {
-        print_result(
-            false,
-            params.base.cutoff_time,
-            params.base.cutoff_length,
-            1000.0,
-            params.base.seed,
-        );
+        // TODO: Is there a better way to indicate "illigal configuration"?
         return;
     }
 
@@ -82,20 +77,24 @@ pub fn run(base_params: BaseParams, args: &mut ArgsIter) {
             max_population_size: params.max_population_size,
         },
         termination::FixedIterations {
-            max_iterations: 500,
+            max_iterations: params.base.cutoff_length,
         },
     );
 
     let logger = &mut Log::none();
     let rng = Random::seeded(params.base.seed);
 
+    let start = Instant::now();
     heuristic::run(&problem, logger, &config, Some(rng), None);
+    let end = Instant::now();
+    let runtime = end - start;
 
+    println!("Final value: {}", logger.final_best_fx());
     print_result(
-        false,
-        params.base.cutoff_time,
+        float_eq!(problem.known_optimum(), logger.final_best_fx(), abs <= 0.3),
+        runtime.as_secs_f64(),
         logger.final_iteration().iteration,
-        logger.final_best_fx(),
+        1.0 - (problem.known_optimum() + 10.0) / (logger.final_best_fx() + 10.0),
         params.base.seed,
     );
 }
