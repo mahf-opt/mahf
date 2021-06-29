@@ -1,0 +1,6 @@
+"sphere<10>"
+"sphere<20>"
+"ackley<10>"
+"ackley<20>"
+"rastrigin<10>"
+"rastrigin<20>"

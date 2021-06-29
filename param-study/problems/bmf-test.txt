@@ -1,0 +1,3 @@
+"ackley<30>"
+"sphere<30>"
+"rastrigin<30>"

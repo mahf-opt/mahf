@@ -217,6 +217,38 @@ impl std::fmt::Display for Instances {
     }
 }
 
+impl TryFrom<&str> for Instances {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "A280" => Ok(Instances::A280),
+            "BERLIN52" => Ok(Instances::BERLIN52),
+            "BIER127" => Ok(Instances::BIER127),
+            "CH130" => Ok(Instances::CH130),
+            "CH150" => Ok(Instances::CH150),
+            "D198" => Ok(Instances::D198),
+            "D493" => Ok(Instances::D493),
+            "D657" => Ok(Instances::D657),
+            "D1291" => Ok(Instances::D1291),
+            "D1655" => Ok(Instances::D1655),
+            "D2103" => Ok(Instances::D2103),
+            "D15112" => Ok(Instances::D15112),
+            "D18512" => Ok(Instances::D18512),
+            "EIL51" => Ok(Instances::EIL51),
+            "EIL76" => Ok(Instances::EIL76),
+            "EIL101" => Ok(Instances::EIL101),
+            "FL417" => Ok(Instances::FL417),
+            "FL1400" => Ok(Instances::FL1400),
+            "FL1577" => Ok(Instances::FL1577),
+            "FL3795" => Ok(Instances::FL3795),
+            "NRW1379" => Ok(Instances::NRW1379),
+            "USA13509" => Ok(Instances::USA13509),
+            _ => Err(anyhow!("Unkonwn instance {}", value)),
+        }
+    }
+}
+
 impl Instances {
     /// Tries to load the built-in instance.
     pub fn try_load(&self) -> Result<SymmetricTsp> {
