@@ -22,28 +22,6 @@ struct Parameters {
     max_iterations: u32,
 }
 
-fn parameters(args: &mut ArgsIter) -> Parameters {
-    let mut params = Parameters::default();
-
-    while let Some(param) = args.next() {
-        let value = args.next().unwrap();
-
-        match param.as_str() {
-            "-initial_population_size" => params.initial_population_size = value.parse().unwrap(),
-            "-max_population_size" => params.max_population_size = value.parse().unwrap(),
-            "-min_number_of_seeds" => params.min_number_of_seeds = value.parse().unwrap(),
-            "-max_number_of_seeds" => params.max_number_of_seeds = value.parse().unwrap(),
-            "-initial_deviation" => params.initial_deviation = value.parse().unwrap(),
-            "-final_deviation" => params.final_deviation = value.parse().unwrap(),
-            "-modulation_index" => params.modulation_index = value.parse().unwrap(),
-            "-max_iterations" => params.max_iterations = value.parse().unwrap(),
-            unknown => panic!("unknown param {}", unknown),
-        }
-    }
-
-    params
-}
-
 pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let params = parameters(args);
 
@@ -86,12 +64,44 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let end = Instant::now();
     let runtime = end - start;
 
-    println!("Final value: {}", logger.final_best_fx());
+    let allowed_error = match problem.name() {
+        "rastrigin" => 5.0,
+        "ackley" => 0.3,
+        "sphere" => 0.01,
+        _ => 1.0,
+    };
+
     print_result(
-        float_eq!(problem.known_optimum(), logger.final_best_fx(), abs <= 0.3),
+        float_eq!(
+            problem.known_optimum(),
+            logger.final_best_fx(),
+            abs <= allowed_error
+        ),
         runtime.as_secs_f64(),
         logger.final_iteration().iteration,
-        1.0 - (problem.known_optimum() + 10.0) / (logger.final_best_fx() + 10.0),
+        logger.final_best_fx(),
         setup.seed,
     );
+}
+
+fn parameters(args: &mut ArgsIter) -> Parameters {
+    let mut params = Parameters::default();
+
+    while let Some(param) = args.next() {
+        let value = args.next().unwrap();
+
+        match param.as_str() {
+            "-initial_population_size" => params.initial_population_size = value.parse().unwrap(),
+            "-max_population_size" => params.max_population_size = value.parse().unwrap(),
+            "-min_number_of_seeds" => params.min_number_of_seeds = value.parse().unwrap(),
+            "-max_number_of_seeds" => params.max_number_of_seeds = value.parse().unwrap(),
+            "-initial_deviation" => params.initial_deviation = value.parse().unwrap(),
+            "-final_deviation" => params.final_deviation = value.parse().unwrap(),
+            "-modulation_index" => params.modulation_index = value.parse().unwrap(),
+            "-max_iterations" => params.max_iterations = value.parse().unwrap(),
+            unknown => panic!("unknown param {}", unknown),
+        }
+    }
+
+    params
 }
