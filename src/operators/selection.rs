@@ -4,8 +4,10 @@ use crate::{
     heuristic::{components::*, Individual, State},
     random::Random,
 };
-use rand::seq::SliceRandom;
+use rand::{seq::SliceRandom, Rng};
+use rand::distributions::{weighted::WeightedIndex, Distribution};
 use serde::{Deserialize, Serialize};
+use std::cmp::Reverse;
 
 /// Selects `offspring` random solutions.
 ///
@@ -131,5 +133,161 @@ mod fitness_proportional {
         // I(2.0) should have (1 + 3/2) seeds
         // I(3.0) should have 1 seeds
         assert_eq!(selection, vec![1.0, 1.0, 1.0, 2.0, 2.0, 3.0]);
+    }
+}
+
+
+/// Selects `offspring` solutions using roulette-wheel method.
+///
+/// Solutions can be selected multiple times in a single iteration.
+#[derive(Serialize, Deserialize)]
+pub struct RouletteWheel {
+    /// Offspring per iteration.
+    pub offspring: u32,
+}
+impl Selection for RouletteWheel {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        #[rustfmt::skip]
+        let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
+        let weights: Vec<f64> = population.iter()
+            .map(|f| f.fitness().into() / total)
+            .collect();
+        let weights_min_total: f64 = weights.iter()
+            .map(|w| 1.0 / w)
+            .sum();
+        let weights_min: Vec<f64> = weights.iter()
+            .map(|w| (1.0 / w) / weights_min_total)
+            .collect();
+        let wheel = WeightedIndex::new(weights_min).unwrap();
+        for _ in 0..self.offspring {
+            selection.push(&population[wheel.sample(rng)]);
+        }
+    }
+}
+#[cfg(test)]
+mod roulette_wheel {
+    use super::*;
+    use crate::operators::testing::new_test_population;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new();
+        let mut rng = Random::testing();
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = RouletteWheel { offspring: 4 };
+        let mut selection = Vec::new();
+        comp.select(&mut state, &mut rng, &population, &mut selection);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
+}
+
+/// Selects `offspring` solutions using stochastic universal sampling.
+///
+/// Solutions can be selected multiple times in a single iteration.
+#[derive(Serialize, Deserialize)]
+pub struct StochasticUniversalSampling {
+    /// Offspring per iteration.
+    pub offspring: u32,
+}
+impl Selection for StochasticUniversalSampling {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        #[rustfmt::skip]
+        let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
+        let weights: Vec<f64> = population.iter()
+            .map(|f| f.fitness().into() / total)
+            .collect();
+        let weights_min_total: f64 = weights.iter()
+            .map(|w| 1.0 / w)
+            .sum();
+        let weights_min: Vec<f64> = weights.iter()
+            .map(|w| (1.0 / w) / weights_min_total)
+            .collect();
+
+        let gap = 1.0 / self.offspring as f64;
+        let start = rng.gen_range(0.0..gap);
+        let mut distance = start * gap;
+
+        let mut sum_weights = weights_min[0];
+        let mut i: usize = 0;
+        while distance < 1.0 {
+            while sum_weights < distance {
+                i += 1;
+                sum_weights += weights_min[i];
+            }
+            selection.push(&population[i]);
+            distance += gap;
+        }
+    }
+}
+#[cfg(test)]
+mod stochastic_universal_sampling {
+    use super::*;
+    use crate::operators::testing::new_test_population;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new();
+        let mut rng = Random::testing();
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = StochasticUniversalSampling { offspring: 4 };
+        let mut selection = Vec::new();
+        comp.select(&mut state, &mut rng, &population, &mut selection);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
+}
+
+/// Selects `offspring` using deterministic Tournament selection.
+///
+/// Solutions can be selected multiple times in a single iteration.
+#[derive(Serialize, Deserialize)]
+pub struct Tournament {
+    /// Offspring per iteration.
+    pub offspring: u32,
+    /// Tournament size.
+    pub size: u32,
+}
+impl Selection for Tournament {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        assert!(self.offspring >= self.size);
+        for _ in 0..self.offspring {
+            let mut tournament: Vec<&Individual> = population.choose_multiple(rng, self.size as usize).collect();
+            #[rustfmt::skip]
+            tournament.sort_by(|x, y| (y.fitness().into()).partial_cmp(&(x.fitness().into())).unwrap());
+            selection.push(tournament[0]);
+        }
+    }
+}
+#[cfg(test)]
+mod tournament {
+    use super::*;
+    use crate::operators::testing::new_test_population;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new();
+        let mut rng = Random::testing();
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = Tournament { offspring: 4, size: 2 };
+        let mut selection = Vec::new();
+        comp.select(&mut state, &mut rng, &population, &mut selection);
+        assert_eq!(selection.len(), comp.offspring as usize);
     }
 }
