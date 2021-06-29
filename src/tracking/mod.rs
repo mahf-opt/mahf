@@ -15,17 +15,17 @@ pub struct CustomLog {
 }
 
 pub struct EvaluationEntry {
-    evaluation: u32,
-    current_fx: f64,
-    best_fx: f64,
-    custom: Vec<CustomLog>,
+    pub evaluation: u32,
+    pub current_fx: f64,
+    pub best_fx: f64,
+    pub custom: Vec<CustomLog>,
 }
 
 pub struct IterationEntry {
-    iteration: u32,
-    best_fx: f64,
-    diversity: f64,
-    custom: Vec<CustomLog>,
+    pub iteration: u32,
+    pub best_fx: f64,
+    pub diversity: f64,
+    pub custom: Vec<CustomLog>,
 }
 
 pub struct Log {
@@ -84,6 +84,10 @@ impl Log {
 
     pub fn final_best_fx(&self) -> f64 {
         self.evaluations.last().unwrap().best_fx
+    }
+
+    pub fn final_iteration(&self) -> &IterationEntry {
+        self.iterations.last().unwrap()
     }
 
     /// Log an evaluation

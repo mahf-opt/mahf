@@ -16,5 +16,6 @@ pub mod threads;
 pub mod tracking;
 
 // re-exports
+pub use float_eq;
 pub use rand;
 pub use rand_distr;
