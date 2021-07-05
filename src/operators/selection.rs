@@ -7,7 +7,6 @@ use crate::{
 use rand::{seq::SliceRandom, Rng};
 use rand::distributions::{weighted::WeightedIndex, Distribution};
 use serde::{Deserialize, Serialize};
-use std::cmp::Reverse;
 
 /// Selects `offspring` random solutions.
 ///
@@ -68,13 +67,13 @@ mod fully_random {
 /// # References
 /// See [crate::heuristics::iwo]
 #[derive(Serialize, Deserialize)]
-pub struct FitnessProportional {
+pub struct DeterministicFitnessProportional {
     /// Minimum offspring per individual per iteration
     pub min_offspring: u32,
     /// Maximum offspring per individual per iteration
     pub max_offspring: u32,
 }
-impl Selection for FitnessProportional {
+impl Selection for DeterministicFitnessProportional {
     fn select<'p>(
         &self,
         _state: &mut State,
@@ -110,13 +109,13 @@ impl Selection for FitnessProportional {
     }
 }
 #[cfg(test)]
-mod fitness_proportional {
+mod deterministic_fitness_proportional {
     use super::*;
     use crate::operators::testing::{collect_population_fitness, new_test_population};
 
     #[test]
     fn selects_right_children() {
-        let comp = FitnessProportional {
+        let comp = DeterministicFitnessProportional {
             min_offspring: 1,
             max_offspring: 3,
         };
@@ -266,10 +265,9 @@ impl Selection for Tournament {
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
-        assert!(self.offspring >= self.size);
+        assert!(population.len() >= self.size as usize);
         for _ in 0..self.offspring {
             let mut tournament: Vec<&Individual> = population.choose_multiple(rng, self.size as usize).collect();
-            #[rustfmt::skip]
             tournament.sort_by(|x, y| (y.fitness().into()).partial_cmp(&(x.fitness().into())).unwrap());
             selection.push(tournament[0]);
         }
@@ -289,5 +287,57 @@ mod tournament {
         let mut selection = Vec::new();
         comp.select(&mut state, &mut rng, &population, &mut selection);
         assert_eq!(selection.len(), comp.offspring as usize);
+    }
+}
+
+/// Selects `offspring` solutions using linear ranking.
+///
+/// Solutions can be selected multiple times in a single iteration.
+#[derive(Serialize, Deserialize)]
+pub struct LinearRank {
+    /// Offspring per iteration.
+    pub offspring: u32,
+}
+impl Selection for LinearRank {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        let mut weight_pos: Vec<(usize, f64)> = population.iter()
+            .enumerate()
+            .map(|(i, f)| (i, f.fitness().into()))
+            .collect();
+
+        weight_pos.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
+        let weights: Vec<usize> = weight_pos.iter()
+            .enumerate()
+            .map(|(i, _k)| 1 + i)
+            .collect();
+
+        let wheel = WeightedIndex::new(&weights).unwrap();
+        for _ in 0..self.offspring {
+            let position = (weight_pos[wheel.sample(rng)]).0;
+            selection.push(&population[position]);
+        }
+    }
+}
+#[cfg(test)]
+mod linear_rank {
+    use super::*;
+    use crate::operators::testing::new_test_population;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new();
+        let mut rng = Random::testing();
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = LinearRank { offspring: 4 };
+        let mut selection = Vec::new();
+        comp.select(&mut state, &mut rng, &population, &mut selection);
+        assert_eq!(selection.len(), comp.offspring as usize);
+
     }
 }

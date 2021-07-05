@@ -13,8 +13,8 @@ use crate::{
 pub fn ga<P>(
     population_size: u32,
     deviation: f64,
-    p_mutation: f64,
-    p_crossover: f64,
+    _p_mutation: f64,
+    _p_crossover: f64,
     max_iterations: u32,
 ) -> Configuration<P>
 where

@@ -36,7 +36,7 @@ where
         initialization::RandomSpread {
             initial_population_size,
         },
-        selection::FitnessProportional {
+        selection::DeterministicFitnessProportional {
             min_offspring: min_number_of_seeds,
             max_offspring: max_number_of_seeds,
         },
