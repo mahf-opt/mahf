@@ -24,7 +24,9 @@ where
         initialization::RandomSpread {
             initial_population_size: population_size,
         },
-        selection::RouletteWheel { offspring: population_size },
+        selection::RouletteWheel {
+            offspring: population_size,
+        },
         generation::FixedDeviationDelta { deviation },
         replacement::Generational {
             max_population_size: population_size,

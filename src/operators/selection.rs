@@ -4,8 +4,8 @@ use crate::{
     heuristic::{components::*, Individual, State},
     random::Random,
 };
-use rand::{seq::SliceRandom, Rng};
 use rand::distributions::{weighted::WeightedIndex, Distribution};
+use rand::{seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 /// Selects `offspring` random solutions.
@@ -135,7 +135,6 @@ mod deterministic_fitness_proportional {
     }
 }
 
-
 /// Selects `offspring` solutions using roulette-wheel method.
 ///
 /// Solutions can be selected multiple times in a single iteration.
@@ -154,13 +153,13 @@ impl Selection for RouletteWheel {
     ) {
         #[rustfmt::skip]
         let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
-        let weights: Vec<f64> = population.iter()
+        let weights: Vec<f64> = population
+            .iter()
             .map(|f| f.fitness().into() / total)
             .collect();
-        let weights_min_total: f64 = weights.iter()
-            .map(|w| 1.0 / w)
-            .sum();
-        let weights_min: Vec<f64> = weights.iter()
+        let weights_min_total: f64 = weights.iter().map(|w| 1.0 / w).sum();
+        let weights_min: Vec<f64> = weights
+            .iter()
             .map(|w| (1.0 / w) / weights_min_total)
             .collect();
         let wheel = WeightedIndex::new(weights_min).unwrap();
@@ -204,13 +203,13 @@ impl Selection for StochasticUniversalSampling {
     ) {
         #[rustfmt::skip]
         let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
-        let weights: Vec<f64> = population.iter()
+        let weights: Vec<f64> = population
+            .iter()
             .map(|f| f.fitness().into() / total)
             .collect();
-        let weights_min_total: f64 = weights.iter()
-            .map(|w| 1.0 / w)
-            .sum();
-        let weights_min: Vec<f64> = weights.iter()
+        let weights_min_total: f64 = weights.iter().map(|w| 1.0 / w).sum();
+        let weights_min: Vec<f64> = weights
+            .iter()
             .map(|w| (1.0 / w) / weights_min_total)
             .collect();
 
@@ -267,8 +266,14 @@ impl Selection for Tournament {
     ) {
         assert!(population.len() >= self.size as usize);
         for _ in 0..self.offspring {
-            let mut tournament: Vec<&Individual> = population.choose_multiple(rng, self.size as usize).collect();
-            tournament.sort_by(|x, y| (y.fitness().into()).partial_cmp(&(x.fitness().into())).unwrap());
+            let mut tournament: Vec<&Individual> = population
+                .choose_multiple(rng, self.size as usize)
+                .collect();
+            tournament.sort_by(|x, y| {
+                (y.fitness().into())
+                    .partial_cmp(&(x.fitness().into()))
+                    .unwrap()
+            });
             selection.push(tournament[0]);
         }
     }
@@ -283,7 +288,10 @@ mod tournament {
         let mut state = State::new();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
-        let comp = Tournament { offspring: 4, size: 2 };
+        let comp = Tournament {
+            offspring: 4,
+            size: 2,
+        };
         let mut selection = Vec::new();
         comp.select(&mut state, &mut rng, &population, &mut selection);
         assert_eq!(selection.len(), comp.offspring as usize);
@@ -306,16 +314,14 @@ impl Selection for LinearRank {
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
-        let mut weight_pos: Vec<(usize, f64)> = population.iter()
+        let mut weight_pos: Vec<(usize, f64)> = population
+            .iter()
             .enumerate()
             .map(|(i, f)| (i, f.fitness().into()))
             .collect();
 
         weight_pos.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
-        let weights: Vec<usize> = weight_pos.iter()
-            .enumerate()
-            .map(|(i, _k)| 1 + i)
-            .collect();
+        let weights: Vec<usize> = weight_pos.iter().enumerate().map(|(i, _k)| 1 + i).collect();
 
         let wheel = WeightedIndex::new(&weights).unwrap();
         for _ in 0..self.offspring {
@@ -338,6 +344,5 @@ mod linear_rank {
         let mut selection = Vec::new();
         comp.select(&mut state, &mut rng, &population, &mut selection);
         assert_eq!(selection.len(), comp.offspring as usize);
-
     }
 }

@@ -2,8 +2,8 @@
 
 use crate::heuristic::{components::*, Individual, State};
 use crate::random::Random;
-use serde::{Deserialize, Serialize};
 use rand::seq::SliceRandom;
+use serde::{Deserialize, Serialize};
 
 /// Always keeps the fittest individuals.
 #[derive(Serialize, Deserialize)]
