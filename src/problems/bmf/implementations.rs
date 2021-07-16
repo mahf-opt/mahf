@@ -293,7 +293,7 @@ impl BenchmarkFunction {
             implementation: scaled_implementations::styblinski_tang,
             dimension,
             domain: [-5.0, 5.0],
-            known_optimum: -39.15699 * dimension as f64,
+            known_optimum: -39.1662 * dimension as f64,
         }
     }
 

@@ -51,7 +51,7 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            selection::FitnessProportional {
+            selection::DeterministicFitnessProportional {
                 min_offspring: 4,
                 max_offspring: 6,
             },
@@ -109,7 +109,7 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::FitnessProportional {
+            selection::DeterministicFitnessProportional {
                 min_offspring: 4,
                 max_offspring: 6,
             },
@@ -154,7 +154,7 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::FitnessProportional {
+            selection::DeterministicFitnessProportional {
                 min_offspring: 4,
                 max_offspring: 6,
             },
@@ -174,7 +174,7 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: population_size,
             },
-            selection::FitnessProportional {
+            selection::DeterministicFitnessProportional {
                 min_offspring: 4,
                 max_offspring: 6,
             },
