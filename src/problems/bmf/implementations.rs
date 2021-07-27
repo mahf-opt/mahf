@@ -36,7 +36,7 @@ impl BenchmarkFunction {
     /// The [Rastrigin](http://benchmarkfcns.xyz/benchmarkfcns/rastriginfcn.html) function.
     pub fn rastrigin(dimension: usize) -> Self {
         BenchmarkFunction {
-            name: "rstrigin",
+            name: "rastrigin",
             implementation: scaled_implementations::rastrigin,
             dimension,
             domain: [-5.12, 5.12],
