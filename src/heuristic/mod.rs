@@ -30,9 +30,11 @@ pub fn run<P: Problem>(
     let rng = &mut rng.unwrap_or_default();
     let Configuration {
         initialization,
+        post_initialization,
         selection,
         generation,
         replacement,
+        post_replacement,
         termination,
     } = components;
 
@@ -49,6 +51,10 @@ pub fn run<P: Problem>(
     evaluator.evaluate(state, problem, initial_population, population);
     for evaluated in population.iter() {
         state.log_evaluation(logger, evaluated.fitness());
+    }
+
+    if let Some(post_initialization) = post_initialization {
+        post_initialization.post_initialize(state, problem, rng, population);
     }
 
     let mut best: Option<Individual> = find_best(population).map(Individual::clone::<P::Encoding>);
@@ -82,6 +88,10 @@ pub fn run<P: Problem>(
 
         // Replancement + Update
         replacement.replace(state, rng, population, evaluated_offspring);
+
+        if let Some(post_replacement) = post_replacement {
+            post_replacement.post_initialize(state, problem, rng, population);
+        }
 
         state.log_iteration(logger);
         if termination.terminate(state) {

@@ -25,12 +25,6 @@ use std::any::Any;
 pub trait Component: Any + DynSerialize + Send {}
 impl<T> Component for T where T: Any + DynSerialize + Send {}
 
-erased_serde::serialize_trait_object!(<P> Initialization<P>);
-erased_serde::serialize_trait_object!(Selection);
-erased_serde::serialize_trait_object!(<P> Generation<P>);
-erased_serde::serialize_trait_object!(Replacement);
-erased_serde::serialize_trait_object!(Termination);
-
 /// Initializes the population.
 pub trait Initialization<P: Problem>: Component {
     fn initialize(
@@ -41,6 +35,7 @@ pub trait Initialization<P: Problem>: Component {
         population: &mut Vec<P::Encoding>,
     );
 }
+erased_serde::serialize_trait_object!(<P> Initialization<P>);
 
 /// Selects individuals for reproduction or modification.
 pub trait Selection: Component {
@@ -52,6 +47,7 @@ pub trait Selection: Component {
         selection: &mut Vec<&'p Individual>,
     );
 }
+erased_serde::serialize_trait_object!(Selection);
 
 /// Generates new solutions from the selected population.
 pub trait Generation<P: Problem>: Component {
@@ -64,6 +60,7 @@ pub trait Generation<P: Problem>: Component {
         offspring: &mut Vec<P::Encoding>,
     );
 }
+erased_serde::serialize_trait_object!(<P> Generation<P>);
 
 /// Replaces old individuals with new ones.
 pub trait Replacement: Component {
@@ -75,8 +72,22 @@ pub trait Replacement: Component {
         offspring: &mut Vec<Individual>,
     );
 }
+erased_serde::serialize_trait_object!(Replacement);
 
 /// Decides when to terminate.
 pub trait Termination: Component {
     fn terminate(&self, state: &mut State) -> bool;
 }
+erased_serde::serialize_trait_object!(Termination);
+
+/// Can be inserted between steps.
+pub trait Postprocess<P: Problem>: Component {
+    fn post_initialize(
+        &self,
+        state: &mut State,
+        problem: &P,
+        rng: &mut Random,
+        population: &Vec<Individual>,
+    );
+}
+erased_serde::serialize_trait_object!(<P> Postprocess<P>);
