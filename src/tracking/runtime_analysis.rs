@@ -173,8 +173,8 @@ fn write_iterations(output: &mut impl Write, log: &[IterationEntry]) -> io::Resu
 }
 
 fn write_summary(output: &mut impl Write, run: u32, log: &Log) -> io::Result<()> {
-    let iterations = log.iterations.len();
-    let evaluations = log.evaluations.len();
+    let iterations = log.iterations.last().unwrap().iteration;
+    let evaluations = log.evaluations.last().unwrap().evaluation;
     let best = log.evaluations.last().unwrap().best_fx;
 
     writeln!(output, "{},{},{},{}", run, iterations, evaluations, best)
