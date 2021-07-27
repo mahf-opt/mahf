@@ -1,0 +1,12 @@
+algo = cargo run --release -- pso
+execdir = .
+deterministic = 0
+run_obj = qual
+overall_obj = mean
+cutoff_time = 5
+cutoff_length = 700
+tunerTimeout = 240
+paramfile = params/pso.txt
+outdir = output/pso
+instance_file = problems/bmf-train.txt
+test_instance_file = problems/bmf-test.txt
