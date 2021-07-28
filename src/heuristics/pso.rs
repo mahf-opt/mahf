@@ -24,13 +24,13 @@ where
         initialization::RandomSpread {
             initial_population_size: num_particles,
         },
-        Some(PsoPostprocess { v_max }),
+        Some(PsoPostInitialization { v_max }),
         selection::All,
         PsoGeneration { a, b, c, v_max },
         replacement::Generational {
             max_population_size: num_particles,
         },
-        Some(PsoPostprocess { v_max }),
+        Some(PsoPostReplacement),
         termination::FixedIterations { max_iterations },
     )
 }
@@ -43,11 +43,11 @@ pub struct PsoState {
 impl CustomState for PsoState {}
 
 #[derive(Debug, serde::Serialize)]
-pub struct PsoPostprocess {
+pub struct PsoPostInitialization {
     pub v_max: f64,
 }
 
-impl<P> Postprocess<P> for PsoPostprocess
+impl<P> Postprocess<P> for PsoPostInitialization
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
@@ -58,43 +58,57 @@ where
         rng: &mut Random,
         population: &[Individual],
     ) {
-        if !state.custom.has::<PsoState>() {
-            let velocities = population
-                .iter()
-                .map(|_| {
-                    (0..problem.dimension())
-                        .into_iter()
-                        .map(|_| rng.gen_range(-self.v_max..=self.v_max))
-                        .collect::<Vec<f64>>()
-                })
-                .collect::<Vec<Vec<f64>>>();
+        let velocities = population
+            .iter()
+            .map(|_| {
+                (0..problem.dimension())
+                    .into_iter()
+                    .map(|_| rng.gen_range(-self.v_max..=self.v_max))
+                    .collect::<Vec<f64>>()
+            })
+            .collect::<Vec<Vec<f64>>>();
 
-            let bests = population
-                .iter()
-                .map(Individual::clone::<Vec<f64>>)
-                .collect::<Vec<Individual>>();
+        let bests = population
+            .iter()
+            .map(Individual::clone::<Vec<f64>>)
+            .collect::<Vec<Individual>>();
 
-            let global_best = bests
-                .iter()
-                .min_by_key(|i| Individual::fitness(i))
-                .map(Individual::clone::<Vec<f64>>)
-                .unwrap();
+        let global_best = bests
+            .iter()
+            .min_by_key(|i| Individual::fitness(i))
+            .map(Individual::clone::<Vec<f64>>)
+            .unwrap();
 
-            state.custom.insert(PsoState {
-                velocities,
-                bests,
-                global_best,
-            });
-        } else {
-            let pso_state = state.custom.get_mut::<PsoState>();
+        state.custom.insert(PsoState {
+            velocities,
+            bests,
+            global_best,
+        });
+    }
+}
 
-            for (i, individual) in population.iter().enumerate() {
-                if pso_state.bests[i].fitness() > individual.fitness() {
-                    pso_state.bests[i] = individual.clone::<Vec<f64>>();
+#[derive(Debug, serde::Serialize)]
+pub struct PsoPostReplacement;
 
-                    if pso_state.global_best.fitness() > individual.fitness() {
-                        pso_state.global_best = individual.clone::<Vec<f64>>();
-                    }
+impl<P> Postprocess<P> for PsoPostReplacement
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+{
+    fn post_initialize(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        population: &[Individual],
+    ) {
+        let pso_state = state.custom.get_mut::<PsoState>();
+
+        for (i, individual) in population.iter().enumerate() {
+            if pso_state.bests[i].fitness() > individual.fitness() {
+                pso_state.bests[i] = individual.clone::<Vec<f64>>();
+
+                if pso_state.global_best.fitness() > individual.fitness() {
+                    pso_state.global_best = individual.clone::<Vec<f64>>();
                 }
             }
         }
