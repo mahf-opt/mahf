@@ -54,7 +54,7 @@ pub fn run<P: Problem>(
     }
 
     if let Some(post_initialization) = post_initialization {
-        post_initialization.post_initialize(state, problem, rng, population);
+        post_initialization.postprocess(state, problem, rng, population);
     }
 
     let mut best: Option<Individual> = find_best(population).map(Individual::clone::<P::Encoding>);
@@ -90,7 +90,7 @@ pub fn run<P: Problem>(
         replacement.replace(state, rng, population, evaluated_offspring);
 
         if let Some(post_replacement) = post_replacement {
-            post_replacement.post_initialize(state, problem, rng, population);
+            post_replacement.postprocess(state, problem, rng, population);
         }
 
         state.log_iteration(logger);

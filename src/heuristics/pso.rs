@@ -51,7 +51,7 @@ impl<P> Postprocess<P> for PsoPostInitialization
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
-    fn post_initialize(
+    fn postprocess(
         &self,
         state: &mut State,
         problem: &P,
@@ -94,7 +94,7 @@ impl<P> Postprocess<P> for PsoPostReplacement
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
-    fn post_initialize(
+    fn postprocess(
         &self,
         state: &mut State,
         _problem: &P,

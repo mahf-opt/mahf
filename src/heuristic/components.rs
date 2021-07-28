@@ -82,7 +82,7 @@ erased_serde::serialize_trait_object!(Termination);
 
 /// Can be inserted between steps.
 pub trait Postprocess<P: Problem>: Component {
-    fn post_initialize(
+    fn postprocess(
         &self,
         state: &mut State,
         problem: &P,
