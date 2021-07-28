@@ -56,7 +56,7 @@ where
         state: &mut State,
         problem: &P,
         rng: &mut Random,
-        population: &Vec<Individual>,
+        population: &[Individual],
     ) {
         if !state.custom.has::<PsoState>() {
             let velocities = population

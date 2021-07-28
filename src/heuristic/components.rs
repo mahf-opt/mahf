@@ -87,7 +87,7 @@ pub trait Postprocess<P: Problem>: Component {
         state: &mut State,
         problem: &P,
         rng: &mut Random,
-        population: &Vec<Individual>,
+        population: &[Individual],
     );
 }
 erased_serde::serialize_trait_object!(<P> Postprocess<P>);
