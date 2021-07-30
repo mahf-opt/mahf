@@ -8,6 +8,20 @@ use rand::distributions::{weighted::WeightedIndex, Distribution};
 use rand::{seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
+pub struct All;
+impl Selection for All {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        _rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        selection.extend(population);
+    }
+}
+
 /// Selects `offspring` random solutions.
 ///
 /// Solutions can be selected multiple times in a single iteration.

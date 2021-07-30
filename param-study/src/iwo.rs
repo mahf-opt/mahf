@@ -19,7 +19,6 @@ struct Parameters {
     initial_deviation: f64,
     final_deviation: f64,
     modulation_index: u32,
-    max_iterations: u32,
 }
 
 pub fn run(setup: &Setup, args: &mut ArgsIter) {
@@ -98,7 +97,6 @@ fn parameters(args: &mut ArgsIter) -> Parameters {
             "-initial_deviation" => params.initial_deviation = value.parse().unwrap(),
             "-final_deviation" => params.final_deviation = value.parse().unwrap(),
             "-modulation_index" => params.modulation_index = value.parse().unwrap(),
-            "-max_iterations" => params.max_iterations = value.parse().unwrap(),
             unknown => panic!("unknown param {}", unknown),
         }
     }

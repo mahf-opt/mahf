@@ -94,7 +94,8 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_none(self) -> Result<()> {
-        unimplemented!()
+        self.component.name = "None";
+        Ok(())
     }
 
     fn serialize_some<T>(self, value: &T) -> Result<()>
