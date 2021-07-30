@@ -90,7 +90,7 @@ impl Study {
 
         write!(self.output, "{},{}", fitness, evaluations)?;
 
-        let values = collect_values(&config);
+        let values = collect_values(config);
         for value in values {
             write!(self.output, ",{}", value)?;
         }
@@ -101,7 +101,7 @@ impl Study {
 }
 
 fn write_header(output: &mut impl Write, config: &SerializedConfiguration) -> io::Result<()> {
-    let headers = collect_headers(&config);
+    let headers = collect_headers(config);
 
     write!(output, "fitness,evaluations")?;
 

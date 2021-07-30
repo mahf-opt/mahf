@@ -14,14 +14,14 @@ test:format:
 test:cargo:
   script:
   - rustc --version && cargo --version      # Print version info for debugging
-  - cargo test --all-targets --all-features --verbose
+  - cargo test --workspace --all-targets --all-features --verbose
 
 # Use cargo to test the project
 test:clippy:
   script:
   - rustup component add clippy
   - cargo clippy --version && cargo --version      # Print version info for debugging
-  - cargo clippy --all-targets --all-features -- -D warnings
+  - cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 # Build and host the documentation
 # pages:

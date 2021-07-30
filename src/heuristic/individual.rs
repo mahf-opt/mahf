@@ -27,7 +27,7 @@ impl Individual {
     /// # Panics
     /// This will panic when `E` is not the right type.
     pub fn solution<E: Any>(&self) -> &E {
-        &self.solution.downcast_ref().unwrap()
+        self.solution.downcast_ref().unwrap()
     }
 
     /// Returns the individuals solution.
