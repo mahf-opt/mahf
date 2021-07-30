@@ -57,7 +57,7 @@ fn main() -> anyhow::Result<()> {
     for (name, config) in configs {
         let data_dir = format!("data/aco/{}", name);
         let random = Random::default();
-        let mut experiment = Experiment::create(&data_dir, tsp, &random, &config)?;
+        let mut experiment = Experiment::create(&data_dir, tsp, &random, config)?;
         let logger = &mut Log::new(
             EvalTrigger {
                 improvement: true,

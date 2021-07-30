@@ -39,7 +39,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
         initialization::RandomSpread {
             initial_population_size: params.initial_population_size,
         },
-        selection::FitnessProportional {
+        selection::DeterministicFitnessProportional {
             min_offspring: params.min_number_of_seeds,
             max_offspring: params.max_number_of_seeds,
         },
