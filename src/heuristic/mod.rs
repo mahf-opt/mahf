@@ -71,7 +71,7 @@ pub fn run<P: Problem>(
         parents.extend(
             parent_individuals
                 .drain(..)
-                .map(|i| i.solution::<P::Encoding>()),
+                .map(|i| i.solution::<P::Encoding>().clone()),
         );
 
         // Generation

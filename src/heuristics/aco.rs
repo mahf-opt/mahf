@@ -177,7 +177,7 @@ impl Generation<SymmetricTsp> for AcoGeneration {
         state: &mut State,
         problem: &SymmetricTsp,
         rng: &mut Random,
-        _parents: &mut Vec<&Route>,
+        _parents: &mut Vec<Route>,
         offspring: &mut Vec<Route>,
     ) {
         let pm = state.custom.get_mut::<PheromoneMatrix>();

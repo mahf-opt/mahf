@@ -56,7 +56,7 @@ pub trait Generation<P: Problem>: Component {
         state: &mut State,
         problem: &P,
         rng: &mut Random,
-        parents: &mut Vec<&P::Encoding>,
+        parents: &mut Vec<P::Encoding>,
         offspring: &mut Vec<P::Encoding>,
     );
 }

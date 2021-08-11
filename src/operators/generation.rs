@@ -21,7 +21,7 @@ where
         _state: &mut State,
         problem: &P,
         rng: &mut Random,
-        _parents: &mut Vec<&Vec<D>>,
+        _parents: &mut Vec<Vec<D>>,
         offspring: &mut Vec<Vec<D>>,
     ) {
         let solution = (0..problem.dimension())
@@ -42,7 +42,7 @@ where
         _state: &mut State,
         problem: &P,
         rng: &mut Random,
-        _parents: &mut Vec<&Vec<usize>>,
+        _parents: &mut Vec<Vec<usize>>,
         offspring: &mut Vec<Vec<usize>>,
     ) {
         let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
@@ -68,20 +68,18 @@ where
         _state: &mut State,
         _problem: &P,
         rng: &mut Random,
-        parents: &mut Vec<&Vec<f64>>,
+        parents: &mut Vec<Vec<f64>>,
         offspring: &mut Vec<Vec<f64>>,
     ) {
         let distribution = rand_distr::Normal::new(0.0, self.deviation).unwrap();
 
-        for parent in parents {
-            let solution = parent
-                .iter()
-                .map(|x| x + distribution.sample(rng))
-                // TODO: How should clamping work?
-                //.map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
-                .collect::<Vec<f64>>();
-            offspring.push(solution);
+        for solution in parents.iter_mut() {
+            for x in solution {
+                *x += distribution.sample(rng)
+            }
         }
+
+        offspring.append(parents)
     }
 }
 
@@ -118,21 +116,19 @@ where
         state: &mut State,
         _problem: &P,
         rng: &mut Random,
-        parents: &mut Vec<&Vec<f64>>,
+        parents: &mut Vec<Vec<f64>>,
         offspring: &mut Vec<Vec<f64>>,
     ) {
         let deviation = self.deviation(state.progress);
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
-        for parent in parents {
-            let solution = parent
-                .iter()
-                .map(|x| x + distribution.sample(rng))
-                // TODO: Clamping
-                //.map(|x| x.clamp(*problem.range.start(), *problem.range.end()))
-                .collect::<Vec<f64>>();
-            offspring.push(solution);
+        for solution in parents.iter_mut() {
+            for x in solution {
+                *x += distribution.sample(rng)
+            }
         }
+
+        offspring.append(parents)
     }
 }
 #[cfg(test)]
