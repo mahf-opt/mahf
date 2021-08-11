@@ -26,6 +26,7 @@ pub struct SerializedConfiguration {
     pub post_initialization: SerializedComponent,
     pub selection: SerializedComponent,
     pub generation: SerializedComponent,
+    pub generation_scheduler: SerializedComponent,
     pub replacement: SerializedComponent,
     pub post_replacement: SerializedComponent,
     pub termination: SerializedComponent,

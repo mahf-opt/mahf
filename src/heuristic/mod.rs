@@ -1,7 +1,7 @@
 //! Framework for modular heuristics.
 
 use crate::{fitness::Fitness, problem::Problem, random::Random, tracking::Log};
-use std::convert::TryFrom;
+use std::{convert::TryFrom, mem};
 
 pub mod components;
 
@@ -33,6 +33,7 @@ pub fn run<P: Problem>(
         post_initialization,
         selection,
         generation,
+        generation_scheduler,
         replacement,
         post_replacement,
         termination,
@@ -61,21 +62,36 @@ pub fn run<P: Problem>(
 
     // Loop until Termination
     loop {
+        let generation_schedule = &mut Vec::new();
         let parent_individuals = &mut Vec::new();
-        let parents = &mut Vec::new();
-        let offspring = &mut Vec::new();
+        let mut parents = &mut Vec::new();
+        let mut offspring = &mut Vec::new();
         let evaluated_offspring = &mut Vec::new();
 
         // Selection
         selection.select(state, rng, population, parent_individuals);
+
+        // Generation
+        generation_scheduler.schedule(
+            state,
+            rng,
+            generation.len(),
+            population,
+            parent_individuals,
+            generation_schedule,
+        );
         parents.extend(
             parent_individuals
                 .drain(..)
-                .map(|i| i.solution::<P::Encoding>()),
+                .map(|i| i.solution::<P::Encoding>().clone()),
         );
+        for generator in generation_schedule.iter().map(|&i| &generation[i]) {
+            generator.generate(state, problem, rng, parents, offspring);
 
-        // Generation
-        generation.generate(state, problem, rng, parents, offspring);
+            parents.clear();
+            mem::swap(&mut parents, &mut offspring);
+        }
+        mem::swap(&mut parents, &mut offspring);
 
         // Evaluation
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);

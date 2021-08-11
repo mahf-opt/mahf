@@ -287,6 +287,7 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
             "initialization" => self.config.initialization = component,
             "selection" => self.config.selection = component,
             "generation" => self.config.generation = component,
+            "generation_scheduler" => self.config.generation_scheduler = component,
             "replacement" => self.config.replacement = component,
             "termination" => self.config.termination = component,
             "post_initialization" => self.config.post_initialization = component,

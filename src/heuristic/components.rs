@@ -56,11 +56,24 @@ pub trait Generation<P: Problem>: Component {
         state: &mut State,
         problem: &P,
         rng: &mut Random,
-        parents: &mut Vec<&P::Encoding>,
+        parents: &mut Vec<P::Encoding>,
         offspring: &mut Vec<P::Encoding>,
     );
 }
 erased_serde::serialize_trait_object!(<P> Generation<P>);
+
+pub trait Scheduler: Component {
+    fn schedule(
+        &self,
+        state: &mut State,
+        rng: &mut Random,
+        choices: usize,
+        population: &[Individual],
+        parents: &[&Individual],
+        schedule: &mut Vec<usize>,
+    );
+}
+erased_serde::serialize_trait_object!(Scheduler);
 
 /// Replaces old individuals with new ones.
 pub trait Replacement: Component {

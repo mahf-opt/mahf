@@ -132,7 +132,7 @@ where
         state: &mut State,
         _problem: &P,
         rng: &mut Random,
-        parents: &mut Vec<&P::Encoding>,
+        parents: &mut Vec<P::Encoding>,
         offspring: &mut Vec<P::Encoding>,
     ) {
         let &PsoGeneration { a, b, c, v_max } = self;
@@ -140,24 +140,21 @@ where
         let rs = rng.gen_range(0.0..=1.0);
         let rt = rng.gen_range(0.0..=1.0);
 
-        for (i, x) in parents.iter().enumerate() {
+        for (i, mut x) in parents.drain(..).enumerate() {
             let v = &mut pso_state.velocities[i];
-            let xl = &pso_state.bests[i].solution::<Vec<f64>>();
-            let xg = &pso_state.global_best.solution::<Vec<f64>>();
+            let xl = pso_state.bests[i].solution::<Vec<f64>>();
+            let xg = pso_state.global_best.solution::<Vec<f64>>();
 
             for i in 0..v.len() {
                 v[i] = a * v[i] + b * rs * (xg[i] - x[i]) + c * rt * (xl[i] - x[i]);
                 v[i] = v[i].clamp(-v_max, v_max);
             }
 
-            let xn = x
-                .iter()
-                .zip(v.iter())
-                .map(|(xi, vi)| xi + vi)
-                .map(|xi| xi.clamp(-1.0, 1.0))
-                .collect::<Vec<f64>>();
+            for i in 0..x.len() {
+                x[i] = (x[i] + v[i]).clamp(-1.0, 1.0);
+            }
 
-            offspring.push(xn);
+            offspring.push(x);
         }
     }
 }
