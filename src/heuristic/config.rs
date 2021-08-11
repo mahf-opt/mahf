@@ -17,6 +17,9 @@ pub struct Configuration<P: 'static> {
     pub generation: Vec<Box<dyn Generation<P>>>,
 
     #[serde(with = "erased_serde")]
+    pub generation_scheduler: Box<dyn Scheduler>,
+
+    #[serde(with = "erased_serde")]
     pub replacement: Box<dyn Replacement>,
 
     #[serde(with = "erased_serde")]
@@ -39,6 +42,7 @@ impl<P: Problem> Configuration<P> {
             post_initialization: None,
             selection: Box::new(selection),
             generation: vec![Box::new(generation)],
+            generation_scheduler: Box::new(crate::operators::schedulers::AllInOrder),
             replacement: Box::new(replacement),
             post_replacement: None,
             termination: Box::new(termination),
@@ -62,6 +66,7 @@ impl<P: Problem> Configuration<P> {
             post_initialization,
             selection: Box::new(selection),
             generation: vec![Box::new(generation)],
+            generation_scheduler: Box::new(crate::operators::schedulers::AllInOrder),
             replacement: Box::new(replacement),
             post_replacement,
             termination: Box::new(termination),

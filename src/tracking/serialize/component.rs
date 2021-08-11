@@ -110,7 +110,8 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<()> {
-        unimplemented!()
+        self.component.name = name;
+        Ok(())
     }
 
     fn serialize_unit_variant(
