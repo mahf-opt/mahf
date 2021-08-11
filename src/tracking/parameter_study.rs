@@ -19,7 +19,7 @@ use std::{
 struct ConfigurationType {
     initialization: TypeId,
     selection: TypeId,
-    generation: TypeId,
+    generation: Vec<TypeId>,
     replacement: TypeId,
     termination: TypeId,
 }
@@ -29,7 +29,7 @@ impl<P> From<&Configuration<P>> for ConfigurationType {
         ConfigurationType {
             initialization: config.initialization.type_id(),
             selection: config.selection.type_id(),
-            generation: config.generation.type_id(),
+            generation: config.generation.iter().map(|g| g.type_id()).collect(),
             replacement: config.replacement.type_id(),
             termination: config.termination.type_id(),
         }

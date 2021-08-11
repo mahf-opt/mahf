@@ -14,7 +14,7 @@ pub struct Configuration<P: 'static> {
     pub selection: Box<dyn Selection>,
 
     #[serde(with = "erased_serde")]
-    pub generation: Box<dyn Generation<P>>,
+    pub generation: Vec<Box<dyn Generation<P>>>,
 
     #[serde(with = "erased_serde")]
     pub replacement: Box<dyn Replacement>,
@@ -38,7 +38,7 @@ impl<P: Problem> Configuration<P> {
             initialization: Box::new(initialization),
             post_initialization: None,
             selection: Box::new(selection),
-            generation: Box::new(generation),
+            generation: vec![Box::new(generation)],
             replacement: Box::new(replacement),
             post_replacement: None,
             termination: Box::new(termination),
@@ -61,7 +61,7 @@ impl<P: Problem> Configuration<P> {
             initialization: Box::new(initialization),
             post_initialization,
             selection: Box::new(selection),
-            generation: Box::new(generation),
+            generation: vec![Box::new(generation)],
             replacement: Box::new(replacement),
             post_replacement,
             termination: Box::new(termination),
@@ -79,7 +79,7 @@ impl<P: Problem> Configuration<P> {
     }
 
     pub fn with_generation(mut self, generation: impl Generation<P> + 'static) -> Self {
-        self.generation = Box::new(generation);
+        self.generation = vec![Box::new(generation)];
         self
     }
 

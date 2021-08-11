@@ -75,7 +75,7 @@ pub fn run<P: Problem>(
         );
 
         // Generation
-        generation.generate(state, problem, rng, parents, offspring);
+        generation[0].generate(state, problem, rng, parents, offspring);
 
         // Evaluation
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);
