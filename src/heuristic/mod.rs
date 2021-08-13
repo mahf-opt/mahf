@@ -1,4 +1,5 @@
-//! Framework for modular heuristics.
+#![doc = embed_doc_image::embed_image!("module_system", "docs/MAHF-module-system.svg")]
+#![doc = include_str!("../../docs/heuristic.md")]
 
 use crate::{fitness::Fitness, problem::Problem, random::Random, tracking::Log};
 use std::{convert::TryFrom, mem};
