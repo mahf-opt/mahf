@@ -1,5 +1,8 @@
+//! Scheduling methods
+
 use crate::heuristic::components::Scheduler;
 
+/// Schedules all operators once and in order.
 #[derive(serde::Serialize)]
 pub struct AllInOrder;
 impl Scheduler for AllInOrder {
