@@ -4,7 +4,7 @@ A framework for modular composition of metaheuristics.
 
 ![MAHF module system][module_system]
 
-Every run begins with the [components::Initialization] which initializes the population followed by a [components::Posprocess] which should initialized required custom state.
+Every run begins with the [components::Initialization] which initializes the population followed by a [components::Postprocess] which should initialized required custom state.
 
 After the initialization is complete, the main optimization loop will be executed. This consists of one selection, one or many generations followed by the replacement. Whether the loop should continue will then be decided by the [components::Termination].
 
