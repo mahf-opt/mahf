@@ -62,7 +62,17 @@ pub trait Generation<P: Problem>: Component {
 }
 erased_serde::serialize_trait_object!(<P> Generation<P>);
 
+/// Schedules the [Generation] operators.
+///
+/// This function defines which operators should be called how often and in what order.
 pub trait Scheduler: Component {
+    /// Schedule the operators.
+    ///
+    /// `choices` is the number of operators to choose from.
+    /// The selected operators must be added to `schedule` in the order they should be called in.
+    /// Operators can be added multiple times to the `schedule`.
+    ///
+    /// Operators are represented by their index. Valid operators are thus in the range \[0..choices].
     fn schedule(
         &self,
         state: &mut State,

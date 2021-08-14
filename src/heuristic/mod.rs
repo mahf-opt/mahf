@@ -20,6 +20,7 @@ pub use config::Configuration;
 /// Run the provided [Configuration] in the framework.
 ///
 /// Returns the best solution encountered during the entire run.
+/// More detailed information can be obtained from the [Log].
 pub fn run<P: Problem>(
     problem: &P,
     logger: &mut Log,
@@ -125,6 +126,10 @@ fn find_best(population: &[Individual]) -> Option<&Individual> {
     population.iter().min_by_key(|i| i.fitness())
 }
 
+/// Evaluates solutions.
+///
+/// Can be used to customize how solutions should be evaluated.
+/// One use case for this would be GPU evaluation.
 pub trait Evaluator<P: Problem> {
     fn evaluate(
         &mut self,
