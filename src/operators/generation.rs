@@ -9,6 +9,7 @@ use rand::{prelude::SliceRandom, Rng};
 use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
 
+/// Generates new random solutions in the search space.
 #[derive(Serialize)]
 pub struct RandomSpread;
 impl<P, D> Generation<P> for RandomSpread
@@ -31,6 +32,7 @@ where
     }
 }
 
+/// Generates new random permutations.
 #[derive(Serialize)]
 pub struct RandomPermutation;
 impl<P> Generation<P> for RandomPermutation

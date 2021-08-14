@@ -1,4 +1,5 @@
-//! Framework for modular heuristics.
+#![doc = embed_doc_image::embed_image!("module_system", "docs/MAHF-module-system.svg")]
+#![doc = include_str!("../../docs/heuristic.md")]
 
 use crate::{fitness::Fitness, problem::Problem, random::Random, tracking::Log};
 use std::{convert::TryFrom, mem};
@@ -7,7 +8,7 @@ pub mod components;
 
 mod custom_state;
 mod state;
-pub use custom_state::CustomState;
+pub use custom_state::{CustomState, CustomStateMap};
 pub use state::State;
 
 mod individual;
@@ -19,6 +20,7 @@ pub use config::Configuration;
 /// Run the provided [Configuration] in the framework.
 ///
 /// Returns the best solution encountered during the entire run.
+/// More detailed information can be obtained from the [Log].
 pub fn run<P: Problem>(
     problem: &P,
     logger: &mut Log,
@@ -124,6 +126,10 @@ fn find_best(population: &[Individual]) -> Option<&Individual> {
     population.iter().min_by_key(|i| i.fitness())
 }
 
+/// Evaluates solutions.
+///
+/// Can be used to customize how solutions should be evaluated.
+/// One use case for this would be GPU evaluation.
 pub trait Evaluator<P: Problem> {
     fn evaluate(
         &mut self,

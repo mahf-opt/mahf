@@ -9,6 +9,7 @@ members = ["param-study"]
 
 [dependencies]
 anyhow = "1.0.40"
+embed-doc-image = "0.1.4"
 erased-serde = "0.3.13"
 float_eq = "0.6.0"
 itoa = "0.4.7"

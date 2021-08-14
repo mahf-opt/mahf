@@ -1,3 +1,5 @@
+//! Particle Swarm Optimization
+
 use crate::{
     heuristic::{
         components::{Generation, Postprocess},

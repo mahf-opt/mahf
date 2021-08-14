@@ -8,6 +8,7 @@ use rand::distributions::{weighted::WeightedIndex, Distribution};
 use rand::{seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
+/// Selects all individuals once.
 #[derive(Serialize, Deserialize)]
 pub struct All;
 impl Selection for All {

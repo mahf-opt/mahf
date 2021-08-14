@@ -9,6 +9,7 @@ use rand::distributions::uniform::SampleUniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+/// Doesn't do anything.
 #[derive(Serialize)]
 pub struct Noop;
 impl<P: Problem> Initialization<P> for Noop {
