@@ -8,7 +8,7 @@ pub mod components;
 
 mod custom_state;
 mod state;
-pub use custom_state::CustomState;
+pub use custom_state::{CustomState, CustomStateMap};
 pub use state::State;
 
 mod individual;

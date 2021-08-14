@@ -62,7 +62,7 @@ impl CustomStateMap {
             .unwrap()
     }
 
-    pub fn collect_evaluation_log(&self) -> Vec<CustomLog> {
+    pub(crate) fn collect_evaluation_log(&self) -> Vec<CustomLog> {
         let mut entries = Vec::new();
         for state in self.map.values() {
             entries.append(&mut state.evaluation_log());
@@ -70,7 +70,7 @@ impl CustomStateMap {
         entries
     }
 
-    pub fn collect_iteration_log(&self) -> Vec<CustomLog> {
+    pub(crate) fn collect_iteration_log(&self) -> Vec<CustomLog> {
         let mut entries = Vec::new();
         for state in self.map.values() {
             entries.append(&mut state.iteration_log());
