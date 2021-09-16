@@ -2,7 +2,7 @@
 //!
 //! Implementation is base on <https://github.com/numbbo/coco>
 
-use std::any::Any;
+use std::{any::Any, ops::Range};
 
 pub mod functions;
 pub mod problems;
@@ -15,8 +15,12 @@ pub trait Transformation {
 }
 
 pub struct Problem {
+    /// Name of the function or transformation
     pub name: &'static str,
+    /// Subproblem or function
     pub function: ProblemFunction,
+    /// Inclusive min and max values
+    pub domain: Range<f64>,
 }
 impl Problem {
     pub fn evaluate(&self, x: &mut [f64], buffer: &mut [f64]) -> f64 {
@@ -27,6 +31,18 @@ impl Problem {
                 p.evaluate(buffer, x)
             }
             ProblemFunction::Function(f) => f(x),
+        }
+    }
+
+    pub fn extend(
+        name: &'static str,
+        subproblem: Problem,
+        transform: impl Transformation + Any,
+    ) -> Problem {
+        Problem {
+            name,
+            domain: subproblem.domain.clone(),
+            function: ProblemFunction::Transformation(Box::new(transform), Box::new(subproblem)),
         }
     }
 }
@@ -56,18 +72,15 @@ impl crate::problem::VectorProblem for Instance {
         self.dimension
     }
 }
+impl crate::problem::LimitedVectorProblem for Instance {
+    fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
+        self.problem.domain.clone()
+    }
+}
 
 pub enum ProblemFunction {
     Transformation(Box<dyn Transformation>, Box<Problem>),
     Function(Function),
-}
-impl ProblemFunction {
-    pub fn new_transformation(
-        transform: impl Transformation + Any,
-        problem: Problem,
-    ) -> ProblemFunction {
-        ProblemFunction::Transformation(Box::new(transform), Box::new(problem))
-    }
 }
 
 #[cfg(test)]
