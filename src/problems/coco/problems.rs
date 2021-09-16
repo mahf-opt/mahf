@@ -16,6 +16,22 @@ pub fn sphere() -> Problem {
     }
 }
 
+pub fn attractive_sector() -> Problem {
+    Problem {
+        name: "attractive_sector",
+        function: ProblemFunction::Function(functions::attractive_sector),
+        domain: DEFAULT_DOMAIN,
+    }
+}
+
+pub fn rastrigin() -> Problem {
+    Problem {
+        name: "rastrigin",
+        function: ProblemFunction::Function(functions::rastrigin),
+        domain: DEFAULT_DOMAIN,
+    }
+}
+
 //
 // Transformations
 //
