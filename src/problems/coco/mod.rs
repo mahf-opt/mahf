@@ -11,7 +11,13 @@ pub mod transformations;
 pub type Function = fn(x: &[f64]) -> f64;
 
 pub trait Transformation {
-    fn transform(&self, x: &[f64], out: &mut [f64]);
+    fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+        out.clone_from_slice(x);
+    }
+
+    fn transform_output(&self, y: f64) -> f64 {
+        y
+    }
 }
 
 pub struct Problem {
@@ -27,8 +33,9 @@ impl Problem {
         debug_assert_eq!(x.len(), buffer.len());
         match &self.function {
             ProblemFunction::Transformation(t, p) => {
-                t.transform(x, buffer);
-                p.evaluate(buffer, x)
+                t.transform_input(x, buffer);
+                let y = p.evaluate(buffer, x);
+                t.transform_output(y)
             }
             ProblemFunction::Function(f) => f(x),
         }
@@ -94,5 +101,14 @@ mod tests {
         let problem = problems::permutation(vec![2, 1, 0], problems::sphere());
         let out = problem.evaluate(&mut [1.0, 2.0, 3.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 1.0 + 4.0 + 9.0, abs <= 0.0);
+    }
+
+    #[test]
+    fn translate_sphere() {
+        let problem = problems::sphere();
+        let problem = problems::translate_input(vec![-1.0, -1.0, -1.0], problem);
+        let problem = problems::translate_output(5.0, problem);
+        let out = problem.evaluate(&mut [1.0, 1.0, 1.0], &mut [0.0, 0.0, 0.0]);
+        assert_float_eq!(out, 5.0, abs <= 0.0);
     }
 }
