@@ -6,6 +6,7 @@ use std::{any::Any, ops::Range};
 
 pub mod functions;
 pub mod problems;
+pub mod suits;
 pub mod transformations;
 
 pub type Function = fn(x: &[f64]) -> f64;
@@ -57,6 +58,11 @@ impl Problem {
 pub struct Instance {
     problem: Problem,
     dimension: usize,
+}
+impl Instance {
+    pub fn new(problem: Problem, dimension: usize) -> Self {
+        Instance { problem, dimension }
+    }
 }
 impl crate::problem::Problem for Instance {
     type Encoding = Vec<f64>;
