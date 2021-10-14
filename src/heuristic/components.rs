@@ -22,8 +22,8 @@ use std::any::Any;
 /// Most of the time, execution should be multi threaded and having
 /// components implement [Send] makes this much easier.
 ///
-pub trait Component: Any + DynSerialize + Send {}
-impl<T> Component for T where T: Any + DynSerialize + Send {}
+pub trait Component: Any + DynSerialize + Send + Sync {}
+impl<T> Component for T where T: Any + DynSerialize + Send + Sync {}
 
 /// Initializes the population.
 pub trait Initialization<P: Problem>: Component {
