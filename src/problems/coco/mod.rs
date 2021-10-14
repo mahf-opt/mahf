@@ -11,7 +11,7 @@ pub mod transformations;
 
 pub type Function = fn(x: &[f64]) -> f64;
 
-pub trait Transformation {
+pub trait Transformation: Send + Sync {
     fn transform_input(&self, x: &[f64], out: &mut [f64]) {
         out.clone_from_slice(x);
     }
@@ -55,13 +55,17 @@ impl Problem {
     }
 }
 
+#[derive(serde::Serialize)]
 pub struct Instance {
+    #[serde(skip)]
     problem: Problem,
+    function: usize,
+    instance: usize,
     dimension: usize,
 }
 impl Instance {
-    pub fn new(problem: Problem, dimension: usize) -> Self {
-        Instance { problem, dimension }
+    pub fn format_name(&self) -> String {
+        format!("f{}_d{}_i{}", self.function, self.dimension, self.instance)
     }
 }
 impl crate::problem::Problem for Instance {

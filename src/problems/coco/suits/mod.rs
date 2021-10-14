@@ -1,6 +1,27 @@
-use crate::problems::coco::Instance;
+use std::{
+    fs,
+    io::Write,
+    path::PathBuf,
+    sync::{mpsc, Arc},
+    thread,
+};
 
-pub mod toy;
+use anyhow::Context;
+
+use crate::{
+    heuristic::{self, Configuration},
+    problems::coco::Instance,
+    random::Random,
+    threads::SyncThreadPool,
+    tracking::{
+        runtime_analysis::Experiment,
+        trigger::{EvalTrigger, IterTrigger},
+        Log,
+    },
+};
+
+mod toy;
+pub use toy::new as toy;
 
 pub type SuiteGenerator = fn(function: usize, instance: usize, dimension: usize) -> Instance;
 
@@ -44,34 +65,39 @@ impl Suite {
         &self.dimensions
     }
 
+    pub fn total_instances(&self) -> usize {
+        self.functions.len() * self.instances.len() * self.dimensions.len()
+    }
+
     fn current_instance(&self) -> Instance {
-        (self.generator)(self.next_function, self.next_instance, self.next_dimension)
+        (self.generator)(
+            self.functions[self.next_function],
+            self.instances[self.next_instance],
+            self.dimensions[self.next_dimension],
+        )
     }
 
     pub fn next_instance(&mut self) -> Option<Instance> {
         if self.next_function == self.functions.len()
-            && self.next_instance == self.instances.len()
-            && self.next_dimension == self.dimensions.len()
+            || self.next_instance == self.instances.len()
+            || self.next_dimension == self.dimensions.len()
         {
             return None;
         }
 
-        if self.next_instance < self.instances.len() {
-            self.next_instance += 1;
-            return Some(self.current_instance());
-        }
+        let instance = self.current_instance();
 
-        if self.next_function < self.functions.len() {
+        self.next_instance += 1;
+        if self.next_instance == self.instances.len() {
+            self.next_instance = 0;
             self.next_function += 1;
-            return Some(self.current_instance());
         }
-
-        if self.next_dimension < self.dimensions.len() {
+        if self.next_function == self.functions.len() {
+            self.next_function = 0;
             self.next_dimension += 1;
-            return Some(self.current_instance());
         }
 
-        unreachable!()
+        Some(instance)
     }
 }
 
@@ -81,4 +107,73 @@ impl Iterator for Suite {
     fn next(&mut self) -> Option<Self::Item> {
         self.next_instance()
     }
+}
+
+pub fn evaluate_suite(
+    suite: Suite,
+    configuration: Configuration<Instance>,
+    output_dir: &str,
+) -> anyhow::Result<()> {
+    let data_dir = Arc::new(PathBuf::from(output_dir));
+    fs::create_dir_all(data_dir.as_ref())?;
+
+    let runs = 1;
+    let total_runs = suite.total_instances() * (runs as usize);
+    let (tx, rx) = mpsc::channel();
+
+    let eval_trigger = EvalTrigger {
+        improvement: true,
+        interval: None,
+    };
+    let iter_trigger = IterTrigger {
+        improvement: false,
+        interval: Some(10),
+    };
+
+    let configuration = Arc::new(configuration);
+    thread::spawn(move || {
+        let mut pool = SyncThreadPool::default();
+        for problem in suite {
+            let tx = tx.clone();
+            let data_dir = data_dir.clone();
+            let configuration = configuration.clone();
+            pool.enqueue(move || {
+                let result: anyhow::Result<()> = (|| {
+                    let logger = &mut Log::new(eval_trigger, iter_trigger);
+
+                    let experiment_desc = problem.format_name();
+                    let data_dir = data_dir.join(experiment_desc);
+
+                    let random = Random::default();
+                    let experiment =
+                        &mut Experiment::create(data_dir, &problem, &random, &configuration)
+                            .context("creating experiment")?;
+
+                    for _ in 0..runs {
+                        heuristic::run(&problem, logger, &configuration, None, None);
+                        experiment.log_run(logger)?;
+                        logger.clear();
+                        let _ = tx.send(Ok(()));
+                    }
+
+                    Ok(())
+                })();
+
+                if result.is_err() {
+                    let _ = tx.send(result);
+                }
+            });
+        }
+    });
+
+    let mut finished_runs = 0;
+    while finished_runs < total_runs {
+        rx.recv().unwrap()?;
+        finished_runs += 1;
+        print!("Runs: {}/{}\r", finished_runs, total_runs);
+        std::io::stdout().flush().unwrap();
+    }
+    println!("\nDone.");
+
+    Ok(())
 }

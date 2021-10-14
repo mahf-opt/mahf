@@ -12,13 +12,23 @@ pub fn new() -> Suite {
 fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
     assert_eq!(instance, 1, "Toy suite only contains one instance");
 
-    match function {
-        1 => Instance::new(problems::sphere(), dimension),
-        2 => Instance::new(problems::ellipsoid(), dimension),
-        3 => Instance::new(problems::rastrigin(), dimension),
-        4 => Instance::new(problems::bueche_rastrigin(), dimension),
-        5 => Instance::new(problems::linear_slope(), dimension),
-        6 => Instance::new(problems::rosenbrock(), dimension),
-        _ => panic!("Toy suite only contains 6 functions"),
+    let problem = match function {
+        1 => problems::sphere(),
+        2 => problems::ellipsoid(),
+        3 => problems::rastrigin(),
+        4 => problems::bueche_rastrigin(),
+        5 => problems::linear_slope(),
+        6 => problems::rosenbrock(),
+        _ => panic!(
+            "Toy suite only contains 6 functions ({} was requested)",
+            function
+        ),
+    };
+
+    Instance {
+        problem,
+        function,
+        instance,
+        dimension,
     }
 }
