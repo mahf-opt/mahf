@@ -84,6 +84,10 @@ pub fn translate_input(translation: Vec<f64>, inner: Problem) -> Problem {
     )
 }
 
+pub fn oscillate_input(inner: Problem) -> Problem {
+    Problem::extend("oscillate_input", inner, transformations::OscillateInput)
+}
+
 pub fn translate_output(translation: f64, inner: Problem) -> Problem {
     Problem::extend(
         "translate_output",
