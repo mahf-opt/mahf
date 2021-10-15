@@ -23,6 +23,9 @@ use crate::{
 mod toy;
 pub use toy::new as toy;
 
+mod bbob;
+pub use bbob::new as bbob;
+
 pub type SuiteGenerator = fn(function: usize, instance: usize, dimension: usize) -> Instance;
 
 pub struct Suite {
