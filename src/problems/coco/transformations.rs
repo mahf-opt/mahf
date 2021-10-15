@@ -60,8 +60,8 @@ pub struct ConditionInput {
 impl Transformation for ConditionInput {
     fn transform_input(&self, x: &[f64], out: &mut [f64]) {
         for i in 0..x.len() {
-            let scale = (self.alpha * i as f64) / (x.len() as f64 - 1.0);
-            out[i] = f64::powf(self.alpha, 0.5 * scale) * x[i];
+            let scale = (i as f64) / (x.len() as f64 - 1.0);
+            out[i] = f64::powf(self.alpha, 0.5 * self.alpha * scale) * x[i];
         }
     }
 }
@@ -73,12 +73,35 @@ impl Transformation for AsymmetricInput {
     fn transform_input(&self, x: &[f64], out: &mut [f64]) {
         for i in 0..x.len() {
             if x[i] > 0.0 {
-                let scale = (self.beta * i as f64) / (x.len() as f64 - 1.0);
-                let exponent = 1.0 + scale * f64::sqrt(x[i]);
+                let scale = (i as f64) / (x.len() as f64 - 1.0);
+                let exponent = 1.0 + self.beta * scale * f64::sqrt(x[i]);
                 out[i] = f64::powf(x[i], exponent);
             } else {
                 out[i] = x[i];
             }
+        }
+    }
+}
+
+/// Implementation of the ominous 's_i scaling' of the BBOB Bueche-Rastrigin problem.
+pub struct BrsInput;
+impl Transformation for BrsInput {
+    fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+        for i in 0..x.len() {
+            let scale = (i as f64) / (x.len() as f64 - 1.0);
+            /* Function documentation says we should compute 10^(0.5 *
+             * (i-1)/(D-1)). Instead we compute the equivalent
+             * sqrt(10)^((i-1)/(D-1)) just like the legacy code.
+             */
+            let mut factor = f64::powf(f64::sqrt(10.0), scale);
+            /* Documentation specifies odd indices and starts indexing
+             * from 1, we use all even indices since C starts indexing
+             * with 0.
+             */
+            if x[i] > 0.0 && i % 2 == 0 {
+                factor *= 10.0;
+            }
+            out[i] = factor * x[i];
         }
     }
 }
