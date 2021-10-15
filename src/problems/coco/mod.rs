@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn translate_sphere() {
         let problem = problems::sphere();
-        let problem = problems::translate_input(vec![-1.0, -1.0, -1.0], problem);
+        let problem = problems::translate_input(vec![1.0, 1.0, 1.0], problem);
         let problem = problems::translate_output(5.0, problem);
         let out = problem.evaluate(&mut [1.0, 1.0, 1.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 5.0, abs <= 0.0);

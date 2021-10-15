@@ -28,7 +28,7 @@ impl TranslateInput {
 impl Transformation for TranslateInput {
     fn transform_input(&self, x: &[f64], out: &mut [f64]) {
         for (i, xi) in x.iter().enumerate() {
-            out[i] = xi + self.translation[i];
+            out[i] = xi - self.translation[i];
         }
     }
 }
