@@ -56,6 +56,7 @@ fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
         2 => functions::ellipsoid(function, instance, dimension, rseed),
         3 => functions::rastrigin(function, instance, dimension, rseed),
         4 => functions::bueche_rastrigin(function, instance, dimension, rseed_3),
+        5 => functions::linear_slope(function, instance, dimension, rseed),
         _ => panic!(
             "Toy suite only contains 6 functions ({} was requested)",
             function
@@ -123,6 +124,22 @@ mod functions {
         let problem = problems::rastrigin();
         let problem = problems::brs_input(problem);
         let problem = problems::oscillate_input(problem);
+        let problem = problems::translate_input(xopt, problem);
+        let problem = problems::translate_output(fopt, problem);
+
+        problem
+    }
+
+    pub fn linear_slope(
+        function: usize,
+        dimension: usize,
+        instance: usize,
+        rseed: usize,
+    ) -> Problem {
+        let xopt = util_2009::compute_xopt(rseed, dimension);
+        let fopt = util_2009::compute_fopt(function, instance);
+
+        let problem = problems::linear_slope();
         let problem = problems::translate_input(xopt, problem);
         let problem = problems::translate_output(fopt, problem);
 
