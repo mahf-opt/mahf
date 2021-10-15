@@ -1,6 +1,6 @@
 #![allow(unused_variables, dead_code)]
 
-use crate::problems::coco::{problems, suits::Suite, Instance};
+use crate::problems::coco::{suits::Suite, Instance};
 use std::ops::RangeInclusive;
 
 mod util_2009;
@@ -9,14 +9,14 @@ static YEARS: &[usize] = &[2009, 2010, 2012, 2013, 2015, 2016, 2017, 2018];
 
 pub fn new() -> Suite {
     Suite::new(
-        vec![1, 2, 3, 4, 5, 6],
+        flatten_ranges(&[1..=24]),
         vec![1],
         vec![2, 3, 5, 10, 20, 40],
         generator,
     )
 }
 
-fn flaten_ranges(ranges: &[RangeInclusive<usize>]) -> Vec<usize> {
+fn flatten_ranges(ranges: &[RangeInclusive<usize>]) -> Vec<usize> {
     let mut list = Vec::new();
 
     for range in ranges {
@@ -41,7 +41,7 @@ fn instances_by_year(year: usize) -> Option<Vec<usize>> {
         _ => None,
     };
 
-    ranges.map(flaten_ranges)
+    ranges.map(flatten_ranges)
 }
 
 fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
@@ -53,11 +53,7 @@ fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
 
     let problem = match function {
         1 => functions::sphere(function, instance, dimension, rseed),
-        2 => problems::ellipsoid(),
-        3 => problems::rastrigin(),
-        4 => problems::bueche_rastrigin(),
-        5 => problems::linear_slope(),
-        6 => problems::rosenbrock(),
+        2 => functions::ellipsoid(function, instance, dimension, rseed),
         _ => panic!(
             "Toy suite only contains 6 functions ({} was requested)",
             function
@@ -81,6 +77,18 @@ mod functions {
         let fopt = util_2009::compute_fopt(function, instance);
 
         let problem = problems::sphere();
+        let problem = problems::translate_input(xopt, problem);
+        let problem = problems::translate_output(fopt, problem);
+
+        problem
+    }
+
+    pub fn ellipsoid(function: usize, dimension: usize, instance: usize, rseed: usize) -> Problem {
+        let xopt = util_2009::compute_xopt(rseed, dimension);
+        let fopt = util_2009::compute_fopt(function, instance);
+
+        let problem = problems::ellipsoid();
+        let problem = problems::oscillate_input(problem);
         let problem = problems::translate_input(xopt, problem);
         let problem = problems::translate_output(fopt, problem);
 
