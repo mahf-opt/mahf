@@ -88,6 +88,22 @@ pub fn oscillate_input(inner: Problem) -> Problem {
     Problem::extend("oscillate_input", inner, transformations::OscillateInput)
 }
 
+pub fn condition_input(alpha: f64, inner: Problem) -> Problem {
+    Problem::extend(
+        "condition_input",
+        inner,
+        transformations::ConditionInput { alpha },
+    )
+}
+
+pub fn asymmetric_input(beta: f64, inner: Problem) -> Problem {
+    Problem::extend(
+        "asymmetric_input",
+        inner,
+        transformations::AsymmetricInput { beta },
+    )
+}
+
 pub fn translate_output(translation: f64, inner: Problem) -> Problem {
     Problem::extend(
         "translate_output",
