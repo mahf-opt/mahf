@@ -54,6 +54,35 @@ impl Transformation for OscillateInput {
     }
 }
 
+pub struct ConditionInput {
+    pub alpha: f64,
+}
+impl Transformation for ConditionInput {
+    fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+        for i in 0..x.len() {
+            let scale = (self.alpha * i as f64) / (x.len() as f64 - 1.0);
+            out[i] = f64::powf(self.alpha, 0.5 * scale) * x[i];
+        }
+    }
+}
+
+pub struct AsymmetricInput {
+    pub beta: f64,
+}
+impl Transformation for AsymmetricInput {
+    fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+        for i in 0..x.len() {
+            if x[i] > 0.0 {
+                let scale = (self.beta * i as f64) / (x.len() as f64 - 1.0);
+                let exponent = 1.0 + scale * f64::sqrt(x[i]);
+                out[i] = f64::powf(x[i], exponent);
+            } else {
+                out[i] = x[i];
+            }
+        }
+    }
+}
+
 pub struct TranslateOutput {
     pub translation: f64,
 }
