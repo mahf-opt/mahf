@@ -104,6 +104,10 @@ pub fn asymmetric_input(beta: f64, inner: Problem) -> Problem {
     )
 }
 
+pub fn brs_input(inner: Problem) -> Problem {
+    Problem::extend("brs_input", inner, transformations::BrsInput)
+}
+
 pub fn translate_output(translation: f64, inner: Problem) -> Problem {
     Problem::extend(
         "translate_output",
