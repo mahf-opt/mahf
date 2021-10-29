@@ -5,7 +5,6 @@ A framework for modular construction and evaluation of meta-heuristics.
 # Requirements
 
 - [The Rust Programming Language](https://rust-lang.org)
-- [An R Envrionment](https://www.r-project.org/) (Only for the evaluation)
 
 # Documentation
 
