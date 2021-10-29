@@ -82,6 +82,8 @@ fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
 }
 
 mod functions {
+    #![allow(clippy::let_and_return)]
+
     use super::util_2009;
     use crate::problems::coco::{problems, Problem};
 
