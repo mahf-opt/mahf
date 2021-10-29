@@ -72,7 +72,7 @@ pub fn permutation(mapping: Vec<usize>, inner: Problem) -> Problem {
     Problem::extend(
         "permutaion",
         inner,
-        transformations::Permutation { mapping },
+        transformations::input::Permutation { mapping },
     )
 }
 
@@ -80,19 +80,19 @@ pub fn translate_input(translation: Vec<f64>, inner: Problem) -> Problem {
     Problem::extend(
         "translate_input",
         inner,
-        transformations::TranslateInput { translation },
+        transformations::input::Translate { translation },
     )
 }
 
 pub fn oscillate_input(inner: Problem) -> Problem {
-    Problem::extend("oscillate_input", inner, transformations::OscillateInput)
+    Problem::extend("oscillate_input", inner, transformations::input::Oscillate)
 }
 
 pub fn condition_input(alpha: f64, inner: Problem) -> Problem {
     Problem::extend(
         "condition_input",
         inner,
-        transformations::ConditionInput { alpha },
+        transformations::input::Condition { alpha },
     )
 }
 
@@ -100,18 +100,18 @@ pub fn asymmetric_input(beta: f64, inner: Problem) -> Problem {
     Problem::extend(
         "asymmetric_input",
         inner,
-        transformations::AsymmetricInput { beta },
+        transformations::input::Asymmetric { beta },
     )
 }
 
 pub fn brs_input(inner: Problem) -> Problem {
-    Problem::extend("brs_input", inner, transformations::BrsInput)
+    Problem::extend("brs_input", inner, transformations::input::Brs)
 }
 
 pub fn translate_output(translation: f64, inner: Problem) -> Problem {
     Problem::extend(
         "translate_output",
         inner,
-        transformations::TranslateOutput { translation },
+        transformations::output::Translate { translation },
     )
 }
