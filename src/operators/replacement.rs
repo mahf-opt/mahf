@@ -19,7 +19,7 @@ impl Replacement for Fittest {
         population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,
     ) {
-        population.extend(offspring.drain(..));
+        population.append(offspring);
         population.sort_unstable_by_key(Individual::fitness);
         population.truncate(self.max_population_size as usize);
     }
@@ -61,7 +61,7 @@ impl Replacement for Generational {
         offspring: &mut Vec<Individual>,
     ) {
         population.clear();
-        population.extend(offspring.drain(..));
+        population.append(offspring);
         population.truncate(self.max_population_size as usize);
     }
 }
@@ -101,7 +101,7 @@ impl Replacement for RandomReplacement {
         population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,
     ) {
-        population.extend(offspring.drain(..));
+        population.append(offspring);
         population.shuffle(rng);
         population.truncate(self.max_population_size as usize);
     }
