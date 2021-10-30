@@ -10,7 +10,6 @@ use crate::{
 };
 use anyhow::{anyhow, Error, Result};
 use pest_consume::Parser;
-use std::convert::TryFrom;
 
 // Converts the parsing-tree for symmetric TSP that was constructed by `pest`
 // into rust-usable data types using the `pest_consume` package.
@@ -109,7 +108,6 @@ mod parser {
             problems::tsp::{symmetric::Optimum, Route},
         };
         use pest_consume::{match_nodes, Error, Parser};
-        use std::convert::TryFrom;
 
         type Result<T> = std::result::Result<T, Error<Rule>>;
         type Node<'i> = pest_consume::Node<'i, Rule, ()>;

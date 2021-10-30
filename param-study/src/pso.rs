@@ -1,10 +1,9 @@
+use crate::util::{print_result, ArgsIter, Setup};
 use mahf::{
     float_eq::float_eq, heuristic, heuristics::pso, problems::bmf::BenchmarkFunction,
     random::Random, tracking::Log,
 };
-use std::{convert::TryFrom, time::Instant};
-
-use crate::util::{print_result, ArgsIter, Setup};
+use std::time::Instant;
 
 #[derive(Debug, Default)]
 struct Parameters {

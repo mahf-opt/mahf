@@ -21,7 +21,6 @@ pub type Route = Vec<Node>;
 /// Popular distance functions used in TSP.
 mod distances {
     use crate::fitness::Fitness;
-    use std::convert::{TryFrom, TryInto};
 
     pub fn euclidean_distance(a: &[f64], b: &[f64]) -> Fitness {
         assert_eq!(a.len(), b.len());

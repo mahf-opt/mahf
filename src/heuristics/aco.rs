@@ -9,10 +9,7 @@ use crate::{
     tracking::CustomLog,
 };
 use rand::distributions::{weighted::WeightedIndex, Distribution};
-use std::{
-    convert::TryFrom,
-    ops::{Index, IndexMut, MulAssign},
-};
+use std::ops::{Index, IndexMut, MulAssign};
 
 /// Ant Colony Optimization - Ant System
 ///
