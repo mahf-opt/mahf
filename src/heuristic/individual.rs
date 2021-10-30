@@ -1,5 +1,5 @@
 use crate::fitness::Fitness;
-use std::{any::Any, convert::TryFrom};
+use std::any::Any;
 
 /// An encoded solution with its associated fitness value.
 pub struct Individual {

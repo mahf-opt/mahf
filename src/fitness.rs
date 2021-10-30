@@ -1,6 +1,6 @@
 //! Utility type to store an individuals fitness.
 
-use std::{convert::TryFrom, fmt};
+use std::fmt;
 
 /// Fitness value of an [Individual](crate::heuristic::Individual)
 ///

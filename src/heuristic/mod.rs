@@ -2,7 +2,7 @@
 #![doc = include_str!("../../docs/heuristic.md")]
 
 use crate::{fitness::Fitness, problem::Problem, random::Random, tracking::Log};
-use std::{convert::TryFrom, mem};
+use std::mem;
 
 pub mod components;
 
