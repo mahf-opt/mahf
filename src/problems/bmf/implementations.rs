@@ -823,7 +823,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: -2.808^n at (7.917,...,7.917) (minimisation by negation), here on input domain [0,10]
+    /// Optimum: -2.808^n at (7.917,...,7.917) (minimisation by negation), here on input domain [0, 10]
     pub fn alpine_n2(x: &[f64]) -> f64 {
         -x.iter()
             .map(|xi| scale_domain(xi, 0.0, 10.0))
@@ -903,7 +903,7 @@ pub mod scaled_implementations {
     /// Scaled to [-1.0, 1.0]
     ///
     /// Optimum: 0.9 at (0,...,0), here on input domain [-10,10]
-    /// On http://benchmarkfcns.xyz/benchmarkfcns/periodicfcn.html, there is a typo in the mathematical definition!
+    /// On <http://benchmarkfcns.xyz/benchmarkfcns/periodicfcn.html>, there is a typo in the mathematical definition!
     pub fn periodic(x: &[f64]) -> f64 {
         let sum = x
             .iter()
@@ -1531,7 +1531,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: - 0.673667521146855 at (1.393249070031784,0) and (0,1.393249070031784), here on input domain [0,10]
+    /// Optimum: - 0.673667521146855 at (1.393249070031784,0) and (0,1.393249070031784), here on input domain [0, 10]
     /// Defined only on 2-dimensional space.
     pub fn keane(x: &[f64]) -> f64 {
         debug_assert_eq!(x.len(), 2);
@@ -1544,7 +1544,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (1,1), here on input domain [0,10]
+    /// Optimum: 0 at (1,1), here on input domain [0, 10]
     /// Defined only on 2-dimensional space.
     pub fn leon(x: &[f64]) -> f64 {
         debug_assert_eq!(x.len(), 2);
@@ -1667,7 +1667,7 @@ pub mod scaled_implementations {
     ///
     /// Scaled to [-1.0, 1.0]
     ///
-    /// Optimum: 0 at (0,0,0), here on input domain [0,2]
+    /// Optimum: 0 at (0,0,0), here on input domain [0, 2]
     /// Defined only on 3-dimensional space.
     pub fn wolfe(x: &[f64]) -> f64 {
         debug_assert_eq!(x.len(), 3);
