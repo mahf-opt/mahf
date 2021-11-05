@@ -1,6 +1,5 @@
 //! Generation methods
 
-use std::cmp::max;
 use crate::{
     heuristic::{components::*, State},
     problem::{LimitedVectorProblem, Problem, VectorProblem},
@@ -9,6 +8,7 @@ use crate::{
 use rand::{prelude::SliceRandom, Rng};
 use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
+use std::cmp::max;
 
 /// Generates new random solutions in the search space.
 #[derive(Serialize)]
@@ -163,8 +163,8 @@ pub struct UniformMutation {
     pub rm: f64,
 }
 impl<P> Generation<P> for UniformMutation
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
     fn generate(
         &self,
@@ -191,25 +191,24 @@ mod uniform_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = UniformMutation {
-            rm: 1.0,
-        };
+        let comp = UniformMutation { rm: 1.0 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4],vec![0.2,0.3,0.6]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
-
 
 /// Applies a gaussian mutation to each position depending on mutation rate.
 /// The distribution is centered around 0 and the resulting value is added to the value of the solution.
@@ -225,8 +224,8 @@ pub struct GaussianMutation {
     pub deviation: f64,
 }
 impl<P> Generation<P> for GaussianMutation
-    where
-        P: Problem<Encoding = Vec<f64>>,
+where
+    P: Problem<Encoding = Vec<f64>>,
 {
     fn generate(
         &self,
@@ -254,7 +253,6 @@ mod gaussian_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
@@ -264,13 +262,16 @@ mod gaussian_mutation {
         };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4],vec![0.2,0.3,0.6]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
 
@@ -285,8 +286,8 @@ pub struct BitflipMutation {
     pub rm: f64,
 }
 impl<P> Generation<P> for BitflipMutation
-    where
-        P: Problem<Encoding = Vec<bool>>,
+where
+    P: Problem<Encoding = Vec<bool>>,
 {
     fn generate(
         &self,
@@ -307,7 +308,6 @@ impl<P> Generation<P> for BitflipMutation
     }
 }
 
-
 /// Applies a swap mutation to n_swap elements depending on mutation probability.
 ///
 /// For more than two elements: swap is performed circular.
@@ -321,8 +321,8 @@ pub struct SwapMutation {
     pub n_swap: usize,
 }
 impl<P, D> Generation<P> for SwapMutation
-    where
-        P: Problem<Encoding = Vec<D>>,
+where
+    P: Problem<Encoding = Vec<D>>,
 {
     fn generate(
         &self,
@@ -340,12 +340,12 @@ impl<P, D> Generation<P> for SwapMutation
                 let mut pos: Vec<usize> = (0..dim).collect();
                 pos.shuffle(rng);
                 pos.resize(self.n_swap, 0);
-                pos.sort();
-                solution.swap(pos[pos.len()-1], pos[0]);
+                pos.sort_unstable();
+                solution.swap(pos[pos.len() - 1], pos[0]);
                 if self.n_swap > 2 {
-                    for _ in 0..self.n_swap-2 {
+                    for _ in 0..self.n_swap - 2 {
                         solution.swap(pos[pos.len() - 1], pos[pos.len() - 2]);
-                        pos.remove(pos.len()-1);
+                        pos.remove(pos.len() - 1);
                     }
                 }
             }
@@ -359,26 +359,24 @@ mod swap_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = SwapMutation {
-            pm: 1.0,
-            n_swap: 2,
-        };
+        let comp = SwapMutation { pm: 1.0, n_swap: 2 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
-
 
 /// Applies a scramble mutation to the solution depending on mutation probability.
 ///
@@ -391,8 +389,8 @@ pub struct ScrambleMutation {
     pub pm: f64,
 }
 impl<P, D> Generation<P> for ScrambleMutation
-    where
-        P: Problem<Encoding = Vec<D>>,
+where
+    P: Problem<Encoding = Vec<D>>,
 {
     fn generate(
         &self,
@@ -416,25 +414,24 @@ mod scramble_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = ScrambleMutation {
-            pm: 1.0,
-        };
+        let comp = ScrambleMutation { pm: 1.0 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
-
 
 /// Applies a insertion mutation to the solution depending on mutation probability.
 ///
@@ -447,8 +444,8 @@ pub struct InsertionMutation {
     pub pm: f64,
 }
 impl<P, D> Generation<P> for InsertionMutation
-    where
-        P: Problem<Encoding = Vec<D>>,
+where
+    P: Problem<Encoding = Vec<D>>,
 {
     fn generate(
         &self,
@@ -473,25 +470,24 @@ mod insertion_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = InsertionMutation {
-            pm: 1.0,
-        };
+        let comp = InsertionMutation { pm: 1.0 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
-
 
 /// Applies a inversion mutation to the solution depending on mutation probability.
 ///
@@ -504,8 +500,8 @@ pub struct InversionMutation {
     pub pm: f64,
 }
 impl<P, D> Generation<P> for InversionMutation
-    where
-        P: Problem<Encoding = Vec<D>>,
+where
+    P: Problem<Encoding = Vec<D>>,
 {
     fn generate(
         &self,
@@ -521,8 +517,8 @@ impl<P, D> Generation<P> for InversionMutation
                 let mut pos: Vec<usize> = (0..dim).collect();
                 pos.shuffle(rng);
                 pos.resize(2, 0);
-                pos.sort();
-                &solution[pos[0]..pos[1]+1].reverse();
+                pos.sort_unstable();
+                solution[pos[0]..pos[1] + 1].reverse();
             }
         }
         offspring.append(parents);
@@ -534,25 +530,24 @@ mod inversion_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = InversionMutation {
-            pm: 1.0,
-        };
+        let comp = InversionMutation { pm: 1.0 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
-
 
 /// Applies a translocation mutation to the solution depending on mutation probability.
 ///
@@ -565,8 +560,9 @@ pub struct TranslocationMutation {
     pub pm: f64,
 }
 impl<P, D> Generation<P> for TranslocationMutation
-    where
-        P: Problem<Encoding = Vec<D>>, D: std::clone::Clone
+where
+    P: Problem<Encoding = Vec<D>>,
+    D: std::clone::Clone,
 {
     fn generate(
         &self,
@@ -582,17 +578,15 @@ impl<P, D> Generation<P> for TranslocationMutation
                 let mut pos: Vec<usize> = (0..dim).collect();
                 pos.shuffle(rng);
                 pos.resize(2, 0);
-                pos.sort();
+                pos.sort_unstable();
                 // TODO: this is extremely ugly, try to improve later!
                 let mut start = solution[0..pos[0]].to_vec();
-                let slice = solution[pos[0]..pos[1]+1].to_vec();
-                let mut end = solution[pos[1]+1..].to_vec();
+                let slice = solution[pos[0]..pos[1] + 1].to_vec();
+                let mut end = solution[pos[1] + 1..].to_vec();
                 start.append(&mut end);
                 let r = rng.gen_range(0..start.len());
-                let mut count = 0;
-                for i in slice {
-                    start.insert(r+count, i);
-                    count += 1;
+                for (count, i) in slice.into_iter().enumerate() {
+                    start.insert(r + count, i);
                 }
                 offspring.push(start);
             }
@@ -605,28 +599,26 @@ mod translocation_mutation {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = TranslocationMutation {
-            pm: 1.0,
-        };
+        let comp = TranslocationMutation { pm: 1.0 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8]];
+        let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
         let solution_length = vec![parents[0].len(), parents[1].len()];
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
-        assert_eq!(vec![offspring[0].len(), offspring[1].len()], solution_length);
+        assert_eq!(
+            vec![offspring[0].len(), offspring[1].len()],
+            solution_length
+        );
     }
 }
 
-
 /* Recombination Operators */
-
 
 /// Applies a n-point crossover to two parent solutions depending on crossover probability.
 ///
@@ -638,8 +630,9 @@ pub struct NPointCrossover {
     pub points: usize,
 }
 impl<P, D> Generation<P> for NPointCrossover
-    where
-        P: Problem<Encoding = Vec<D>>, D: std::clone::Clone
+where
+    P: Problem<Encoding = Vec<D>>,
+    D: std::clone::Clone,
 {
     fn generate(
         &self,
@@ -649,7 +642,11 @@ impl<P, D> Generation<P> for NPointCrossover
         parents: &mut Vec<Vec<D>>,
         offspring: &mut Vec<Vec<D>>,
     ) {
-        let dim: usize = parents.iter().min_by(|x, &y| (x.len()).cmp(&y.len())).unwrap().len();
+        let dim: usize = parents
+            .iter()
+            .min_by(|x, &y| (x.len()).cmp(&y.len()))
+            .unwrap()
+            .len();
         assert!(self.points < dim);
         for pairs in parents.chunks(2) {
             if pairs.len() > 1 {
@@ -659,7 +656,7 @@ impl<P, D> Generation<P> for NPointCrossover
                     let mut pos: Vec<usize> = (0..dim).collect();
                     pos.shuffle(rng);
                     pos.resize(self.points, 0);
-                    pos.sort();
+                    pos.sort_unstable();
                     for (i, &pt) in pos.iter().enumerate() {
                         if pairs[0].len() != pairs[1].len() {
                             if i < self.points - 1 {
@@ -674,12 +671,9 @@ impl<P, D> Generation<P> for NPointCrossover
                             child2[pt..].swap_with_slice(&mut child1[pt..]);
                         }
                     }
-                    offspring.push(child1);
-                    offspring.push(child2);
-                } else {
-                    offspring.push(child1);
-                    offspring.push(child2);
                 }
+                offspring.push(child1);
+                offspring.push(child2);
             } else {
                 let child1 = pairs[0].to_owned();
                 offspring.push(child1);
@@ -693,25 +687,23 @@ mod npoint_crossover {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = NPointCrossover {
-            pc: 1.0,
-            points: 3,
-        };
+        let comp = NPointCrossover { pc: 1.0, points: 3 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8],vec![0.11,0.21,0.41,0.51,0.91]];
+        let mut parents = vec![
+            vec![0.1, 0.2, 0.4, 0.5, 0.9],
+            vec![0.2, 0.3, 0.6, 0.7, 0.8],
+            vec![0.11, 0.21, 0.41, 0.51, 0.91],
+        ];
         let parents_length = parents.len();
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
         assert_eq!(offspring.len(), parents_length);
     }
 }
-
-
 
 /// Applies a uniform crossover to two parent solutions depending on crossover probability.
 ///
@@ -722,8 +714,9 @@ pub struct UniformCrossover {
     pub pc: f64,
 }
 impl<P, D> Generation<P> for UniformCrossover
-    where
-        P: Problem<Encoding = Vec<D>>, D: std::clone::Clone
+where
+    P: Problem<Encoding = Vec<D>>,
+    D: std::clone::Clone,
 {
     fn generate(
         &self,
@@ -734,41 +727,30 @@ impl<P, D> Generation<P> for UniformCrossover
         offspring: &mut Vec<Vec<D>>,
     ) {
         for pairs in parents.chunks(2) {
-            if pairs.len() > 1 {
-                let mut child1 = Vec::new();
-                let mut child2 = Vec::new();
-                if rng.gen::<f64>() <= self.pc {
-                    for i in 0..max(pairs[0].len(), pairs[1].len()) {
-                        if rng.gen::<f64>() < 0.5 {
-                            if i < pairs[0].len() && i < pairs[1].len() {
-                                child1.push(pairs[0][i].clone());
-                                child2.push(pairs[1][i].clone());
-                            } else if i >= pairs[0].len() {
-                                child2.push(pairs[1][i].clone());
-                            } else if i >= pairs[1].len() {
-                                child1.push(pairs[0][i].clone());
-                            }
-                        } else {
-                            if i < pairs[0].len() && i < pairs[1].len() {
-                                child1.push(pairs[1][i].clone());
-                                child2.push(pairs[0][i].clone());
-                            } else if i >= pairs[0].len() {
-                                child2.push(pairs[1][i].clone());
-                            } else if i >= pairs[1].len() {
-                                child1.push(pairs[0][i].clone());
-                            }
-                        }
-                    }
-                    offspring.push(child1);
-                    offspring.push(child2);
-                } else {
-                    offspring.push(child1);
-                    offspring.push(child2);
-                }
-            } else {
+            if pairs.len() == 1 {
                 let child1 = pairs[0].to_owned();
                 offspring.push(child1);
+                continue;
             }
+
+            let mut child1 = Vec::new();
+            let mut child2 = Vec::new();
+            if rng.gen::<f64>() <= self.pc {
+                for i in 0..max(pairs[0].len(), pairs[1].len()) {
+                    if i < pairs[0].len() && i < pairs[1].len() {
+                        let r = rng.gen::<f64>() < 0.5;
+                        let (a, b) = if r { (0, 1) } else { (1, 0) };
+                        child1.push(pairs[a][i].clone());
+                        child2.push(pairs[b][i].clone());
+                    } else if i >= pairs[0].len() {
+                        child2.push(pairs[1][i].clone());
+                    } else if i >= pairs[1].len() {
+                        child1.push(pairs[0][i].clone());
+                    }
+                }
+            }
+            offspring.push(child1);
+            offspring.push(child2);
         }
     }
 }
@@ -778,16 +760,17 @@ mod uniform_crossover {
     use super::*;
     use crate::problems::bmf::BenchmarkFunction;
 
-
     #[test]
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = UniformCrossover {
-            pc: 1.0,
-        };
+        let comp = UniformCrossover { pc: 1.0 };
         let mut state = State::new();
         let mut rng = Random::testing();
-        let mut parents = vec![vec![0.1,0.2,0.4,0.5,0.9],vec![0.2,0.3,0.6,0.7,0.8],vec![0.11,0.21,0.41,0.51,0.91]];
+        let mut parents = vec![
+            vec![0.1, 0.2, 0.4, 0.5, 0.9],
+            vec![0.2, 0.3, 0.6, 0.7, 0.8],
+            vec![0.11, 0.21, 0.41, 0.51, 0.91],
+        ];
         let parents_length = parents.len();
         let mut offspring = Vec::new();
         comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
