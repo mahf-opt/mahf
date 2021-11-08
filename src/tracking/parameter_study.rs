@@ -152,7 +152,7 @@ impl Summary {
     }
 
     pub fn add_run(&mut self, log: &Log) {
-        let last = log.evaluations.last().unwrap();
+        let last = log.final_evaluation();
         let best = last.best_fx;
         let evaluations = last.evaluation as usize;
         self.entries.push(SummaryEntry { best, evaluations });

@@ -1,4 +1,4 @@
-use crate::tracking::CustomLog;
+use crate::tracking::log::CustomLog;
 use std::any::{Any, TypeId};
 use std::collections::BTreeMap;
 
