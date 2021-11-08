@@ -26,6 +26,31 @@ pub fn get_parameters() -> (String, Setup, ArgsIter) {
     (heuristic, base, args)
 }
 
+#[macro_export]
+macro_rules! declare_parameters {
+    { $($p_name:ident : $p_type:ty,)* } => {
+        #[derive(Debug, Default)]
+        struct Parameters {
+            $($p_name: $p_type),*
+        }
+
+        fn parameters(args: &mut ArgsIter) -> Parameters {
+            let mut params = Parameters::default();
+
+            while let Some(param) = args.next() {
+                let value = args.next().unwrap();
+
+                match param.as_str() {
+                    $(concat!("-", stringify!($p_name)) => params.$p_name = value.parse().unwrap(),)*
+                    unknown => panic!("unknown param {}", unknown),
+                }
+            }
+
+            params
+        }
+    };
+}
+
 /// Prints output for ParamILS.
 ///
 /// This can be called multiple times and the last call will define
