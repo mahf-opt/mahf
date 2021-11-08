@@ -1,4 +1,7 @@
-use crate::util::{print_result, ArgsIter, Setup};
+use crate::{
+    declare_parameters,
+    util::{print_result, ArgsIter, Setup},
+};
 use mahf::{
     float_eq::float_eq,
     heuristic::{self, Configuration},
@@ -9,8 +12,7 @@ use mahf::{
 };
 use std::time::Instant;
 
-#[derive(Debug, Default)]
-struct Parameters {
+declare_parameters! {
     initial_population_size: u32,
     max_population_size: u32,
     min_number_of_seeds: u32,
@@ -80,25 +82,4 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
         logger.final_best_fx(),
         setup.seed,
     );
-}
-
-fn parameters(args: &mut ArgsIter) -> Parameters {
-    let mut params = Parameters::default();
-
-    while let Some(param) = args.next() {
-        let value = args.next().unwrap();
-
-        match param.as_str() {
-            "-initial_population_size" => params.initial_population_size = value.parse().unwrap(),
-            "-max_population_size" => params.max_population_size = value.parse().unwrap(),
-            "-min_number_of_seeds" => params.min_number_of_seeds = value.parse().unwrap(),
-            "-max_number_of_seeds" => params.max_number_of_seeds = value.parse().unwrap(),
-            "-initial_deviation" => params.initial_deviation = value.parse().unwrap(),
-            "-final_deviation" => params.final_deviation = value.parse().unwrap(),
-            "-modulation_index" => params.modulation_index = value.parse().unwrap(),
-            unknown => panic!("unknown param {}", unknown),
-        }
-    }
-
-    params
 }

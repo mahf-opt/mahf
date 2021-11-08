@@ -1,12 +1,14 @@
-use crate::util::{print_result, ArgsIter, Setup};
+use crate::{
+    declare_parameters,
+    util::{print_result, ArgsIter, Setup},
+};
 use mahf::{
     float_eq::float_eq, heuristic, heuristics::pso, problems::bmf::BenchmarkFunction,
     random::Random, tracking::Log,
 };
 use std::time::Instant;
 
-#[derive(Debug, Default)]
-struct Parameters {
+declare_parameters! {
     population_size: u32,
     a: f64,
     b: f64,
@@ -54,23 +56,4 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
         logger.final_best_fx(),
         setup.seed,
     );
-}
-
-fn parameters(args: &mut ArgsIter) -> Parameters {
-    let mut params = Parameters::default();
-
-    while let Some(param) = args.next() {
-        let value = args.next().unwrap();
-
-        match param.as_str() {
-            "-population_size" => params.population_size = value.parse().unwrap(),
-            "-a" => params.a = value.parse().unwrap(),
-            "-b" => params.b = value.parse().unwrap(),
-            "-c" => params.c = value.parse().unwrap(),
-            "-v_max" => params.v_max = value.parse().unwrap(),
-            unknown => panic!("unknown param {}", unknown),
-        }
-    }
-
-    params
 }
