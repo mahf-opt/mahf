@@ -6,7 +6,7 @@ use crate::{
     operators::*,
     problems::tsp::{Route, SymmetricTsp},
     random::Random,
-    tracking::CustomLog,
+    tracking::log::CustomLog,
 };
 use rand::distributions::{weighted::WeightedIndex, Distribution};
 use std::ops::{Index, IndexMut, MulAssign};
