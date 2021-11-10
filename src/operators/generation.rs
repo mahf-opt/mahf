@@ -748,6 +748,9 @@ where
                         child1.push(pairs[0][i].clone());
                     }
                 }
+            } else {
+                child1 = pairs[0].to_owned();
+                child2 = pairs[1].to_owned();
             }
             offspring.push(child1);
             offspring.push(child2);
@@ -770,6 +773,96 @@ mod uniform_crossover {
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
             vec![0.2, 0.3, 0.6, 0.7, 0.8],
             vec![0.11, 0.21, 0.41, 0.51, 0.91],
+        ];
+        let parents_length = parents.len();
+        let mut offspring = Vec::new();
+        comp.generate(&mut state, &problem, &mut rng, &mut parents, &mut offspring);
+        assert_eq!(offspring.len(), parents_length);
+    }
+}
+
+
+/// Applies a cycle crossover to two parent solutions depending on crossover probability.
+///
+/// Usually exclusive to combinatorial problems.
+///
+/// If pc = 1, the solutions are recombined.
+#[derive(Serialize, Deserialize)]
+pub struct CycleCrossover {
+    /// Probability of recombining the solutions.
+    pub pc: f64,
+}
+impl<P, D: Clone> Generation<P> for CycleCrossover
+    where
+        P: Problem<Encoding = Vec<D>>,
+        D: std::clone::Clone + std::cmp::PartialEq,
+{
+    fn generate(
+        &self,
+        _state: &mut State,
+        _problem: &P,
+        rng: &mut Random,
+        parents: &mut Vec<Vec<D>>,
+        offspring: &mut Vec<Vec<D>>,
+    ) {
+        for pairs in parents.chunks(2) {
+            if pairs.len() == 1 {
+                let child1 = pairs[0].to_owned();
+                offspring.push(child1);
+                continue;
+            }
+
+            let mut child1 = Vec::new();
+            let mut child2 = Vec::new();
+
+            if rng.gen::<f64>() <= self.pc {
+                let mut cycles = vec![-1; pairs[0].len()];
+                let mut cycle_number = 1;
+                let cycle_start: Vec<usize> = (0..cycles.len()).collect();
+
+                for mut pos in cycle_start {
+                    while cycles[pos] < 0 {
+                        cycles[pos] = cycle_number;
+                        pos = pairs[0].iter().position(|r| r == &pairs[1][pos]).unwrap();
+                    }
+
+                    cycle_number += 1;
+                }
+
+                for (i, n) in cycles.iter().enumerate() {
+                    if n%2 == 0 {
+                        child1.push(pairs[0][i].clone());
+                        child2.push(pairs[1][i].clone());
+                    } else {
+                        child1.push(pairs[1][i].clone());
+                        child2.push(pairs[0][i].clone());
+                    }
+                }
+
+            } else {
+                child1 = pairs[0].to_owned();
+                child2 = pairs[1].to_owned();
+            }
+            offspring.push(child1);
+            offspring.push(child2);
+        }
+    }
+}
+
+#[cfg(test)]
+mod cycle_crossover {
+    use super::*;
+    use crate::problems::bmf::BenchmarkFunction;
+
+    #[test]
+    fn all_recombined() {
+        let problem = BenchmarkFunction::sphere(3);
+        let comp = CycleCrossover { pc: 1.0 };
+        let mut state = State::new();
+        let mut rng = Random::testing();
+        let mut parents = vec![
+            vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
+            vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
         ];
         let parents_length = parents.len();
         let mut offspring = Vec::new();
