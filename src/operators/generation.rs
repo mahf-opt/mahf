@@ -781,7 +781,6 @@ mod uniform_crossover {
     }
 }
 
-
 /// Applies a cycle crossover to two parent solutions depending on crossover probability.
 ///
 /// Usually exclusive to combinatorial problems.
@@ -793,9 +792,9 @@ pub struct CycleCrossover {
     pub pc: f64,
 }
 impl<P, D: Clone> Generation<P> for CycleCrossover
-    where
-        P: Problem<Encoding = Vec<D>>,
-        D: std::clone::Clone + std::cmp::PartialEq,
+where
+    P: Problem<Encoding = Vec<D>>,
+    D: std::clone::Clone + std::cmp::PartialEq,
 {
     fn generate(
         &self,
@@ -830,7 +829,7 @@ impl<P, D: Clone> Generation<P> for CycleCrossover
                 }
 
                 for (i, n) in cycles.iter().enumerate() {
-                    if n%2 == 0 {
+                    if n % 2 == 0 {
                         child1.push(pairs[0][i].clone());
                         child2.push(pairs[1][i].clone());
                     } else {
@@ -838,7 +837,6 @@ impl<P, D: Clone> Generation<P> for CycleCrossover
                         child2.push(pairs[0][i].clone());
                     }
                 }
-
             } else {
                 child1 = pairs[0].to_owned();
                 child2 = pairs[1].to_owned();
