@@ -1,4 +1,4 @@
-//! Implementations of [crate::heuristic::components].
+//! Implementations of [crate::framework::components].
 
 pub mod generation;
 pub mod initialization;
