@@ -5,8 +5,7 @@ use crate::{
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
-use rand::distributions::uniform::SampleUniform;
-use rand::Rng;
+use rand::{distributions::uniform::SampleUniform, Rng};
 use serde::{Deserialize, Serialize};
 
 /// Doesn't do anything.

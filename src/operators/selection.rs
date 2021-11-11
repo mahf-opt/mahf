@@ -4,8 +4,11 @@ use crate::{
     framework::{components::*, Individual, State},
     random::Random,
 };
-use rand::distributions::{weighted::WeightedIndex, Distribution};
-use rand::{seq::SliceRandom, Rng};
+use rand::{
+    distributions::{weighted::WeightedIndex, Distribution},
+    seq::SliceRandom,
+    Rng,
+};
 use serde::{Deserialize, Serialize};
 
 /// Selects all individuals once.
