@@ -1,7 +1,9 @@
 //! Replacement methods
 
-use crate::framework::{components::*, Individual, State};
-use crate::random::Random;
+use crate::{
+    framework::{components::*, Individual, State},
+    random::Random,
+};
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 

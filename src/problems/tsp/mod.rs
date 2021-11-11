@@ -4,8 +4,7 @@ use crate::framework::Fitness;
 
 /// Symmetric TSP
 pub mod symmetric;
-pub use symmetric::Instances;
-pub use symmetric::SymmetricTsp;
+pub use symmetric::{Instances, SymmetricTsp};
 
 /// Asymmetric TSP
 pub mod asymmetric {}

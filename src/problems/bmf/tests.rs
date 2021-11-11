@@ -12,8 +12,10 @@ fn scale_domain(value: &f64, min: f64, max: f64) -> f64 {
 
 mod bmf_tests {
     use crate::problems::{
-        bmf::tests::{abs_tol, r1st_tol, scale_domain},
-        bmf::*,
+        bmf::{
+            tests::{abs_tol, r1st_tol, scale_domain},
+            *,
+        },
         Problem,
     };
     use float_eq::*;
