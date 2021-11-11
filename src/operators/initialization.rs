@@ -2,7 +2,7 @@
 
 use crate::{
     heuristic::{components::*, State},
-    problem::{LimitedVectorProblem, Problem},
+    problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::distributions::uniform::SampleUniform;

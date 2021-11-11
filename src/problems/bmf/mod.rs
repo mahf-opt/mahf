@@ -4,7 +4,7 @@ pub mod implementations;
 #[cfg(test)]
 pub mod tests;
 
-use crate::problem::{LimitedVectorProblem, Problem, VectorProblem};
+use crate::problems::{LimitedVectorProblem, Problem, VectorProblem};
 use anyhow::anyhow;
 use std::convert::TryFrom;
 

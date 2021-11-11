@@ -2,10 +2,9 @@
 
 use crate::{
     fitness::Fitness,
-    problem::{Problem, VectorProblem},
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
-        Optimum,
+        Optimum, Problem, VectorProblem,
     },
 };
 use anyhow::{anyhow, Error, Result};

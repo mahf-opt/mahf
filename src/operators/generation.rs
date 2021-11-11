@@ -2,7 +2,7 @@
 
 use crate::{
     heuristic::{components::*, State},
-    problem::{LimitedVectorProblem, Problem, VectorProblem},
+    problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };
 use rand::{prelude::SliceRandom, Rng};

@@ -2,7 +2,7 @@
 
 use crate::{
     heuristic::{Individual, State},
-    problem::Problem,
+    problems::Problem,
     random::Random,
 };
 use erased_serde::Serialize as DynSerialize;

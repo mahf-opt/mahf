@@ -10,7 +10,7 @@
 
 use crate::{
     heuristic::Configuration,
-    problem::Problem,
+    problems::Problem,
     random::{Random, RandomConfig},
     tracking::log::{EvaluationEntry, IterationEntry, Log},
 };

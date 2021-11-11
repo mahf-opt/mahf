@@ -5,7 +5,6 @@ pub mod fitness;
 pub mod heuristic;
 pub mod heuristics;
 pub mod operators;
-pub mod problem;
 pub mod problems;
 pub mod prompt;
 pub mod random;
