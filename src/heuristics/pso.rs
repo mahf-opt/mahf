@@ -6,7 +6,7 @@ use crate::{
         Configuration, CustomState, Individual, State,
     },
     operators::*,
-    problem::{LimitedVectorProblem, Problem},
+    problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::Rng;

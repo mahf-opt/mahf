@@ -68,7 +68,7 @@ impl Instance {
         format!("f{}_d{}_i{}", self.function, self.dimension, self.instance)
     }
 }
-impl crate::problem::Problem for Instance {
+impl crate::problems::Problem for Instance {
     type Encoding = Vec<f64>;
 
     fn evaluate(&self, solution: &Self::Encoding) -> f64 {
@@ -82,14 +82,14 @@ impl crate::problem::Problem for Instance {
         "coco"
     }
 }
-impl crate::problem::VectorProblem for Instance {
+impl crate::problems::VectorProblem for Instance {
     type T = f64;
 
     fn dimension(&self) -> usize {
         self.dimension
     }
 }
-impl crate::problem::LimitedVectorProblem for Instance {
+impl crate::problems::LimitedVectorProblem for Instance {
     fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
         self.problem.domain.clone()
     }

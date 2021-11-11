@@ -1,4 +1,4 @@
-use crate::{heuristic::components::*, problem::Problem};
+use crate::{heuristic::components::*, problems::Problem};
 use serde::Serialize;
 
 /// A full set of components, effectively representing a heuristic.

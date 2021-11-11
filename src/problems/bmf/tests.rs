@@ -11,9 +11,11 @@ fn scale_domain(value: &f64, min: f64, max: f64) -> f64 {
 }
 
 mod bmf_tests {
-    use crate::problem::Problem;
-    use crate::problems::bmf::tests::{abs_tol, r1st_tol, scale_domain};
-    use crate::problems::bmf::*;
+    use crate::problems::{
+        bmf::tests::{abs_tol, r1st_tol, scale_domain},
+        bmf::*,
+        Problem,
+    };
     use float_eq::*;
     use proptest::prelude::*;
     use std::f64::consts::PI;

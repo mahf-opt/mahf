@@ -3,7 +3,7 @@
 use crate::{
     heuristic::Configuration,
     operators::*,
-    problem::{LimitedVectorProblem, Problem, VectorProblem},
+    problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
 
 /// Invasive Weed Optimization

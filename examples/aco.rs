@@ -1,8 +1,7 @@
 use mahf::{
     heuristic,
     heuristics::{aco, rs},
-    problem::VectorProblem,
-    problems::tsp,
+    problems::{tsp, VectorProblem},
     random::Random,
     tracking::{
         runtime_analysis::Experiment,
