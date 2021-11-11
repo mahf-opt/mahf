@@ -1,6 +1,6 @@
 //! Collection of common test problems.
 
-use crate::fitness::Fitness;
+use crate::framework::Fitness;
 use std::{any::Any, ops::Range};
 
 pub mod bmf;

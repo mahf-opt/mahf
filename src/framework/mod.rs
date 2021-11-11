@@ -1,10 +1,13 @@
 #![doc = embed_doc_image::embed_image!("module_system", "docs/MAHF-module-system.svg")]
 #![doc = include_str!("../../docs/heuristic.md")]
 
-use crate::{fitness::Fitness, problems::Problem, random::Random, tracking::Log};
+use crate::{problems::Problem, random::Random, tracking::Log};
 use std::mem;
 
 pub mod components;
+
+mod fitness;
+pub use fitness::{Fitness, IllegalFitness};
 
 mod state;
 pub use state::State;

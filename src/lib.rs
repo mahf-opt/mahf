@@ -1,7 +1,6 @@
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 #![doc = include_str!("../docs/overview.md")]
 
-pub mod fitness;
 pub mod framework;
 pub mod heuristics;
 pub mod operators;
