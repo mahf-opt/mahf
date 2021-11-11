@@ -1,6 +1,6 @@
 #![allow(clippy::new_without_default)]
 
-use crate::heuristic::Configuration;
+use crate::framework::Configuration;
 use std::collections::HashMap;
 
 pub mod error;

@@ -1,7 +1,7 @@
 //! Genetic Algorithm
 
 use crate::{
-    heuristic::Configuration,
+    framework::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };

@@ -1,6 +1,6 @@
 //! Termination methods
 
-use crate::heuristic::{components::*, State};
+use crate::framework::{components::*, State};
 use serde::{Deserialize, Serialize};
 
 /// Terminates after a fixed number of iterations.

@@ -4,7 +4,7 @@ use crate::{
 };
 use mahf::{
     float_eq::float_eq,
-    heuristic::{self, Configuration},
+    framework::{self, Configuration},
     operators::*,
     problems::bmf::BenchmarkFunction,
     random::Random,
@@ -60,7 +60,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
-    heuristic::run(&problem, logger, &config, Some(rng), None);
+    framework::run(&problem, logger, &config, Some(rng), None);
     let end = Instant::now();
     let runtime = end - start;
 

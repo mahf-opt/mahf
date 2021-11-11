@@ -9,7 +9,7 @@
 //!
 
 use crate::{
-    heuristic::Configuration,
+    framework::Configuration,
     problems::Problem,
     random::{Random, RandomConfig},
     tracking::log::{EvaluationEntry, IterationEntry, Log},

@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    heuristic::{
+    framework::{
         components::{Generation, Postprocess},
         Configuration, CustomState, Individual, State,
     },

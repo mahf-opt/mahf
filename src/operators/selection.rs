@@ -1,7 +1,7 @@
 //! Selection methods
 
 use crate::{
-    heuristic::{components::*, Individual, State},
+    framework::{components::*, Individual, State},
     random::Random,
 };
 use rand::distributions::{weighted::WeightedIndex, Distribution};
