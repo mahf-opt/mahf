@@ -1,8 +1,7 @@
 //! Ant Colony Optimization
 
 use crate::{
-    fitness::Fitness,
-    framework::{components::*, Configuration, CustomState, Individual, State},
+    framework::{components::*, Configuration, CustomState, Fitness, Individual, State},
     operators::*,
     problems::tsp::{Route, SymmetricTsp},
     random::Random,

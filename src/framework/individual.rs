@@ -1,4 +1,4 @@
-use crate::fitness::Fitness;
+use crate::framework::Fitness;
 use std::any::Any;
 
 /// An encoded solution with its associated fitness value.

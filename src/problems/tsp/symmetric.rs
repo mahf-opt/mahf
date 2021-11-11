@@ -1,7 +1,7 @@
 //! This module contains instances of the symmetric traveling salesman problem.
 
 use crate::{
-    fitness::Fitness,
+    framework::Fitness,
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Optimum, Problem, VectorProblem,
@@ -103,7 +103,7 @@ mod parser {
     // Parser for .opt.tour files
     pub(super) mod opt {
         use crate::{
-            fitness::Fitness,
+            framework::Fitness,
             problems::tsp::{symmetric::Optimum, Route},
         };
         use pest_consume::{match_nodes, Error, Parser};
