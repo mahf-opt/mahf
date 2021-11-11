@@ -6,10 +6,11 @@ use std::mem;
 
 pub mod components;
 
-mod custom_state;
 mod state;
-pub use custom_state::{CustomState, CustomStateMap};
 pub use state::State;
+
+mod custom_state;
+pub use custom_state::{CustomState, CustomStateMap};
 
 mod individual;
 pub use individual::Individual;

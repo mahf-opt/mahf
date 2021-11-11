@@ -1,7 +1,7 @@
 //! Framework components.
 
 use crate::{
-    heuristic::{Individual, State},
+    framework::{Individual, State},
     problems::Problem,
     random::Random,
 };

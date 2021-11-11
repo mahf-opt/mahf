@@ -9,7 +9,7 @@ use std::{
 use anyhow::Context;
 
 use crate::{
-    heuristic::{self, Configuration},
+    framework::{self, Configuration},
     problems::coco::Instance,
     random::Random,
     threads::SyncThreadPool,
@@ -153,7 +153,7 @@ pub fn evaluate_suite(
                             .context("creating experiment")?;
 
                     for _ in 0..runs {
-                        heuristic::run(&problem, logger, &configuration, None, None);
+                        framework::run(&problem, logger, &configuration, None, None);
                         experiment.log_run(logger)?;
                         logger.clear();
                         let _ = tx.send(Ok(()));

@@ -1,4 +1,4 @@
-use crate::{heuristic::State, tracking::trigger::*};
+use crate::{framework::State, tracking::trigger::*};
 
 pub struct CustomLog {
     pub name: &'static str,

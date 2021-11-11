@@ -1,7 +1,7 @@
 //! Generation methods
 
 use crate::{
-    heuristic::{components::*, State},
+    framework::{components::*, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };

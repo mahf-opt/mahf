@@ -1,7 +1,7 @@
 //! Initialization methods
 
 use crate::{
-    heuristic::{components::*, State},
+    framework::{components::*, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };

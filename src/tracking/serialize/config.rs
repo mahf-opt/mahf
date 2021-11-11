@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 
 use crate::{
-    heuristic::Configuration,
+    framework::Configuration,
     tracking::serialize::{
         component,
         error::{Error, Result},

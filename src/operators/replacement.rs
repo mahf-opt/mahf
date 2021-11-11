@@ -1,6 +1,6 @@
 //! Replacement methods
 
-use crate::heuristic::{components::*, Individual, State};
+use crate::framework::{components::*, Individual, State};
 use crate::random::Random;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};

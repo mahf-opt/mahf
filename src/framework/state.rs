@@ -1,4 +1,4 @@
-use crate::{fitness::Fitness, heuristic::custom_state::CustomStateMap, tracking::Log};
+use crate::{fitness::Fitness, framework::custom_state::CustomStateMap, tracking::Log};
 use std::convert::TryFrom;
 
 /// Tracks various aspects of the current execution.

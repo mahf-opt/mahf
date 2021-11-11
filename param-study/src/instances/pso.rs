@@ -3,7 +3,7 @@ use crate::{
     util::{print_result, ArgsIter, Setup},
 };
 use mahf::{
-    float_eq::float_eq, heuristic, heuristics::pso, problems::bmf::BenchmarkFunction,
+    float_eq::float_eq, framework, heuristics::pso, problems::bmf::BenchmarkFunction,
     random::Random, tracking::Log,
 };
 use std::time::Instant;
@@ -34,7 +34,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
-    heuristic::run(&problem, logger, &config, Some(rng), None);
+    framework::run(&problem, logger, &config, Some(rng), None);
     let end = Instant::now();
     let runtime = end - start;
 

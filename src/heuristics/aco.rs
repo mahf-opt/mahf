@@ -2,7 +2,7 @@
 
 use crate::{
     fitness::Fitness,
-    heuristic::{components::*, Configuration, CustomState, Individual, State},
+    framework::{components::*, Configuration, CustomState, Individual, State},
     operators::*,
     problems::tsp::{Route, SymmetricTsp},
     random::Random,

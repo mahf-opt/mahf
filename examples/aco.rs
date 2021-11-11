@@ -1,5 +1,5 @@
 use mahf::{
-    heuristic,
+    framework,
     heuristics::{aco, rs},
     problems::{tsp, VectorProblem},
     random::Random,
@@ -67,7 +67,7 @@ fn main() -> anyhow::Result<()> {
                 interval: Some(10),
             },
         );
-        heuristic::run(tsp, logger, config, None, None);
+        framework::run(tsp, logger, config, None, None);
         let best = logger.final_best_fx();
         println!(
             "{} reached: {:.0} of {}",
