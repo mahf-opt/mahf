@@ -1,4 +1,4 @@
-use crate::problems::coco::{problems, suits::Suite, Instance};
+use crate::problems::coco::{problems, suits::Suite, CocoInstance};
 
 pub fn new() -> Suite {
     Suite::new(
@@ -9,7 +9,7 @@ pub fn new() -> Suite {
     )
 }
 
-fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
+fn generator(function: usize, instance: usize, dimension: usize) -> CocoInstance {
     assert_eq!(instance, 1, "Toy suite only contains one instance");
 
     let problem = match function {
@@ -25,7 +25,8 @@ fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
         ),
     };
 
-    Instance {
+    CocoInstance {
+        suite: "Toy",
         problem,
         function,
         instance,

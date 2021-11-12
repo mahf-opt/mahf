@@ -1,6 +1,6 @@
 #![allow(unused_variables, dead_code)]
 
-use crate::problems::coco::{suits::Suite, Instance};
+use crate::problems::coco::{suits::Suite, CocoInstance};
 use std::ops::RangeInclusive;
 
 mod util_2009;
@@ -60,7 +60,7 @@ fn instances_by_year(year: Years) -> Vec<usize> {
     flatten_ranges(ranges)
 }
 
-fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
+fn generator(function: usize, instance: usize, dimension: usize) -> CocoInstance {
     assert_eq!(instance, 1, "Toy suite only contains one instance");
 
     let rseed = function + 10000 * instance;
@@ -81,7 +81,8 @@ fn generator(function: usize, instance: usize, dimension: usize) -> Instance {
         ),
     };
 
-    Instance {
+    CocoInstance {
+        suite: "BBOB",
         problem,
         function,
         instance,
