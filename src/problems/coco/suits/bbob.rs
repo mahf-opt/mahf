@@ -14,6 +14,13 @@ pub enum Years {
     Y2016 = 2016,
     Y2017 = 2017,
     Y2018 = 2018,
+    Y2021 = 2021,
+}
+
+impl Years {
+    pub fn current() -> Self {
+        Years::Y2021
+    }
 }
 
 pub fn new(year: Years) -> Suite {
@@ -47,6 +54,7 @@ fn instances_by_year(year: Years) -> Vec<usize> {
         Years::Y2016 => &[1..=5, 51..=60],
         Years::Y2017 => &[1..=5, 61..=70],
         Years::Y2018 => &[1..=5, 71..=80],
+        Years::Y2021 => &[1..=5, 91..=100],
     };
 
     flatten_ranges(ranges)
