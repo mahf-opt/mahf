@@ -1,12 +1,12 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    heuristic::{
+    framework::{
         components::{Generation, Postprocess},
         Configuration, CustomState, Individual, State,
     },
     operators::*,
-    problem::{LimitedVectorProblem, Problem},
+    problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::Rng;

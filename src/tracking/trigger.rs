@@ -1,4 +1,4 @@
-use crate::tracking::{EvaluationEntry, IterationEntry};
+use crate::tracking::log::{EvaluationEntry, IterationEntry};
 
 #[derive(Debug, Clone, Copy)]
 pub struct EvalTrigger {

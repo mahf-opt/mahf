@@ -1,12 +1,11 @@
 //! Ant Colony Optimization
 
 use crate::{
-    fitness::Fitness,
-    heuristic::{components::*, Configuration, CustomState, Individual, State},
+    framework::{components::*, Configuration, CustomState, Fitness, Individual, State},
     operators::*,
     problems::tsp::{Route, SymmetricTsp},
     random::Random,
-    tracking::CustomLog,
+    tracking::log::CustomLog,
 };
 use rand::distributions::{weighted::WeightedIndex, Distribution};
 use std::ops::{Index, IndexMut, MulAssign};
@@ -15,7 +14,7 @@ use std::ops::{Index, IndexMut, MulAssign};
 ///
 /// # References
 /// Dorigo, Marco & Birattari, Mauro & Stützle, Thomas. (2006). Ant Colony Optimization. Computational Intelligence Magazine, IEEE. 1. 28-39. 10.1109/MCI.2006.329691.
-pub fn ant_stystem(
+pub fn ant_system(
     number_of_ants: usize,
     alpha: f64,
     beta: f64,
@@ -44,7 +43,7 @@ pub fn ant_stystem(
 ///
 /// # References
 /// Dorigo, Marco & Birattari, Mauro & Stützle, Thomas. (2006). Ant Colony Optimization. Computational Intelligence Magazine, IEEE. 1. 28-39. 10.1109/MCI.2006.329691.
-pub fn min_max_ant_stystem(
+pub fn min_max_ant_system(
     number_of_ants: usize,
     alpha: f64,
     beta: f64,

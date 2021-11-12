@@ -1,11 +1,10 @@
 //! This module allows easy access to instances of the traveling salesman problem taken from tsplib.
 
-use crate::fitness::Fitness;
+use crate::framework::Fitness;
 
 /// Symmetric TSP
 pub mod symmetric;
-pub use symmetric::Instances;
-pub use symmetric::SymmetricTsp;
+pub use symmetric::{Instances, SymmetricTsp};
 
 /// Asymmetric TSP
 pub mod asymmetric {}
@@ -20,7 +19,7 @@ pub type Route = Vec<Node>;
 
 /// Popular distance functions used in TSP.
 mod distances {
-    use crate::fitness::Fitness;
+    use crate::framework::Fitness;
 
     pub fn euclidean_distance(a: &[f64], b: &[f64]) -> Fitness {
         assert_eq!(a.len(), b.len());

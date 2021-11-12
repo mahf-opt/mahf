@@ -9,8 +9,8 @@ use std::{
 use anyhow::Context;
 
 use crate::{
-    heuristic::{self, Configuration},
-    problems::coco::Instance,
+    framework::{self, Configuration},
+    problems::coco::CocoInstance,
     random::Random,
     threads::SyncThreadPool,
     tracking::{
@@ -26,7 +26,7 @@ pub use toy::new as toy;
 mod bbob;
 pub use bbob::new as bbob;
 
-pub type SuiteGenerator = fn(function: usize, instance: usize, dimension: usize) -> Instance;
+pub type SuiteGenerator = fn(function: usize, instance: usize, dimension: usize) -> CocoInstance;
 
 pub struct Suite {
     functions: Vec<usize>,
@@ -72,7 +72,7 @@ impl Suite {
         self.functions.len() * self.instances.len() * self.dimensions.len()
     }
 
-    fn current_instance(&self) -> Instance {
+    fn current_instance(&self) -> CocoInstance {
         (self.generator)(
             self.functions[self.next_function],
             self.instances[self.next_instance],
@@ -80,7 +80,7 @@ impl Suite {
         )
     }
 
-    pub fn next_instance(&mut self) -> Option<Instance> {
+    pub fn next_instance(&mut self) -> Option<CocoInstance> {
         if self.next_function == self.functions.len()
             || self.next_instance == self.instances.len()
             || self.next_dimension == self.dimensions.len()
@@ -105,7 +105,7 @@ impl Suite {
 }
 
 impl Iterator for Suite {
-    type Item = Instance;
+    type Item = CocoInstance;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.next_instance()
@@ -114,7 +114,7 @@ impl Iterator for Suite {
 
 pub fn evaluate_suite(
     suite: Suite,
-    configuration: Configuration<Instance>,
+    configuration: Configuration<CocoInstance>,
     output_dir: &str,
 ) -> anyhow::Result<()> {
     let data_dir = Arc::new(PathBuf::from(output_dir));
@@ -153,7 +153,7 @@ pub fn evaluate_suite(
                             .context("creating experiment")?;
 
                     for _ in 0..runs {
-                        heuristic::run(&problem, logger, &configuration, None, None);
+                        framework::run(&problem, logger, &configuration, None, None);
                         experiment.log_run(logger)?;
                         logger.clear();
                         let _ = tx.send(Ok(()));

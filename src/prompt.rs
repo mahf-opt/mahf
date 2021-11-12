@@ -1,6 +1,4 @@
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{fs, io, path::Path};
 
 pub fn data_dir(data_dir: &str) -> io::Result<Option<String>> {
     if Path::new(data_dir).exists() {

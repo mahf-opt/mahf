@@ -9,10 +9,10 @@
 //!
 
 use crate::{
-    heuristic::Configuration,
-    problem::Problem,
+    framework::Configuration,
+    problems::Problem,
     random::{Random, RandomConfig},
-    tracking::{EvaluationEntry, IterationEntry, Log},
+    tracking::log::{EvaluationEntry, IterationEntry, Log},
 };
 use anyhow::Context;
 use serde::Serialize;
@@ -76,14 +76,14 @@ impl Experiment {
         if !self.wrote_header {
             self.wrote_header = true;
 
-            if let Some(entry) = log.evaluations.get(0) {
+            if let Some(entry) = log.evaluations().get(0) {
                 write!(eval_buf, "evaluation,current_fx,best_fx")?;
                 for custom in &entry.custom {
                     write!(eval_buf, ",{}", custom.name)?;
                 }
                 writeln!(eval_buf)?;
             }
-            if let Some(entry) = log.iterations.get(0) {
+            if let Some(entry) = log.iterations().get(0) {
                 write!(iter_buf, "iteration,best_fx,diversity")?;
                 for custom in &entry.custom {
                     write!(iter_buf, ",{}", custom.name)?;
@@ -92,8 +92,8 @@ impl Experiment {
             }
         }
 
-        write_evaluations(eval_buf, &log.evaluations).context("writing evaluations")?;
-        write_iterations(iter_buf, &log.iterations).context("writing iterations")?;
+        write_evaluations(eval_buf, log.evaluations()).context("writing evaluations")?;
+        write_iterations(iter_buf, log.iterations()).context("writing iterations")?;
         write_summary(summ_buf, self.logged_runs, log).context("writing summary")?;
 
         Ok(())
@@ -173,9 +173,9 @@ fn write_iterations(output: &mut impl Write, log: &[IterationEntry]) -> io::Resu
 }
 
 fn write_summary(output: &mut impl Write, run: u32, log: &Log) -> io::Result<()> {
-    let iterations = log.iterations.last().unwrap().iteration;
-    let evaluations = log.evaluations.last().unwrap().evaluation;
-    let best = log.evaluations.last().unwrap().best_fx;
+    let iterations = log.final_iteration().iteration;
+    let evaluations = log.final_evaluation().evaluation;
+    let best = log.final_evaluation().best_fx;
 
     writeln!(output, "{},{},{},{}", run, iterations, evaluations, best)
 }

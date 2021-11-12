@@ -1,8 +1,7 @@
 use mahf::{
-    heuristic,
+    framework,
     heuristics::{aco, rs},
-    problem::VectorProblem,
-    problems::tsp,
+    problems::{tsp, VectorProblem},
     random::Random,
     tracking::{
         runtime_analysis::Experiment,
@@ -23,7 +22,7 @@ fn main() -> anyhow::Result<()> {
             let heuristic_length = 1.0; // tsp.evaluate(&tsp.greedy_route());
             let default_pheromones = (tsp.dimension as f64 * heuristic_length).powi(-1);
 
-            &aco::ant_stystem(
+            &aco::ant_system(
                 number_of_ants,
                 alpha,
                 1.0,
@@ -38,7 +37,7 @@ fn main() -> anyhow::Result<()> {
             let p_dec = (0.01f64).powf(1.0 / tsp.dimension() as f64);
             let t_min = t_max * (1.0 - p_dec) / (tsp.dimension() as f64 / 2.0) * p_dec;
 
-            &aco::min_max_ant_stystem(
+            &aco::min_max_ant_system(
                 number_of_ants,
                 alpha,
                 2.0,
@@ -68,7 +67,7 @@ fn main() -> anyhow::Result<()> {
                 interval: Some(10),
             },
         );
-        heuristic::run(tsp, logger, config, None, None);
+        framework::run(tsp, logger, config, None, None);
         let best = logger.final_best_fx();
         println!(
             "{} reached: {:.0} of {}",

@@ -1,6 +1,6 @@
 #![allow(clippy::new_without_default)]
 
-use crate::heuristic::Configuration;
+use crate::framework::Configuration;
 use std::collections::HashMap;
 
 pub mod error;
@@ -39,8 +39,7 @@ pub fn validate_serializability<P>(config: &Configuration<P>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{serialize_config, validate_serializability};
-    use crate::heuristics::es;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::{heuristics::es, problems::bmf::BenchmarkFunction};
 
     #[test]
     pub fn serializing_es_config() {

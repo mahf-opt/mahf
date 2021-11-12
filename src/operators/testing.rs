@@ -1,4 +1,4 @@
-use crate::heuristic::Individual;
+use crate::framework::Individual;
 use std::borrow::Borrow;
 
 pub fn new_test_population(fitness_values: &[f64]) -> Vec<Individual> {

@@ -1,6 +1,6 @@
 use anyhow::Context;
 use mahf::{
-    heuristic::{self, Configuration},
+    framework::{self, Configuration},
     problems::bmf::BenchmarkFunction,
     prompt,
     random::Random,
@@ -44,7 +44,7 @@ type ConfigBuilder = fn() -> Configuration<BenchmarkFunction>;
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{heuristic::Configuration, operators::*, problems::bmf::BenchmarkFunction};
+    use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn iwo() -> Configuration<BenchmarkFunction> {
         Configuration::new(
@@ -263,7 +263,7 @@ fn main() -> anyhow::Result<()> {
                                     .context("creating experiment")?;
 
                             for _ in 0..RUNS {
-                                heuristic::run(&problem, logger, &config, None, None);
+                                framework::run(&problem, logger, &config, None, None);
                                 experiment.log_run(logger)?;
                                 logger.clear();
                                 let _ = tx.send(Ok(()));

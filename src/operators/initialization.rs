@@ -1,12 +1,11 @@
 //! Initialization methods
 
 use crate::{
-    heuristic::{components::*, State},
-    problem::{LimitedVectorProblem, Problem},
+    framework::{components::*, State},
+    problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
-use rand::distributions::uniform::SampleUniform;
-use rand::Rng;
+use rand::{distributions::uniform::SampleUniform, Rng};
 use serde::{Deserialize, Serialize};
 
 /// Doesn't do anything.

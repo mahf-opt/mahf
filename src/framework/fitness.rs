@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-/// Fitness value of an [Individual](crate::heuristic::Individual)
+/// Fitness value of an [Individual](crate::framework::Individual)
 ///
 /// [Fitness::try_from] can be used to construct a `Fitness` value.
 #[derive(Debug, Clone, Copy, serde::Serialize)]

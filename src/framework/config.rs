@@ -1,9 +1,9 @@
-use crate::{heuristic::components::*, problem::Problem};
+use crate::{framework::components::*, problems::Problem};
 use serde::Serialize;
 
-/// A full set of components, effectively representing a heuristic.
+/// A set of components, representing a heuristic.
 ///
-/// See [heuristic](crate::heuristic) documentation.
+/// See [framework](crate::framework) documentation.
 #[derive(Serialize)]
 pub struct Configuration<P: 'static> {
     /// Initializes the population.

@@ -1,6 +1,8 @@
-use crate::tracking::CustomLog;
-use std::any::{Any, TypeId};
-use std::collections::BTreeMap;
+use crate::tracking::log::CustomLog;
+use std::{
+    any::{Any, TypeId},
+    collections::BTreeMap,
+};
 
 /// Makes custom state trackable.
 pub trait CustomState: AsAny {

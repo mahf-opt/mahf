@@ -1,8 +1,8 @@
 //! Framework components.
 
 use crate::{
-    heuristic::{Individual, State},
-    problem::Problem,
+    framework::{Individual, State},
+    problems::Problem,
     random::Random,
 };
 use erased_serde::Serialize as DynSerialize;

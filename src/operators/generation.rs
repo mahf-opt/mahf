@@ -1,8 +1,8 @@
 //! Generation methods
 
 use crate::{
-    heuristic::{components::*, State},
-    problem::{LimitedVectorProblem, Problem, VectorProblem},
+    framework::{components::*, State},
+    problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };
 use rand::{prelude::SliceRandom, Rng};

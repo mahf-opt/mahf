@@ -1,5 +1,7 @@
-use crate::{fitness::Fitness, heuristic::custom_state::CustomStateMap, tracking::Log};
-use std::convert::TryFrom;
+use crate::{
+    framework::{custom_state::CustomStateMap, Fitness},
+    tracking::Log,
+};
 
 /// Tracks various aspects of the current execution.
 pub struct State {
