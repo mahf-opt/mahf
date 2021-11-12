@@ -56,19 +56,20 @@ impl Problem {
 }
 
 #[derive(serde::Serialize)]
-pub struct Instance {
+pub struct CocoInstance {
     #[serde(skip)]
     problem: Problem,
+    suite: &'static str,
     function: usize,
     instance: usize,
     dimension: usize,
 }
-impl Instance {
+impl CocoInstance {
     pub fn format_name(&self) -> String {
         format!("f{}_d{}_i{}", self.function, self.dimension, self.instance)
     }
 }
-impl crate::problems::Problem for Instance {
+impl crate::problems::Problem for CocoInstance {
     type Encoding = Vec<f64>;
 
     fn evaluate(&self, solution: &Self::Encoding) -> f64 {
@@ -82,14 +83,14 @@ impl crate::problems::Problem for Instance {
         "coco"
     }
 }
-impl crate::problems::VectorProblem for Instance {
+impl crate::problems::VectorProblem for CocoInstance {
     type T = f64;
 
     fn dimension(&self) -> usize {
         self.dimension
     }
 }
-impl crate::problems::LimitedVectorProblem for Instance {
+impl crate::problems::LimitedVectorProblem for CocoInstance {
     fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
         self.problem.domain.clone()
     }
