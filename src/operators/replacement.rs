@@ -89,7 +89,7 @@ mod generational {
     }
 }
 
-/// Always keeps the children.
+/// Keeps random individuals from parents and children.
 #[derive(Serialize, Deserialize)]
 pub struct RandomReplacement {
     /// Limits the population growth.

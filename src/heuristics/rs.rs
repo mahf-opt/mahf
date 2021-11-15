@@ -1,4 +1,4 @@
-//! Evolutionary Strategy
+//! Random Search
 
 use crate::{
     framework::Configuration,
@@ -6,10 +6,7 @@ use crate::{
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
 
-/// (μ+λ)-Evolutionary-Strategy
-///
-/// # References
-/// [doi.org/10.1023/A:1015059928466](https://doi.org/10.1023/A:1015059928466)
+/// Random Search
 pub fn random_search<P>(max_iterations: u32) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,

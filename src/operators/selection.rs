@@ -364,3 +364,67 @@ mod linear_rank {
         assert_eq!(selection.len(), comp.offspring as usize);
     }
 }
+
+/// Selects `offspring` solutions using exponential ranking.
+///
+/// Solutions can be selected multiple times in a single iteration.
+///
+/// See [https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf](https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf) for details.
+#[derive(Serialize, Deserialize)]
+pub struct ExponentialRank {
+    /// Offspring per iteration.
+    pub offspring: u32,
+    /// Base of exponent within (0,1).
+    pub base: f64,
+}
+impl Selection for ExponentialRank {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        let mut ranking: Vec<(usize, f64)> = population
+            .iter()
+            .enumerate()
+            .map(|(i, f)| (i, f.fitness().into()))
+            .collect();
+
+        ranking.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
+
+        let weights: Vec<f64> = ranking
+            .iter()
+            .enumerate()
+            .map(|(i, _k)| {
+                (self.base - 1.0) / (self.base.powi(population.len() as i32) - 1.0)
+                    * (self.base.powi((population.len() - i) as i32))
+            })
+            .collect();
+
+        let wheel = WeightedIndex::new(&weights).unwrap();
+        for _ in 0..self.offspring {
+            let position = (ranking[wheel.sample(rng)]).0;
+            selection.push(&population[position]);
+        }
+    }
+}
+#[cfg(test)]
+mod exponential_rank {
+    use super::*;
+    use crate::operators::testing::new_test_population;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new();
+        let mut rng = Random::testing();
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = ExponentialRank {
+            offspring: 4,
+            base: 0.5,
+        };
+        let mut selection = Vec::new();
+        comp.select(&mut state, &mut rng, &population, &mut selection);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
+}
