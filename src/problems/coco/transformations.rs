@@ -1,19 +1,28 @@
+#![allow(clippy::new_ret_no_self, unused_variables)]
+
 pub mod input {
-    use crate::problems::coco::Transformation;
+    use crate::problems::coco::InputTransformation;
 
     pub struct Permutation {
         pub mapping: Vec<usize>,
     }
     impl Permutation {
-        pub fn new(mapping: Vec<usize>) -> Self {
-            Permutation { mapping }
+        pub fn new(mapping: Vec<usize>) -> Box<dyn InputTransformation> {
+            Box::new(Permutation { mapping })
         }
     }
-    impl Transformation for Permutation {
-        fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+    impl InputTransformation for Permutation {
+        fn apply(&self, x: &[f64], out: &mut [f64]) {
             debug_assert_eq!(x.len(), self.mapping.len());
             for (o, m) in out.iter_mut().zip(self.mapping.iter()) {
                 *o = x[*m];
+            }
+        }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            debug_assert_eq!(x.len(), self.mapping.len());
+            for (o, m) in x.iter().zip(self.mapping.iter()) {
+                out[*m] = *o;
             }
         }
     }
@@ -22,21 +31,32 @@ pub mod input {
         pub translation: Vec<f64>,
     }
     impl Translate {
-        pub fn new(translation: Vec<f64>) -> Self {
-            Translate { translation }
+        pub fn new(translation: Vec<f64>) -> Box<dyn InputTransformation> {
+            Box::new(Translate { translation })
         }
     }
-    impl Transformation for Translate {
-        fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+    impl InputTransformation for Translate {
+        fn apply(&self, x: &[f64], out: &mut [f64]) {
             for (i, xi) in x.iter().enumerate() {
                 out[i] = xi - self.translation[i];
+            }
+        }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            for (i, xi) in x.iter().enumerate() {
+                out[i] = xi + self.translation[i];
             }
         }
     }
 
     pub struct Oscillate;
-    impl Transformation for Oscillate {
-        fn transform_input(&self, x: &[f64], oscillated_x: &mut [f64]) {
+    impl Oscillate {
+        pub fn new() -> Box<dyn InputTransformation> {
+            Box::new(Oscillate)
+        }
+    }
+    impl InputTransformation for Oscillate {
+        fn apply(&self, x: &[f64], oscillated_x: &mut [f64]) {
             let alpha = 0.1;
 
             for i in 0..x.len() {
@@ -53,25 +73,43 @@ pub mod input {
                 }
             }
         }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            todo!()
+        }
     }
 
     pub struct Condition {
         pub alpha: f64,
     }
-    impl Transformation for Condition {
-        fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+    impl Condition {
+        pub fn new(alpha: f64) -> Box<dyn InputTransformation> {
+            Box::new(Condition { alpha })
+        }
+    }
+    impl InputTransformation for Condition {
+        fn apply(&self, x: &[f64], out: &mut [f64]) {
             for i in 0..x.len() {
                 let scale = (i as f64) / (x.len() as f64 - 1.0);
                 out[i] = f64::powf(self.alpha, 0.5 * self.alpha * scale) * x[i];
             }
+        }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            todo!()
         }
     }
 
     pub struct Asymmetric {
         pub beta: f64,
     }
-    impl Transformation for Asymmetric {
-        fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+    impl Asymmetric {
+        pub fn new(beta: f64) -> Box<dyn InputTransformation> {
+            Box::new(Asymmetric { beta })
+        }
+    }
+    impl InputTransformation for Asymmetric {
+        fn apply(&self, x: &[f64], out: &mut [f64]) {
             for i in 0..x.len() {
                 if x[i] > 0.0 {
                     let scale = (i as f64) / (x.len() as f64 - 1.0);
@@ -82,12 +120,21 @@ pub mod input {
                 }
             }
         }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            todo!()
+        }
     }
 
     /// Implementation of the ominous 's_i scaling' of the BBOB Bueche-Rastrigin problem.
     pub struct Brs;
-    impl Transformation for Brs {
-        fn transform_input(&self, x: &[f64], out: &mut [f64]) {
+    impl Brs {
+        pub fn new() -> Box<dyn InputTransformation> {
+            Box::new(Brs)
+        }
+    }
+    impl InputTransformation for Brs {
+        fn apply(&self, x: &[f64], out: &mut [f64]) {
             for i in 0..x.len() {
                 let scale = (i as f64) / (x.len() as f64 - 1.0);
                 /* Function documentation says we should compute 10^(0.5 *
@@ -105,22 +152,30 @@ pub mod input {
                 out[i] = factor * x[i];
             }
         }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            todo!()
+        }
     }
 }
 
 pub mod output {
-    use crate::problems::coco::Transformation;
+    use crate::problems::coco::OutputTransformation;
 
     pub struct Translate {
         pub translation: f64,
     }
     impl Translate {
-        pub fn new(translation: f64) -> Self {
-            Translate { translation }
+        pub fn new(translation: f64) -> Box<dyn OutputTransformation> {
+            Box::new(Translate { translation })
         }
     }
-    impl Transformation for Translate {
-        fn transform_output(&self, y: f64) -> f64 {
+    impl OutputTransformation for Translate {
+        fn apply(&self, y: f64) -> f64 {
+            y - self.translation
+        }
+
+        fn reverse(&self, y: f64) -> f64 {
             y + self.translation
         }
     }

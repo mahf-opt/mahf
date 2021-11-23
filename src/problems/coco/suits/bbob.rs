@@ -94,43 +94,51 @@ mod functions {
     #![allow(clippy::let_and_return)]
 
     use super::util_2009;
-    use crate::problems::coco::{problems, Problem};
+    use crate::problems::coco::{
+        functions,
+        transformations::{input, output},
+        Problem,
+    };
 
     pub fn sphere(function: usize, dimension: usize, instance: usize, rseed: usize) -> Problem {
         let xopt = util_2009::compute_xopt(rseed, dimension);
         let fopt = util_2009::compute_fopt(function, instance);
 
-        let problem = problems::sphere();
-        let problem = problems::translate_input(xopt, problem);
-        let problem = problems::translate_output(fopt, problem);
-
-        problem
+        Problem {
+            input_transformations: vec![input::Translate::new(xopt)],
+            function: functions::sphere,
+            output_transformations: vec![output::Translate::new(fopt)],
+            domain: functions::DEFAULT_DOMAIN,
+        }
     }
 
     pub fn ellipsoid(function: usize, dimension: usize, instance: usize, rseed: usize) -> Problem {
         let xopt = util_2009::compute_xopt(rseed, dimension);
         let fopt = util_2009::compute_fopt(function, instance);
 
-        let problem = problems::ellipsoid();
-        let problem = problems::oscillate_input(problem);
-        let problem = problems::translate_input(xopt, problem);
-        let problem = problems::translate_output(fopt, problem);
-
-        problem
+        Problem {
+            input_transformations: vec![input::Oscillate::new(), input::Translate::new(xopt)],
+            function: functions::ellipsoid,
+            output_transformations: vec![output::Translate::new(fopt)],
+            domain: functions::DEFAULT_DOMAIN,
+        }
     }
 
     pub fn rastrigin(function: usize, dimension: usize, instance: usize, rseed: usize) -> Problem {
         let xopt = util_2009::compute_xopt(rseed, dimension);
         let fopt = util_2009::compute_fopt(function, instance);
 
-        let problem = problems::rastrigin();
-        let problem = problems::condition_input(10.0, problem);
-        let problem = problems::asymmetric_input(0.2, problem);
-        let problem = problems::oscillate_input(problem);
-        let problem = problems::translate_input(xopt, problem);
-        let problem = problems::translate_output(fopt, problem);
-
-        problem
+        Problem {
+            input_transformations: vec![
+                input::Condition::new(10.0),
+                input::Asymmetric::new(0.2),
+                input::Oscillate::new(),
+                input::Translate::new(xopt),
+            ],
+            function: functions::rastrigin,
+            output_transformations: vec![output::Translate::new(fopt)],
+            domain: functions::DEFAULT_DOMAIN,
+        }
     }
 
     pub fn bueche_rastrigin(
@@ -142,13 +150,16 @@ mod functions {
         let xopt = util_2009::compute_xopt(rseed, dimension);
         let fopt = util_2009::compute_fopt(function, instance);
 
-        let problem = problems::rastrigin();
-        let problem = problems::brs_input(problem);
-        let problem = problems::oscillate_input(problem);
-        let problem = problems::translate_input(xopt, problem);
-        let problem = problems::translate_output(fopt, problem);
-
-        problem
+        Problem {
+            input_transformations: vec![
+                input::Brs::new(),
+                input::Oscillate::new(),
+                input::Translate::new(xopt),
+            ],
+            function: functions::rastrigin,
+            output_transformations: vec![output::Translate::new(fopt)],
+            domain: functions::DEFAULT_DOMAIN,
+        }
     }
 
     pub fn linear_slope(
@@ -160,10 +171,11 @@ mod functions {
         let xopt = util_2009::compute_xopt(rseed, dimension);
         let fopt = util_2009::compute_fopt(function, instance);
 
-        let problem = problems::linear_slope();
-        let problem = problems::translate_input(xopt, problem);
-        let problem = problems::translate_output(fopt, problem);
-
-        problem
+        Problem {
+            input_transformations: vec![input::Translate::new(xopt)],
+            function: functions::linear_slope,
+            output_transformations: vec![output::Translate::new(fopt)],
+            domain: functions::DEFAULT_DOMAIN,
+        }
     }
 }
