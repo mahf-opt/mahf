@@ -1,4 +1,6 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, ops::Range};
+
+pub const DEFAULT_DOMAIN: Range<f64> = -5.0..5.0;
 
 /// Sphere
 pub fn sphere(x: &[f64]) -> f64 {

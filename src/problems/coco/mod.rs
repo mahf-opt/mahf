@@ -2,56 +2,50 @@
 //!
 //! Implementation is base on <https://github.com/numbbo/coco>
 
-use std::{any::Any, ops::Range};
+use std::{mem, ops::Range};
 
 pub mod functions;
-pub mod problems;
 pub mod suits;
 pub mod transformations;
 
 pub type Function = fn(x: &[f64]) -> f64;
 
-pub trait Transformation: Send + Sync {
-    fn transform_input(&self, x: &[f64], out: &mut [f64]) {
-        out.clone_from_slice(x);
-    }
+pub trait InputTransformation: Send + Sync {
+    fn apply(&self, x: &[f64], out: &mut [f64]);
+    fn reverse(&self, x: &[f64], out: &mut [f64]);
+}
 
-    fn transform_output(&self, y: f64) -> f64 {
-        y
-    }
+pub trait OutputTransformation: Send + Sync {
+    fn apply(&self, x: f64) -> f64;
+    fn reverse(&self, x: f64) -> f64;
 }
 
 pub struct Problem {
-    /// Name of the function or transformation
-    pub name: &'static str,
-    /// Subproblem or function
-    pub function: ProblemFunction,
+    /// Transformations applied before evaluation
+    pub input_transformations: Vec<Box<dyn InputTransformation>>,
+    /// The base function
+    pub function: Function,
+    /// Transformations applied after evaluation
+    pub output_transformations: Vec<Box<dyn OutputTransformation>>,
     /// Inclusive min and max values
     pub domain: Range<f64>,
 }
 impl Problem {
-    pub fn evaluate(&self, x: &mut [f64], buffer: &mut [f64]) -> f64 {
+    pub fn evaluate<'a>(&self, mut x: &'a mut [f64], mut buffer: &'a mut [f64]) -> f64 {
         debug_assert_eq!(x.len(), buffer.len());
-        match &self.function {
-            ProblemFunction::Transformation(t, p) => {
-                t.transform_input(x, buffer);
-                let y = p.evaluate(buffer, x);
-                t.transform_output(y)
-            }
-            ProblemFunction::Function(f) => f(x),
-        }
-    }
 
-    pub fn extend(
-        name: &'static str,
-        subproblem: Problem,
-        transform: impl Transformation + Any,
-    ) -> Problem {
-        Problem {
-            name,
-            domain: subproblem.domain.clone(),
-            function: ProblemFunction::Transformation(Box::new(transform), Box::new(subproblem)),
+        for transformation in &self.input_transformations {
+            transformation.apply(x, buffer);
+            mem::swap(&mut x, &mut buffer);
         }
+
+        let mut y = (self.function)(buffer);
+
+        for transformation in &self.output_transformations {
+            y = transformation.apply(y);
+        }
+
+        y
     }
 }
 
@@ -96,29 +90,36 @@ impl crate::problems::LimitedVectorProblem for CocoInstance {
     }
 }
 
-pub enum ProblemFunction {
-    Transformation(Box<dyn Transformation>, Box<Problem>),
-    Function(Function),
-}
-
 #[cfg(test)]
 mod tests {
     use float_eq::assert_float_eq;
 
-    use super::*;
+    use crate::problems::coco::{
+        functions,
+        transformations::{input, output},
+        Problem,
+    };
 
     #[test]
     fn create_permutated_sphere() {
-        let problem = problems::permutation(vec![2, 1, 0], problems::sphere());
+        let problem = Problem {
+            input_transformations: vec![input::Permutation::new(vec![2, 1, 0])],
+            function: functions::sphere,
+            output_transformations: vec![],
+            domain: functions::DEFAULT_DOMAIN,
+        };
         let out = problem.evaluate(&mut [1.0, 2.0, 3.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 1.0 + 4.0 + 9.0, abs <= 0.0);
     }
 
     #[test]
     fn translate_sphere() {
-        let problem = problems::sphere();
-        let problem = problems::translate_input(vec![1.0, 1.0, 1.0], problem);
-        let problem = problems::translate_output(5.0, problem);
+        let problem = Problem {
+            input_transformations: vec![input::Translate::new(vec![1.0, 1.0, 1.0])],
+            function: functions::sphere,
+            output_transformations: vec![output::Translate::new(5.0)],
+            domain: functions::DEFAULT_DOMAIN,
+        };
         let out = problem.evaluate(&mut [1.0, 1.0, 1.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 5.0, abs <= 0.0);
     }
