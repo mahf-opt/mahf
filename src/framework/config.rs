@@ -107,4 +107,9 @@ impl<P: Problem> Configuration<P> {
         self.termination = Box::new(termination);
         self
     }
+
+    pub fn add_generator(mut self, generation: impl Generation<P> + 'static) -> Self {
+        self.generation.push(Box::new(generation));
+        self
+    }
 }

@@ -14,17 +14,17 @@ pub fn ga<P>(
     population_size: u32,
     deviation: f64,
     _p_mutation: f64,
-    _p_crossover: f64,
+    pc: f64,
     max_iterations: u32,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    Configuration::new(
+    let mut config = Configuration::new(
         initialization::RandomSpread {
             initial_population_size: population_size,
         },
-        selection::RouletteWheel {
+        selection::FullyRandom {
             offspring: population_size,
         },
         generation::FixedDeviationDelta { deviation },
@@ -32,5 +32,7 @@ where
             max_population_size: population_size,
         },
         termination::FixedIterations { max_iterations },
-    )
+    );
+    config = config.add_generator(generation::UniformCrossover { pc });
+    config
 }
