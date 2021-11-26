@@ -22,12 +22,12 @@ static HEURISTICS: &[(&str, ConfigBuilder)] = &[
     ("custom", heuristics::custom),
 ];
 static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
-    BenchmarkFunction::sphere,
-    BenchmarkFunction::rastrigin,
+    //BenchmarkFunction::sphere,
+    //BenchmarkFunction::rastrigin,
     BenchmarkFunction::ackley,
 ];
-static DIMENSIONS: &[usize] = &[10, 20, 30];
-static RUNS: u32 = 50;
+static DIMENSIONS: &[usize] = &[10]; //, 20, 30
+static RUNS: u32 = 5;
 
 
 //                           //
@@ -41,7 +41,7 @@ mod heuristics {
     use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
-        Configuration::new(
+        let mut custom_config = Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
@@ -57,7 +57,10 @@ mod heuristics {
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        )
+        );
+        //TODO adapt this when add_generator is improved
+        custom_config = custom_config.add_generator(generation::UniformCrossover {pc: 0.8});
+        custom_config
     }
 }
 
