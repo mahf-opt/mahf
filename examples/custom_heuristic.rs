@@ -18,9 +18,7 @@ use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 //                                 //
 
 static DATA_DIR: &str = "data/custom_heuristic";
-static HEURISTICS: &[(&str, ConfigBuilder)] = &[
-    ("custom", heuristics::custom),
-];
+static HEURISTICS: &[(&str, ConfigBuilder)] = &[("custom", heuristics::custom)];
 static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
     //BenchmarkFunction::sphere,
     //BenchmarkFunction::rastrigin,
@@ -28,7 +26,6 @@ static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
 ];
 static DIMENSIONS: &[usize] = &[10]; //, 20, 30
 static RUNS: u32 = 5;
-
 
 //                           //
 //     Custom Heuristic      //
@@ -45,12 +42,8 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            selection::RouletteWheel {
-                offspring: 25,
-            },
-            generation::FixedDeviationDelta {
-                deviation: 0.2,
-            },
+            selection::RouletteWheel { offspring: 25 },
+            generation::FixedDeviationDelta { deviation: 0.2 },
             replacement::Generational {
                 max_population_size: 25,
             },
@@ -59,11 +52,10 @@ mod heuristics {
             },
         );
         //TODO adapt this when add_generator is improved
-        custom_config = custom_config.add_generator(generation::UniformCrossover {pc: 0.8});
+        custom_config = custom_config.add_generator(generation::UniformCrossover { pc: 0.8 });
         custom_config
     }
 }
-
 
 //                                 //
 //    Custom Test Implementation   //
