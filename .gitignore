@@ -26,6 +26,9 @@ ehthumbs_vista.db
 ## R
 .Rhistory
 
+## Python
+.pyc
+
 ## Jupyter
 .ipynb_checkpoints
 
