@@ -1,5 +1,7 @@
 use std::{f64::consts::PI, ops::Range};
 
+use float_eq::assert_float_eq;
+
 pub const DEFAULT_DOMAIN: Range<f64> = -5.0..5.0;
 
 /// Sphere
@@ -34,6 +36,10 @@ pub fn bueche_rastrigin(x: &[f64]) -> f64 {
     rastrigin(x)
 }
 
+/// Linear Slope
+///
+/// Important: This deviates from coco!
+// Unlike coco's implementation the optimum is always at 5^n.
 pub fn linear_slope(x: &[f64]) -> f64 {
     let n = x.len() as f64;
 
@@ -43,6 +49,13 @@ pub fn linear_slope(x: &[f64]) -> f64 {
         .map(|(i, xi)| (10.0f64.powf(i / (n - 1.0)), xi))
         .map(|(si, xi)| 5.0 * (si.abs() - f64::min(5.0, xi)))
         .sum::<f64>()
+}
+#[cfg(test)]
+#[test]
+fn linear_slope_optimum_check() {
+    let input = &[5.0; 10];
+    let output = linear_slope(input);
+    assert_float_eq!(output, 0.0, abs <= 0.0);
 }
 
 pub fn rosenbrock(x: &[f64]) -> f64 {

@@ -168,11 +168,15 @@ mod functions {
         instance: usize,
         rseed: usize,
     ) -> Problem {
-        let xopt = util_2009::compute_xopt(rseed, dimension);
+        let mut xopt = util_2009::compute_xopt(rseed, dimension);
         let fopt = util_2009::compute_fopt(function, instance);
 
+        for xi in &mut xopt {
+            *xi = if *xi >= 0.0 { 1.0 } else { -1.0 };
+        }
+
         Problem {
-            input_transformations: vec![input::Translate::new(xopt)],
+            input_transformations: vec![input::Scale::new(xopt)],
             function: functions::linear_slope,
             output_transformations: vec![output::Translate::new(fopt)],
             domain: functions::DEFAULT_DOMAIN,

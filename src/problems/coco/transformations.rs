@@ -49,6 +49,28 @@ pub mod input {
         }
     }
 
+    pub struct Scale {
+        pub scales: Vec<f64>,
+    }
+    impl Scale {
+        pub fn new(scales: Vec<f64>) -> Box<dyn InputTransformation> {
+            Box::new(Scale { scales })
+        }
+    }
+    impl InputTransformation for Scale {
+        fn apply(&self, x: &[f64], out: &mut [f64]) {
+            for (i, xi) in x.iter().enumerate() {
+                out[i] = xi * self.scales[i];
+            }
+        }
+
+        fn reverse(&self, x: &[f64], out: &mut [f64]) {
+            for (i, xi) in x.iter().enumerate() {
+                out[i] = xi / self.scales[i];
+            }
+        }
+    }
+
     pub struct Oscillate;
     impl Oscillate {
         pub fn new() -> Box<dyn InputTransformation> {
