@@ -43,12 +43,12 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
             min_offspring: params.min_number_of_seeds,
             max_offspring: params.max_number_of_seeds,
         },
-        generation::AdaptiveDeviationDelta {
+        generation::IWOAdaptiveDeviationDelta {
             initial_deviation: params.initial_deviation,
             final_deviation: params.final_deviation,
             modulation_index: params.modulation_index,
         },
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size: params.max_population_size,
         },
         termination::FixedIterations {

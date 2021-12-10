@@ -57,6 +57,7 @@ where
 /// Applies a fixed, component wise delta from a normal distribution.
 ///
 /// Uses a `N(0, deviation)` normal distribution.
+/// Currently the same as Gaussian but without mutation rate.
 #[derive(Serialize, Deserialize)]
 pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.
@@ -86,14 +87,14 @@ where
     }
 }
 
-/// Applies an adaptive, component wise delta from a normal distribution.
+/// Applies an adaptive, component wise delta from a normal distribution as was proposed for IWO.
 ///
 /// The actual deviation gets computed as follows:
 /// ```math
 /// final_deviation + (1 - progress)^modulation * (initial_deviation - final_deviation)
 /// ```
 #[derive(Serialize, Deserialize)]
-pub struct AdaptiveDeviationDelta {
+pub struct IWOAdaptiveDeviationDelta {
     /// Initial standard deviation for the mutation
     pub initial_deviation: f64,
     /// Final standard deviation for the mutation
@@ -103,14 +104,14 @@ pub struct AdaptiveDeviationDelta {
     /// Modulation index for the standard deviation.
     pub modulation_index: u32,
 }
-impl AdaptiveDeviationDelta {
+impl IWOAdaptiveDeviationDelta {
     fn deviation(&self, progress: f64) -> f64 {
         self.final_deviation
             + (1.0 - progress).powi(self.modulation_index as i32)
                 * (self.initial_deviation - self.final_deviation)
     }
 }
-impl<P> Generation<P> for AdaptiveDeviationDelta
+impl<P> Generation<P> for IWOAdaptiveDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
 {
@@ -140,7 +141,7 @@ mod adaptive_deviation_delta {
 
     #[test]
     fn deviation_is_falling() {
-        let comp = AdaptiveDeviationDelta {
+        let comp = IWOAdaptiveDeviationDelta {
             initial_deviation: 10.0,
             final_deviation: 1.0,
             modulation_index: 1,

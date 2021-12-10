@@ -43,7 +43,7 @@ mod heuristics {
                 initial_population_size: 25,
             },
             selection::RouletteWheel { offspring: 25 },
-            generation::FixedDeviationDelta { deviation: 0.2 },
+            generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
@@ -51,8 +51,8 @@ mod heuristics {
                 max_iterations: 500,
             },
         );
-        //TODO adapt this when add_generator is improved
-        custom_config = custom_config.add_generator(generation::UniformCrossover { pc: 0.8 });
+        //TODO adapt this when add_generator is improved; also we need to consider the sequence of operators!
+        custom_config = custom_config.add_generator(generation::FixedDeviationDelta { deviation: 0.2 });
         custom_config
     }
 }

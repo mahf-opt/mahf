@@ -25,7 +25,7 @@ where
         },
         selection::FullyRandom { offspring: lambda },
         generation::FixedDeviationDelta { deviation },
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size: population_size,
         },
         termination::FixedIterations { max_iterations },

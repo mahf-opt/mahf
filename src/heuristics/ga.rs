@@ -27,12 +27,12 @@ where
         selection::FullyRandom {
             offspring: population_size,
         },
-        generation::FixedDeviationDelta { deviation },
+        generation::UniformCrossover { pc },
         replacement::Generational {
             max_population_size: population_size,
         },
         termination::FixedIterations { max_iterations },
     );
-    config = config.add_generator(generation::UniformCrossover { pc });
+    config = config.add_generator(generation::FixedDeviationDelta { deviation });
     config
 }

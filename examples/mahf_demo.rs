@@ -55,12 +55,12 @@ mod heuristics {
                 min_offspring: 4,
                 max_offspring: 6,
             },
-            generation::AdaptiveDeviationDelta {
+            generation::IWOAdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: 50,
             },
             termination::FixedIterations {
@@ -77,7 +77,7 @@ mod heuristics {
             },
             selection::FullyRandom { offspring: 60 },
             generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: population_size,
             },
             termination::FixedIterations {
@@ -94,7 +94,7 @@ mod heuristics {
             },
             selection::FullyRandom { offspring: 60 },
             generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: 50,
             },
             termination::FixedIterations {
@@ -113,12 +113,12 @@ mod heuristics {
                 min_offspring: 4,
                 max_offspring: 6,
             },
-            generation::AdaptiveDeviationDelta {
+            generation::IWOAdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: population_size,
             },
             termination::FixedIterations {
@@ -134,12 +134,12 @@ mod heuristics {
                 initial_population_size: population_size,
             },
             selection::FullyRandom { offspring: 60 },
-            generation::AdaptiveDeviationDelta {
+            generation::IWOAdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: 50,
             },
             termination::FixedIterations {
@@ -159,7 +159,7 @@ mod heuristics {
                 max_offspring: 6,
             },
             generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: 50,
             },
             termination::FixedIterations {
@@ -179,7 +179,7 @@ mod heuristics {
                 max_offspring: 6,
             },
             generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: population_size,
             },
             termination::FixedIterations {
@@ -195,12 +195,12 @@ mod heuristics {
                 initial_population_size: population_size,
             },
             selection::FullyRandom { offspring: 60 },
-            generation::AdaptiveDeviationDelta {
+            generation::IWOAdaptiveDeviationDelta {
                 initial_deviation: 0.1,
                 final_deviation: 0.001,
                 modulation_index: 5,
             },
-            replacement::Fittest {
+            replacement::MuPlusLambda {
                 max_population_size: 50,
             },
             termination::FixedIterations {

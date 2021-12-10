@@ -109,19 +109,19 @@ impl Selection for DeterministicFitnessProportional {
             "selection::FitnessProportional does not work with Inf fitness values"
         );
 
-        for plant in population.iter() {
-            let bonus: f64 = (plant.fitness().into() - worst) / (best - worst);
-            let bonus_seeds = (self.max_offspring - self.min_offspring) as f64;
+        for ind in population.iter() {
+            let bonus: f64 = (ind.fitness().into() - worst) / (best - worst);
+            let bonus_offspring = (self.max_offspring - self.min_offspring) as f64;
             let num_offspring = self.min_offspring
                 + if bonus.is_nan() {
                     // best ≈ worst, thus we picked a generic value
-                    (0.5 * bonus_seeds).floor() as u32
+                    (0.5 * bonus_offspring).floor() as u32
                 } else {
-                    (bonus * bonus_seeds).floor() as u32
+                    (bonus * bonus_offspring).floor() as u32
                 };
 
             for _ in 0..num_offspring {
-                selection.push(plant);
+                selection.push(ind);
             }
         }
     }
@@ -170,12 +170,16 @@ impl Selection for RouletteWheel {
         selection: &mut Vec<&'p Individual>,
     ) {
         #[rustfmt::skip]
+        // calculate population fitness as sum of individuals' fitness
         let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
+        // calculate weights for individuals (fitness / total fitness)
         let weights: Vec<f64> = population
             .iter()
             .map(|f| f.fitness().into() / total)
             .collect();
+        // due to minimisation, lower fitness is better, so adapt weights; first sum
         let weights_min_total: f64 = weights.iter().map(|w| 1.0 / w).sum();
+        // then all individual weights
         let weights_min: Vec<f64> = weights
             .iter()
             .map(|w| (1.0 / w) / weights_min_total)
@@ -283,15 +287,19 @@ impl Selection for Tournament {
         selection: &mut Vec<&'p Individual>,
     ) {
         assert!(population.len() >= self.size as usize);
+        // for each individual
         for _ in 0..self.offspring {
+            // choose size competitors in tournament
             let mut tournament: Vec<&Individual> = population
                 .choose_multiple(rng, self.size as usize)
                 .collect();
+            // and evaluate them against each other, placing the winner first
             tournament.sort_by(|x, y| {
                 (y.fitness().into())
                     .partial_cmp(&(x.fitness().into()))
                     .unwrap()
             });
+            // add winner (first) to selection
             selection.push(tournament[0]);
         }
     }
@@ -332,17 +340,22 @@ impl Selection for LinearRank {
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
+        // get positions in population and fitness of all individuals
         let mut weight_pos: Vec<(usize, f64)> = population
             .iter()
             .enumerate()
             .map(|(i, f)| (i, f.fitness().into()))
             .collect();
 
+        // sort those by their fitness values
         weight_pos.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
+        // weights are new positions after sorting by fitness
         let weights: Vec<usize> = weight_pos.iter().enumerate().map(|(i, _k)| 1 + i).collect();
 
         let wheel = WeightedIndex::new(&weights).unwrap();
         for _ in 0..self.offspring {
+            // sample individuals by their ranks but select them from the initial population by the
+            // positions marked in weight_pos
             let position = (weight_pos[wheel.sample(rng)]).0;
             selection.push(&population[position]);
         }
@@ -393,6 +406,7 @@ impl Selection for ExponentialRank {
 
         ranking.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
 
+        // weigh ranking by exponential equation
         let weights: Vec<f64> = ranking
             .iter()
             .enumerate()
