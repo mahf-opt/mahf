@@ -27,6 +27,8 @@ ehthumbs_vista.db
 .Rhistory
 
 ## Python
+/evaluation/eval/__pycache__
+/evaluation/eval/.pytest_cache
 .pyc
 
 ## Jupyter
