@@ -14,7 +14,6 @@ fn toy_problem(function: FunctionObject) -> Problem {
         input_transformations: vec![],
         function,
         output_transformations: vec![],
-        domain: functions::DEFAULT_DOMAIN,
     }
 }
 

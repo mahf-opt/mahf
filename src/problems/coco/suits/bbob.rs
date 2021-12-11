@@ -108,7 +108,6 @@ mod functions {
             input_transformations: vec![input::Translate::new(xopt)],
             function: functions::Sphere.into(),
             output_transformations: vec![output::Translate::new(fopt)],
-            domain: functions::DEFAULT_DOMAIN,
         }
     }
 
@@ -120,7 +119,6 @@ mod functions {
             input_transformations: vec![input::Oscillate::new(), input::Translate::new(xopt)],
             function: functions::Ellipsoid.into(),
             output_transformations: vec![output::Translate::new(fopt)],
-            domain: functions::DEFAULT_DOMAIN,
         }
     }
 
@@ -137,7 +135,6 @@ mod functions {
             ],
             function: functions::Rastrigin.into(),
             output_transformations: vec![output::Translate::new(fopt)],
-            domain: functions::DEFAULT_DOMAIN,
         }
     }
 
@@ -158,7 +155,6 @@ mod functions {
             ],
             function: functions::Rastrigin.into(),
             output_transformations: vec![output::Translate::new(fopt)],
-            domain: functions::DEFAULT_DOMAIN,
         }
     }
 
@@ -179,7 +175,6 @@ mod functions {
             input_transformations: vec![input::Scale::new(xopt)],
             function: functions::LinearSlope.into(),
             output_transformations: vec![output::Translate::new(fopt)],
-            domain: functions::DEFAULT_DOMAIN,
         }
     }
 }
