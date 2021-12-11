@@ -194,11 +194,11 @@ pub mod output {
     }
     impl OutputTransformation for Translate {
         fn apply(&self, y: f64) -> f64 {
-            y - self.translation
+            y + self.translation
         }
 
         fn reverse(&self, y: f64) -> f64 {
-            y + self.translation
+            y - self.translation
         }
     }
 }
