@@ -54,7 +54,7 @@ impl Problem {
             mem::swap(&mut x, &mut buffer);
         }
 
-        let mut y = (self.function.evaluate)(buffer);
+        let mut y = (self.function.evaluate)(x);
 
         for transformation in &self.output_transformations {
             y = transformation.apply(y);
