@@ -1,5 +1,8 @@
 use std::{f64::consts::PI, ops::Range};
 
+#[cfg(doc)]
+use super::transformations::input;
+
 pub const DEFAULT_DOMAIN: Range<f64> = -5.0..5.0;
 const DEFAULT_OPTIMUM: f64 = 0.0;
 
@@ -77,13 +80,16 @@ impl Function for Rastrigin {
 
 /// Büche Rastrigin
 ///
-/// This is the same as [rastrigin]
+/// This is the same as [Rastrigin]
 pub use Rastrigin as BuecheRastrigin;
 
 /// Linear Slope
 ///
-/// Important: This deviates from coco!
-// Unlike coco's implementation the optimum is always at 5^n.
+/// # Important
+/// This deviates from coco. Unlike coco's implementation
+/// the optimum is always at 5^n. It will perform the same
+/// as in Coco once paired with a [input::Scale] filled with
+/// the signs of the optimum, so either -1 or +1.
 pub struct LinearSlope;
 impl Function for LinearSlope {
     fn evaluate(x: &[f64]) -> f64 {
@@ -93,7 +99,7 @@ impl Function for LinearSlope {
             .enumerate()
             .map(|(i, xi)| (i as f64, *xi))
             .map(|(i, xi)| (10.0f64.powf(i / (n - 1.0)), xi))
-            .map(|(si, xi)| 5.0 * (si.abs() - f64::min(5.0, xi)))
+            .map(|(si, xi)| si * (5.0 - f64::min(5.0, xi)))
             .sum::<f64>()
     }
 }
