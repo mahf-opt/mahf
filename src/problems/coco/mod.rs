@@ -8,15 +8,26 @@ pub mod functions;
 pub mod suits;
 pub mod transformations;
 
-pub type Function = fn(x: &[f64]) -> f64;
+use functions::FunctionObject;
 
 pub trait InputTransformation: Send + Sync {
+    /// Transform the function input.
     fn apply(&self, x: &[f64], out: &mut [f64]);
-    fn reverse(&self, x: &[f64], out: &mut [f64]);
+
+    /// Reverse the function input transformation.
+    ///
+    /// NOTE: This is not supported by Coco!
+    fn reverse(&self, x: &[f64], out: &mut [f64]) {
+        let _ = (x, out);
+        unimplemented!("Coco officially does not support this.")
+    }
 }
 
 pub trait OutputTransformation: Send + Sync {
+    /// Transform the function output.
     fn apply(&self, x: f64) -> f64;
+
+    /// Reverse the function output transformation.
     fn reverse(&self, x: f64) -> f64;
 }
 
@@ -24,7 +35,7 @@ pub struct Problem {
     /// Transformations applied before evaluation
     pub input_transformations: Vec<Box<dyn InputTransformation>>,
     /// The base function
-    pub function: Function,
+    pub function: FunctionObject,
     /// Transformations applied after evaluation
     pub output_transformations: Vec<Box<dyn OutputTransformation>>,
     /// Inclusive min and max values
@@ -39,7 +50,7 @@ impl Problem {
             mem::swap(&mut x, &mut buffer);
         }
 
-        let mut y = (self.function)(buffer);
+        let mut y = (self.function.evaluate)(buffer);
 
         for transformation in &self.output_transformations {
             y = transformation.apply(y);
@@ -104,7 +115,7 @@ mod tests {
     fn create_permutated_sphere() {
         let problem = Problem {
             input_transformations: vec![input::Permutation::new(vec![2, 1, 0])],
-            function: functions::sphere,
+            function: functions::Sphere.into(),
             output_transformations: vec![],
             domain: functions::DEFAULT_DOMAIN,
         };
@@ -116,7 +127,7 @@ mod tests {
     fn translate_sphere() {
         let problem = Problem {
             input_transformations: vec![input::Translate::new(vec![1.0, 1.0, 1.0])],
-            function: functions::sphere,
+            function: functions::Sphere.into(),
             output_transformations: vec![output::Translate::new(5.0)],
             domain: functions::DEFAULT_DOMAIN,
         };

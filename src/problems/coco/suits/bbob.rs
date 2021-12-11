@@ -106,7 +106,7 @@ mod functions {
 
         Problem {
             input_transformations: vec![input::Translate::new(xopt)],
-            function: functions::sphere,
+            function: functions::Sphere.into(),
             output_transformations: vec![output::Translate::new(fopt)],
             domain: functions::DEFAULT_DOMAIN,
         }
@@ -118,7 +118,7 @@ mod functions {
 
         Problem {
             input_transformations: vec![input::Oscillate::new(), input::Translate::new(xopt)],
-            function: functions::ellipsoid,
+            function: functions::Ellipsoid.into(),
             output_transformations: vec![output::Translate::new(fopt)],
             domain: functions::DEFAULT_DOMAIN,
         }
@@ -135,7 +135,7 @@ mod functions {
                 input::Oscillate::new(),
                 input::Translate::new(xopt),
             ],
-            function: functions::rastrigin,
+            function: functions::Rastrigin.into(),
             output_transformations: vec![output::Translate::new(fopt)],
             domain: functions::DEFAULT_DOMAIN,
         }
@@ -156,7 +156,7 @@ mod functions {
                 input::Oscillate::new(),
                 input::Translate::new(xopt),
             ],
-            function: functions::rastrigin,
+            function: functions::Rastrigin.into(),
             output_transformations: vec![output::Translate::new(fopt)],
             domain: functions::DEFAULT_DOMAIN,
         }
@@ -177,7 +177,7 @@ mod functions {
 
         Problem {
             input_transformations: vec![input::Scale::new(xopt)],
-            function: functions::linear_slope,
+            function: functions::LinearSlope.into(),
             output_transformations: vec![output::Translate::new(fopt)],
             domain: functions::DEFAULT_DOMAIN,
         }
