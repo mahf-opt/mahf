@@ -16,7 +16,13 @@ pub trait InputTransformation: Send + Sync {
 
     /// Reverse the function input transformation.
     ///
-    /// NOTE: This is not supported by Coco!
+    /// # Important
+    /// This is not fully supported by Coco!
+    ///
+    /// Coco does implement this for some transformations,
+    /// but most of the complex onces do not implement this.
+    /// Without this being implemented, we won't know the
+    /// optimal parameters of a transformed function.
     fn reverse(&self, x: &[f64], out: &mut [f64]) {
         let _ = (x, out);
         unimplemented!("Coco officially does not support this.")
