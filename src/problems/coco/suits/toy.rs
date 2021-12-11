@@ -1,4 +1,4 @@
-use crate::problems::coco::{functions, suits::Suite, CocoInstance, Function, Problem};
+use crate::problems::coco::{functions, suits::Suite, CocoInstance, FunctionObject, Problem};
 
 pub fn new() -> Suite {
     Suite::new(
@@ -9,7 +9,7 @@ pub fn new() -> Suite {
     )
 }
 
-fn toy_problem(function: Function) -> Problem {
+fn toy_problem(function: FunctionObject) -> Problem {
     Problem {
         input_transformations: vec![],
         function,
@@ -22,12 +22,12 @@ fn generator(function: usize, instance: usize, dimension: usize) -> CocoInstance
     assert_eq!(instance, 1, "Toy suite only contains one instance");
 
     let problem = match function {
-        1 => toy_problem(functions::sphere),
-        2 => toy_problem(functions::ellipsoid),
-        3 => toy_problem(functions::rastrigin),
-        4 => toy_problem(functions::bueche_rastrigin),
-        5 => toy_problem(functions::linear_slope),
-        6 => toy_problem(functions::rosenbrock),
+        1 => toy_problem(functions::Sphere.into()),
+        2 => toy_problem(functions::Ellipsoid.into()),
+        3 => toy_problem(functions::Rastrigin.into()),
+        4 => toy_problem(functions::BuecheRastrigin.into()),
+        5 => toy_problem(functions::LinearSlope.into()),
+        6 => toy_problem(functions::Rosenbrock.into()),
         _ => panic!(
             "Toy suite only contains 6 functions ({} was requested)",
             function
