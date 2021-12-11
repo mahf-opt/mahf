@@ -44,8 +44,6 @@ pub struct Problem {
     pub function: FunctionObject,
     /// Transformations applied after evaluation
     pub output_transformations: Vec<Box<dyn OutputTransformation>>,
-    /// Inclusive min and max values
-    pub domain: Range<f64>,
 }
 impl Problem {
     pub fn evaluate<'a>(&self, mut x: &'a mut [f64], mut buffer: &'a mut [f64]) -> f64 {
@@ -79,6 +77,22 @@ impl CocoInstance {
     pub fn format_name(&self) -> String {
         format!("f{}_d{}_i{}", self.function, self.dimension, self.instance)
     }
+
+    pub fn domain(&self) -> Vec<Range<f64>> {
+        // TODO: cache this
+        (self.problem.function.domain)(self.dimension)
+    }
+
+    pub fn best_value(&self) -> f64 {
+        // TODO: cache this
+        let mut y = (self.problem.function.best_value)(self.dimension);
+
+        for transformation in &self.problem.output_transformations {
+            y = transformation.apply(y);
+        }
+
+        y
+    }
 }
 impl crate::problems::Problem for CocoInstance {
     type Encoding = Vec<f64>;
@@ -102,8 +116,8 @@ impl crate::problems::VectorProblem for CocoInstance {
     }
 }
 impl crate::problems::LimitedVectorProblem for CocoInstance {
-    fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
-        self.problem.domain.clone()
+    fn range(&self, dimension: usize) -> Range<Self::T> {
+        self.domain()[dimension].clone()
     }
 }
 
@@ -123,7 +137,6 @@ mod tests {
             input_transformations: vec![input::Permutation::new(vec![2, 1, 0])],
             function: functions::Sphere.into(),
             output_transformations: vec![],
-            domain: functions::DEFAULT_DOMAIN,
         };
         let out = problem.evaluate(&mut [1.0, 2.0, 3.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 1.0 + 4.0 + 9.0, abs <= 0.0);
@@ -135,7 +148,6 @@ mod tests {
             input_transformations: vec![input::Translate::new(vec![1.0, 1.0, 1.0])],
             function: functions::Sphere.into(),
             output_transformations: vec![output::Translate::new(5.0)],
-            domain: functions::DEFAULT_DOMAIN,
         };
         let out = problem.evaluate(&mut [1.0, 1.0, 1.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 5.0, abs <= 0.0);
