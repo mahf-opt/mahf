@@ -1,4 +1,5 @@
 use crate::{framework::State, tracking::trigger::*};
+use crate::operators::custom_states::DiversityState;
 
 pub struct CustomLog {
     pub name: &'static str,
@@ -115,7 +116,7 @@ impl Log {
         let entry = IterationEntry {
             iteration: state.iterations,
             best_fx: state.best_so_far.into(),
-            diversity: 0.0,
+            diversity: state.custom.get::<DiversityState>().diversity, //TODO: this might cause trouble
             custom: state.custom.collect_iteration_log(),
         };
         let prev = self.iterations.last();

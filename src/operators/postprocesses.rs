@@ -1,6 +1,6 @@
 //! Postprocess variants
 
-use crate::operators::custom_states::PsoState;
+use crate::operators::custom_states::{DiversityState, PsoState};
 use crate::{
     framework::{components::Postprocess, Individual, State},
     problems::{LimitedVectorProblem, Problem},
@@ -8,7 +8,7 @@ use crate::{
 };
 use rand::Rng;
 
-/* Post-Initialisation Strategies */
+// Post-Initialisation Strategies //
 
 /// PostInitialisation for PSO.
 ///
@@ -58,7 +58,41 @@ where
     }
 }
 
-/* Post-Replacement Strategies */
+#[derive(Debug, serde::Serialize)]
+pub struct DiversityPostInitialization;
+
+impl<P> Postprocess<P> for DiversityPostInitialization
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+{
+    fn postprocess(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        population: &[Individual],
+    ) {
+        let mut diversity;
+
+        let m = population.len() as f64;
+        let d = population[0].solution::<Vec<f64>>().len();
+
+        diversity = (0..d)
+            .into_iter()
+            .map(|j| {
+                let xj = population.iter().map(|i| i.solution::<Vec<f64>>()[j]).sum::<f64>() / m;
+                population.iter().map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs()).sum::<f64>() / m
+            })
+            .sum::<f64>()
+            / (d as f64);
+
+        state.custom.insert(DiversityState {
+            diversity,
+        });
+    }
+}
+
+// Post-Replacement Strategies //
 
 /// PostReplacement for PSO.
 ///
@@ -88,5 +122,39 @@ where
                 }
             }
         }
+    }
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct DiversityPostReplacement;
+
+impl<P> Postprocess<P> for DiversityPostReplacement
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+{
+    fn postprocess(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        population: &[Individual],
+    ) {
+        let diversity_state = state.custom.get_mut::<DiversityState>();
+        if population.is_empty() {
+            diversity_state.diversity = 0.0;
+        }
+
+        let m = population.len() as f64;
+        let d = population[0].solution::<Vec<f64>>().len();
+
+        diversity_state.diversity = (0..d)
+            .into_iter()
+            .map(|j| {
+                let xj = population.iter().map(|i| i.solution::<Vec<f64>>()[j]).sum::<f64>() / m;
+                population.iter().map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs()).sum::<f64>() / m
+            })
+            .sum::<f64>()
+            / (d as f64);
+
     }
 }

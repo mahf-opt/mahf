@@ -11,6 +11,8 @@ use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
+// Mutation-like Operators //
+
 /// Generates new random solutions in the search space.
 #[derive(Serialize)]
 pub struct RandomSpread;
@@ -667,7 +669,7 @@ where
     }
 }
 
-/* Recombination Operators */
+// Recombination Operators //
 
 /// Applies a n-point crossover to two parent solutions depending on crossover probability.
 ///
