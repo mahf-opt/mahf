@@ -38,23 +38,26 @@ mod heuristics {
     use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
-        let mut custom_config = Configuration::new(
+        Configuration::new_extended(
             initialization::RandomSpread {
-                initial_population_size: 25,
+                initial_population_size: 10,
             },
-            selection::RouletteWheel { offspring: 25 },
-            generation::UniformCrossover { pc: 0.8 },
+            Some(postprocesses::PsoPostInitialization { v_max: 0.5 }),
+            selection::All,
+            generation::PsoGeneration {
+                a: 1.0,
+                b: 0.5,
+                c: 0.5,
+                v_max: 0.5,
+            },
             replacement::Generational {
-                max_population_size: 25,
+                max_population_size: 10,
             },
+            Some(postprocesses::PsoPostReplacement),
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
-        //TODO adapt this when add_generator is improved; also we need to consider the sequence of operators!
-        custom_config =
-            custom_config.add_generator(generation::FixedDeviationDelta { deviation: 0.2 });
-        custom_config
+        )
     }
 }
 

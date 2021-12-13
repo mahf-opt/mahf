@@ -1,5 +1,6 @@
 //! Generation methods
 
+use crate::operators::custom_states::PsoState;
 use crate::{
     framework::{components::*, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -616,6 +617,51 @@ mod translocation_mutation {
             vec![offspring[0].len(), offspring[1].len()],
             solution_length
         );
+    }
+}
+
+/// Applies the PSO specific generation operator.
+#[derive(serde::Serialize)]
+pub struct PsoGeneration {
+    pub a: f64,
+    pub b: f64,
+    pub c: f64,
+    pub v_max: f64,
+}
+
+impl<P> Generation<P> for PsoGeneration
+where
+    P: Problem<Encoding = Vec<f64>>,
+{
+    fn generate(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        rng: &mut Random,
+        parents: &mut Vec<P::Encoding>,
+        offspring: &mut Vec<P::Encoding>,
+    ) {
+        let &PsoGeneration { a, b, c, v_max } = self;
+        let pso_state = state.custom.get_mut::<PsoState>();
+        let rs = rng.gen_range(0.0..=1.0);
+        let rt = rng.gen_range(0.0..=1.0);
+
+        for (i, mut x) in parents.drain(..).enumerate() {
+            let v = &mut pso_state.velocities[i];
+            let xl = pso_state.bests[i].solution::<Vec<f64>>();
+            let xg = pso_state.global_best.solution::<Vec<f64>>();
+
+            for i in 0..v.len() {
+                v[i] = a * v[i] + b * rs * (xg[i] - x[i]) + c * rt * (xl[i] - x[i]);
+                v[i] = v[i].clamp(-v_max, v_max);
+            }
+
+            for i in 0..x.len() {
+                x[i] = (x[i] + v[i]).clamp(-1.0, 1.0);
+            }
+
+            offspring.push(x);
+        }
     }
 }
 
