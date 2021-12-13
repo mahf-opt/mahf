@@ -17,7 +17,7 @@ use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 //    Custom Test Configuration    //
 //                                 //
 
-static DATA_DIR: &str = "data/custom_heuristic";
+static DATA_DIR: &str = "data/extended_config";
 static HEURISTICS: &[(&str, ConfigBuilder)] = &[("custom", heuristics::custom)];
 static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
     BenchmarkFunction::sphere,

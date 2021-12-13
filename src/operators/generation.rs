@@ -621,6 +621,8 @@ mod translocation_mutation {
 }
 
 /// Applies the PSO specific generation operator.
+///
+/// Requires PsoPostInitialization and PsoPostReplacement!
 #[derive(serde::Serialize)]
 pub struct PsoGeneration {
     pub a: f64,
