@@ -11,13 +11,16 @@ use crate::{
 /// # Arguments
 ///
 /// * mutation: The mutation method used to move in the search space.
-pub fn random_walk<P>(max_iterations: u32, mutation: impl Generation<P> + 'static) -> Configuration<P>
-    where
-        P: Problem<Encoding=Vec<f64>> + VectorProblem<T=f64> + LimitedVectorProblem,
+pub fn random_walk<P>(
+    max_iterations: u32,
+    mutation: impl Generation<P> + 'static,
+) -> Configuration<P>
+where
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     Configuration::new(
         initialization::RandomSpread {
-            initial_population_size: 1
+            initial_population_size: 1,
         },
         selection::All,
         mutation,
@@ -33,9 +36,12 @@ pub fn random_walk<P>(max_iterations: u32, mutation: impl Generation<P> + 'stati
 /// # Arguments
 ///
 /// * mutation: The mutation method used to move in the search space.
-pub fn random_permutation_walk<P>(max_iterations: u32, mutation: impl Generation<P> + 'static) -> Configuration<P>
-    where
-        P: Problem<Encoding=Vec<usize>> + VectorProblem<T=usize>,
+pub fn random_permutation_walk<P>(
+    max_iterations: u32,
+    mutation: impl Generation<P> + 'static,
+) -> Configuration<P>
+where
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
     Configuration::new(
         initialization::RandomPermutation {

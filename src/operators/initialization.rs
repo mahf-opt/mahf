@@ -62,7 +62,7 @@ pub struct RandomPermutation {
     pub initial_population_size: u32,
 }
 
-impl<P, D> Initialization<P> for RandomPermutation
+impl<P> Initialization<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
