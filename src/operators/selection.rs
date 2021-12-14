@@ -1,15 +1,16 @@
 //! Selection methods
 
-use crate::{
-    framework::{components::*, Individual, State},
-    random::Random,
-};
 use rand::{
-    distributions::{weighted::WeightedIndex, Distribution},
+    distributions::{Distribution, WeightedIndex},
     seq::SliceRandom,
     Rng,
 };
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    framework::{components::*, Individual, State},
+    random::Random,
+};
 
 /// Selects all individuals once.
 #[derive(Serialize, Deserialize)]
@@ -23,6 +24,20 @@ impl Selection for All {
         selection: &mut Vec<&'p Individual>,
     ) {
         selection.extend(population);
+    }
+}
+
+/// Selects no individual.
+#[derive(Serialize, Deserialize)]
+pub struct None;
+impl Selection for None {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        _rng: &mut Random,
+        _population: &'p [Individual],
+        _selection: &mut Vec<&'p Individual>,
+    ) {
     }
 }
 
@@ -49,8 +64,9 @@ impl Selection for FullyRandom {
 }
 #[cfg(test)]
 mod fully_random {
-    use super::*;
     use crate::operators::testing::new_test_population;
+
+    use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
@@ -128,8 +144,9 @@ impl Selection for DeterministicFitnessProportional {
 }
 #[cfg(test)]
 mod deterministic_fitness_proportional {
-    use super::*;
     use crate::operators::testing::{collect_population_fitness, new_test_population};
+
+    use super::*;
 
     #[test]
     fn selects_right_children() {
@@ -188,8 +205,9 @@ impl Selection for RouletteWheel {
 }
 #[cfg(test)]
 mod roulette_wheel {
-    use super::*;
     use crate::operators::testing::new_test_population;
+
+    use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
@@ -249,8 +267,9 @@ impl Selection for StochasticUniversalSampling {
 }
 #[cfg(test)]
 mod stochastic_universal_sampling {
-    use super::*;
     use crate::operators::testing::new_test_population;
+
+    use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
@@ -298,8 +317,9 @@ impl Selection for Tournament {
 }
 #[cfg(test)]
 mod tournament {
-    use super::*;
     use crate::operators::testing::new_test_population;
+
+    use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
@@ -350,8 +370,9 @@ impl Selection for LinearRank {
 }
 #[cfg(test)]
 mod linear_rank {
-    use super::*;
     use crate::operators::testing::new_test_population;
+
+    use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
@@ -411,8 +432,9 @@ impl Selection for ExponentialRank {
 }
 #[cfg(test)]
 mod exponential_rank {
-    use super::*;
     use crate::operators::testing::new_test_population;
+
+    use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
