@@ -5,7 +5,7 @@ use crate::{
     random::Random,
 };
 use rand::{
-    distributions::{weighted::WeightedIndex, Distribution},
+    distributions::{WeightedIndex, Distribution},
     seq::SliceRandom,
     Rng,
 };
@@ -23,6 +23,20 @@ impl Selection for All {
         selection: &mut Vec<&'p Individual>,
     ) {
         selection.extend(population);
+    }
+}
+
+/// Selects no individual.
+#[derive(Serialize, Deserialize)]
+pub struct None;
+impl Selection for None {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        _rng: &mut Random,
+        _population: &'p [Individual],
+        _selection: &mut Vec<&'p Individual>,
+    ) {
     }
 }
 
