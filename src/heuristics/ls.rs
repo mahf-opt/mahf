@@ -1,15 +1,8 @@
 //! Local Search
 
-use rand::distributions::uniform::SampleUniform;
-use serde::Serialize;
-
-use crate::framework::components::{Component, Generation};
-use crate::framework::State;
-use crate::random::Random;
 use crate::{
-    framework::Configuration,
+    framework::{components::Generation, Configuration},
     operators::*,
-    problems,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
 
@@ -43,8 +36,8 @@ pub fn local_permutation_search<P>(
     n_neighbors: u32,
     neighbors: impl Generation<P>,
 ) -> Configuration<P>
-    where
-        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+where
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
     Configuration::new(
         initialization::RandomPermutation {
