@@ -2,56 +2,65 @@
 //!
 //! Implementation is base on <https://github.com/numbbo/coco>
 
-use std::{any::Any, ops::Range};
+use std::{mem, ops::Range};
 
 pub mod functions;
-pub mod problems;
 pub mod suits;
 pub mod transformations;
 
-pub type Function = fn(x: &[f64]) -> f64;
+use functions::FunctionObject;
 
-pub trait Transformation: Send + Sync {
-    fn transform_input(&self, x: &[f64], out: &mut [f64]) {
-        out.clone_from_slice(x);
-    }
+pub trait InputTransformation: Send + Sync {
+    /// Transform the function input.
+    fn apply(&self, x: &[f64], out: &mut [f64]);
 
-    fn transform_output(&self, y: f64) -> f64 {
-        y
+    /// Reverse the function input transformation.
+    ///
+    /// # Important
+    /// This is not fully supported by Coco!
+    ///
+    /// Coco does implement this for some transformations,
+    /// but most of the complex onces do not implement this.
+    /// Without this being implemented, we won't know the
+    /// optimal parameters of a transformed function.
+    fn reverse(&self, x: &[f64], out: &mut [f64]) {
+        let _ = (x, out);
+        unimplemented!("Coco officially does not support this.")
     }
+}
+
+pub trait OutputTransformation: Send + Sync {
+    /// Transform the function output.
+    fn apply(&self, x: f64) -> f64;
+
+    /// Reverse the function output transformation.
+    fn reverse(&self, x: f64) -> f64;
 }
 
 pub struct Problem {
-    /// Name of the function or transformation
-    pub name: &'static str,
-    /// Subproblem or function
-    pub function: ProblemFunction,
-    /// Inclusive min and max values
-    pub domain: Range<f64>,
+    /// Transformations applied before evaluation
+    pub input_transformations: Vec<Box<dyn InputTransformation>>,
+    /// The base function
+    pub function: FunctionObject,
+    /// Transformations applied after evaluation
+    pub output_transformations: Vec<Box<dyn OutputTransformation>>,
 }
 impl Problem {
-    pub fn evaluate(&self, x: &mut [f64], buffer: &mut [f64]) -> f64 {
+    pub fn evaluate<'a>(&self, mut x: &'a mut [f64], mut buffer: &'a mut [f64]) -> f64 {
         debug_assert_eq!(x.len(), buffer.len());
-        match &self.function {
-            ProblemFunction::Transformation(t, p) => {
-                t.transform_input(x, buffer);
-                let y = p.evaluate(buffer, x);
-                t.transform_output(y)
-            }
-            ProblemFunction::Function(f) => f(x),
-        }
-    }
 
-    pub fn extend(
-        name: &'static str,
-        subproblem: Problem,
-        transform: impl Transformation + Any,
-    ) -> Problem {
-        Problem {
-            name,
-            domain: subproblem.domain.clone(),
-            function: ProblemFunction::Transformation(Box::new(transform), Box::new(subproblem)),
+        for transformation in &self.input_transformations {
+            transformation.apply(x, buffer);
+            mem::swap(&mut x, &mut buffer);
         }
+
+        let mut y = (self.function.evaluate)(x);
+
+        for transformation in &self.output_transformations {
+            y = transformation.apply(y);
+        }
+
+        y
     }
 }
 
@@ -67,6 +76,22 @@ pub struct CocoInstance {
 impl CocoInstance {
     pub fn format_name(&self) -> String {
         format!("f{}_d{}_i{}", self.function, self.dimension, self.instance)
+    }
+
+    pub fn domain(&self) -> Vec<Range<f64>> {
+        // TODO: cache this
+        (self.problem.function.domain)(self.dimension)
+    }
+
+    pub fn best_value(&self) -> f64 {
+        // TODO: cache this
+        let mut y = (self.problem.function.best_value)(self.dimension);
+
+        for transformation in &self.problem.output_transformations {
+            y = transformation.apply(y);
+        }
+
+        y
     }
 }
 impl crate::problems::Problem for CocoInstance {
@@ -91,34 +116,39 @@ impl crate::problems::VectorProblem for CocoInstance {
     }
 }
 impl crate::problems::LimitedVectorProblem for CocoInstance {
-    fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
-        self.problem.domain.clone()
+    fn range(&self, dimension: usize) -> Range<Self::T> {
+        self.domain()[dimension].clone()
     }
-}
-
-pub enum ProblemFunction {
-    Transformation(Box<dyn Transformation>, Box<Problem>),
-    Function(Function),
 }
 
 #[cfg(test)]
 mod tests {
     use float_eq::assert_float_eq;
 
-    use super::*;
+    use crate::problems::coco::{
+        functions,
+        transformations::{input, output},
+        Problem,
+    };
 
     #[test]
     fn create_permutated_sphere() {
-        let problem = problems::permutation(vec![2, 1, 0], problems::sphere());
+        let problem = Problem {
+            input_transformations: vec![input::Permutation::new(vec![2, 1, 0])],
+            function: functions::Sphere.into(),
+            output_transformations: vec![],
+        };
         let out = problem.evaluate(&mut [1.0, 2.0, 3.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 1.0 + 4.0 + 9.0, abs <= 0.0);
     }
 
     #[test]
     fn translate_sphere() {
-        let problem = problems::sphere();
-        let problem = problems::translate_input(vec![1.0, 1.0, 1.0], problem);
-        let problem = problems::translate_output(5.0, problem);
+        let problem = Problem {
+            input_transformations: vec![input::Translate::new(vec![1.0, 1.0, 1.0])],
+            function: functions::Sphere.into(),
+            output_transformations: vec![output::Translate::new(5.0)],
+        };
         let out = problem.evaluate(&mut [1.0, 1.0, 1.0], &mut [0.0, 0.0, 0.0]);
         assert_float_eq!(out, 5.0, abs <= 0.0);
     }
