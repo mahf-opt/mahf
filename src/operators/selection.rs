@@ -56,8 +56,9 @@ impl Selection for CopySingle {
         selection: &mut Vec<&'p Individual>,
     ) {
         assert_eq!(population.len(), 1);
+        let single_solution = population.first().unwrap();
         for _ in 0..self.offspring {
-            selection.push(population.first().unwrap());
+            selection.push(single_solution);
         }
     }
 }
