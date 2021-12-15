@@ -75,7 +75,7 @@ impl<P> Postprocess<P> for DiversityPostInitialization
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let mut diversity;
+        let diversity;
 
         let m = population.len() as f64;
         let d = population[0].solution::<Vec<f64>>().len();

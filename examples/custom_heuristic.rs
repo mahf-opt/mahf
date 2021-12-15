@@ -18,7 +18,7 @@ use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 //                                 //
 
 static DATA_DIR: &str = "data/custom_heuristic";
-static HEURISTICS: &[(&str, ConfigBuilder)] = &[("custom", heuristics::custom)];
+static HEURISTICS: &[(&str, ConfigBuilder)] = &[("diversity", heuristics::custom)];
 static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
     BenchmarkFunction::sphere,
     //BenchmarkFunction::rastrigin,
@@ -42,13 +42,13 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            Some(postprocesses::PopulationPostInitialization),
+            Some(postprocesses::DiversityPostInitialization),
             selection::RouletteWheel { offspring: 25 },
             generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
-            Some(postprocesses::PopulationPostReplacement),
+            Some(postprocesses::DiversityPostReplacement),
             termination::FixedIterations {
                 max_iterations: 500,
             },

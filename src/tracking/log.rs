@@ -1,5 +1,4 @@
 use crate::{framework::State, tracking::trigger::*};
-use crate::operators::custom_states::DiversityState;
 
 pub struct CustomLog {
     pub name: &'static str,

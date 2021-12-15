@@ -23,7 +23,7 @@ where
             offspring: n_neighbors,
         },
         neighbors,
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size: 1,
         },
         termination::FixedIterations { max_iterations },
@@ -47,7 +47,7 @@ where
             offspring: n_neighbors,
         },
         neighbors,
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size: 1,
         },
         termination::FixedIterations { max_iterations },
