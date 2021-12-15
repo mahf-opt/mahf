@@ -13,7 +13,7 @@ where
 {
     Configuration::new(
         initialization::Noop,
-        selection::FullyRandom { offspring: 0 },
+        selection::None,
         generation::RandomSpread,
         replacement::MuPlusLambda {
             max_population_size: 0,
@@ -28,7 +28,7 @@ where
 {
     Configuration::new(
         initialization::Noop,
-        selection::FullyRandom { offspring: 0 },
+        selection::None,
         generation::RandomPermutation,
         replacement::MuPlusLambda {
             max_population_size: 0,
