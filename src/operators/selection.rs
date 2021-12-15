@@ -41,6 +41,28 @@ impl Selection for None {
     }
 }
 
+/// Select the single solution `offspring` times.
+#[derive(Serialize, Deserialize)]
+pub struct CopySingle {
+    /// Offspring per iteration.
+    pub offspring: u32,
+}
+impl Selection for CopySingle {
+    fn select<'p>(
+        &self,
+        _state: &mut State,
+        _rng: &mut Random,
+        population: &'p [Individual],
+        selection: &mut Vec<&'p Individual>,
+    ) {
+        assert_eq!(population.len(), 1);
+        let single_solution = population.first().unwrap();
+        for _ in 0..self.offspring {
+            selection.push(single_solution);
+        }
+    }
+}
+
 /// Selects `offspring` random solutions.
 ///
 /// Solutions can be selected multiple times in a single iteration.
