@@ -103,15 +103,18 @@ impl CustomState for PheromoneMatrix {
         vec![
             CustomLog {
                 name: "avg_pheromone",
-                value: avg,
+                value: Some(avg),
+                solutions: None,
             },
             CustomLog {
                 name: "min_pheromone",
-                value: min,
+                value: Some(min),
+                solutions: None,
             },
             CustomLog {
                 name: "max_pheromone",
-                value: max,
+                value: Some(max),
+                solutions: None,
             },
         ]
     }

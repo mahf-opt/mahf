@@ -1,6 +1,6 @@
 //! Postprocess variants
 
-use crate::operators::custom_states::{DiversityState, PsoState};
+use crate::operators::custom_states::{DiversityState, PopulationState, PsoState};
 use crate::{
     framework::{components::Postprocess, Individual, State},
     problems::{LimitedVectorProblem, Problem},
@@ -58,6 +58,9 @@ where
     }
 }
 
+/// Post Initialisation procedure for tracking population diversity
+///
+/// Currently only for LimitedVectorProblem
 #[derive(Debug, serde::Serialize)]
 pub struct DiversityPostInitialization;
 
@@ -88,6 +91,32 @@ impl<P> Postprocess<P> for DiversityPostInitialization
 
         state.custom.insert(DiversityState {
             diversity,
+        });
+    }
+}
+
+/// Post Initialisation procedure for tracking all individuals' solutions
+///
+/// Independent of problem type
+//TODO Independent of problem type
+#[derive(Debug, serde::Serialize)]
+pub struct PopulationPostInitialization;
+
+impl<P> Postprocess<P> for PopulationPostInitialization
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+{
+    fn postprocess(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        population: &[Individual],
+    ) {
+        let current_pop: Vec<Vec<f64>> = population.iter().map(|i| i.solution::<Vec<f64>>()).cloned().collect();
+
+        state.custom.insert(PopulationState {
+            current_pop
         });
     }
 }
@@ -125,6 +154,9 @@ where
     }
 }
 
+/// Post Replacement procedure for tracking population diversity
+///
+/// Currently only for LimitedVectorProblem
 #[derive(Debug, serde::Serialize)]
 pub struct DiversityPostReplacement;
 
@@ -155,6 +187,31 @@ impl<P> Postprocess<P> for DiversityPostReplacement
             })
             .sum::<f64>()
             / (d as f64);
+
+    }
+}
+
+/// Post Replacement procedure for tracking all individuals' solutions
+///
+/// Independent of problem type
+//TODO Independent of problem type
+#[derive(Debug, serde::Serialize)]
+pub struct PopulationPostReplacement;
+
+impl<P> Postprocess<P> for PopulationPostReplacement
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+{
+    fn postprocess(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        population: &[Individual],
+    ) {
+        let population_state = state.custom.get_mut::<PopulationState>();
+
+        population_state.current_pop = population.iter().map(|i| i.solution::<Vec<f64>>()).cloned().collect();
 
     }
 }

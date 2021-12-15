@@ -61,6 +61,7 @@ where
 ///
 /// Uses a `N(0, deviation)` normal distribution.
 /// Currently the same as Gaussian but without mutation rate.
+//TODO: maybe change this to generating new value (as in uniform mutation) but with Gaussian distr.
 #[derive(Serialize, Deserialize)]
 pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.

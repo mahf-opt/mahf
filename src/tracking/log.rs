@@ -3,7 +3,8 @@ use crate::operators::custom_states::DiversityState;
 
 pub struct CustomLog {
     pub name: &'static str,
-    pub value: f64,
+    pub value: Option<f64>,
+    pub solutions: Option<Vec<Vec<f64>>>,
 }
 
 pub struct EvaluationEntry {
@@ -16,7 +17,7 @@ pub struct EvaluationEntry {
 pub struct IterationEntry {
     pub iteration: u32,
     pub best_fx: f64,
-    pub diversity: f64,
+    pub evaluation: u32,
     pub custom: Vec<CustomLog>,
 }
 
@@ -116,7 +117,7 @@ impl Log {
         let entry = IterationEntry {
             iteration: state.iterations,
             best_fx: state.best_so_far.into(),
-            diversity: state.custom.get::<DiversityState>().diversity, //TODO: this might cause trouble
+            evaluation: state.evaluations,//state.custom.get::<DiversityState>().diversity, //TODO: this might cause trouble
             custom: state.custom.collect_iteration_log(),
         };
         let prev = self.iterations.last();

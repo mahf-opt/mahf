@@ -1,6 +1,7 @@
 //! Custom states required for specific metaheuristics and evaluation procedures
 
 use crate::framework::{CustomState, Individual};
+use crate::tracking::log::CustomLog;
 
 // Custom States for Metaheuristics //
 
@@ -20,10 +21,28 @@ impl CustomState for PsoState {}
 pub struct DiversityState {
     pub diversity: f64,
 }
-impl CustomState for DiversityState {}
+impl CustomState for DiversityState {
+    fn iteration_log(&self) -> Vec<CustomLog> {
+        vec![
+            CustomLog {
+                name: "diversity",
+                value: Some(self.diversity),
+                solutions: None,
+            }]
+    }
+}
 
 /// State for logging current population
 pub struct PopulationState {
-    pub current_pop: Vec<Individual>,
+    pub current_pop: Vec<Vec<f64>>,
 }
-impl CustomState for PopulationState {}
+impl CustomState for PopulationState {
+    fn iteration_log(&self) -> Vec<CustomLog> {
+        vec![
+            CustomLog {
+                name: "population",
+                value: None,
+                solutions: Some(self.current_pop.clone()),
+            }]
+    }
+}
