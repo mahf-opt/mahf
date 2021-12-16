@@ -65,8 +65,8 @@ where
 pub struct DiversityPostInitialization;
 
 impl<P> Postprocess<P> for DiversityPostInitialization
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
     fn postprocess(
         &self,
@@ -83,15 +83,21 @@ impl<P> Postprocess<P> for DiversityPostInitialization
         diversity = (0..d)
             .into_iter()
             .map(|j| {
-                let xj = population.iter().map(|i| i.solution::<Vec<f64>>()[j]).sum::<f64>() / m;
-                population.iter().map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs()).sum::<f64>() / m
+                let xj = population
+                    .iter()
+                    .map(|i| i.solution::<Vec<f64>>()[j])
+                    .sum::<f64>()
+                    / m;
+                population
+                    .iter()
+                    .map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs())
+                    .sum::<f64>()
+                    / m
             })
             .sum::<f64>()
             / (d as f64);
 
-        state.custom.insert(DiversityState {
-            diversity,
-        });
+        state.custom.insert(DiversityState { diversity });
     }
 }
 
@@ -103,8 +109,8 @@ impl<P> Postprocess<P> for DiversityPostInitialization
 pub struct PopulationPostInitialization;
 
 impl<P> Postprocess<P> for PopulationPostInitialization
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
     fn postprocess(
         &self,
@@ -113,11 +119,13 @@ impl<P> Postprocess<P> for PopulationPostInitialization
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let current_pop: Vec<Vec<f64>> = population.iter().map(|i| i.solution::<Vec<f64>>()).cloned().collect();
+        let current_pop: Vec<Vec<f64>> = population
+            .iter()
+            .map(|i| i.solution::<Vec<f64>>())
+            .cloned()
+            .collect();
 
-        state.custom.insert(PopulationState {
-            current_pop
-        });
+        state.custom.insert(PopulationState { current_pop });
     }
 }
 
@@ -161,8 +169,8 @@ where
 pub struct DiversityPostReplacement;
 
 impl<P> Postprocess<P> for DiversityPostReplacement
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
     fn postprocess(
         &self,
@@ -182,12 +190,19 @@ impl<P> Postprocess<P> for DiversityPostReplacement
         diversity_state.diversity = (0..d)
             .into_iter()
             .map(|j| {
-                let xj = population.iter().map(|i| i.solution::<Vec<f64>>()[j]).sum::<f64>() / m;
-                population.iter().map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs()).sum::<f64>() / m
+                let xj = population
+                    .iter()
+                    .map(|i| i.solution::<Vec<f64>>()[j])
+                    .sum::<f64>()
+                    / m;
+                population
+                    .iter()
+                    .map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs())
+                    .sum::<f64>()
+                    / m
             })
             .sum::<f64>()
             / (d as f64);
-
     }
 }
 
@@ -199,8 +214,8 @@ impl<P> Postprocess<P> for DiversityPostReplacement
 pub struct PopulationPostReplacement;
 
 impl<P> Postprocess<P> for PopulationPostReplacement
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+where
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
     fn postprocess(
         &self,
@@ -211,7 +226,10 @@ impl<P> Postprocess<P> for PopulationPostReplacement
     ) {
         let population_state = state.custom.get_mut::<PopulationState>();
 
-        population_state.current_pop = population.iter().map(|i| i.solution::<Vec<f64>>()).cloned().collect();
-
+        population_state.current_pop = population
+            .iter()
+            .map(|i| i.solution::<Vec<f64>>())
+            .cloned()
+            .collect();
     }
 }

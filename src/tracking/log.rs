@@ -116,7 +116,7 @@ impl Log {
         let entry = IterationEntry {
             iteration: state.iterations,
             best_fx: state.best_so_far.into(),
-            evaluation: state.evaluations,//state.custom.get::<DiversityState>().diversity, //TODO: this might cause trouble
+            evaluation: state.evaluations,
             custom: state.custom.collect_iteration_log(),
         };
         let prev = self.iterations.last();

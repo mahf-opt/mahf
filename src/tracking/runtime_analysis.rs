@@ -145,9 +145,8 @@ fn write_evaluations(output: &mut impl Write, log: &[EvaluationEntry]) -> io::Re
             if item.value.is_some() {
                 write!(output, ",{:+1.5e}", item.value.unwrap())?;
             } else if item.solutions.is_some() {
-                write!(output, ",{:?}",item.solutions.as_ref().unwrap())?;
+                write!(output, ",{:?}", item.solutions.as_ref().unwrap())?;
             }
-
         }
         writeln!(output)?;
     }
@@ -163,11 +162,7 @@ fn write_iterations(output: &mut impl Write, log: &[IterationEntry]) -> io::Resu
             evaluation,
             ref custom,
         } = entry;
-        write!(
-            output,
-            "{},{:+1.5e},{}",
-            iteration, best_fx, evaluation
-        )?;
+        write!(output, "{},{:+1.5e},{}", iteration, best_fx, evaluation)?;
         for item in custom {
             if item.value.is_some() {
                 write!(output, ",{:+1.5e}", item.value.unwrap())?;

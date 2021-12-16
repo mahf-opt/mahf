@@ -23,12 +23,11 @@ pub struct DiversityState {
 }
 impl CustomState for DiversityState {
     fn iteration_log(&self) -> Vec<CustomLog> {
-        vec![
-            CustomLog {
-                name: "diversity",
-                value: Some(self.diversity),
-                solutions: None,
-            }]
+        vec![CustomLog {
+            name: "diversity",
+            value: Some(self.diversity),
+            solutions: None,
+        }]
     }
 }
 
@@ -38,11 +37,10 @@ pub struct PopulationState {
 }
 impl CustomState for PopulationState {
     fn iteration_log(&self) -> Vec<CustomLog> {
-        vec![
-            CustomLog {
-                name: "population",
-                value: None,
-                solutions: Some(self.current_pop.clone()),
-            }]
+        vec![CustomLog {
+            name: "population",
+            value: None,
+            solutions: Some(self.current_pop.clone()),
+        }]
     }
 }

@@ -90,5 +90,4 @@ impl CustomStateMap {
         }
         entries
     }
-
 }
