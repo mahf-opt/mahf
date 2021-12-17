@@ -21,13 +21,13 @@ where
         initialization::RandomSpread {
             initial_population_size: num_particles,
         },
-        Some(postprocesses::PsoPostInitialization { v_max }),
+        Some(postprocess::PsoPostInitialization { v_max }),
         selection::All,
         generation::PsoGeneration { a, b, c, v_max },
         replacement::Generational {
             max_population_size: num_particles,
         },
-        Some(postprocesses::PsoPostReplacement),
+        Some(postprocess::PsoPostReplacement),
         termination::FixedIterations { max_iterations },
     )
 }

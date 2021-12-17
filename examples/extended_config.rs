@@ -42,7 +42,7 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 10,
             },
-            Some(postprocesses::PsoPostInitialization { v_max: 0.5 }),
+            Some(postprocess::PsoPostInitialization { v_max: 0.5 }),
             selection::All,
             generation::PsoGeneration {
                 a: 1.0,
@@ -53,7 +53,7 @@ mod heuristics {
             replacement::Generational {
                 max_population_size: 10,
             },
-            Some(postprocesses::PsoPostReplacement),
+            Some(postprocess::PsoPostReplacement),
             termination::FixedIterations {
                 max_iterations: 500,
             },

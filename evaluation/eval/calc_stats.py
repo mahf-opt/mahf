@@ -4,8 +4,9 @@ import numpy as np
 __all__ = ["basic_statistics", "diversity_statistics"]
 
 
-# calculate basic statistics for best found solution depending on column (usually either iterations or evaluations)
 def basic_statistics(df, column):
+    """Calculate basic statistics for best found solution depending on column
+    (usually either iterations or evaluations)"""
     stats_df = df.groupby(column).agg(
         mean_opt=pd.NamedAgg(column="best_fx", aggfunc=np.mean),
         std_opt=pd.NamedAgg(column="best_fx", aggfunc=np.std),
@@ -17,8 +18,9 @@ def basic_statistics(df, column):
     return stats_df
 
 
-# calculate basic statistics for population diversity depending on column (usually either iterations or evaluations)
 def diversity_statistics(df, column):
+    """Calculate basic statistics for population diversity depending on column
+    (usually either iterations or evaluations)"""
     stats_df = df.groupby(column).agg(
         mean_div=pd.NamedAgg(column="diversity", aggfunc=np.mean),
         std_div=pd.NamedAgg(column="diversity", aggfunc=np.std),
