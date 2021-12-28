@@ -5,6 +5,7 @@ use std::{any::Any, ops::Range};
 
 pub mod bmf;
 pub mod coco;
+pub mod coco_bound;
 pub mod tsp;
 
 /// Represents the (global) optimum of the search space.
