@@ -3,7 +3,6 @@ use std::{
     any::{Any, TypeId},
     collections::BTreeMap,
 };
-use crate::operators::postprocess::FloatPopulation;
 
 /// Makes custom state trackable.
 pub trait CustomState: AsAny {

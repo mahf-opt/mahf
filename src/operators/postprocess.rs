@@ -1,13 +1,14 @@
 //! Postprocess variants
+//!
 
 use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
+use crate::problems::VectorProblem;
 use crate::{
     framework::{components::Postprocess, Individual, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::Rng;
-use crate::problems::VectorProblem;
 
 // Post-Initialisation Strategies //
 
@@ -157,7 +158,9 @@ where
         population: &[Individual],
     ) {
         if !state.custom.has::<PopulationState>() {
-            state.custom.insert(PopulationState { current_pop: vec![] });
+            state.custom.insert(PopulationState {
+                current_pop: vec![],
+            });
         }
         let population_state = state.custom.get_mut::<PopulationState>();
 
