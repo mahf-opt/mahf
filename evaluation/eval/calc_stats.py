@@ -14,7 +14,6 @@ def basic_statistics(df, column):
         max_opt=pd.NamedAgg(column="best_fx", aggfunc="max"),
         median_opt=pd.NamedAgg(column="best_fx", aggfunc=np.median),
     )
-    pd.DataFrame(stats_df)
     return stats_df
 
 
@@ -28,5 +27,4 @@ def diversity_statistics(df, column):
         max_div=pd.NamedAgg(column="diversity", aggfunc="max"),
         median_div=pd.NamedAgg(column="diversity", aggfunc=np.median),
     )
-    pd.DataFrame(stats_df)
     return stats_df
