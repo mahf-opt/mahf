@@ -38,17 +38,15 @@ mod heuristics {
     use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
-        let mut custom_config = Configuration::new_extended(
+        let mut custom_config = Configuration::new(
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            Some(postprocess::DiversityPostInitialization),
             selection::RouletteWheel { offspring: 25 },
             generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
-            Some(postprocess::DiversityPostReplacement),
             termination::FixedIterations {
                 max_iterations: 500,
             },

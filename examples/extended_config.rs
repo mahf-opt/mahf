@@ -40,20 +40,15 @@ mod heuristics {
     pub fn custom() -> Configuration<BenchmarkFunction> {
         Configuration::new_extended(
             initialization::RandomSpread {
-                initial_population_size: 10,
+                initial_population_size: 25,
             },
-            Some(postprocess::PsoPostInitialization { v_max: 0.5 }),
-            selection::All,
-            generation::PsoGeneration {
-                a: 1.0,
-                b: 0.5,
-                c: 0.5,
-                v_max: 0.5,
-            },
+            Some(postprocess::FloatVectorDiversity),
+            selection::RouletteWheel { offspring: 25 },
+            generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
-                max_population_size: 10,
+                max_population_size: 25,
             },
-            Some(postprocess::PsoPostReplacement),
+            Some(postprocess::FloatVectorDiversity),
             termination::FixedIterations {
                 max_iterations: 500,
             },
