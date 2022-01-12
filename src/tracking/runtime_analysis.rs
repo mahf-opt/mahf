@@ -84,7 +84,7 @@ impl Experiment {
                 writeln!(eval_buf)?;
             }
             if let Some(entry) = log.iterations().get(0) {
-                write!(iter_buf, "iteration,best_fx,evaluation")?;
+                write!(iter_buf, "iteration,evaluation,best_fx")?;
                 for custom in &entry.custom {
                     write!(iter_buf, ",{}", custom.name)?;
                 }
@@ -162,7 +162,7 @@ fn write_iterations(output: &mut impl Write, log: &[IterationEntry]) -> io::Resu
             evaluation,
             ref custom,
         } = entry;
-        write!(output, "{},{:+1.5e},{}", iteration, best_fx, evaluation)?;
+        write!(output, "{},{:+1.5e},{}", iteration, evaluation, best_fx)?;
         for item in custom {
             if item.value.is_some() {
                 write!(output, ",{:+1.5e}", item.value.unwrap())?;
