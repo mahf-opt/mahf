@@ -1,6 +1,6 @@
 //! Implementations of [crate::framework::components].
 
-pub mod custom_states;
+pub mod custom_state;
 pub mod generation;
 pub mod initialization;
 pub mod postprocess;

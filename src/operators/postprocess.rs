@@ -1,12 +1,13 @@
 //! Postprocess variants
 
-use crate::operators::custom_states::{DiversityState, PopulationState, PsoState};
+use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
 use crate::{
     framework::{components::Postprocess, Individual, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::Rng;
+use crate::problems::VectorProblem;
 
 // Post-Initialisation Strategies //
 
@@ -58,77 +59,6 @@ where
     }
 }
 
-/// Post Initialisation procedure for tracking population diversity
-///
-/// Currently only for LimitedVectorProblem
-#[derive(Debug, serde::Serialize)]
-pub struct DiversityPostInitialization;
-
-impl<P> Postprocess<P> for DiversityPostInitialization
-where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-{
-    fn postprocess(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let diversity;
-
-        let m = population.len() as f64;
-        let d = population[0].solution::<Vec<f64>>().len();
-
-        diversity = (0..d)
-            .into_iter()
-            .map(|j| {
-                let xj = population
-                    .iter()
-                    .map(|i| i.solution::<Vec<f64>>()[j])
-                    .sum::<f64>()
-                    / m;
-                population
-                    .iter()
-                    .map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs())
-                    .sum::<f64>()
-                    / m
-            })
-            .sum::<f64>()
-            / (d as f64);
-
-        state.custom.insert(DiversityState { diversity });
-    }
-}
-
-/// Post Initialisation procedure for tracking all individuals' solutions
-///
-/// Independent of problem type
-//TODO Independent of problem type
-#[derive(Debug, serde::Serialize)]
-pub struct PopulationPostInitialization;
-
-impl<P> Postprocess<P> for PopulationPostInitialization
-where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-{
-    fn postprocess(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let current_pop: Vec<Vec<f64>> = population
-            .iter()
-            .map(|i| i.solution::<Vec<f64>>())
-            .cloned()
-            .collect();
-
-        state.custom.insert(PopulationState { current_pop });
-    }
-}
-
 // Post-Replacement Strategies //
 
 /// PostReplacement for PSO.
@@ -162,60 +92,62 @@ where
     }
 }
 
-/// Post Replacement procedure for tracking population diversity
-///
-/// Currently only for LimitedVectorProblem
-#[derive(Debug, serde::Serialize)]
-pub struct DiversityPostReplacement;
+// General post-processes //
 
-impl<P> Postprocess<P> for DiversityPostReplacement
+/// Postprocess procedure for tracking population diversity
+///
+/// Currently only for VectorProblem
+#[derive(Debug, serde::Serialize)]
+pub struct FloatVectorDiversity;
+
+impl<P> Postprocess<P> for FloatVectorDiversity
 where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
 {
     fn postprocess(
         &self,
         state: &mut State,
-        _problem: &P,
+        problem: &P,
         _rng: &mut Random,
         population: &[Individual],
     ) {
+        if !state.custom.has::<DiversityState>() {
+            state.custom.insert(DiversityState { diversity: 0.0 });
+        }
+
         let diversity_state = state.custom.get_mut::<DiversityState>();
+
         if population.is_empty() {
             diversity_state.diversity = 0.0;
+            return;
         }
 
         let m = population.len() as f64;
-        let d = population[0].solution::<Vec<f64>>().len();
+        let d = problem.dimension();
+        let iter_solutions = || population.iter().map(|i| i.solution::<Vec<f64>>());
 
+        //TODO: implement different diversity metrics
         diversity_state.diversity = (0..d)
             .into_iter()
             .map(|j| {
-                let xj = population
-                    .iter()
-                    .map(|i| i.solution::<Vec<f64>>()[j])
-                    .sum::<f64>()
-                    / m;
-                population
-                    .iter()
-                    .map(|i| (i.solution::<Vec<f64>>()[j] - xj).abs())
-                    .sum::<f64>()
-                    / m
+                let xj = iter_solutions().map(|s| s[j]).sum::<f64>() / m;
+                iter_solutions().map(|s| (s[j] - xj).abs()).sum::<f64>() / m
             })
             .sum::<f64>()
             / (d as f64);
     }
 }
 
-/// Post Replacement procedure for tracking all individuals' solutions
+/// Postprocess procedure for tracking all individuals' solutions
 ///
-/// Independent of problem type
+/// Currently only for VectorProblem
 //TODO Independent of problem type
 #[derive(Debug, serde::Serialize)]
-pub struct PopulationPostReplacement;
+pub struct FloatPopulation;
 
-impl<P> Postprocess<P> for PopulationPostReplacement
+impl<P> Postprocess<P> for FloatPopulation
 where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
 {
     fn postprocess(
         &self,
@@ -224,6 +156,9 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
+        if !state.custom.has::<PopulationState>() {
+            state.custom.insert(PopulationState { current_pop: vec![] });
+        }
         let population_state = state.custom.get_mut::<PopulationState>();
 
         population_state.current_pop = population

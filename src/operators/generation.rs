@@ -1,6 +1,6 @@
 //! Generation methods
 
-use crate::operators::custom_states::PsoState;
+use crate::operators::custom_state::PsoState;
 use crate::{
     framework::{components::*, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
