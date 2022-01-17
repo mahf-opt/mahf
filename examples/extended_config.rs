@@ -17,8 +17,8 @@ use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 //    Custom Test Configuration    //
 //                                 //
 
-static DATA_DIR: &str = "data/custom_heuristic";
-static HEURISTICS: &[(&str, ConfigBuilder)] = &[("diversity", heuristics::custom)];
+static DATA_DIR: &str = "data/extended_config";
+static HEURISTICS: &[(&str, ConfigBuilder)] = &[("custom", heuristics::custom)];
 static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
     BenchmarkFunction::sphere,
     //BenchmarkFunction::rastrigin,
@@ -38,23 +38,21 @@ mod heuristics {
     use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
-        let mut custom_config = Configuration::new(
+        Configuration::new_extended(
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
+            Some(postprocess::FloatVectorDiversity),
             selection::RouletteWheel { offspring: 25 },
             generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
+            Some(postprocess::FloatVectorDiversity),
             termination::FixedIterations {
                 max_iterations: 500,
             },
-        );
-        //TODO adapt this when add_generator is improved; also we need to consider the sequence of operators!
-        custom_config =
-            custom_config.add_generator(generation::FixedDeviationDelta { deviation: 0.2 });
-        custom_config
+        )
     }
 }
 

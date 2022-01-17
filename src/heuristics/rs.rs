@@ -15,7 +15,7 @@ where
         initialization::Noop,
         selection::None,
         generation::RandomSpread,
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size: 0,
         },
         termination::FixedIterations { max_iterations },
@@ -30,7 +30,7 @@ where
         initialization::Noop,
         selection::None,
         generation::RandomPermutation,
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size: 0,
         },
         termination::FixedIterations { max_iterations },

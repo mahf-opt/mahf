@@ -2,14 +2,14 @@
 <module version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python">
-      <configuration sdkName="Python 3.8" />
+      <configuration sdkName="Python 3.8 (mahf_env)" />
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (mahf_env)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="Python 3.8 interpreter library" level="application" />
+    <orderEntry type="library" name="Python 3.8 (mahf_env) interpreter library" level="application" />
   </component>
 </module>

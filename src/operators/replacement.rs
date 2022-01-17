@@ -9,11 +9,11 @@ use serde::{Deserialize, Serialize};
 
 /// Always keeps the fittest individuals.
 #[derive(Serialize, Deserialize)]
-pub struct Fittest {
+pub struct MuPlusLambda {
     /// Limits the population growth.
     pub max_population_size: u32,
 }
-impl Replacement for Fittest {
+impl Replacement for MuPlusLambda {
     fn replace(
         &self,
         _state: &mut State,
@@ -28,7 +28,7 @@ impl Replacement for Fittest {
 }
 
 #[cfg(test)]
-mod fittest {
+mod mupluslambda {
     use super::*;
     use crate::operators::testing::*;
 
@@ -36,7 +36,7 @@ mod fittest {
     fn keeps_right_individuals() {
         let mut state = State::new();
         let mut rng = Random::testing();
-        let comp = Fittest {
+        let comp = MuPlusLambda {
             max_population_size: 3,
         };
         let mut population = new_test_population(&[1.0, 3.0, 5.0]);

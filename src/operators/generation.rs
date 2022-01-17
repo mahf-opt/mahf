@@ -1,5 +1,6 @@
 //! Generation methods
 
+use crate::operators::custom_state::PsoState;
 use crate::{
     framework::{components::*, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -9,6 +10,8 @@ use rand::{prelude::SliceRandom, Rng};
 use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
+
+// Mutation-like Operators //
 
 /// Generates new random solutions in the search space.
 #[derive(Serialize)]
@@ -57,6 +60,8 @@ where
 /// Applies a fixed, component wise delta from a normal distribution.
 ///
 /// Uses a `N(0, deviation)` normal distribution.
+/// Currently the same as Gaussian but without mutation rate.
+//TODO: maybe change this to generating new value (as in uniform mutation) but with Gaussian distr.
 #[derive(Serialize, Deserialize)]
 pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.
@@ -86,14 +91,14 @@ where
     }
 }
 
-/// Applies an adaptive, component wise delta from a normal distribution.
+/// Applies an adaptive, component wise delta from a normal distribution as was proposed for IWO.
 ///
 /// The actual deviation gets computed as follows:
 /// ```math
 /// final_deviation + (1 - progress)^modulation * (initial_deviation - final_deviation)
 /// ```
 #[derive(Serialize, Deserialize)]
-pub struct AdaptiveDeviationDelta {
+pub struct IWOAdaptiveDeviationDelta {
     /// Initial standard deviation for the mutation
     pub initial_deviation: f64,
     /// Final standard deviation for the mutation
@@ -103,14 +108,14 @@ pub struct AdaptiveDeviationDelta {
     /// Modulation index for the standard deviation.
     pub modulation_index: u32,
 }
-impl AdaptiveDeviationDelta {
+impl IWOAdaptiveDeviationDelta {
     fn deviation(&self, progress: f64) -> f64 {
         self.final_deviation
             + (1.0 - progress).powi(self.modulation_index as i32)
                 * (self.initial_deviation - self.final_deviation)
     }
 }
-impl<P> Generation<P> for AdaptiveDeviationDelta
+impl<P> Generation<P> for IWOAdaptiveDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
 {
@@ -140,7 +145,7 @@ mod adaptive_deviation_delta {
 
     #[test]
     fn deviation_is_falling() {
-        let comp = AdaptiveDeviationDelta {
+        let comp = IWOAdaptiveDeviationDelta {
             initial_deviation: 10.0,
             final_deviation: 1.0,
             modulation_index: 1,
@@ -618,7 +623,54 @@ mod translocation_mutation {
     }
 }
 
-/* Recombination Operators */
+/// Applies the PSO specific generation operator.
+///
+/// Requires PsoPostInitialization and PsoPostReplacement!
+#[derive(serde::Serialize)]
+pub struct PsoGeneration {
+    pub a: f64,
+    pub b: f64,
+    pub c: f64,
+    pub v_max: f64,
+}
+
+impl<P> Generation<P> for PsoGeneration
+where
+    P: Problem<Encoding = Vec<f64>>,
+{
+    fn generate(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        rng: &mut Random,
+        parents: &mut Vec<P::Encoding>,
+        offspring: &mut Vec<P::Encoding>,
+    ) {
+        let &PsoGeneration { a, b, c, v_max } = self;
+        let pso_state = state.custom.get_mut::<PsoState>();
+        let rs = rng.gen_range(0.0..=1.0);
+        let rt = rng.gen_range(0.0..=1.0);
+
+        for (i, mut x) in parents.drain(..).enumerate() {
+            let v = &mut pso_state.velocities[i];
+            let xl = pso_state.bests[i].solution::<Vec<f64>>();
+            let xg = pso_state.global_best.solution::<Vec<f64>>();
+
+            for i in 0..v.len() {
+                v[i] = a * v[i] + b * rs * (xg[i] - x[i]) + c * rt * (xl[i] - x[i]);
+                v[i] = v[i].clamp(-v_max, v_max);
+            }
+
+            for i in 0..x.len() {
+                x[i] = (x[i] + v[i]).clamp(-1.0, 1.0);
+            }
+
+            offspring.push(x);
+        }
+    }
+}
+
+// Recombination Operators //
 
 /// Applies a n-point crossover to two parent solutions depending on crossover probability.
 ///

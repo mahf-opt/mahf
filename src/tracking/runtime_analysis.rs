@@ -84,7 +84,7 @@ impl Experiment {
                 writeln!(eval_buf)?;
             }
             if let Some(entry) = log.iterations().get(0) {
-                write!(iter_buf, "iteration,best_fx,diversity")?;
+                write!(iter_buf, "iteration,evaluation,best_fx")?;
                 for custom in &entry.custom {
                     write!(iter_buf, ",{}", custom.name)?;
                 }
@@ -142,7 +142,11 @@ fn write_evaluations(output: &mut impl Write, log: &[EvaluationEntry]) -> io::Re
             evaluation, current_fx, best_fx
         )?;
         for item in custom {
-            write!(output, ",{:+1.5e}", item.value)?;
+            if item.value.is_some() {
+                write!(output, ",{:+1.5e}", item.value.unwrap())?;
+            } else if item.solutions.is_some() {
+                write!(output, ",{:?}", item.solutions.as_ref().unwrap())?;
+            }
         }
         writeln!(output)?;
     }
@@ -155,16 +159,16 @@ fn write_iterations(output: &mut impl Write, log: &[IterationEntry]) -> io::Resu
         let &IterationEntry {
             iteration,
             best_fx,
-            diversity,
+            evaluation,
             ref custom,
         } = entry;
-        write!(
-            output,
-            "{},{:+1.5e},{:+1.5e}",
-            iteration, best_fx, diversity
-        )?;
+        write!(output, "{},{:+1.5e},{}", iteration, evaluation, best_fx)?;
         for item in custom {
-            write!(output, ",{:+1.5e}", item.value)?;
+            if item.value.is_some() {
+                write!(output, ",{:+1.5e}", item.value.unwrap())?;
+            } else if item.solutions.is_some() {
+                write!(output, ",{:?}", item.solutions.as_ref().unwrap())?;
+            }
         }
         writeln!(output)?;
     }

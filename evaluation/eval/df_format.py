@@ -3,8 +3,8 @@ import pandas as pd
 __all__ = ["add_missing_values"]
 
 
-# add missing values to dataframe when data is logged on event (mostly evaluations)
 def add_missing_values(df, column):
+    """Add missing values to dataframe when data is logged on event (mostly evaluations)"""
     # gather all logged on event numbers
     loe_numbers = sorted(df[column].unique())
     loe_numbers = pd.DataFrame(loe_numbers, columns=[column])

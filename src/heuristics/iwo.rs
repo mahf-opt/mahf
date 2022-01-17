@@ -40,12 +40,12 @@ where
             min_offspring: min_number_of_seeds,
             max_offspring: max_number_of_seeds,
         },
-        generation::AdaptiveDeviationDelta {
+        generation::IWOAdaptiveDeviationDelta {
             initial_deviation,
             final_deviation,
             modulation_index,
         },
-        replacement::Fittest {
+        replacement::MuPlusLambda {
             max_population_size,
         },
         termination::FixedIterations { max_iterations },
