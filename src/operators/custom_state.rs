@@ -15,6 +15,14 @@ pub struct PsoState {
 }
 impl CustomState for PsoState {}
 
+/// State required for Elitism.
+///
+/// For preserving n elitist individuals.
+pub struct ElitismState {
+    pub elitists: Vec<Individual>,
+}
+impl CustomState for ElitismState {}
+
 // Custom States for Metrics and Logging //
 
 /// State for logging/tracking population diversity
