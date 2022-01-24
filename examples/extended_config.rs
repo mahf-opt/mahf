@@ -42,13 +42,13 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            Some(postprocess::FloatVectorDiversity),
+            Some(postprocess::Elitism),
             selection::RouletteWheel { offspring: 25 },
             generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
-            Some(postprocess::FloatVectorDiversity),
+            Some(postprocess::Elitism),
             termination::FixedIterations {
                 max_iterations: 500,
             },
