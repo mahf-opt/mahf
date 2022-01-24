@@ -9,6 +9,7 @@ members = ["param-study"]
 
 [dependencies]
 anyhow = "1.0.51"
+coco-rs = "0.4"
 embed-doc-image = "0.1.4"
 erased-serde = "0.3.16"
 float_eq = "0.7.0"
@@ -22,8 +23,7 @@ rand_distr = "0.4.2"
 ron = "0.7.0"
 rprompt = "1.0.5"
 ryu = "1.0.9"
-serde = { version = "1.0.131", features = ["derive"] }
-coco-rs = "0.3"
+serde = {version = "1.0.131", features = ["derive"]}
 
 [dev-dependencies]
 proptest = "1.0.0"
