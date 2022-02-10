@@ -97,6 +97,19 @@ pub trait Replacement: Component {
 }
 erased_serde::serialize_trait_object!(Replacement);
 
+/// Exchanges individuals between population and archive after replacement.
+pub trait Archiving<P: Problem>: Component {
+    fn archive(
+        &self,
+        state: &mut State,
+        rng: &mut Random,
+        _problem: &P,
+        population: &mut Vec<Individual>,
+        offspring: &mut Vec<Individual>,
+    );
+}
+erased_serde::serialize_trait_object!(<P> Archiving<P>);
+
 /// Decides when to terminate.
 pub trait Termination: Component {
     fn terminate(&self, state: &mut State) -> bool;

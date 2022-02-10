@@ -172,18 +172,17 @@ where
     }
 }
 
-
 /// Postprocess procedure for preserving elitists
 ///
 /// Currently only for VectorProblem
 #[derive(Debug, serde::Serialize)]
 pub struct Elitism {
-    n_elitists: usize,
+    pub n_elitists: usize,
 }
 
 impl<P> Postprocess<P> for Elitism
-    where
-        P: Problem,
+where
+    P: Problem,
 {
     fn postprocess(
         &self,
@@ -193,22 +192,16 @@ impl<P> Postprocess<P> for Elitism
         population: &[Individual],
     ) {
         if !state.custom.has::<ElitismState>() {
-            state.custom.insert(ElitismState {
-                elitists: vec![],
-            });
+            state.custom.insert(ElitismState { elitists: vec![] });
         }
         let elitism_state = state.custom.get_mut::<ElitismState>();
-
-        // after initialisation, get first set of elitists from population
-        if elitism_state.elitists.is_empty() {
-            let mut pop = population.clone();
-            elitism_state.elitists = pop.sort_unstable_by_key(Individual::fitness).truncate(self.n_elitists);
-        // after replacement, add elitists to population and get new elitists from all
-        } else {
-            population.extend_from_slice(&elitism_state.elitists);
-            let mut pop = population.clone();
-            elitism_state.elitists = pop.sort_unstable_by_key(Individual::fitness).truncate(self.n_elitists);
-        }
-
+        let mut pop: Vec<Individual> = population
+            .iter()
+            .map(Individual::clone::<P::Encoding>)
+            .collect();
+        pop.sort_unstable_by_key(|i| i.fitness());
+        pop.truncate(self.n_elitists);
+        elitism_state.elitists = pop;
+        assert_eq!(state.best_so_far, elitism_state.elitists[0].fitness());
     }
 }

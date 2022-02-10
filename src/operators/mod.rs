@@ -1,5 +1,6 @@
 //! Implementations of [crate::framework::components].
 
+pub mod archive;
 pub mod custom_state;
 pub mod generation;
 pub mod initialization;
