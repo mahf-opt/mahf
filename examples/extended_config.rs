@@ -25,7 +25,7 @@ static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
     //BenchmarkFunction::ackley,
 ];
 static DIMENSIONS: &[usize] = &[10]; //, 20, 30
-static RUNS: u32 = 5;
+static RUNS: u32 = 1;
 
 //                           //
 //     Custom Heuristic      //
@@ -42,16 +42,15 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            Some(postprocess::Elitism),
+            Some(postprocess::Elitism { n_elitists: 1 }),
             selection::RouletteWheel { offspring: 25 },
             generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
-            Some(postprocess::Elitism),
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
+            Some(archive::Elitists {}),
+            Some(postprocess::Elitism { n_elitists: 1 }),
+            termination::FixedIterations { max_iterations: 50 },
         )
     }
 }

@@ -41,6 +41,7 @@ pub fn run<P: Problem>(
         generation,
         generation_scheduler,
         replacement,
+        archiving,
         post_replacement,
         termination,
     } = components;
@@ -110,6 +111,11 @@ pub fn run<P: Problem>(
 
         // Replancement + Update
         replacement.replace(state, rng, population, evaluated_offspring);
+
+        // Archiving
+        if let Some(archiving) = archiving {
+            archiving.archive(state, rng, problem, population, evaluated_offspring);
+        }
 
         if let Some(post_replacement) = post_replacement {
             post_replacement.postprocess(state, problem, rng, population);
