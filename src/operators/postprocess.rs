@@ -22,9 +22,9 @@ where
         _problem: &P,
         _rng: &mut Random,
         _population: &[Individual],
-    ) {}
+    ) {
+    }
 }
-
 
 // Post-Initialisation Strategies //
 
