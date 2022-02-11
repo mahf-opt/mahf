@@ -42,14 +42,14 @@ mod heuristics {
             initialization::RandomSpread {
                 initial_population_size: 25,
             },
-            Some(postprocess::Elitism { n_elitists: 1 }),
+            Some(postprocess::None),
             selection::RouletteWheel { offspring: 25 },
             generation::UniformCrossover { pc: 0.8 },
             replacement::Generational {
                 max_population_size: 25,
             },
-            Some(archive::Elitists {}),
-            Some(postprocess::Elitism { n_elitists: 1 }),
+            Some(archive::Elitists { n_elitists: 1 }),
+            Some(postprocess::None),
             termination::FixedIterations { max_iterations: 50 },
         )
     }

@@ -28,7 +28,9 @@ where
 
 /// Adds elitists after replacement
 #[derive(Serialize, Deserialize)]
-pub struct Elitists {}
+pub struct Elitists {
+    pub n_elitists: usize,
+}
 
 impl<P> Archiving<P> for Elitists
 where
@@ -42,13 +44,23 @@ where
         population: &mut Vec<Individual>,
         _offspring: &mut Vec<Individual>,
     ) {
-        if state.custom.has::<ElitismState>() {
-            let elitism_state = state.custom.get_mut::<ElitismState>();
-            for elitist in elitism_state.elitists.iter() {
-                if population.iter().all(|ind| ind != elitist) {
-                    population.push(elitist.clone());
-                }
+        if !state.custom.has::<ElitismState>() {
+            state.custom.insert(ElitismState { elitists: vec![] });
+        }
+        let elitism_state = state.custom.get_mut::<ElitismState>();
+
+        for elitist in elitism_state.elitists.iter() {
+            if population.iter().all(|ind| ind != elitist) {
+                population.push(elitist.clone());
             }
         }
+
+        let mut pop = population.iter().collect::<Vec<&Individual>>();
+        pop.sort_unstable_by_key(|i| i.fitness());
+        pop.truncate(self.n_elitists);
+        let elitists = pop.into_iter().map(Individual::clone).collect();
+        elitism_state.elitists = elitists;
+
+        assert_eq!(state.best_so_far, elitism_state.elitists[0].fitness());
     }
 }
