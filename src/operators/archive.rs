@@ -55,7 +55,7 @@ where
                             .ne((elitist.solution::<Vec<f64>>()).iter())
                     })
                 {
-                    population.push(elitist.clone::<P::Encoding>());
+                    population.push(elitist.clone());
                 }
             }
         }

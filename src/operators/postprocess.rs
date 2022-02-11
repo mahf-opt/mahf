@@ -43,13 +43,13 @@ where
 
         let bests = population
             .iter()
-            .map(Individual::clone::<Vec<f64>>)
+            .map(Individual::clone)
             .collect::<Vec<Individual>>();
 
         let global_best = bests
             .iter()
             .min_by_key(|i| Individual::fitness(i))
-            .map(Individual::clone::<Vec<f64>>)
+            .map(Individual::clone)
             .unwrap();
 
         state.custom.insert(PsoState {
@@ -83,10 +83,10 @@ where
 
         for (i, individual) in population.iter().enumerate() {
             if pso_state.bests[i].fitness() > individual.fitness() {
-                pso_state.bests[i] = individual.clone::<Vec<f64>>();
+                pso_state.bests[i] = individual.clone();
 
                 if pso_state.global_best.fitness() > individual.fitness() {
-                    pso_state.global_best = individual.clone::<Vec<f64>>();
+                    pso_state.global_best = individual.clone();
                 }
             }
         }
@@ -195,10 +195,7 @@ where
             state.custom.insert(ElitismState { elitists: vec![] });
         }
         let elitism_state = state.custom.get_mut::<ElitismState>();
-        let mut pop: Vec<Individual> = population
-            .iter()
-            .map(Individual::clone::<P::Encoding>)
-            .collect();
+        let mut pop: Vec<Individual> = population.iter().map(Individual::clone).collect();
         pop.sort_unstable_by_key(|i| i.fitness());
         pop.truncate(self.n_elitists);
         elitism_state.elitists = pop;
