@@ -16,7 +16,7 @@ pub struct Optimum<S> {
 }
 
 pub trait Problem {
-    type Encoding: Any + Clone;
+    type Encoding: Any + Clone + PartialEq;
 
     fn evaluate(&self, solution: &Self::Encoding) -> f64;
 
