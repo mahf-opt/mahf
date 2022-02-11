@@ -65,7 +65,7 @@ pub fn run<P: Problem>(
         post_initialization.postprocess(state, problem, rng, population);
     }
 
-    let mut best: Option<Individual> = find_best(population).map(Individual::clone::<P::Encoding>);
+    let mut best: Option<Individual> = find_best(population).map(Individual::clone);
 
     // Loop until Termination
     loop {
@@ -104,7 +104,7 @@ pub fn run<P: Problem>(
         evaluator.evaluate(state, problem, offspring, evaluated_offspring);
         for evaluated in evaluated_offspring.iter() {
             if evaluated.fitness() < best.as_ref().map(Individual::fitness).unwrap_or_default() {
-                best = Some(evaluated.clone::<P::Encoding>());
+                best = Some(evaluated.clone());
             }
             state.log_evaluation(logger, evaluated.fitness());
         }

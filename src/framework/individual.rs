@@ -5,21 +5,23 @@ use std::any::Any;
 pub struct Individual {
     solution: Box<dyn Any>,
     fitness: Fitness,
+    clone: fn(&Box<dyn Any>) -> Box<dyn Any>,
 }
 
 impl Individual {
     /// Constructs a new `Individual`.
-    pub fn new(solution: Box<dyn Any>, fitness: Fitness) -> Self {
-        Individual { solution, fitness }
+    pub fn new<T: Any + Clone>(solution: T, fitness: Fitness) -> Self {
+        let solution = Box::new(solution);
+        let clone  = T::typed_clone;
+        Individual { solution, fitness, clone }
     }
 
     /// Construct a pseudo individual.
     ///
     /// Should only be used for testing.
     pub fn new_test_unit(fitness: f64) -> Self {
-        let solution = Box::new(());
         let fitness = Fitness::try_from(fitness).unwrap();
-        Individual { solution, fitness }
+        Individual::new((), fitness)
     }
 
     /// Returns the individuals solution.
@@ -42,12 +44,20 @@ impl Individual {
     pub fn fitness(&self) -> Fitness {
         self.fitness
     }
+}
 
-    #[allow(clippy::should_implement_trait)]
-    pub fn clone<E: Any + Clone>(&self) -> Self {
-        Individual {
-            solution: Box::new(self.solution::<E>().clone()),
-            fitness: self.fitness(),
-        }
+impl Clone for Individual {
+    fn clone(&self) -> Self {
+        Individual { solution: (self.clone)(&self.solution), fitness: self.fitness, clone: self.clone }
+    }
+}
+
+trait TypedClone {
+    fn typed_clone(this: &Box<dyn Any>) -> Box<dyn Any>;
+}
+impl<T> TypedClone for T where T: Any + Clone {
+    fn typed_clone(this: &Box<dyn Any>) -> Box<dyn Any> {
+        let this: &T = this.downcast_ref().unwrap();
+        Box::new(this.clone())
     }
 }
