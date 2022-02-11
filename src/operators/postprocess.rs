@@ -1,7 +1,7 @@
 //! Postprocess variants
 //!
 
-use crate::operators::custom_state::{DiversityState, ElitismState, PopulationState, PsoState};
+use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
 use crate::problems::VectorProblem;
 use crate::{
     framework::{components::Postprocess, Individual, State},
@@ -9,6 +9,22 @@ use crate::{
     random::Random,
 };
 use rand::Rng;
+
+#[derive(Debug, serde::Serialize)]
+pub struct None;
+impl<P> Postprocess<P> for None
+where
+    P: Problem,
+{
+    fn postprocess(
+        &self,
+        _state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _population: &[Individual],
+    ) {}
+}
+
 
 // Post-Initialisation Strategies //
 
@@ -169,36 +185,5 @@ where
             .map(|i| i.solution::<Vec<f64>>())
             .cloned()
             .collect();
-    }
-}
-
-/// Postprocess procedure for preserving elitists
-///
-/// Currently only for VectorProblem
-#[derive(Debug, serde::Serialize)]
-pub struct Elitism {
-    pub n_elitists: usize,
-}
-
-impl<P> Postprocess<P> for Elitism
-where
-    P: Problem,
-{
-    fn postprocess(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        if !state.custom.has::<ElitismState>() {
-            state.custom.insert(ElitismState { elitists: vec![] });
-        }
-        let elitism_state = state.custom.get_mut::<ElitismState>();
-        let mut pop: Vec<Individual> = population.iter().map(Individual::clone).collect();
-        pop.sort_unstable_by_key(|i| i.fitness());
-        pop.truncate(self.n_elitists);
-        elitism_state.elitists = pop;
-        assert_eq!(state.best_so_far, elitism_state.elitists[0].fitness());
     }
 }
