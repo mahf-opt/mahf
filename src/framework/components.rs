@@ -118,6 +118,16 @@ erased_serde::serialize_trait_object!(Termination);
 
 /// Can be inserted between steps.
 pub trait Postprocess<P: Problem>: Component {
+    /// Called exactly once.
+    fn initialize(
+        &self,
+        state: &mut State,
+        problem: &P,
+        rng: &mut Random,
+        population: &[Individual],
+    );
+
+    /// Called after initialization and every replacement.
     fn postprocess(
         &self,
         state: &mut State,

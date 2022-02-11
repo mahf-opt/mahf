@@ -16,6 +16,15 @@ impl<P> Postprocess<P> for None
 where
     P: Problem,
 {
+    fn initialize(
+        &self,
+        _state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _population: &[Individual],
+    ) {
+    }
+
     fn postprocess(
         &self,
         _state: &mut State,
@@ -26,21 +35,19 @@ where
     }
 }
 
-// Post-Initialisation Strategies //
-
-/// PostInitialisation for PSO.
+/// PsoPostprocess for PSO.
 ///
-/// Provides initial PsoState by calculating initial velocities, setting the own best and global best.
+/// Updates best found solutions of particles and global best in PsoState.
 #[derive(Debug, serde::Serialize)]
-pub struct PsoPostInitialization {
+pub struct PsoPostprocess {
     pub v_max: f64,
 }
 
-impl<P> Postprocess<P> for PsoPostInitialization
+impl<P> Postprocess<P> for PsoPostprocess
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
-    fn postprocess(
+    fn initialize(
         &self,
         state: &mut State,
         problem: &P,
@@ -74,20 +81,7 @@ where
             global_best,
         });
     }
-}
 
-// Post-Replacement Strategies //
-
-/// PostReplacement for PSO.
-///
-/// Updates best found solutions of particles and global best in PsoState.
-#[derive(Debug, serde::Serialize)]
-pub struct PsoPostReplacement;
-
-impl<P> Postprocess<P> for PsoPostReplacement
-where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-{
     fn postprocess(
         &self,
         state: &mut State,
@@ -121,6 +115,16 @@ impl<P> Postprocess<P> for FloatVectorDiversity
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
 {
+    fn initialize(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _population: &[Individual],
+    ) {
+        state.custom.insert(DiversityState { diversity: 0.0 });
+    }
+
     fn postprocess(
         &self,
         state: &mut State,
@@ -128,10 +132,6 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        if !state.custom.has::<DiversityState>() {
-            state.custom.insert(DiversityState { diversity: 0.0 });
-        }
-
         let diversity_state = state.custom.get_mut::<DiversityState>();
 
         if population.is_empty() {
@@ -166,6 +166,18 @@ impl<P> Postprocess<P> for FloatPopulation
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
 {
+    fn initialize(
+        &self,
+        state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _population: &[Individual],
+    ) {
+        state.custom.insert(PopulationState {
+            current_pop: vec![],
+        });
+    }
+
     fn postprocess(
         &self,
         state: &mut State,
@@ -173,11 +185,6 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        if !state.custom.has::<PopulationState>() {
-            state.custom.insert(PopulationState {
-                current_pop: vec![],
-            });
-        }
         let population_state = state.custom.get_mut::<PopulationState>();
 
         population_state.current_pop = population

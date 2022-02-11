@@ -23,7 +23,6 @@ pub struct SerializedComponent {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct SerializedConfiguration {
     pub initialization: SerializedComponent,
-    pub post_initialization: SerializedComponent,
     pub selection: SerializedComponent,
     pub generation: SerializedComponent,
     pub generation_scheduler: SerializedComponent,
