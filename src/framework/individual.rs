@@ -6,14 +6,21 @@ pub struct Individual {
     solution: Box<dyn Any>,
     fitness: Fitness,
     clone: fn(&Box<dyn Any>) -> Box<dyn Any>,
+    partial_eq: fn(&Box<dyn Any>, &Box<dyn Any>) -> bool,
 }
 
 impl Individual {
     /// Constructs a new `Individual`.
-    pub fn new<T: Any + Clone>(solution: T, fitness: Fitness) -> Self {
+    pub fn new<T: Any + Clone + PartialEq>(solution: T, fitness: Fitness) -> Self {
         let solution = Box::new(solution);
-        let clone  = T::typed_clone;
-        Individual { solution, fitness, clone }
+        let clone = T::typed_clone;
+        let partial_eq = T::typed_partial_eq;
+        Individual {
+            solution,
+            fitness,
+            clone,
+            partial_eq,
+        }
     }
 
     /// Construct a pseudo individual.
@@ -48,16 +55,44 @@ impl Individual {
 
 impl Clone for Individual {
     fn clone(&self) -> Self {
-        Individual { solution: (self.clone)(&self.solution), fitness: self.fitness, clone: self.clone }
+        Individual {
+            solution: (self.clone)(&self.solution),
+            fitness: self.fitness,
+            clone: self.clone,
+            partial_eq: self.partial_eq,
+        }
+    }
+}
+
+impl PartialEq for Individual {
+    fn eq(&self, other: &Self) -> bool {
+        self.fitness == other.fitness && (self.partial_eq)(&self.solution, &other.solution)
     }
 }
 
 trait TypedClone {
     fn typed_clone(this: &Box<dyn Any>) -> Box<dyn Any>;
 }
-impl<T> TypedClone for T where T: Any + Clone {
+impl<T> TypedClone for T
+where
+    T: Any + Clone,
+{
     fn typed_clone(this: &Box<dyn Any>) -> Box<dyn Any> {
         let this: &T = this.downcast_ref().unwrap();
         Box::new(this.clone())
+    }
+}
+
+trait TypedPartialEq {
+    fn typed_partial_eq(this: &Box<dyn Any>, other: &Box<dyn Any>) -> bool;
+}
+impl<T> TypedPartialEq for T
+where
+    T: Any + PartialEq,
+{
+    fn typed_partial_eq(this: &Box<dyn Any>, other: &Box<dyn Any>) -> bool {
+        let this: &T = this.downcast_ref().unwrap();
+        let other: &T = other.downcast_ref().unwrap();
+        this == other
     }
 }
