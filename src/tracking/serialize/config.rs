@@ -289,7 +289,7 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
             "generation" => self.config.generation = component,
             "generation_scheduler" => self.config.generation_scheduler = component,
             "replacement" => self.config.replacement = component,
-            "archiving" => self.config.archive = component,
+            "archiving" => self.config.archiving = component,
             "termination" => self.config.termination = component,
             "post_initialization" => self.config.post_initialization = component,
             "post_replacement" => self.config.post_replacement = component,
