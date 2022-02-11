@@ -27,7 +27,6 @@ where
 }
 
 /// Adds elitists after replacement
-//TODO: Make elitism problem-independent!
 #[derive(Serialize, Deserialize)]
 pub struct Elitists {}
 
@@ -46,15 +45,7 @@ where
         if state.custom.has::<ElitismState>() {
             let elitism_state = state.custom.get_mut::<ElitismState>();
             for elitist in elitism_state.elitists.iter() {
-                if population
-                    .iter()
-                    .all(|ind| ind.fitness() != elitist.fitness())
-                    && population.iter().all(|ind| {
-                        (ind.solution::<Vec<f64>>())
-                            .iter()
-                            .ne((elitist.solution::<Vec<f64>>()).iter())
-                    })
-                {
+                if population.iter().all(|ind| ind != elitist) {
                     population.push(elitist.clone());
                 }
             }
