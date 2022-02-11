@@ -10,10 +10,6 @@ pub struct Configuration<P: 'static> {
     #[serde(with = "erased_serde")]
     pub initialization: Box<dyn Initialization<P>>,
 
-    /// Initializes (custom) state.
-    #[serde(with = "erased_serde")]
-    pub post_initialization: Option<Box<dyn Postprocess<P>>>,
-
     /// Selects individuals from the population.
     #[serde(with = "erased_serde")]
     pub selection: Box<dyn Selection>,
@@ -53,7 +49,6 @@ impl<P: Problem> Configuration<P> {
     ) -> Self {
         Configuration {
             initialization: Box::new(initialization),
-            post_initialization: None,
             selection: Box::new(selection),
             generation: vec![Box::new(generation)],
             generation_scheduler: Box::new(crate::operators::schedulers::AllInOrder),
@@ -66,7 +61,6 @@ impl<P: Problem> Configuration<P> {
 
     pub fn new_extended(
         initialization: impl Initialization<P> + 'static,
-        post_initialization: Option<impl Postprocess<P> + 'static>,
         selection: impl Selection + 'static,
         generation: impl Generation<P> + 'static,
         replacement: impl Replacement + 'static,
@@ -74,13 +68,10 @@ impl<P: Problem> Configuration<P> {
         post_replacement: Option<impl Postprocess<P> + 'static>,
         termination: impl Termination + 'static,
     ) -> Self {
-        let post_initialization =
-            post_initialization.map::<Box<dyn Postprocess<P>>, _>(|c| Box::new(c));
         let post_replacement = post_replacement.map::<Box<dyn Postprocess<P>>, _>(|c| Box::new(c));
         let archiving = archiving.map::<Box<dyn Archiving<P>>, _>(|c| Box::new(c));
         Configuration {
             initialization: Box::new(initialization),
-            post_initialization,
             selection: Box::new(selection),
             generation: vec![Box::new(generation)],
             generation_scheduler: Box::new(crate::operators::schedulers::AllInOrder),

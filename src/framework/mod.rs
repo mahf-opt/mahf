@@ -36,7 +36,6 @@ pub fn run<P: Problem>(
     let rng = &mut rng.unwrap_or_default();
     let Configuration {
         initialization,
-        post_initialization,
         selection,
         generation,
         generation_scheduler,
@@ -61,8 +60,9 @@ pub fn run<P: Problem>(
         state.log_evaluation(logger, evaluated.fitness());
     }
 
-    if let Some(post_initialization) = post_initialization {
-        post_initialization.postprocess(state, problem, rng, population);
+    if let Some(post_replacement) = post_replacement {
+        post_replacement.initialize(state, problem, rng, population);
+        post_replacement.postprocess(state, problem, rng, population);
     }
 
     let mut best: Option<Individual> = find_best(population).map(Individual::clone);
