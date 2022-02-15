@@ -50,7 +50,7 @@ mod heuristics {
             },
             Some(archive::Elitists { n_elitists: 1 }),
             Some(postprocess::FloatVectorDiversity { measure: DW }),
-            termination::FixedIterations { max_iterations: 50 },
+            termination::FixedIterations { max_iterations: 100 },
         )
     }
 }

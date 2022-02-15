@@ -169,10 +169,11 @@ where
                 / (d as f64),
             DiversityMeasure::PW => {
                 let mut sum = 0.0;
-                for i in 1..=n as usize {
+                let solutions: Vec<Vec<f64>> = iter_solutions().map(|i| i.clone()).collect();
+                for i in 1..n as usize {
                     for j in 0..=i - 1 {
                         sum += (0..d).into_iter()
-                            .map(|k| (iter_solutions().nth(i).unwrap()[k] - iter_solutions().nth(j).unwrap()[k].powi(2)))
+                            .map(|k| (solutions[i][k] - solutions[j][k]).powi(2))
                             .sum::<f64>();
                         diversity_state.diversity += sum.sqrt();
                     }
