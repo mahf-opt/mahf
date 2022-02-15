@@ -79,7 +79,8 @@ where
 {
     fn typed_clone(this: &Box<dyn Any>) -> Box<dyn Any> {
         let this: &T = this.downcast_ref().unwrap();
-        Box::new(this.clone())
+        let clone: Self = this.clone();
+        Box::new(clone)
     }
 }
 
