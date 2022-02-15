@@ -49,9 +49,9 @@ where
         }
         let elitism_state = state.custom.get_mut::<ElitismState>();
 
-        for elitist in elitism_state.elitists.iter() {
-            if population.iter().all(|ind| ind != elitist) {
-                population.push(elitist.clone());
+        for elitist in elitism_state.elitists.drain(..) {
+            if population.iter().all(|ind| ind != &elitist) {
+                population.push(elitist);
             }
         }
 
