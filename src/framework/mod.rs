@@ -59,6 +59,10 @@ pub fn run<P: Problem>(
     for evaluated in population.iter() {
         state.log_evaluation(logger, evaluated.fitness());
     }
+    
+    if let Some(archiving) = archiving {
+        archiving.archive(state, rng, problem, population, &mut Vec::new());
+    }
 
     if let Some(post_replacement) = post_replacement {
         post_replacement.initialize(state, problem, rng, population);
