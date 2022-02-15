@@ -161,8 +161,7 @@ impl<P: Problem> Evaluator<P> for SimpleEvaluator {
     ) {
         for solution in offspring.drain(..) {
             let fitness = Fitness::try_from(problem.evaluate(&solution)).unwrap();
-            let solution = Box::new(solution);
-            evaluated.push(Individual::new(solution, fitness));
+            evaluated.push(Individual::new::<P::Encoding>(solution, fitness));
         }
     }
 }
