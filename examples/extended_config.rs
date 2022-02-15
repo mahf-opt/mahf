@@ -36,6 +36,7 @@ type ConfigBuilder = fn() -> Configuration<BenchmarkFunction>;
 #[allow(dead_code)]
 mod heuristics {
     use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
+    use mahf::operators::postprocess::DiversityMeasure::*;
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
         Configuration::new_extended(
@@ -48,7 +49,7 @@ mod heuristics {
                 max_population_size: 25,
             },
             Some(archive::Elitists { n_elitists: 1 }),
-            Some(postprocess::None),
+            Some(postprocess::FloatVectorDiversity { measure: DW }),
             termination::FixedIterations { max_iterations: 50 },
         )
     }

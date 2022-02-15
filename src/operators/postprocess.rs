@@ -108,8 +108,22 @@ where
 /// Postprocess procedure for tracking population diversity
 ///
 /// Currently only for VectorProblem
+///
+/// Measures can be chosen between dimension-wise (DW), mean of pairwise distance between solutions (PW),
+/// average standard deviation of each position (also "true diversity", TD), and distance to average point (DTAP).
+/// All measures are normalized with the maximum diversity found so far.
+#[derive(Clone, Debug, serde::Serialize)]
+pub enum DiversityMeasure {
+    DW,
+    PW,
+    TD,
+    DTAP,
+}
+
 #[derive(Debug, serde::Serialize)]
-pub struct FloatVectorDiversity;
+pub struct FloatVectorDiversity {
+    pub measure: DiversityMeasure,
+}
 
 impl<P> Postprocess<P> for FloatVectorDiversity
 where
@@ -122,7 +136,7 @@ where
         _rng: &mut Random,
         _population: &[Individual],
     ) {
-        state.custom.insert(DiversityState { diversity: 0.0 });
+        state.custom.insert(DiversityState { diversity: 0.0, max_div: 0.0 });
     }
 
     fn postprocess(
@@ -139,19 +153,63 @@ where
             return;
         }
 
-        let m = population.len() as f64;
+        let n = population.len() as f64;
         let d = problem.dimension();
         let iter_solutions = || population.iter().map(|i| i.solution::<Vec<f64>>());
 
-        //TODO: implement different diversity metrics
-        diversity_state.diversity = (0..d)
+        let selected_measure = self.measure.clone();
+        match selected_measure {
+            DiversityMeasure::DW => diversity_state.diversity = (0..d)
+                .into_iter()
+                .map(|k| {
+                    let xk = iter_solutions().map(|s| s[k]).sum::<f64>() / n;
+                    iter_solutions().map(|s| (s[k] - xk).abs()).sum::<f64>() / n
+                })
+                .sum::<f64>()
+                / (d as f64),
+            DiversityMeasure::PW => {
+                let mut sum = 0.0;
+                for i in 1..=n as usize {
+                    for j in 0..=i - 1 {
+                        sum += (0..d).into_iter()
+                            .map(|k| (iter_solutions().nth(i).unwrap()[k] - iter_solutions().nth(j).unwrap()[k].powi(2)))
+                            .sum::<f64>();
+                        diversity_state.diversity += sum.sqrt();
+                    }
+                }
+                diversity_state.diversity = diversity_state.diversity * 2.0 / (n * (n - 1.0));
+            },
+            DiversityMeasure::TD => {
+            diversity_state.diversity = (0..d)
             .into_iter()
-            .map(|j| {
-                let xj = iter_solutions().map(|s| s[j]).sum::<f64>() / m;
-                iter_solutions().map(|s| (s[j] - xj).abs()).sum::<f64>() / m
+            .map(|k|{
+                let xk = iter_solutions().map(|s| s[k]).sum::<f64>() / n;
+                let sum = iter_solutions().map(|i| i[k].powi(2)).sum::<f64>() / n;
+                sum - xk.powi(2)
             })
-            .sum::<f64>()
-            / (d as f64);
+                .sum::<f64>()
+                .sqrt()
+                / (d as f64)
+            },
+            DiversityMeasure::DTAP => {
+                let mut sum = 0.0;
+                for i in iter_solutions() {
+                    sum += (0..d).into_iter().map(|k| {
+                        let xk = iter_solutions().map(|s| s[k]).sum::<f64>() / n;
+                        (i[k] - xk).powi(2) }).sum::<f64>().sqrt();
+                }
+                diversity_state.diversity = sum / n;
+            },
+        }
+
+        // set new maximum diversity found so far
+        if diversity_state.diversity > diversity_state.max_div {
+            diversity_state.max_div = diversity_state.diversity
+        }
+
+        // normalize by division with maximum diversity
+        diversity_state.diversity = diversity_state.diversity / diversity_state.max_div;
+
     }
 }
 
