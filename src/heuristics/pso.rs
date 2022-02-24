@@ -26,8 +26,8 @@ where
         replacement::Generational {
             max_population_size: num_particles,
         },
-        Some(archive::None),
-        Some(postprocess::PsoPostprocess { v_max }),
+        archive::None,
+        postprocess::PsoPostprocess { v_max },
         termination::FixedIterations { max_iterations },
     )
 }

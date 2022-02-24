@@ -11,6 +11,20 @@ use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 
+#[derive(Serialize)]
+pub struct Noop;
+impl<P: Problem> Generation<P> for Noop {
+    fn generate(
+        &self,
+        _state: &mut State,
+        _problem: &P,
+        _rng: &mut Random,
+        _parents: &mut Vec<<P as Problem>::Encoding>,
+        _offspring: &mut Vec<<P as Problem>::Encoding>,
+    ) {
+    }
+}
+
 // Mutation-like Operators //
 
 /// Generates new random solutions in the search space.

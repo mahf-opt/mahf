@@ -7,6 +7,19 @@ use crate::{
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize)]
+pub struct Noop;
+impl Replacement for Noop {
+    fn replace(
+        &self,
+        _state: &mut State,
+        _rng: &mut Random,
+        _population: &mut Vec<Individual>,
+        _offspring: &mut Vec<Individual>,
+    ) {
+    }
+}
+
 /// Always keeps the fittest individuals.
 #[derive(Serialize, Deserialize)]
 pub struct MuPlusLambda {

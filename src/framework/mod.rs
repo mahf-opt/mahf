@@ -19,7 +19,7 @@ mod individual;
 pub use individual::Individual;
 
 mod config;
-pub use config::Configuration;
+pub use config::{Configuration};
 
 /// Run the provided [Configuration] in the framework.
 ///
@@ -117,13 +117,10 @@ pub fn run<P: Problem>(
         replacement.replace(state, rng, population, evaluated_offspring);
 
         // Archiving
-        if let Some(archiving) = archiving {
-            archiving.archive(state, rng, problem, population, evaluated_offspring);
-        }
+        archiving.archive(state, rng, problem, population, evaluated_offspring);
 
-        if let Some(post_replacement) = post_replacement {
-            post_replacement.postprocess(state, problem, rng, population);
-        }
+        // Postprocessing
+        post_replacement.postprocess(state, problem, rng, population);
 
         state.log_iteration(logger);
         if termination.terminate(state) {
