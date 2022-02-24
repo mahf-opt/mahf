@@ -208,20 +208,29 @@ impl Selection for RouletteWheel {
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
+        // find fitness max and min for normalization
         #[rustfmt::skip]
+            let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
+        #[rustfmt::skip]
+            let worst: f64 = population.iter().map(Individual::fitness).max().unwrap().into();
+        assert!(
+            worst.is_finite(),
+            "selection::FitnessProportional does not work with Inf fitness values"
+        );
+        #[rustfmt::skip]
+        // normalize fitness values
+        let normalized: Vec<f64> = population.iter().map(|i| (i.fitness().into() - best) / (worst - best)).collect();
         // calculate population fitness as sum of individuals' fitness
-        let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
+        let total: f64 = normalized.iter().map(|i| i).sum();
         // calculate weights for individuals (fitness / total fitness)
-        let weights: Vec<f64> = population
+        let weights: Vec<f64> = normalized
             .iter()
-            .map(|f| f.fitness().into() / total)
+            .map(|f| f / total)
             .collect();
-        // due to minimisation, lower fitness is better, so adapt weights; first sum
-        let weights_min_total: f64 = weights.iter().map(|w| 1.0 / w).sum();
-        // then all individual weights
+        // due to minimisation, lower fitness is better, so adapt weights
         let weights_min: Vec<f64> = weights
             .iter()
-            .map(|w| (1.0 / w) / weights_min_total)
+            .map(|&w| 1.0 - w)
             .collect();
         let wheel = WeightedIndex::new(weights_min).unwrap();
         for _ in 0..self.offspring {
@@ -263,32 +272,49 @@ impl Selection for StochasticUniversalSampling {
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
+        // find fitness max and min for normalization
         #[rustfmt::skip]
-        let total: f64 = population.iter().map(|i| i.fitness().into()).sum();
-        let weights: Vec<f64> = population
+            let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
+        #[rustfmt::skip]
+            let worst: f64 = population.iter().map(Individual::fitness).max().unwrap().into();
+        assert!(
+            worst.is_finite(),
+            "selection::FitnessProportional does not work with Inf fitness values"
+        );
+        #[rustfmt::skip]
+        // normalize fitness values
+        let normalized: Vec<f64> = population.iter().map(|i| (i.fitness().into() - best) / (worst - best)).collect();
+        // calculate population fitness as sum of individuals' fitness
+        let total: f64 = normalized.iter().map(|i| i).sum();
+        // calculate weights for individuals (fitness / total fitness)
+        let weights: Vec<f64> = normalized
             .iter()
-            .map(|f| f.fitness().into() / total)
+            .map(|f| f / total)
             .collect();
-        let weights_min_total: f64 = weights.iter().map(|w| 1.0 / w).sum();
+        // due to minimisation, lower fitness is better, so adapt weights
         let weights_min: Vec<f64> = weights
             .iter()
-            .map(|w| (1.0 / w) / weights_min_total)
+            .map(|&w| 1.0 - w)
             .collect();
 
-        let gap = 1.0 / self.offspring as f64;
-        let start = rng.gen_range(0.0..gap);
-        let mut distance = start * gap;
+        // calculate the distance between selection points and the random start point
+        let weights_total = weights_min.iter().map(|w| w).sum();
+        let gaps = weights_total / self.offspring as f64;
+        let start = rng.gen::<f64>() * gaps;
+        let mut distance = start;
 
+        // select the individuals for which the selection point falls within their fitness range
         let mut sum_weights = weights_min[0];
         let mut i: usize = 0;
-        while distance < 1.0 {
+        while distance < weights_total {
             while sum_weights < distance {
                 i += 1;
                 sum_weights += weights_min[i];
             }
             selection.push(&population[i]);
-            distance += gap;
+            distance += gaps;
         }
+        assert_eq!(selection.len(), self.offspring as usize)
     }
 }
 #[cfg(test)]
@@ -389,11 +415,10 @@ impl Selection for LinearRank {
             .map(|(i, f)| (i, f.fitness().into()))
             .collect();
 
-        // sort those by their fitness values
+        // sort those by their fitness values from worst to best
         weight_pos.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
-        // weights are new positions after sorting by fitness
+        // weights are new positions after sorting by fitness, worst has smallest weight
         let weights: Vec<usize> = weight_pos.iter().enumerate().map(|(i, _k)| 1 + i).collect();
-
         let wheel = WeightedIndex::new(&weights).unwrap();
         for _ in 0..self.offspring {
             // sample individuals by their ranks but select them from the initial population by the
@@ -447,9 +472,10 @@ impl Selection for ExponentialRank {
             .map(|(i, f)| (i, f.fitness().into()))
             .collect();
 
+        // sort according to fitness from worst to best
         ranking.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
 
-        // weigh ranking by exponential equation
+        // weight ranking by exponential equation, worst has smallest weight
         let weights: Vec<f64> = ranking
             .iter()
             .enumerate()
@@ -458,7 +484,7 @@ impl Selection for ExponentialRank {
                     * (self.base.powi((population.len() - i) as i32))
             })
             .collect();
-
+        println!("{:?}", weights);
         let wheel = WeightedIndex::new(&weights).unwrap();
         for _ in 0..self.offspring {
             let position = (ranking[wheel.sample(rng)]).0;

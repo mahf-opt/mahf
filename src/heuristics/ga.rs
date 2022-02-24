@@ -24,7 +24,7 @@ where
         initialization::RandomSpread {
             initial_population_size: population_size,
         },
-        selection::FullyRandom {
+        selection::RouletteWheel {
             offspring: population_size,
         },
         generation::UniformCrossover { pc },
