@@ -82,6 +82,7 @@ impl Selection for FullyRandom {
         for _ in 0..self.offspring {
             selection.push(population.choose(rng).unwrap());
         }
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
@@ -162,6 +163,7 @@ impl Selection for DeterministicFitnessProportional {
                 selection.push(ind);
             }
         }
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
@@ -236,6 +238,7 @@ impl Selection for RouletteWheel {
         for _ in 0..self.offspring {
             selection.push(&population[wheel.sample(rng)]);
         }
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
@@ -258,7 +261,8 @@ mod roulette_wheel {
 
 /// Selects `offspring` solutions using stochastic universal sampling.
 ///
-/// Solutions can be selected multiple times in a single iteration.
+/// Solutions can be selected multiple times in a single iteration. Population is not sorted by fitness,
+/// but individuals are weighted "in place".
 #[derive(Serialize, Deserialize)]
 pub struct StochasticUniversalSampling {
     /// Offspring per iteration.
@@ -314,7 +318,7 @@ impl Selection for StochasticUniversalSampling {
             selection.push(&population[i]);
             distance += gaps;
         }
-        assert_eq!(selection.len(), self.offspring as usize)
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
@@ -369,6 +373,7 @@ impl Selection for Tournament {
             // add winner (first) to selection
             selection.push(tournament[0]);
         }
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
@@ -426,6 +431,7 @@ impl Selection for LinearRank {
             let position = (weight_pos[wheel.sample(rng)]).0;
             selection.push(&population[position]);
         }
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
@@ -484,12 +490,12 @@ impl Selection for ExponentialRank {
                     * (self.base.powi((population.len() - i) as i32))
             })
             .collect();
-        println!("{:?}", weights);
         let wheel = WeightedIndex::new(&weights).unwrap();
         for _ in 0..self.offspring {
             let position = (ranking[wheel.sample(rng)]).0;
             selection.push(&population[position]);
         }
+        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]
