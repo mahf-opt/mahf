@@ -13,6 +13,11 @@ use std::cmp::max;
 
 #[derive(Serialize)]
 pub struct Noop;
+impl Noop {
+    pub fn new<P: Problem>() -> Box<dyn Generation<P>> {
+        Box::new(Self)
+    }
+}
 impl<P: Problem> Generation<P> for Noop {
     fn generate(
         &self,
@@ -30,6 +35,15 @@ impl<P: Problem> Generation<P> for Noop {
 /// Generates new random solutions in the search space.
 #[derive(Serialize)]
 pub struct RandomSpread;
+impl RandomSpread {
+    pub fn new<P, D>() -> Box<dyn Generation<P>>
+    where
+        D: SampleUniform + PartialOrd,
+        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+    {
+        Box::new(Self)
+    }
+}
 impl<P, D> Generation<P> for RandomSpread
 where
     D: SampleUniform + PartialOrd,
@@ -53,6 +67,14 @@ where
 /// Generates new random permutations.
 #[derive(Serialize)]
 pub struct RandomPermutation;
+impl RandomPermutation {
+    pub fn new<P>() -> Box<dyn Generation<P>>
+    where
+        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    {
+        Box::new(Self)
+    }
+}
 impl<P> Generation<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -80,6 +102,14 @@ where
 pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.
     pub deviation: f64,
+}
+impl FixedDeviationDelta {
+    pub fn new<P>(deviation: f64) -> Box<dyn Generation<P>>
+    where
+        P: Problem<Encoding = Vec<f64>>,
+    {
+        Box::new(Self { deviation })
+    }
 }
 impl<P> Generation<P> for FixedDeviationDelta
 where
@@ -123,6 +153,21 @@ pub struct IWOAdaptiveDeviationDelta {
     pub modulation_index: u32,
 }
 impl IWOAdaptiveDeviationDelta {
+    pub fn new<P>(
+        initial_deviation: f64,
+        final_deviation: f64,
+        modulation_index: u32,
+    ) -> Box<dyn Generation<P>>
+    where
+        P: Problem<Encoding = Vec<f64>>,
+    {
+        Box::new(Self {
+            initial_deviation,
+            final_deviation,
+            modulation_index,
+        })
+    }
+
     fn deviation(&self, progress: f64) -> f64 {
         self.final_deviation
             + (1.0 - progress).powi(self.modulation_index as i32)
@@ -647,7 +692,14 @@ pub struct PsoGeneration {
     pub c: f64,
     pub v_max: f64,
 }
-
+impl PsoGeneration {
+    pub fn new<P>(a: f64, b: f64, c: f64, v_max: f64) -> Box<dyn Generation<P>>
+    where
+        P: Problem<Encoding = Vec<f64>>,
+    {
+        Box::new(Self { a, b, c, v_max })
+    }
+}
 impl<P> Generation<P> for PsoGeneration
 where
     P: Problem<Encoding = Vec<f64>>,
@@ -778,6 +830,15 @@ mod npoint_crossover {
 pub struct UniformCrossover {
     /// Probability of recombining the solutions.
     pub pc: f64,
+}
+impl UniformCrossover {
+    pub fn new<P, D>(pc: f64) -> Box<dyn Generation<P>>
+    where
+        P: Problem<Encoding = Vec<D>>,
+        D: std::clone::Clone,
+    {
+        Box::new(Self { pc })
+    }
 }
 impl<P, D> Generation<P> for UniformCrossover
 where

@@ -1,8 +1,4 @@
-use crate::{
-    framework::components::*,
-    operators::*,
-    problems::Problem,
-};
+use crate::{framework::components::*, operators::*, problems::Problem};
 use serde::Serialize;
 
 /// A set of components, representing a heuristic.
@@ -49,7 +45,7 @@ impl<P: Problem> Default for Configuration<P> {
             initialization: Box::new(initialization::Noop),
             selection: Box::new(selection::None),
             generation: vec![Box::new(generation::Noop)],
-            generation_scheduler:  Box::new(schedulers::AllInOrder),
+            generation_scheduler: Box::new(schedulers::AllInOrder),
             replacement: Box::new(replacement::Noop),
             archiving: Box::new(archive::None),
             post_replacement: Box::new(postprocess::None),

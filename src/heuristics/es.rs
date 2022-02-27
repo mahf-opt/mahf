@@ -19,15 +19,12 @@ pub fn mu_plus_lambda<P>(
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    Configuration::new(
-        initialization::RandomSpread {
-            initial_population_size: population_size,
-        },
-        selection::FullyRandom { offspring: lambda },
-        generation::FixedDeviationDelta { deviation },
-        replacement::MuPlusLambda {
-            max_population_size: population_size,
-        },
-        termination::FixedIterations { max_iterations },
-    )
+    Configuration {
+        initialization: initialization::RandomSpread::new(population_size),
+        selection: selection::FullyRandom::new(lambda),
+        generation: vec![generation::FixedDeviationDelta::new(deviation)],
+        replacement: replacement::MuPlusLambda::new(population_size),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }

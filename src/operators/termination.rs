@@ -11,6 +11,11 @@ pub struct FixedIterations {
     /// Maximum number of iterations.
     pub max_iterations: u32,
 }
+impl FixedIterations {
+    pub fn new(max_iterations: u32) -> Box<dyn Termination> {
+        Box::new(Self { max_iterations })
+    }
+}
 impl Termination for FixedIterations {
     fn terminate(&self, state: &mut State) -> bool {
         state.progress = state.iterations as f64 / self.max_iterations as f64;

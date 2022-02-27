@@ -35,12 +35,7 @@ type ConfigBuilder = fn() -> Configuration<BenchmarkFunction>;
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{
-        framework::{Configuration},
-        operators::*,
-        problems::bmf::BenchmarkFunction,
-    };
-    use std::marker::PhantomData;
+    use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
         let initialization = initialization::RandomSpread {
@@ -57,11 +52,9 @@ mod heuristics {
         Configuration {
             initialization: Box::new(initialization),
             selection: Box::new(selection),
-            generation: vec![generation],
-            generation_scheduler: Box::new(generation_scheduler),
+            generation: vec![Box::new(generation)],
             replacement: Box::new(replacement),
             archiving: Box::new(archiving),
-            post_replacement: Box::new(post_replacement),
             termination: Box::new(termination),
             ..Configuration::default()
         }

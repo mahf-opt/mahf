@@ -23,20 +23,14 @@ pub fn ant_system(
     decay_coefficient: f64,
     max_iterations: u32,
 ) -> Configuration<SymmetricTsp> {
-    Configuration::new(
-        AcoInitialization { default_pheromones },
-        selection::FullyRandom { offspring: 0 },
-        AcoGeneration {
-            number_of_ants,
-            alpha,
-            beta,
-        },
-        AsReplacement {
-            evaporation,
-            decay_coefficient,
-        },
-        termination::FixedIterations { max_iterations },
-    )
+    Configuration {
+        initialization: AcoInitialization::new(default_pheromones),
+        selection: selection::FullyRandom::new(0),
+        generation: vec![AcoGeneration::new(number_of_ants, alpha, beta)],
+        replacement: AsReplacement::new(evaporation, decay_coefficient),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }
 
 /// Ant Colony Optimization - Ant System
@@ -58,21 +52,14 @@ pub fn min_max_ant_system(
         "min_pheromones must be less than max_pheromones"
     );
 
-    Configuration::new(
-        AcoInitialization { default_pheromones },
-        selection::FullyRandom { offspring: 0 },
-        AcoGeneration {
-            number_of_ants,
-            alpha,
-            beta,
-        },
-        MinMaxReplacement {
-            evaporation,
-            max_pheromones,
-            min_pheromones,
-        },
-        termination::FixedIterations { max_iterations },
-    )
+    Configuration {
+        initialization: AcoInitialization::new(default_pheromones),
+        selection: selection::FullyRandom::new(0),
+        generation: vec![AcoGeneration::new(number_of_ants, alpha, beta)],
+        replacement: MinMaxReplacement::new(evaporation, max_pheromones, min_pheromones),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }
 
 struct PheromoneMatrix {
@@ -149,6 +136,11 @@ impl MulAssign<f64> for PheromoneMatrix {
 pub struct AcoInitialization {
     pub default_pheromones: f64,
 }
+impl AcoInitialization {
+    pub fn new(default_pheromones: f64) -> Box<dyn Initialization<SymmetricTsp>> {
+        Box::new(Self { default_pheromones })
+    }
+}
 impl Initialization<SymmetricTsp> for AcoInitialization {
     fn initialize(
         &self,
@@ -169,6 +161,15 @@ pub struct AcoGeneration {
     pub number_of_ants: usize,
     pub alpha: f64,
     pub beta: f64,
+}
+impl AcoGeneration {
+    pub fn new(number_of_ants: usize, alpha: f64, beta: f64) -> Box<dyn Generation<SymmetricTsp>> {
+        Box::new(Self {
+            number_of_ants,
+            alpha,
+            beta,
+        })
+    }
 }
 impl Generation<SymmetricTsp> for AcoGeneration {
     fn generate(
@@ -230,6 +231,14 @@ pub struct AsReplacement {
     pub evaporation: f64,
     pub decay_coefficient: f64,
 }
+impl AsReplacement {
+    pub fn new(evaporation: f64, decay_coefficient: f64) -> Box<dyn Replacement> {
+        Box::new(Self {
+            evaporation,
+            decay_coefficient,
+        })
+    }
+}
 impl Replacement for AsReplacement {
     fn replace(
         &self,
@@ -261,6 +270,15 @@ pub struct MinMaxReplacement {
     pub evaporation: f64,
     pub max_pheromones: f64,
     pub min_pheromones: f64,
+}
+impl MinMaxReplacement {
+    pub fn new(evaporation: f64, max_pheromones: f64, min_pheromones: f64) -> Box<dyn Replacement> {
+        Box::new(Self {
+            evaporation,
+            max_pheromones,
+            min_pheromones,
+        })
+    }
 }
 impl Replacement for MinMaxReplacement {
     fn replace(
