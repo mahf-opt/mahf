@@ -12,6 +12,14 @@ use rand::Rng;
 
 #[derive(Debug, serde::Serialize)]
 pub struct None;
+impl None {
+    pub fn new<P>() -> Box<dyn Postprocess<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self)
+    }
+}
 impl<P> Postprocess<P> for None
 where
     P: Problem,

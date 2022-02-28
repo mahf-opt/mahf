@@ -3,6 +3,29 @@ use serde::Serialize;
 
 /// A set of components, representing a heuristic.
 ///
+/// While `generation_scheduler`, `archiving` and `post_replacement` can
+/// often be ommitet, the other components should always be specified.
+///
+/// A simple GA could look like this:
+/// ```
+///# use mahf::operators::*;
+///# use mahf::framework::Configuration;
+///# use mahf::problems::bmf::BenchmarkFunction;
+///# let config: Configuration<BenchmarkFunction> =
+/// Configuration {
+///     initialization: initialization::RandomSpread::new(25),
+///     selection: selection::RouletteWheel::new(25),
+///     generation: vec![
+///         generation::UniformCrossover::new(0.8),
+///         generation::FixedDeviationDelta::new(0.2),
+///     ],
+///     replacement: replacement::Generational::new(25),
+///     termination: termination::FixedIterations::new(500),
+///     ..Default::default()
+/// }
+///# ;
+/// ```
+///
 /// See [framework](crate::framework) documentation.
 #[derive(Serialize)]
 pub struct Configuration<P: 'static> {
@@ -42,14 +65,14 @@ pub struct Configuration<P: 'static> {
 impl<P: Problem> Default for Configuration<P> {
     fn default() -> Self {
         Self {
-            initialization: Box::new(initialization::Noop),
-            selection: Box::new(selection::None),
-            generation: vec![Box::new(generation::Noop)],
-            generation_scheduler: Box::new(schedulers::AllInOrder),
-            replacement: Box::new(replacement::Noop),
-            archiving: Box::new(archive::None),
-            post_replacement: Box::new(postprocess::None),
-            termination: Box::new(termination::FixedIterations { max_iterations: 0 }),
+            initialization: initialization::Noop::new(),
+            selection: selection::None::new(),
+            generation: vec![generation::Noop::new()],
+            generation_scheduler: schedulers::AllInOrder::new(),
+            replacement: replacement::Noop::new(),
+            archiving: archive::None::new(),
+            post_replacement: postprocess::None::new(),
+            termination: termination::Undefined::new(),
         }
     }
 }
