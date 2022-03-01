@@ -10,46 +10,36 @@ use crate::{
 pub fn local_search<P>(
     max_iterations: u32,
     n_neighbors: u32,
-    neighbors: impl Generation<P>,
+    neighbors: Box<dyn Generation<P>>,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    Configuration::new(
-        initialization::RandomSpread {
-            initial_population_size: 1,
-        },
-        selection::CopySingle {
-            offspring: n_neighbors,
-        },
-        neighbors,
-        replacement::MuPlusLambda {
-            max_population_size: 1,
-        },
-        termination::FixedIterations { max_iterations },
-    )
+    Configuration {
+        initialization: initialization::RandomSpread::new(1),
+        selection: selection::CopySingle::new(n_neighbors),
+        generation: vec![neighbors],
+        replacement: replacement::MuPlusLambda::new(1),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }
 
 /// Local Permutation Search
 pub fn local_permutation_search<P>(
     max_iterations: u32,
     n_neighbors: u32,
-    neighbors: impl Generation<P>,
+    neighbors: Box<dyn Generation<P>>,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    Configuration::new(
-        initialization::RandomPermutation {
-            initial_population_size: 1,
-        },
-        selection::CopySingle {
-            offspring: n_neighbors,
-        },
-        neighbors,
-        replacement::MuPlusLambda {
-            max_population_size: 1,
-        },
-        termination::FixedIterations { max_iterations },
-    )
+    Configuration {
+        initialization: initialization::RandomPermutation::new(1),
+        selection: selection::CopySingle::new(n_neighbors),
+        generation: vec![neighbors],
+        replacement: replacement::MuPlusLambda::new(1),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }

@@ -26,6 +26,8 @@ pub trait Component: Any + DynSerialize + Send + Sync {}
 impl<T> Component for T where T: Any + DynSerialize + Send + Sync {}
 
 /// Initializes the population.
+///
+/// See [crate::operators::initialization] for existing implementations.
 pub trait Initialization<P: Problem>: Component {
     fn initialize(
         &self,
@@ -38,6 +40,8 @@ pub trait Initialization<P: Problem>: Component {
 erased_serde::serialize_trait_object!(<P> Initialization<P>);
 
 /// Selects individuals for reproduction or modification.
+///
+/// See [crate::operators::selection] for existing implementations.
 pub trait Selection: Component {
     fn select<'p>(
         &self,
@@ -50,6 +54,8 @@ pub trait Selection: Component {
 erased_serde::serialize_trait_object!(Selection);
 
 /// Generates new solutions from the selected population.
+///
+/// See [crate::operators::generation] for existing implementations.
 pub trait Generation<P: Problem>: Component {
     fn generate(
         &self,
@@ -65,6 +71,8 @@ erased_serde::serialize_trait_object!(<P> Generation<P>);
 /// Schedules the [Generation] operators.
 ///
 /// This function defines which operators should be called how often and in what order.
+///
+/// See [crate::operators::schedulers] for existing implementations.
 pub trait Scheduler: Component {
     /// Schedule the operators.
     ///
@@ -86,6 +94,8 @@ pub trait Scheduler: Component {
 erased_serde::serialize_trait_object!(Scheduler);
 
 /// Replaces old individuals with new ones.
+///
+/// See [crate::operators::replacement] for existing implementations.
 pub trait Replacement: Component {
     fn replace(
         &self,
@@ -98,6 +108,8 @@ pub trait Replacement: Component {
 erased_serde::serialize_trait_object!(Replacement);
 
 /// Exchanges individuals between population and archive after replacement.
+///
+/// See [crate::operators::archive] for existing implementations.
 pub trait Archiving<P: Problem>: Component {
     fn archive(
         &self,
@@ -111,12 +123,16 @@ pub trait Archiving<P: Problem>: Component {
 erased_serde::serialize_trait_object!(<P> Archiving<P>);
 
 /// Decides when to terminate.
+///
+/// See [crate::operators::termination] for existing implementations.
 pub trait Termination: Component {
     fn terminate(&self, state: &mut State) -> bool;
 }
 erased_serde::serialize_trait_object!(Termination);
 
 /// Can be inserted between steps.
+///
+/// See [crate::operators::postprocess] for existing implementations.
 pub trait Postprocess<P: Problem>: Component {
     /// Called exactly once.
     fn initialize(

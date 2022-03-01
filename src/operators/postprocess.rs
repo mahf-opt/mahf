@@ -12,6 +12,14 @@ use rand::Rng;
 
 #[derive(Debug, serde::Serialize)]
 pub struct None;
+impl None {
+    pub fn new<P>() -> Box<dyn Postprocess<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self)
+    }
+}
 impl<P> Postprocess<P> for None
 where
     P: Problem,
@@ -42,7 +50,14 @@ where
 pub struct PsoPostprocess {
     pub v_max: f64,
 }
-
+impl PsoPostprocess {
+    pub fn new<P>(v_max: f64) -> Box<dyn Postprocess<P>>
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    {
+        Box::new(Self { v_max })
+    }
+}
 impl<P> Postprocess<P> for PsoPostprocess
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,

@@ -60,14 +60,10 @@ pub fn run<P: Problem>(
         state.log_evaluation(logger, evaluated.fitness());
     }
 
-    if let Some(archiving) = archiving {
-        archiving.archive(state, rng, problem, population, &mut Vec::new());
-    }
+    archiving.archive(state, rng, problem, population, &mut Vec::new());
 
-    if let Some(post_replacement) = post_replacement {
-        post_replacement.initialize(state, problem, rng, population);
-        post_replacement.postprocess(state, problem, rng, population);
-    }
+    post_replacement.initialize(state, problem, rng, population);
+    post_replacement.postprocess(state, problem, rng, population);
 
     let mut best: Option<Individual> = find_best(population).map(Individual::clone);
 
@@ -117,13 +113,10 @@ pub fn run<P: Problem>(
         replacement.replace(state, rng, population, evaluated_offspring);
 
         // Archiving
-        if let Some(archiving) = archiving {
-            archiving.archive(state, rng, problem, population, evaluated_offspring);
-        }
+        archiving.archive(state, rng, problem, population, evaluated_offspring);
 
-        if let Some(post_replacement) = post_replacement {
-            post_replacement.postprocess(state, problem, rng, population);
-        }
+        // Postprocessing
+        post_replacement.postprocess(state, problem, rng, population);
 
         state.log_iteration(logger);
         if termination.terminate(state) {

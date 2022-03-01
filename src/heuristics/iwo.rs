@@ -32,22 +32,19 @@ where
     assert!(min_number_of_seeds <= max_number_of_seeds);
     assert!(final_deviation <= initial_deviation);
 
-    Configuration::new(
-        initialization::RandomSpread {
-            initial_population_size,
-        },
-        selection::DeterministicFitnessProportional {
-            min_offspring: min_number_of_seeds,
-            max_offspring: max_number_of_seeds,
-        },
-        generation::IWOAdaptiveDeviationDelta {
+    Configuration {
+        initialization: initialization::RandomSpread::new(initial_population_size),
+        selection: selection::DeterministicFitnessProportional::new(
+            min_number_of_seeds,
+            max_number_of_seeds,
+        ),
+        generation: vec![generation::IWOAdaptiveDeviationDelta::new(
             initial_deviation,
             final_deviation,
             modulation_index,
-        },
-        replacement::MuPlusLambda {
-            max_population_size,
-        },
-        termination::FixedIterations { max_iterations },
-    )
+        )],
+        replacement: replacement::MuPlusLambda::new(max_population_size),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }
