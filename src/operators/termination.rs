@@ -3,6 +3,25 @@
 use crate::framework::{components::*, State};
 use serde::{Deserialize, Serialize};
 
+/// Only a placeholder. Replace this with something else.
+///
+/// See [operators::termination][crate::operators::termination] for possible criteria.
+#[derive(Serialize, Deserialize)]
+pub struct Undefined;
+impl Undefined {
+    pub fn new() -> Box<dyn Termination> {
+        Box::new(Self)
+    }
+}
+impl Termination for Undefined {
+    fn terminate(&self, _state: &mut State) -> bool {
+        unimplemented!(concat!(
+            "Heuristic with no termination criteria was run. ",
+            "Please specify a termination criteria."
+        ));
+    }
+}
+
 /// Terminates after a fixed number of iterations.
 ///
 /// Supports measuring time to completion.
@@ -10,6 +29,11 @@ use serde::{Deserialize, Serialize};
 pub struct FixedIterations {
     /// Maximum number of iterations.
     pub max_iterations: u32,
+}
+impl FixedIterations {
+    pub fn new(max_iterations: u32) -> Box<dyn Termination> {
+        Box::new(Self { max_iterations })
+    }
 }
 impl Termination for FixedIterations {
     fn terminate(&self, state: &mut State) -> bool {

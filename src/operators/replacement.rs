@@ -7,11 +7,36 @@ use crate::{
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize)]
+pub struct Noop;
+impl Noop {
+    pub fn new() -> Box<dyn Replacement> {
+        Box::new(Self)
+    }
+}
+impl Replacement for Noop {
+    fn replace(
+        &self,
+        _state: &mut State,
+        _rng: &mut Random,
+        _population: &mut Vec<Individual>,
+        _offspring: &mut Vec<Individual>,
+    ) {
+    }
+}
+
 /// Always keeps the fittest individuals.
 #[derive(Serialize, Deserialize)]
 pub struct MuPlusLambda {
     /// Limits the population growth.
     pub max_population_size: u32,
+}
+impl MuPlusLambda {
+    pub fn new(max_population_size: u32) -> Box<dyn Replacement> {
+        Box::new(Self {
+            max_population_size,
+        })
+    }
 }
 impl Replacement for MuPlusLambda {
     fn replace(
@@ -53,6 +78,13 @@ mod mupluslambda {
 pub struct Generational {
     /// Limits the population growth.
     pub max_population_size: u32,
+}
+impl Generational {
+    pub fn new(max_population_size: u32) -> Box<dyn Replacement> {
+        Box::new(Self {
+            max_population_size,
+        })
+    }
 }
 impl Replacement for Generational {
     fn replace(

@@ -11,6 +11,11 @@ use serde::{Deserialize, Serialize};
 /// Do not use archive
 #[derive(Serialize, Deserialize)]
 pub struct None;
+impl None {
+    pub fn new<P: Problem>() -> Box<dyn Archiving<P>> {
+        Box::new(Self)
+    }
+}
 impl<P> Archiving<P> for None
 where
     P: Problem,
@@ -31,7 +36,11 @@ where
 pub struct Elitists {
     pub n_elitists: usize,
 }
-
+impl Elitists {
+    pub fn new<P: Problem>(n_elitists: usize) -> Box<dyn Archiving<P>> {
+        Box::new(Self { n_elitists })
+    }
+}
 impl<P> Archiving<P> for Elitists
 where
     P: Problem,
