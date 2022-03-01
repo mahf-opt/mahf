@@ -127,7 +127,7 @@ where
 /// Measures can be chosen between dimension-wise (DW), mean of pairwise distance between solutions (PW),
 /// average standard deviation of each position (also "true diversity", TD), and distance to average point (DTAP).
 /// All measures are normalized with the maximum diversity found so far.
-#[derive(Clone, Debug, serde::Serialize)]
+#[derive(Copy, Clone, Debug, serde::Serialize)]
 pub enum DiversityMeasure {
     DW,
     PW,
@@ -175,7 +175,7 @@ where
         let d = problem.dimension();
         let iter_solutions = || population.iter().map(|i| i.solution::<Vec<f64>>());
 
-        let selected_measure = self.measure.clone();
+        let selected_measure = self.measure;
         match selected_measure {
             DiversityMeasure::DW => {
                 diversity_state.diversity = (0..d)

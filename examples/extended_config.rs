@@ -48,6 +48,7 @@ mod heuristics {
             max_population_size: 25,
         };
         let archiving = archive::Elitists { n_elitists: 1 };
+        let post_replacement = postprocess::FloatVectorDiversity { measure: DW };
         let termination = termination::FixedIterations { max_iterations: 50 };
 
         Configuration {
@@ -56,6 +57,7 @@ mod heuristics {
             generation: vec![Box::new(generation)],
             replacement: Box::new(replacement),
             archiving: Box::new(archiving),
+            post_replacement: Box::new(post_replacement),
             termination: Box::new(termination),
             ..Configuration::default()
         }
