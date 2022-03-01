@@ -40,6 +40,7 @@ impl CustomState for FitnessImprovementState {}
 /// State for logging/tracking population diversity
 pub struct DiversityState {
     pub diversity: f64,
+    pub max_div: f64,
 }
 impl CustomState for DiversityState {
     fn iteration_log(&self) -> Vec<CustomLog> {
