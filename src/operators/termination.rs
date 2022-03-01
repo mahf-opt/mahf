@@ -1,8 +1,8 @@
 //! Termination methods
 
 use crate::framework::{components::*, State};
-use serde::{Deserialize, Serialize};
 use crate::operators::custom_state::FitnessImprovementState;
+use serde::{Deserialize, Serialize};
 
 /// Only a placeholder. Replace this with something else.
 ///
@@ -135,8 +135,8 @@ impl Termination for DistanceToOpt {
 }
 #[cfg(test)]
 mod distance_to_opt {
-    use crate::framework::Fitness;
     use super::*;
+    use crate::framework::Fitness;
 
     #[test]
     fn terminates() {
@@ -163,10 +163,14 @@ pub struct StepsWithoutImprovement {
 impl Termination for StepsWithoutImprovement {
     fn terminate(&self, state: &mut State) -> bool {
         if !state.custom.has::<FitnessImprovementState>() {
-            state.custom.insert(FitnessImprovementState {current_steps: 0, current_fitness: state.best_so_far.into()});
+            state.custom.insert(FitnessImprovementState {
+                current_steps: 0,
+                current_fitness: state.best_so_far.into(),
+            });
         }
         let termination_state = state.custom.get_mut::<FitnessImprovementState>();
-        if state.best_so_far.into() == termination_state.current_fitness {
+        let error_margin = f64::EPSILON;
+        if (state.best_so_far.into() - termination_state.current_fitness).abs() < error_margin {
             termination_state.current_steps += 1;
         } else {
             termination_state.current_fitness = state.best_so_far.into();
@@ -177,16 +181,17 @@ impl Termination for StepsWithoutImprovement {
 }
 #[cfg(test)]
 mod steps_without_improvement {
-    use crate::framework::Fitness;
     use super::*;
+    use crate::framework::Fitness;
 
     #[test]
     fn terminates() {
         let mut state = State::new();
-        let comp = StepsWithoutImprovement {
-            steps: 20,
-        };
-        state.custom.insert(FitnessImprovementState {current_steps: 0, current_fitness: 0.5});
+        let comp = StepsWithoutImprovement { steps: 20 };
+        state.custom.insert(FitnessImprovementState {
+            current_steps: 0,
+            current_fitness: 0.5,
+        });
         state.best_so_far = Fitness::try_from(0.5).unwrap();
         state.iterations = 10;
         assert!(!comp.terminate(&mut state));

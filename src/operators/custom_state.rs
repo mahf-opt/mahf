@@ -34,7 +34,6 @@ pub struct FitnessImprovementState {
 }
 impl CustomState for FitnessImprovementState {}
 
-
 // Custom States for Metrics and Logging //
 
 /// State for logging/tracking population diversity

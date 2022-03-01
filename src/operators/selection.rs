@@ -255,17 +255,11 @@ impl Selection for RouletteWheel {
         // normalize fitness values
         let normalized: Vec<f64> = population.iter().map(|i| (i.fitness().into() - best) / (worst - best)).collect();
         // calculate population fitness as sum of individuals' fitness
-        let total: f64 = normalized.iter().map(|i| i).sum();
+        let total: f64 = normalized.iter().sum();
         // calculate weights for individuals (fitness / total fitness)
-        let weights: Vec<f64> = normalized
-            .iter()
-            .map(|f| f / total)
-            .collect();
+        let weights: Vec<f64> = normalized.iter().map(|f| f / total).collect();
         // due to minimisation, lower fitness is better, so adapt weights
-        let weights_min: Vec<f64> = weights
-            .iter()
-            .map(|&w| 1.0 - w)
-            .collect();
+        let weights_min: Vec<f64> = weights.iter().map(|&w| 1.0 - w).collect();
         let wheel = WeightedIndex::new(weights_min).unwrap();
         for _ in 0..self.offspring {
             selection.push(&population[wheel.sample(rng)]);
@@ -321,20 +315,14 @@ impl Selection for StochasticUniversalSampling {
         // normalize fitness values
         let normalized: Vec<f64> = population.iter().map(|i| (i.fitness().into() - best) / (worst - best)).collect();
         // calculate population fitness as sum of individuals' fitness
-        let total: f64 = normalized.iter().map(|i| i).sum();
+        let total: f64 = normalized.iter().sum();
         // calculate weights for individuals (fitness / total fitness)
-        let weights: Vec<f64> = normalized
-            .iter()
-            .map(|f| f / total)
-            .collect();
+        let weights: Vec<f64> = normalized.iter().map(|f| f / total).collect();
         // due to minimisation, lower fitness is better, so adapt weights
-        let weights_min: Vec<f64> = weights
-            .iter()
-            .map(|&w| 1.0 - w)
-            .collect();
+        let weights_min: Vec<f64> = weights.iter().map(|&w| 1.0 - w).collect();
 
         // calculate the distance between selection points and the random start point
-        let weights_total = weights_min.iter().map(|w| w).sum();
+        let weights_total = weights_min.iter().sum();
         let gaps = weights_total / self.offspring as f64;
         let start = rng.gen::<f64>() * gaps;
         let mut distance = start;
