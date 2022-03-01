@@ -20,19 +20,16 @@ pub fn ga<P>(
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    let mut config = Configuration::new(
-        initialization::RandomSpread {
-            initial_population_size: population_size,
-        },
-        selection::FullyRandom {
-            offspring: population_size,
-        },
-        generation::UniformCrossover { pc },
-        replacement::Generational {
-            max_population_size: population_size,
-        },
-        termination::FixedIterations { max_iterations },
-    );
-    config = config.add_generator(generation::FixedDeviationDelta { deviation });
-    config
+    Configuration {
+        initialization: initialization::RandomSpread::new(population_size),
+        selection: selection::FullyRandom::new(population_size),
+        generation: vec![
+            generation::UniformCrossover::new(pc),
+            generation::FixedDeviationDelta::new(deviation),
+        ],
+        generation_scheduler: schedulers::AllInOrder::new(),
+        replacement: replacement::Generational::new(population_size),
+        termination: termination::FixedIterations::new(max_iterations),
+        ..Default::default()
+    }
 }

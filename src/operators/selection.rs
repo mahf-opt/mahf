@@ -15,6 +15,11 @@ use crate::{
 /// Selects all individuals once.
 #[derive(Serialize, Deserialize)]
 pub struct All;
+impl All {
+    pub fn new() -> Box<dyn Selection> {
+        Box::new(Self)
+    }
+}
 impl Selection for All {
     fn select<'p>(
         &self,
@@ -30,6 +35,11 @@ impl Selection for All {
 /// Selects no individual.
 #[derive(Serialize, Deserialize)]
 pub struct None;
+impl None {
+    pub fn new() -> Box<dyn Selection> {
+        Box::new(Self)
+    }
+}
 impl Selection for None {
     fn select<'p>(
         &self,
@@ -46,6 +56,11 @@ impl Selection for None {
 pub struct CopySingle {
     /// Offspring per iteration.
     pub offspring: u32,
+}
+impl CopySingle {
+    pub fn new(offspring: u32) -> Box<dyn Selection> {
+        Box::new(Self { offspring })
+    }
 }
 impl Selection for CopySingle {
     fn select<'p>(
@@ -70,6 +85,11 @@ impl Selection for CopySingle {
 pub struct FullyRandom {
     /// Offspring per iteration.
     pub offspring: u32,
+}
+impl FullyRandom {
+    pub fn new(offspring: u32) -> Box<dyn Selection> {
+        Box::new(Self { offspring })
+    }
 }
 impl Selection for FullyRandom {
     fn select<'p>(
@@ -128,6 +148,14 @@ pub struct DeterministicFitnessProportional {
     pub min_offspring: u32,
     /// Maximum offspring per individual per iteration
     pub max_offspring: u32,
+}
+impl DeterministicFitnessProportional {
+    pub fn new(min_offspring: u32, max_offspring: u32) -> Box<dyn Selection> {
+        Box::new(Self {
+            min_offspring,
+            max_offspring,
+        })
+    }
 }
 impl Selection for DeterministicFitnessProportional {
     fn select<'p>(
@@ -199,6 +227,11 @@ mod deterministic_fitness_proportional {
 pub struct RouletteWheel {
     /// Offspring per iteration.
     pub offspring: u32,
+}
+impl RouletteWheel {
+    pub fn new(offspring: u32) -> Box<dyn Selection> {
+        Box::new(Self { offspring })
+    }
 }
 impl Selection for RouletteWheel {
     fn select<'p>(

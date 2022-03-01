@@ -44,169 +44,105 @@ type ConfigBuilder = fn() -> Configuration<BenchmarkFunction>;
 
 #[allow(dead_code)]
 mod heuristics {
-    use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
+    use mahf::{
+        framework::{components::Termination, Configuration},
+        operators::*,
+        problems::bmf::BenchmarkFunction,
+    };
+
+    fn termination() -> Box<dyn Termination> {
+        termination::FixedIterations::new(500)
+    }
 
     pub fn iwo() -> Configuration<BenchmarkFunction> {
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: 25,
-            },
-            selection::DeterministicFitnessProportional {
-                min_offspring: 4,
-                max_offspring: 6,
-            },
-            generation::IWOAdaptiveDeviationDelta {
-                initial_deviation: 0.1,
-                final_deviation: 0.001,
-                modulation_index: 5,
-            },
-            replacement::MuPlusLambda {
-                max_population_size: 50,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(25),
+            selection: selection::DeterministicFitnessProportional::new(4, 6),
+            generation: vec![generation::IWOAdaptiveDeviationDelta::new(0.1, 0.001, 5)],
+            replacement: replacement::MuPlusLambda::new(50),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn es() -> Configuration<BenchmarkFunction> {
         let population_size = 5;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::FullyRandom { offspring: 60 },
-            generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::MuPlusLambda {
-                max_population_size: population_size,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(population_size),
+            selection: selection::FullyRandom::new(60),
+            generation: vec![generation::FixedDeviationDelta::new(0.1)],
+            replacement: replacement::MuPlusLambda::new(population_size),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn c1() -> Configuration<BenchmarkFunction> {
-        let population_size = 5;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::FullyRandom { offspring: 60 },
-            generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::MuPlusLambda {
-                max_population_size: 50,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(5),
+            selection: selection::FullyRandom::new(60),
+            generation: vec![generation::FixedDeviationDelta::new(0.1)],
+            replacement: replacement::MuPlusLambda::new(50),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn c2() -> Configuration<BenchmarkFunction> {
         let population_size = 25;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::DeterministicFitnessProportional {
-                min_offspring: 4,
-                max_offspring: 6,
-            },
-            generation::IWOAdaptiveDeviationDelta {
-                initial_deviation: 0.1,
-                final_deviation: 0.001,
-                modulation_index: 5,
-            },
-            replacement::MuPlusLambda {
-                max_population_size: population_size,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(population_size),
+            selection: selection::DeterministicFitnessProportional::new(4, 6),
+            generation: vec![generation::IWOAdaptiveDeviationDelta::new(0.1, 0.001, 5)],
+            replacement: replacement::MuPlusLambda::new(population_size),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn c3() -> Configuration<BenchmarkFunction> {
-        let population_size = 5;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::FullyRandom { offspring: 60 },
-            generation::IWOAdaptiveDeviationDelta {
-                initial_deviation: 0.1,
-                final_deviation: 0.001,
-                modulation_index: 5,
-            },
-            replacement::MuPlusLambda {
-                max_population_size: 50,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(5),
+            selection: selection::FullyRandom::new(60),
+            generation: vec![generation::IWOAdaptiveDeviationDelta::new(0.1, 0.001, 5)],
+            replacement: replacement::MuPlusLambda::new(50),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn c4() -> Configuration<BenchmarkFunction> {
-        let population_size = 25;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::DeterministicFitnessProportional {
-                min_offspring: 4,
-                max_offspring: 6,
-            },
-            generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::MuPlusLambda {
-                max_population_size: 50,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(25),
+            selection: selection::DeterministicFitnessProportional::new(4, 6),
+            generation: vec![generation::FixedDeviationDelta::new(0.1)],
+            replacement: replacement::MuPlusLambda::new(50),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn c5() -> Configuration<BenchmarkFunction> {
         let population_size = 25;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::DeterministicFitnessProportional {
-                min_offspring: 4,
-                max_offspring: 6,
-            },
-            generation::FixedDeviationDelta { deviation: 0.1 },
-            replacement::MuPlusLambda {
-                max_population_size: population_size,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(population_size),
+            selection: selection::DeterministicFitnessProportional::new(4, 6),
+            generation: vec![generation::FixedDeviationDelta::new(0.1)],
+            replacement: replacement::MuPlusLambda::new(population_size),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 
     pub fn c6() -> Configuration<BenchmarkFunction> {
-        let population_size = 5;
-        Configuration::new(
-            initialization::RandomSpread {
-                initial_population_size: population_size,
-            },
-            selection::FullyRandom { offspring: 60 },
-            generation::IWOAdaptiveDeviationDelta {
-                initial_deviation: 0.1,
-                final_deviation: 0.001,
-                modulation_index: 5,
-            },
-            replacement::MuPlusLambda {
-                max_population_size: 50,
-            },
-            termination::FixedIterations {
-                max_iterations: 500,
-            },
-        )
+        Configuration {
+            initialization: initialization::RandomSpread::new(5),
+            selection: selection::FullyRandom::new(60),
+            generation: vec![generation::IWOAdaptiveDeviationDelta::new(0.1, 0.001, 5)],
+            replacement: replacement::MuPlusLambda::new(50),
+            termination: termination(),
+            ..Default::default()
+        }
     }
 }
 

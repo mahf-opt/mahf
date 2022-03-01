@@ -38,19 +38,26 @@ mod heuristics {
     use mahf::{framework::Configuration, operators::*, problems::bmf::BenchmarkFunction};
 
     pub fn custom() -> Configuration<BenchmarkFunction> {
-        Configuration::new_extended(
-            initialization::RandomSpread {
-                initial_population_size: 25,
-            },
-            selection::RouletteWheel { offspring: 25 },
-            generation::UniformCrossover { pc: 0.8 },
-            replacement::Generational {
-                max_population_size: 25,
-            },
-            Some(archive::Elitists { n_elitists: 1 }),
-            Some(postprocess::None),
-            termination::FixedIterations { max_iterations: 50 },
-        )
+        let initialization = initialization::RandomSpread {
+            initial_population_size: 25,
+        };
+        let selection = selection::RouletteWheel { offspring: 25 };
+        let generation = generation::UniformCrossover { pc: 0.8 };
+        let replacement = replacement::Generational {
+            max_population_size: 25,
+        };
+        let archiving = archive::Elitists { n_elitists: 1 };
+        let termination = termination::FixedIterations { max_iterations: 50 };
+
+        Configuration {
+            initialization: Box::new(initialization),
+            selection: Box::new(selection),
+            generation: vec![Box::new(generation)],
+            replacement: Box::new(replacement),
+            archiving: Box::new(archiving),
+            termination: Box::new(termination),
+            ..Configuration::default()
+        }
     }
 }
 

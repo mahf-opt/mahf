@@ -5,6 +5,11 @@ use crate::framework::components::Scheduler;
 /// Schedules all operators once and in order.
 #[derive(serde::Serialize)]
 pub struct AllInOrder;
+impl AllInOrder {
+    pub fn new() -> Box<dyn Scheduler> {
+        Box::new(Self)
+    }
+}
 impl Scheduler for AllInOrder {
     fn schedule(
         &self,
