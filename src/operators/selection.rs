@@ -191,7 +191,6 @@ impl Selection for DeterministicFitnessProportional {
                 selection.push(ind);
             }
         }
-        assert_eq!(selection.len(), self.offspring as usize);
     }
 }
 #[cfg(test)]

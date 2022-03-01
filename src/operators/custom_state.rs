@@ -3,7 +3,7 @@
 use crate::framework::{CustomState, Individual};
 use crate::tracking::log::CustomLog;
 
-// Custom States for Metaheuristics //
+// Custom States for Specific Metaheuristics //
 
 /// State required for PSO.
 ///
@@ -15,6 +15,8 @@ pub struct PsoState {
 }
 impl CustomState for PsoState {}
 
+// Custom States for Operators //
+
 /// State required for Elitism.
 ///
 /// For preserving n elitist individuals.
@@ -22,6 +24,16 @@ pub struct ElitismState {
     pub elitists: Vec<Individual>,
 }
 impl CustomState for ElitismState {}
+
+/// State required for Termination by Steps without Improvement.
+///
+/// For preserving current number of steps without improvement and corresponding fitness value.
+pub struct FitnessImprovementState {
+    pub current_steps: usize,
+    pub current_fitness: f64,
+}
+impl CustomState for FitnessImprovementState {}
+
 
 // Custom States for Metrics and Logging //
 
