@@ -119,6 +119,10 @@ impl crate::problems::LimitedVectorProblem for CocoInstance {
     fn range(&self, dimension: usize) -> Range<Self::T> {
         self.domain()[dimension].clone()
     }
+
+    fn known_optimum(&self) -> f64 {
+        self.best_value()
+    }
 }
 
 #[cfg(test)]

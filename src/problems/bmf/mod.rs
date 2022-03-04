@@ -49,6 +49,10 @@ impl LimitedVectorProblem for BenchmarkFunction {
     fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
         0.0..1.0
     }
+
+    fn known_optimum(&self) -> f64 {
+        self.known_optimum
+    }
 }
 
 /// A benchmark function.

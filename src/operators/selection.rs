@@ -166,10 +166,18 @@ impl Selection for DeterministicFitnessProportional {
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
     ) {
-        #[rustfmt::skip]
-        let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
-        #[rustfmt::skip]
-        let worst: f64 = population.iter().map(Individual::fitness).max().unwrap().into();
+        let best: f64 = population
+            .iter()
+            .map(Individual::fitness)
+            .min()
+            .unwrap()
+            .into();
+        let worst: f64 = population
+            .iter()
+            .map(Individual::fitness)
+            .max()
+            .unwrap()
+            .into();
 
         assert!(
             worst.is_finite(),
@@ -243,17 +251,27 @@ impl Selection for RouletteWheel {
         selection: &mut Vec<&'p Individual>,
     ) {
         // find fitness max and min for normalization
-        #[rustfmt::skip]
-            let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
-        #[rustfmt::skip]
-            let worst: f64 = population.iter().map(Individual::fitness).max().unwrap().into();
+        let best: f64 = population
+            .iter()
+            .map(Individual::fitness)
+            .min()
+            .unwrap()
+            .into();
+        let worst: f64 = population
+            .iter()
+            .map(Individual::fitness)
+            .max()
+            .unwrap()
+            .into();
         assert!(
             worst.is_finite(),
             "selection::FitnessProportional does not work with Inf fitness values"
         );
-        #[rustfmt::skip]
         // normalize fitness values
-        let normalized: Vec<f64> = population.iter().map(|i| (i.fitness().into() - best) / (worst - best)).collect();
+        let normalized: Vec<f64> = population
+            .iter()
+            .map(|i| (i.fitness().into() - best) / (worst - best))
+            .collect();
         // calculate population fitness as sum of individuals' fitness
         let total: f64 = normalized.iter().sum();
         // calculate weights for individuals (fitness / total fitness)
@@ -303,17 +321,27 @@ impl Selection for StochasticUniversalSampling {
         selection: &mut Vec<&'p Individual>,
     ) {
         // find fitness max and min for normalization
-        #[rustfmt::skip]
-            let best: f64 = population.iter().map(Individual::fitness).min().unwrap().into();
-        #[rustfmt::skip]
-            let worst: f64 = population.iter().map(Individual::fitness).max().unwrap().into();
+        let best: f64 = population
+            .iter()
+            .map(Individual::fitness)
+            .min()
+            .unwrap()
+            .into();
+        let worst: f64 = population
+            .iter()
+            .map(Individual::fitness)
+            .max()
+            .unwrap()
+            .into();
         assert!(
             worst.is_finite(),
             "selection::FitnessProportional does not work with Inf fitness values"
         );
-        #[rustfmt::skip]
         // normalize fitness values
-        let normalized: Vec<f64> = population.iter().map(|i| (i.fitness().into() - best) / (worst - best)).collect();
+        let normalized: Vec<f64> = population
+            .iter()
+            .map(|i| (i.fitness().into() - best) / (worst - best))
+            .collect();
         // calculate population fitness as sum of individuals' fitness
         let total: f64 = normalized.iter().sum();
         // calculate weights for individuals (fitness / total fitness)
