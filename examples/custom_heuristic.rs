@@ -20,11 +20,11 @@ use std::{fs, io::Write, path::PathBuf, sync::mpsc, thread};
 static DATA_DIR: &str = "data/custom_heuristic";
 static HEURISTICS: &[(&str, ConfigBuilder)] = &[("diversity", heuristics::custom)];
 static FUNCTIONS: &[fn(usize) -> BenchmarkFunction] = &[
-    BenchmarkFunction::sphere,
+    //BenchmarkFunction::sphere,
     //BenchmarkFunction::rastrigin,
-    //BenchmarkFunction::ackley,
+    BenchmarkFunction::ackley_n2,
 ];
-static DIMENSIONS: &[usize] = &[10]; //, 20, 30
+static DIMENSIONS: &[usize] = &[2]; //, 20, 30
 static RUNS: u32 = 5;
 
 //                           //

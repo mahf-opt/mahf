@@ -4,7 +4,7 @@ pub mod implementations;
 #[cfg(test)]
 pub mod tests;
 
-use crate::problems::{LimitedVectorProblem, Problem, VectorProblem};
+use crate::problems::{HasKnownOptimum, LimitedVectorProblem, Problem, VectorProblem};
 use anyhow::anyhow;
 use std::convert::TryFrom;
 
@@ -48,6 +48,12 @@ impl VectorProblem for BenchmarkFunction {
 impl LimitedVectorProblem for BenchmarkFunction {
     fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
         0.0..1.0
+    }
+}
+
+impl HasKnownOptimum for BenchmarkFunction {
+    fn known_optimum(&self) -> f64 {
+        self.known_optimum
     }
 }
 

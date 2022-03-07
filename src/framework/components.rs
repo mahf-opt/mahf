@@ -125,10 +125,10 @@ erased_serde::serialize_trait_object!(<P> Archiving<P>);
 /// Decides when to terminate.
 ///
 /// See [crate::operators::termination] for existing implementations.
-pub trait Termination: Component {
-    fn terminate(&self, state: &mut State) -> bool;
+pub trait Termination<P: Problem>: Component {
+    fn terminate(&self, state: &mut State, problem: &P) -> bool;
 }
-erased_serde::serialize_trait_object!(Termination);
+erased_serde::serialize_trait_object!(<P> Termination<P>);
 
 /// Can be inserted between steps.
 ///

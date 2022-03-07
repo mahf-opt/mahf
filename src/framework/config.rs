@@ -59,7 +59,7 @@ pub struct Configuration<P: 'static> {
 
     /// Decides when to terminate the process.
     #[serde(with = "erased_serde")]
-    pub termination: Box<dyn Termination>,
+    pub termination: Box<dyn Termination<P>>,
 }
 
 impl<P: Problem> Default for Configuration<P> {

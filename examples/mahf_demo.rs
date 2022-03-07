@@ -47,10 +47,10 @@ mod heuristics {
     use mahf::{
         framework::{components::Termination, Configuration},
         operators::*,
-        problems::bmf::BenchmarkFunction,
+        problems::{bmf::BenchmarkFunction, Problem},
     };
 
-    fn termination() -> Box<dyn Termination> {
+    fn termination<P: Problem>() -> Box<dyn Termination<P>> {
         termination::FixedIterations::new(500)
     }
 

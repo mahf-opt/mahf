@@ -119,7 +119,7 @@ pub fn run<P: Problem>(
         post_replacement.postprocess(state, problem, rng, population);
 
         state.log_iteration(logger);
-        if termination.terminate(state) {
+        if termination.terminate(state, problem) {
             break;
         }
     }

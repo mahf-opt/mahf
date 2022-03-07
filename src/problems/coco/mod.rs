@@ -121,6 +121,12 @@ impl crate::problems::LimitedVectorProblem for CocoInstance {
     }
 }
 
+impl crate::problems::HasKnownOptimum for CocoInstance {
+    fn known_optimum(&self) -> f64 {
+        self.best_value()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use float_eq::assert_float_eq;
