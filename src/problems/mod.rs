@@ -31,6 +31,8 @@ pub trait VectorProblem {
 
 pub trait LimitedVectorProblem: VectorProblem {
     fn range(&self, dimension: usize) -> Range<Self::T>;
+}
 
+pub trait HasKnownOptimum {
     fn known_optimum(&self) -> f64;
 }

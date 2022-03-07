@@ -2,7 +2,7 @@
 
 use crate::framework::{components::*, State};
 use crate::operators::custom_state::FitnessImprovementState;
-use crate::problems::{LimitedVectorProblem, Problem};
+use crate::problems::{HasKnownOptimum, Problem};
 use serde::{Deserialize, Serialize};
 
 /// Only a placeholder. Replace this with something else.
@@ -150,9 +150,9 @@ pub struct DistanceToOpt {
     /// Known optimum.
     pub optimum: f64,
 }
-impl<P> Termination<P> for DistanceToOpt
+impl<P: HasKnownOptimum> Termination<P> for DistanceToOpt
 where
-    P: Problem + LimitedVectorProblem,
+    P: Problem,
 {
     fn terminate(&self, state: &mut State, problem: &P) -> bool {
         state.best_so_far.into() < problem.known_optimum() + self.distance

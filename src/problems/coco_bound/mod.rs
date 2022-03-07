@@ -63,8 +63,4 @@ impl problems::LimitedVectorProblem for CocoInstance {
         let (start, end) = range.into_inner();
         start..end
     }
-
-    fn known_optimum(&self) -> f64 {
-        unimplemented!()
-    }
 }
