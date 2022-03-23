@@ -37,7 +37,7 @@ pub trait Initialization<P: Problem>: Component {
         population: &mut Vec<P::Encoding>,
     );
 }
-erased_serde::serialize_trait_object!(<P> Initialization<P>);
+erased_serde::serialize_trait_object!(<P: Problem> Initialization<P>);
 
 /// Selects individuals for reproduction or modification.
 ///
@@ -66,7 +66,7 @@ pub trait Generation<P: Problem>: Component {
         offspring: &mut Vec<P::Encoding>,
     );
 }
-erased_serde::serialize_trait_object!(<P> Generation<P>);
+erased_serde::serialize_trait_object!(<P: Problem> Generation<P>);
 
 /// Schedules the [Generation] operators.
 ///
@@ -120,7 +120,7 @@ pub trait Archiving<P: Problem>: Component {
         offspring: &mut Vec<Individual>,
     );
 }
-erased_serde::serialize_trait_object!(<P> Archiving<P>);
+erased_serde::serialize_trait_object!(<P: Problem> Archiving<P>);
 
 /// Decides when to terminate.
 ///
@@ -128,7 +128,7 @@ erased_serde::serialize_trait_object!(<P> Archiving<P>);
 pub trait Termination<P: Problem>: Component {
     fn terminate(&self, state: &mut State, problem: &P) -> bool;
 }
-erased_serde::serialize_trait_object!(<P> Termination<P>);
+erased_serde::serialize_trait_object!(<P: Problem> Termination<P>);
 
 /// Can be inserted between steps.
 ///
@@ -152,4 +152,4 @@ pub trait Postprocess<P: Problem>: Component {
         population: &[Individual],
     );
 }
-erased_serde::serialize_trait_object!(<P> Postprocess<P>);
+erased_serde::serialize_trait_object!(<P: Problem> Postprocess<P>);

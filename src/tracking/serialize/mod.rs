@@ -1,6 +1,6 @@
 #![allow(clippy::new_without_default)]
 
-use crate::framework::Configuration;
+use crate::{framework::Configuration, problems::Problem};
 use std::collections::HashMap;
 
 pub mod error;
@@ -32,7 +32,7 @@ pub struct SerializedConfiguration {
     pub termination: SerializedComponent,
 }
 
-pub fn validate_serializability<P>(config: &Configuration<P>) -> bool {
+pub fn validate_serializability<P: Problem>(config: &Configuration<P>) -> bool {
     serialize_config(config).is_ok()
 }
 
