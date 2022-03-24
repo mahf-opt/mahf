@@ -102,13 +102,13 @@ impl Experiment {
 
 #[derive(Serialize)]
 #[serde(rename = "Experiment")]
-struct ExperimentConfiguration<'a, P: Serialize + 'static> {
+struct ExperimentConfiguration<'a, P: Problem + Serialize + 'static> {
     problem: &'a P,
     random: RandomConfig,
     heuristic: &'a Configuration<P>,
 }
 
-fn write_configuration<P: Serialize>(
+fn write_configuration<P: Problem + Serialize>(
     data_dir: impl AsRef<Path>,
     random: &Random,
     problem: &P,

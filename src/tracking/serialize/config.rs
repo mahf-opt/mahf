@@ -2,6 +2,7 @@
 
 use crate::{
     framework::Configuration,
+    problems::Problem,
     tracking::serialize::{
         component,
         error::{Error, Result},
@@ -15,7 +16,7 @@ pub struct Serializer {
     component_serializer: component::Serializer,
 }
 
-pub fn serialize_config<P>(config: &Configuration<P>) -> Result<SerializedConfiguration> {
+pub fn serialize_config<P: Problem>(config: &Configuration<P>) -> Result<SerializedConfiguration> {
     let mut serializer = Serializer {
         config: SerializedConfiguration::default(),
         component_serializer: component::Serializer::new(),

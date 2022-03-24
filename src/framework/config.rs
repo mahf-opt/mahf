@@ -28,7 +28,7 @@ use serde::Serialize;
 ///
 /// See [framework](crate::framework) documentation.
 #[derive(Serialize)]
-pub struct Configuration<P: 'static> {
+pub struct Configuration<P: Problem + 'static> {
     /// Initializes the population.
     #[serde(with = "erased_serde")]
     pub initialization: Box<dyn Initialization<P>>,
