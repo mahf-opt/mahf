@@ -11,11 +11,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Undefined;
 impl Undefined {
-    pub fn new<P>() -> Box<dyn Termination<P>>
+    pub fn new<P: Problem>() -> Box<dyn Component<P>>
     where
         P: Problem,
     {
-        Box::new(Self)
+        Box::new(Terminator(Self))
     }
 }
 impl<P> Termination<P> for Undefined
@@ -39,11 +39,11 @@ pub struct FixedIterations {
     pub max_iterations: u32,
 }
 impl FixedIterations {
-    pub fn new<P>(max_iterations: u32) -> Box<dyn Termination<P>>
+    pub fn new<P: Problem>(max_iterations: u32) -> Box<dyn Component<P>>
     where
         P: Problem,
     {
-        Box::new(Self { max_iterations })
+        Box::new(Terminator(Self { max_iterations }))
     }
 }
 impl<P> Termination<P> for FixedIterations

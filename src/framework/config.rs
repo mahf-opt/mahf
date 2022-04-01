@@ -31,35 +31,35 @@ use serde::Serialize;
 pub struct Configuration<P: Problem + 'static> {
     /// Initializes the population.
     #[serde(with = "erased_serde")]
-    pub initialization: Box<dyn Initialization<P>>,
+    pub initialization: Box<dyn Component<P>>,
 
     /// Selects individuals from the population.
     #[serde(with = "erased_serde")]
-    pub selection: Box<dyn Selection>,
+    pub selection: Box<dyn Component<P>>,
 
     /// Generates new solutions based on selection.
     #[serde(with = "erased_serde")]
-    pub generation: Vec<Box<dyn Generation<P>>>,
+    pub generation: Vec<Box<dyn Component<P>>>,
 
     /// Decides which generations should be called.
     #[serde(with = "erased_serde")]
-    pub generation_scheduler: Box<dyn Scheduler>,
+    pub generation_scheduler: Box<dyn Component<P>>,
 
     /// Replaces old solutions with newly generated.
     #[serde(with = "erased_serde")]
-    pub replacement: Box<dyn Replacement>,
+    pub replacement: Box<dyn Component<P>>,
 
     /// Exchanges solutions with population after replacement.
     #[serde(with = "erased_serde")]
-    pub archiving: Box<dyn Archiving<P>>,
+    pub archiving: Box<dyn Component<P>>,
 
     /// Updates (custom) state after an iteration.
     #[serde(with = "erased_serde")]
-    pub post_replacement: Box<dyn Postprocess<P>>,
+    pub post_replacement: Box<dyn Component<P>>,
 
     /// Decides when to terminate the process.
     #[serde(with = "erased_serde")]
-    pub termination: Box<dyn Termination<P>>,
+    pub termination: Box<dyn Component<P>>,
 }
 
 impl<P: Problem> Default for Configuration<P> {

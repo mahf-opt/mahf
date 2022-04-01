@@ -1,13 +1,13 @@
 //! Scheduling methods
 
-use crate::framework::components::Scheduler;
+use crate::{framework::components::*, problems::Problem};
 
 /// Schedules all operators once and in order.
 #[derive(serde::Serialize)]
 pub struct AllInOrder;
 impl AllInOrder {
-    pub fn new() -> Box<dyn Scheduler> {
-        Box::new(Self)
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Schedule(Self))
     }
 }
 impl Scheduler for AllInOrder {

@@ -1,5 +1,10 @@
 //! Selection methods
 
+use crate::{
+    framework::{components::*, Individual, State},
+    problems::Problem,
+    random::Random,
+};
 use rand::{
     distributions::{Distribution, WeightedIndex},
     seq::SliceRandom,
@@ -7,17 +12,12 @@ use rand::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    framework::{components::*, Individual, State},
-    random::Random,
-};
-
 /// Selects all individuals once.
 #[derive(Serialize, Deserialize)]
 pub struct All;
 impl All {
-    pub fn new() -> Box<dyn Selection> {
-        Box::new(Self)
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Selector(Self))
     }
 }
 impl Selection for All {
@@ -36,8 +36,8 @@ impl Selection for All {
 #[derive(Serialize, Deserialize)]
 pub struct None;
 impl None {
-    pub fn new() -> Box<dyn Selection> {
-        Box::new(Self)
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Selector(Self))
     }
 }
 impl Selection for None {
@@ -58,8 +58,8 @@ pub struct CopySingle {
     pub offspring: u32,
 }
 impl CopySingle {
-    pub fn new(offspring: u32) -> Box<dyn Selection> {
-        Box::new(Self { offspring })
+    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring }))
     }
 }
 impl Selection for CopySingle {
@@ -87,8 +87,8 @@ pub struct FullyRandom {
     pub offspring: u32,
 }
 impl FullyRandom {
-    pub fn new(offspring: u32) -> Box<dyn Selection> {
-        Box::new(Self { offspring })
+    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring }))
     }
 }
 impl Selection for FullyRandom {
@@ -151,11 +151,11 @@ pub struct DeterministicFitnessProportional {
     pub max_offspring: u32,
 }
 impl DeterministicFitnessProportional {
-    pub fn new(min_offspring: u32, max_offspring: u32) -> Box<dyn Selection> {
-        Box::new(Self {
+    pub fn new<P: Problem>(min_offspring: u32, max_offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self {
             min_offspring,
             max_offspring,
-        })
+        }))
     }
 }
 impl Selection for DeterministicFitnessProportional {
@@ -238,8 +238,8 @@ pub struct RouletteWheel {
     pub offspring: u32,
 }
 impl RouletteWheel {
-    pub fn new(offspring: u32) -> Box<dyn Selection> {
-        Box::new(Self { offspring })
+    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring }))
     }
 }
 impl Selection for RouletteWheel {

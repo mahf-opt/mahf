@@ -134,7 +134,10 @@ mod ant_ops {
     use super::PheromoneMatrix;
     use crate::{
         framework::{components::*, Fitness, Individual, State},
-        problems::tsp::{Route, SymmetricTsp},
+        problems::{
+            tsp::{Route, SymmetricTsp},
+            Problem,
+        },
         random::Random,
     };
     use rand::distributions::{weighted::WeightedIndex, Distribution};
@@ -144,8 +147,8 @@ mod ant_ops {
         pub default_pheromones: f64,
     }
     impl AcoInitialization {
-        pub fn new(default_pheromones: f64) -> Box<dyn Initialization<SymmetricTsp>> {
-            Box::new(Self { default_pheromones })
+        pub fn new(default_pheromones: f64) -> Box<dyn Component<SymmetricTsp>> {
+            Box::new(Initializer(Self { default_pheromones }))
         }
     }
     impl Initialization<SymmetricTsp> for AcoInitialization {
@@ -174,12 +177,12 @@ mod ant_ops {
             number_of_ants: usize,
             alpha: f64,
             beta: f64,
-        ) -> Box<dyn Generation<SymmetricTsp>> {
-            Box::new(Self {
+        ) -> Box<dyn Component<SymmetricTsp>> {
+            Box::new(Generator(Self {
                 number_of_ants,
                 alpha,
                 beta,
-            })
+            }))
         }
     }
     impl Generation<SymmetricTsp> for AcoGeneration {
@@ -243,11 +246,11 @@ mod ant_ops {
         pub decay_coefficient: f64,
     }
     impl AsReplacement {
-        pub fn new(evaporation: f64, decay_coefficient: f64) -> Box<dyn Replacement> {
-            Box::new(Self {
+        pub fn new<P: Problem>(evaporation: f64, decay_coefficient: f64) -> Box<dyn Component<P>> {
+            Box::new(Replacer(Self {
                 evaporation,
                 decay_coefficient,
-            })
+            }))
         }
     }
     impl Replacement for AsReplacement {
@@ -283,16 +286,16 @@ mod ant_ops {
         pub min_pheromones: f64,
     }
     impl MinMaxReplacement {
-        pub fn new(
+        pub fn new<P: Problem>(
             evaporation: f64,
             max_pheromones: f64,
             min_pheromones: f64,
-        ) -> Box<dyn Replacement> {
-            Box::new(Self {
+        ) -> Box<dyn Component<P>> {
+            Box::new(Replacer(Self {
                 evaporation,
                 max_pheromones,
                 min_pheromones,
-            })
+            }))
         }
     }
     impl Replacement for MinMaxReplacement {

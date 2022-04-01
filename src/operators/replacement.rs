@@ -2,6 +2,7 @@
 
 use crate::{
     framework::{components::*, Individual, State},
+    problems::Problem,
     random::Random,
 };
 use rand::seq::SliceRandom;
@@ -10,8 +11,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize)]
 pub struct Noop;
 impl Noop {
-    pub fn new() -> Box<dyn Replacement> {
-        Box::new(Self)
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Replacer(Self))
     }
 }
 impl Replacement for Noop {
@@ -32,10 +33,10 @@ pub struct MuPlusLambda {
     pub max_population_size: u32,
 }
 impl MuPlusLambda {
-    pub fn new(max_population_size: u32) -> Box<dyn Replacement> {
-        Box::new(Self {
+    pub fn new<P: Problem>(max_population_size: u32) -> Box<dyn Component<P>> {
+        Box::new(Replacer(Self {
             max_population_size,
-        })
+        }))
     }
 }
 impl Replacement for MuPlusLambda {
@@ -80,10 +81,10 @@ pub struct Generational {
     pub max_population_size: u32,
 }
 impl Generational {
-    pub fn new(max_population_size: u32) -> Box<dyn Replacement> {
-        Box::new(Self {
+    pub fn new<P: Problem>(max_population_size: u32) -> Box<dyn Component<P>> {
+        Box::new(Replacer(Self {
             max_population_size,
-        })
+        }))
     }
 }
 impl Replacement for Generational {

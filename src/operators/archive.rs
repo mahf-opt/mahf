@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct None;
 impl None {
-    pub fn new<P: Problem>() -> Box<dyn Archiving<P>> {
-        Box::new(Self)
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Archiver(Self))
     }
 }
 impl<P> Archiving<P> for None
@@ -37,8 +37,8 @@ pub struct Elitists {
     pub n_elitists: usize,
 }
 impl Elitists {
-    pub fn new<P: Problem>(n_elitists: usize) -> Box<dyn Archiving<P>> {
-        Box::new(Self { n_elitists })
+    pub fn new<P: Problem>(n_elitists: usize) -> Box<dyn Component<P>> {
+        Box::new(Archiver(Self { n_elitists }))
     }
 }
 impl<P> Archiving<P> for Elitists

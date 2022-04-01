@@ -4,7 +4,7 @@
 use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
 use crate::problems::VectorProblem;
 use crate::{
-    framework::{components::Postprocess, Individual, State},
+    framework::{components::*, Individual, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
@@ -13,11 +13,11 @@ use rand::Rng;
 #[derive(Debug, serde::Serialize)]
 pub struct None;
 impl None {
-    pub fn new<P>() -> Box<dyn Postprocess<P>>
+    pub fn new<P: Problem>() -> Box<dyn Component<P>>
     where
         P: Problem,
     {
-        Box::new(Self)
+        Box::new(Postprocessor(Self))
     }
 }
 impl<P> Postprocess<P> for None
@@ -51,11 +51,11 @@ pub struct PsoPostprocess {
     pub v_max: f64,
 }
 impl PsoPostprocess {
-    pub fn new<P>(v_max: f64) -> Box<dyn Postprocess<P>>
+    pub fn new<P: Problem>(v_max: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
     {
-        Box::new(Self { v_max })
+        Box::new(Postprocessor(Self { v_max }))
     }
 }
 impl<P> Postprocess<P> for PsoPostprocess

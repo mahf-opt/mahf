@@ -5,8 +5,12 @@ use crate::{
     problems::Problem,
     random::Random,
 };
-use erased_serde::Serialize as DynSerialize;
 use std::any::Any;
+use trait_set::trait_set;
+
+trait_set! {
+    pub trait AnyComponent = Any + Send + Sync;
+}
 
 /// Defines the traits required by any component.
 ///
@@ -22,13 +26,16 @@ use std::any::Any;
 /// Most of the time, execution should be multi threaded and having
 /// components implement [Send] makes this much easier.
 ///
-pub trait Component: Any + DynSerialize + Send + Sync {}
-impl<T> Component for T where T: Any + DynSerialize + Send + Sync {}
+pub trait Component<P>: AnyComponent {
+    fn initialize(&self, problem: P, state: &mut State) {}
+    fn execute(&self, problem: P, state: &mut State);
+}
+erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 
 /// Initializes the population.
 ///
 /// See [crate::operators::initialization] for existing implementations.
-pub trait Initialization<P: Problem>: Component {
+pub trait Initialization<P: Problem> {
     fn initialize(
         &self,
         state: &mut State,
@@ -37,12 +44,24 @@ pub trait Initialization<P: Problem>: Component {
         population: &mut Vec<P::Encoding>,
     );
 }
-erased_serde::serialize_trait_object!(<P: Problem> Initialization<P>);
+
+#[derive(serde::Serialize)]
+pub struct Initializer<T>(pub T);
+
+impl<T, P> Component<P> for Initializer<T>
+where
+    P: Problem,
+    T: AnyComponent + Initialization<P>,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Selects individuals for reproduction or modification.
 ///
 /// See [crate::operators::selection] for existing implementations.
-pub trait Selection: Component {
+pub trait Selection {
     fn select<'p>(
         &self,
         state: &mut State,
@@ -51,12 +70,24 @@ pub trait Selection: Component {
         selection: &mut Vec<&'p Individual>,
     );
 }
-erased_serde::serialize_trait_object!(Selection);
+
+#[derive(serde::Serialize)]
+pub struct Selector<T>(pub T);
+
+impl<T, P> Component<P> for Selector<T>
+where
+    P: Problem,
+    T: AnyComponent + Selection,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Generates new solutions from the selected population.
 ///
 /// See [crate::operators::generation] for existing implementations.
-pub trait Generation<P: Problem>: Component {
+pub trait Generation<P: Problem> {
     fn generate(
         &self,
         state: &mut State,
@@ -66,14 +97,26 @@ pub trait Generation<P: Problem>: Component {
         offspring: &mut Vec<P::Encoding>,
     );
 }
-erased_serde::serialize_trait_object!(<P: Problem> Generation<P>);
+
+#[derive(serde::Serialize)]
+pub struct Generator<T>(pub T);
+
+impl<T, P> Component<P> for Generator<T>
+where
+    P: Problem,
+    T: AnyComponent + Generation<P>,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Schedules the [Generation] operators.
 ///
 /// This function defines which operators should be called how often and in what order.
 ///
 /// See [crate::operators::schedulers] for existing implementations.
-pub trait Scheduler: Component {
+pub trait Scheduler {
     /// Schedule the operators.
     ///
     /// `choices` is the number of operators to choose from.
@@ -91,12 +134,24 @@ pub trait Scheduler: Component {
         schedule: &mut Vec<usize>,
     );
 }
-erased_serde::serialize_trait_object!(Scheduler);
+
+#[derive(serde::Serialize)]
+pub struct Schedule<T>(pub T);
+
+impl<T, P> Component<P> for Schedule<T>
+where
+    P: Problem,
+    T: AnyComponent + Scheduler,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Replaces old individuals with new ones.
 ///
 /// See [crate::operators::replacement] for existing implementations.
-pub trait Replacement: Component {
+pub trait Replacement {
     fn replace(
         &self,
         state: &mut State,
@@ -105,12 +160,24 @@ pub trait Replacement: Component {
         offspring: &mut Vec<Individual>,
     );
 }
-erased_serde::serialize_trait_object!(Replacement);
+
+#[derive(serde::Serialize)]
+pub struct Replacer<T>(pub T);
+
+impl<T, P> Component<P> for Replacer<T>
+where
+    P: Problem,
+    T: AnyComponent + Replacement,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Exchanges individuals between population and archive after replacement.
 ///
 /// See [crate::operators::archive] for existing implementations.
-pub trait Archiving<P: Problem>: Component {
+pub trait Archiving<P: Problem> {
     fn archive(
         &self,
         state: &mut State,
@@ -120,20 +187,44 @@ pub trait Archiving<P: Problem>: Component {
         offspring: &mut Vec<Individual>,
     );
 }
-erased_serde::serialize_trait_object!(<P: Problem> Archiving<P>);
+
+#[derive(serde::Serialize)]
+pub struct Archiver<T>(pub T);
+
+impl<T, P> Component<P> for Archiver<T>
+where
+    P: Problem,
+    T: AnyComponent + Archiving<P>,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Decides when to terminate.
 ///
 /// See [crate::operators::termination] for existing implementations.
-pub trait Termination<P: Problem>: Component {
+pub trait Termination<P: Problem> {
     fn terminate(&self, state: &mut State, problem: &P) -> bool;
 }
-erased_serde::serialize_trait_object!(<P: Problem> Termination<P>);
+
+#[derive(serde::Serialize)]
+pub struct Terminator<T>(pub T);
+
+impl<T, P> Component<P> for Terminator<T>
+where
+    P: Problem,
+    T: AnyComponent + Termination<P>,
+{
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}
 
 /// Can be inserted between steps.
 ///
 /// See [crate::operators::postprocess] for existing implementations.
-pub trait Postprocess<P: Problem>: Component {
+pub trait Postprocess<P: Problem> {
     /// Called exactly once.
     fn initialize(
         &self,
@@ -152,4 +243,20 @@ pub trait Postprocess<P: Problem>: Component {
         population: &[Individual],
     );
 }
-erased_serde::serialize_trait_object!(<P: Problem> Postprocess<P>);
+
+#[derive(serde::Serialize)]
+pub struct Postprocessor<T>(pub T);
+
+impl<T, P> Component<P> for Postprocessor<T>
+where
+    P: Problem,
+    T: AnyComponent + Postprocess<P>,
+{
+    fn initialize(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+
+    fn execute(&self, problem: P, state: &mut State) {
+        todo!()
+    }
+}

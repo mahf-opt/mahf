@@ -15,11 +15,11 @@ use crate::{
 #[derive(Serialize)]
 pub struct Noop;
 impl Noop {
-    pub fn new<P>() -> Box<dyn Initialization<P>>
+    pub fn new<P>() -> Box<dyn Component<P>>
     where
         P: Problem,
     {
-        Box::new(Self)
+        Box::new(Initializer(Self))
     }
 }
 impl<P: Problem> Initialization<P> for Noop {
@@ -41,14 +41,14 @@ pub struct RandomSpread {
     pub initial_population_size: u32,
 }
 impl RandomSpread {
-    pub fn new<P, D>(initial_population_size: u32) -> Box<dyn Initialization<P>>
+    pub fn new<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         D: SampleUniform + PartialOrd,
         P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
     {
-        Box::new(Self {
+        Box::new(Initializer(Self {
             initial_population_size,
-        })
+        }))
     }
 }
 impl<P, D> Initialization<P> for RandomSpread
@@ -79,13 +79,13 @@ pub struct RandomPermutation {
     pub initial_population_size: u32,
 }
 impl RandomPermutation {
-    pub fn new<P>(initial_population_size: u32) -> Box<dyn Initialization<P>>
+    pub fn new<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
     {
-        Box::new(Self {
+        Box::new(Initializer(Self {
             initial_population_size,
-        })
+        }))
     }
 }
 impl<P> Initialization<P> for RandomPermutation
