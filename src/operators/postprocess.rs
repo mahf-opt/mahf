@@ -104,7 +104,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let pso_state = state.custom.get_mut::<PsoState>();
+        let mut pso_state = state.custom.get_mut::<PsoState>();
 
         for (i, individual) in population.iter().enumerate() {
             if pso_state.bests[i].fitness() > individual.fitness() {

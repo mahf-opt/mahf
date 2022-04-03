@@ -38,6 +38,7 @@ impl<S: CustomState> AsAny for S {
 /// Custom state can be of any type as long as it implements the [CustomState] trait.
 ///
 /// [new type]: https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html
+#[derive(Default)]
 pub struct CustomStateMap {
     map: BTreeMap<TypeId, Box<dyn CustomState>>,
 }

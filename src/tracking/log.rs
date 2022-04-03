@@ -1,4 +1,7 @@
-use crate::{framework::State, tracking::trigger::*};
+use crate::{
+    framework::{CustomState, State},
+    tracking::trigger::*,
+};
 
 pub struct CustomLog {
     pub name: &'static str,
@@ -29,6 +32,7 @@ pub struct Log {
     iterations: Vec<IterationEntry>,
     pending_iteration: Option<IterationEntry>,
 }
+impl CustomState for Log {}
 
 impl Default for Log {
     /// Creates the default logger

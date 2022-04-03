@@ -1,7 +1,7 @@
 //! Ant Colony Optimization
 
 use crate::{
-    framework::{Configuration, CustomState},
+    framework::{legacy::Configuration, CustomState},
     operators::*,
     problems::tsp::SymmetricTsp,
     tracking::log::CustomLog,

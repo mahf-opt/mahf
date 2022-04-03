@@ -14,14 +14,14 @@ impl Fitness {
         self.0
     }
 
-    /// Returns whether the fitness is finite
+    /// Returns whether the fitness is finite.
     pub fn is_finite(&self) -> bool {
         self.0.is_finite()
     }
 }
 
 impl Default for Fitness {
-    /// Returns Inf fitness
+    /// Returns worst possible (infinity) fitness.
     fn default() -> Self {
         Fitness(f64::INFINITY)
     }

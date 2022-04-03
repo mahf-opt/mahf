@@ -1,7 +1,8 @@
+#![allow(unused_variables)]
 //! Framework components.
 
 use crate::{
-    framework::{Individual, State},
+    framework::{state::StateTree, Fitness, Individual, State},
     problems::Problem,
     random::Random,
 };
@@ -27,8 +28,9 @@ trait_set! {
 /// components implement [Send] makes this much easier.
 ///
 pub trait Component<P>: AnyComponent {
-    fn initialize(&self, problem: P, state: &mut State) {}
-    fn execute(&self, problem: P, state: &mut State);
+    #[allow(unused_variables)]
+    fn initialize(&self, problem: &P, state: &mut StateTree) {}
+    fn execute(&self, problem: &P, state: &mut StateTree);
 }
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 
@@ -53,7 +55,7 @@ where
     P: Problem,
     T: AnyComponent + Initialization<P>,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -79,7 +81,7 @@ where
     P: Problem,
     T: AnyComponent + Selection,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -106,7 +108,7 @@ where
     P: Problem,
     T: AnyComponent + Generation<P>,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -143,7 +145,7 @@ where
     P: Problem,
     T: AnyComponent + Scheduler,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -169,7 +171,7 @@ where
     P: Problem,
     T: AnyComponent + Replacement,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -196,7 +198,7 @@ where
     P: Problem,
     T: AnyComponent + Archiving<P>,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -216,7 +218,7 @@ where
     P: Problem,
     T: AnyComponent + Termination<P>,
 {
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 }
@@ -252,11 +254,41 @@ where
     P: Problem,
     T: AnyComponent + Postprocess<P>,
 {
-    fn initialize(&self, problem: P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut StateTree) {
         todo!()
     }
 
-    fn execute(&self, problem: P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut StateTree) {
         todo!()
+    }
+}
+
+/// Evaluates solutions.
+///
+/// Can be used to customize how solutions should be evaluated.
+/// One use case for this would be GPU evaluation.
+pub trait Evaluator<P: Problem> {
+    fn evaluate(
+        &mut self,
+        state: &mut State,
+        problem: &P,
+        offspring: &mut Vec<P::Encoding>,
+        evaluated: &mut Vec<Individual>,
+    );
+}
+
+pub struct SimpleEvaluator;
+impl<P: Problem> Evaluator<P> for SimpleEvaluator {
+    fn evaluate(
+        &mut self,
+        _state: &mut State,
+        problem: &P,
+        offspring: &mut Vec<P::Encoding>,
+        evaluated: &mut Vec<Individual>,
+    ) {
+        for solution in offspring.drain(..) {
+            let fitness = Fitness::try_from(problem.evaluate(&solution)).unwrap();
+            evaluated.push(Individual::new::<P::Encoding>(solution, fitness));
+        }
     }
 }

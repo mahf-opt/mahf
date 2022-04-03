@@ -1,7 +1,7 @@
 //! Random Walk
 
 use crate::{
-    framework::{components::Component, Configuration},
+    framework::{components::Component, legacy::Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };

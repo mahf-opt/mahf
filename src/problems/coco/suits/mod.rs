@@ -9,7 +9,7 @@ use std::{
 use anyhow::Context;
 
 use crate::{
-    framework::{self, Configuration},
+    framework::{self, legacy::Configuration},
     problems::coco::CocoInstance,
     random::Random,
     threads::SyncThreadPool,
@@ -153,7 +153,7 @@ pub fn evaluate_suite(
                             .context("creating experiment")?;
 
                     for _ in 0..runs {
-                        framework::run(&problem, logger, &configuration, None, None);
+                        framework::legacy::run(&problem, logger, &configuration, None, None);
                         experiment.log_run(logger)?;
                         logger.clear();
                         let _ = tx.send(Ok(()));

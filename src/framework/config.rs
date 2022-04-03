@@ -1,78 +1,67 @@
-use crate::{framework::components::*, operators::*, problems::Problem};
-use serde::Serialize;
+#![allow(clippy::new_ret_no_self)]
 
-/// A set of components, representing a heuristic.
-///
-/// While `generation_scheduler`, `archiving` and `post_replacement` can
-/// often be ommitet, the other components should always be specified.
-///
-/// A simple GA could look like this:
-/// ```
-///# use mahf::operators::*;
-///# use mahf::framework::Configuration;
-///# use mahf::problems::bmf::BenchmarkFunction;
-///# let config: Configuration<BenchmarkFunction> =
-/// Configuration {
-///     initialization: initialization::RandomSpread::new(25),
-///     selection: selection::RouletteWheel::new(25),
-///     generation: vec![
-///         generation::UniformCrossover::new(0.8),
-///         generation::FixedDeviationDelta::new(0.2),
-///     ],
-///     replacement: replacement::Generational::new(25),
-///     termination: termination::FixedIterations::new(500),
-///     ..Default::default()
-/// }
-///# ;
-/// ```
-///
-/// See [framework](crate::framework) documentation.
-#[derive(Serialize)]
-pub struct Configuration<P: Problem + 'static> {
-    /// Initializes the population.
-    #[serde(with = "erased_serde")]
-    pub initialization: Box<dyn Component<P>>,
+use crate::{
+    framework::{
+        components::Component,
+        state::{self, StateTree},
+    },
+    problems::Problem,
+};
 
-    /// Selects individuals from the population.
-    #[serde(with = "erased_serde")]
-    pub selection: Box<dyn Component<P>>,
+pub type Configuration<P> = Box<dyn Component<P>>;
 
-    /// Generates new solutions based on selection.
-    #[serde(with = "erased_serde")]
-    pub generation: Vec<Box<dyn Component<P>>>,
+pub struct Block<P>(Vec<Box<dyn Component<P>>>);
 
-    /// Decides which generations should be called.
-    #[serde(with = "erased_serde")]
-    pub generation_scheduler: Box<dyn Component<P>>,
-
-    /// Replaces old solutions with newly generated.
-    #[serde(with = "erased_serde")]
-    pub replacement: Box<dyn Component<P>>,
-
-    /// Exchanges solutions with population after replacement.
-    #[serde(with = "erased_serde")]
-    pub archiving: Box<dyn Component<P>>,
-
-    /// Updates (custom) state after an iteration.
-    #[serde(with = "erased_serde")]
-    pub post_replacement: Box<dyn Component<P>>,
-
-    /// Decides when to terminate the process.
-    #[serde(with = "erased_serde")]
-    pub termination: Box<dyn Component<P>>,
+impl<P> Component<P> for Block<P>
+where
+    P: Problem + 'static,
+{
+    fn execute(&self, problem: &P, state: &mut StateTree) {
+        for component in &self.0 {
+            component.execute(problem, state);
+        }
+    }
 }
 
-impl<P: Problem> Default for Configuration<P> {
-    fn default() -> Self {
-        Self {
-            initialization: initialization::Noop::new(),
-            selection: selection::None::new(),
-            generation: vec![generation::Noop::new()],
-            generation_scheduler: schedulers::AllInOrder::new(),
-            replacement: replacement::Noop::new(),
-            archiving: archive::None::new(),
-            post_replacement: postprocess::None::new(),
-            termination: termination::Undefined::new(),
-        }
+impl<P: Problem + 'static> Block<P> {
+    pub fn new(components: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
+        Box::new(Block(components))
+    }
+}
+
+pub struct Loop<P> {
+    condition: Box<dyn Component<P>>,
+    body: Box<dyn Component<P>>,
+}
+
+impl<P> Component<P> for Loop<P>
+where
+    P: Problem + 'static,
+{
+    fn initialize(&self, problem: &P, state: &mut StateTree) {
+        self.condition.initialize(problem, state);
+    }
+
+    fn execute(&self, problem: &P, state: &mut StateTree) {
+        state.with_substate(|state| {
+            state.insert(state::common::Loop(true));
+            self.body.initialize(problem, state);
+            loop {
+                self.condition.execute(problem, state);
+                if !state.get::<state::common::Loop>().0 {
+                    break;
+                }
+                self.body.execute(problem, state);
+            }
+        });
+    }
+}
+
+impl<P: Problem + 'static> Loop<P> {
+    pub fn new(
+        condition: Box<dyn Component<P>>,
+        body: Box<dyn Component<P>>,
+    ) -> Box<dyn Component<P>> {
+        Box::new(Loop { condition, body })
     }
 }

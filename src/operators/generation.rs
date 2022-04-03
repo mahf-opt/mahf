@@ -10,6 +10,7 @@ use rand::{prelude::SliceRandom, Rng};
 use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
+use std::ops::DerefMut;
 
 #[derive(Serialize)]
 pub struct Noop;
@@ -713,7 +714,10 @@ where
         offspring: &mut Vec<P::Encoding>,
     ) {
         let &PsoGeneration { a, b, c, v_max } = self;
-        let pso_state = state.custom.get_mut::<PsoState>();
+
+        let mut pso_state = state.custom.get_mut::<PsoState>();
+        let pso_state = pso_state.deref_mut();
+
         let rs = rng.gen_range(0.0..=1.0);
         let rt = rng.gen_range(0.0..=1.0);
 

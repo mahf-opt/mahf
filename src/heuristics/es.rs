@@ -1,7 +1,7 @@
 //! Evolutionary Strategy
 
 use crate::{
-    framework::Configuration,
+    framework::legacy::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };

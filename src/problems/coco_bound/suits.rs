@@ -1,5 +1,5 @@
 use crate::{
-    framework::{self, Configuration},
+    framework::{self, config::Configuration},
     problems::coco_bound::CocoInstance,
     random::Random,
     threads::SyncThreadPool,
@@ -66,12 +66,11 @@ pub fn evaluate_suite(
                     let data_dir = data_dir.join(experiment_desc);
 
                     let random = Random::default();
-                    let experiment =
-                        &mut Experiment::create(data_dir, &problem, &random, &configuration)
-                            .context("creating experiment")?;
+                    let experiment = &mut Experiment::create(data_dir, &problem, &random, todo!())
+                        .context("creating experiment")?;
 
                     for _ in 0..runs {
-                        framework::run(&problem, logger, &configuration, None, None);
+                        framework::run(&problem, &configuration, None);
                         experiment.log_run(logger)?;
                         logger.clear();
                         let _ = tx.send(Ok(()));

@@ -4,9 +4,11 @@ use crate::framework::Fitness;
 use std::{any::Any, ops::Range};
 
 pub mod bmf;
-pub mod coco;
 pub mod coco_bound;
 pub mod tsp;
+
+#[cfg(never)]
+pub mod coco;
 
 /// Represents the (global) optimum of the search space.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]

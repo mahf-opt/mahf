@@ -56,7 +56,7 @@ where
         if !state.custom.has::<ElitismState>() {
             state.custom.insert(ElitismState { elitists: vec![] });
         }
-        let elitism_state = state.custom.get_mut::<ElitismState>();
+        let mut elitism_state = state.custom.get_mut::<ElitismState>();
 
         for elitist in elitism_state.elitists.drain(..) {
             if population.iter().all(|ind| ind != &elitist) {
