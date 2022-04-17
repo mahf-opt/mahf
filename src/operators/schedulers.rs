@@ -1,6 +1,14 @@
 //! Scheduling methods
 
-use crate::{framework::components::*, problems::Problem};
+use crate::{
+    framework::{
+        components::*,
+        legacy::{components::*, State},
+        Individual,
+    },
+    problems::Problem,
+    random::Random,
+};
 
 /// Schedules all operators once and in order.
 #[derive(serde::Serialize)]
@@ -13,11 +21,11 @@ impl AllInOrder {
 impl Scheduler for AllInOrder {
     fn schedule(
         &self,
-        _state: &mut crate::framework::State,
-        _rng: &mut crate::random::Random,
+        _state: &mut State,
+        _rng: &mut Random,
         choices: usize,
-        _population: &[crate::framework::Individual],
-        _parents: &[&crate::framework::Individual],
+        _population: &[Individual],
+        _parents: &[&Individual],
         schedule: &mut Vec<usize>,
     ) {
         schedule.extend((0..choices).into_iter())

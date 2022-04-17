@@ -1,7 +1,11 @@
 //! Replacement methods
 
 use crate::{
-    framework::{components::*, Individual, State},
+    framework::{
+        components::*,
+        legacy::{components::*, State},
+        Individual,
+    },
     problems::Problem,
     random::Random,
 };

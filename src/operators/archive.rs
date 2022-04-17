@@ -3,7 +3,11 @@
 use crate::operators::custom_state::ElitismState;
 use crate::problems::Problem;
 use crate::{
-    framework::{components::*, Individual, State},
+    framework::{
+        components::*,
+        legacy::{components::*, State},
+        Individual,
+    },
     random::Random,
 };
 use serde::{Deserialize, Serialize};

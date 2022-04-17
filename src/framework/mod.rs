@@ -2,7 +2,6 @@
 #![doc = include_str!("../../docs/heuristic.md")]
 
 pub mod components;
-pub mod config;
 pub mod legacy;
 
 mod fitness;
@@ -10,14 +9,14 @@ pub use fitness::{Fitness, IllegalFitness};
 
 mod state;
 pub use state::common as common_state;
-pub use state::{CustomState, CustomStateMap, State};
+pub use state::{CustomState, CustomStateMap};
 
 mod individual;
 pub use individual::Individual;
 
 use crate::tracking::Log;
 use crate::{
-    framework::{config::Configuration, state::StateTree},
+    framework::{components::Configuration, state::StateTree},
     problems::Problem,
     random::Random,
 };

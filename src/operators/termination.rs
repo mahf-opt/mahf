@@ -1,9 +1,13 @@
 //! Termination methods
 
-use crate::framework::config::Condition;
-use crate::framework::{components::*, State};
-use crate::operators::custom_state::FitnessImprovementState;
-use crate::problems::{HasKnownOptimum, Problem};
+use crate::{
+    framework::{
+        components::Condition,
+        legacy::{components::*, State},
+    },
+    operators::custom_state::FitnessImprovementState,
+    problems::{HasKnownOptimum, Problem},
+};
 use serde::{Deserialize, Serialize};
 
 /// Only a placeholder. Replace this with something else.

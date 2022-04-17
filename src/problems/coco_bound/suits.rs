@@ -1,5 +1,5 @@
 use crate::{
-    framework::{self, config::Configuration},
+    framework::{self, components::Configuration},
     problems::coco_bound::CocoInstance,
     random::Random,
     threads::SyncThreadPool,

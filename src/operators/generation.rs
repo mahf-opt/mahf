@@ -2,7 +2,10 @@
 
 use crate::operators::custom_state::PsoState;
 use crate::{
-    framework::{components::*, State},
+    framework::{
+        components::*,
+        legacy::{components::*, State},
+    },
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };

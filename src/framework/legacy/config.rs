@@ -1,8 +1,8 @@
 use crate::{
     framework::{
         common_state::common_state,
-        components::Component,
-        config::{self, Block, Condition, Loop, Scope},
+        components::{self, Component},
+        components::{Block, Condition, Loop, Scope},
     },
     operators::*,
     problems::Problem,
@@ -87,7 +87,7 @@ impl<P: Problem> Default for Configuration<P> {
     }
 }
 
-impl<P: Problem> From<Configuration<P>> for config::Configuration<P> {
+impl<P: Problem> From<Configuration<P>> for components::Configuration<P> {
     fn from(cfg: Configuration<P>) -> Self {
         Scope::new_with(
             common_state,

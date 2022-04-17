@@ -133,7 +133,11 @@ impl std::ops::MulAssign<f64> for PheromoneMatrix {
 mod ant_ops {
     use super::PheromoneMatrix;
     use crate::{
-        framework::{components::*, Fitness, Individual, State},
+        framework::{
+            components::*,
+            legacy::{components::*, State},
+            Fitness, Individual,
+        },
         problems::{
             tsp::{Route, SymmetricTsp},
             Problem,

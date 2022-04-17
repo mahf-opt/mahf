@@ -4,7 +4,11 @@
 use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
 use crate::problems::VectorProblem;
 use crate::{
-    framework::{components::*, Individual, State},
+    framework::{
+        components::*,
+        legacy::{components::*, State},
+        Individual,
+    },
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
