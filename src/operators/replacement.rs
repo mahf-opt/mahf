@@ -1,11 +1,7 @@
 //! Replacement methods
 
 use crate::{
-    framework::{
-        components::*,
-        legacy::{components::*, State},
-        Individual,
-    },
+    framework::{components::*, legacy::components::*, Individual, State},
     problems::Problem,
     random::Random,
 };
@@ -64,7 +60,7 @@ mod mupluslambda {
 
     #[test]
     fn keeps_right_individuals() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let comp = MuPlusLambda {
             max_population_size: 3,
@@ -112,7 +108,7 @@ mod generational {
 
     #[test]
     fn keeps_all_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let comp = Generational {
             max_population_size: 5,
@@ -153,7 +149,7 @@ mod random_replacement {
 
     #[test]
     fn keeps_right_amount_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let comp = RandomReplacement {
             max_population_size: 5,

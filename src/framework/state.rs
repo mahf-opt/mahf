@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use crate::tracking::log::CustomLog;
 
 mod map;
@@ -66,11 +68,35 @@ impl State {
         }
     }
 
+    pub fn get_value<T>(&self) -> T::Target
+    where
+        T: CustomState + Deref,
+        T::Target: Sized,
+    {
+        if self.map.has::<T>() {
+            *self.map.get::<T>().deref()
+        } else {
+            *self.parent().unwrap().get::<T>().deref()
+        }
+    }
+
     pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
         if self.map.has::<T>() {
             self.map.get_mut::<T>()
         } else {
             self.parent_mut().unwrap().get_mut::<T>()
+        }
+    }
+
+    pub fn set_value<T>(&mut self, value: T::Target)
+    where
+        T: CustomState + DerefMut,
+        T::Target: Sized,
+    {
+        if self.map.has::<T>() {
+            *self.map.get_mut::<T>().deref_mut() = value;
+        } else {
+            *self.parent_mut().unwrap().get_mut::<T>().deref_mut() = value;
         }
     }
 }

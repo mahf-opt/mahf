@@ -10,6 +10,7 @@ members = ["param-study"]
 [dependencies]
 anyhow = "1.0.51"
 coco-rs = "0.4"
+derive_deref = "1.1.1"
 embed-doc-image = "0.1.4"
 erased-serde = "0.3.16"
 float_eq = "0.7.0"

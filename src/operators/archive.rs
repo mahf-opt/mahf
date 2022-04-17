@@ -1,13 +1,11 @@
 //! Archiving methods
 
-use crate::operators::custom_state::ElitismState;
-use crate::problems::Problem;
 use crate::{
     framework::{
-        components::*,
-        legacy::{components::*, State},
-        Individual,
+        common_state::BestFitness, components::*, legacy::components::*, Individual, State,
     },
+    operators::custom_state::ElitismState,
+    problems::Problem,
     random::Random,
 };
 use serde::{Deserialize, Serialize};
@@ -57,10 +55,10 @@ where
         population: &mut Vec<Individual>,
         _offspring: &mut Vec<Individual>,
     ) {
-        if !state.custom.has::<ElitismState>() {
-            state.custom.insert(ElitismState { elitists: vec![] });
+        if !state.has::<ElitismState>() {
+            state.insert(ElitismState { elitists: vec![] });
         }
-        let mut elitism_state = state.custom.get_mut::<ElitismState>();
+        let mut elitism_state = state.get_mut::<ElitismState>();
 
         for elitist in elitism_state.elitists.drain(..) {
             if population.iter().all(|ind| ind != &elitist) {
@@ -73,7 +71,9 @@ where
         pop.truncate(self.n_elitists);
         let elitists = pop.into_iter().map(Individual::clone).collect();
         elitism_state.elitists = elitists;
+        let fittest = elitism_state.elitists[0].fitness();
 
-        assert_eq!(state.best_so_far, elitism_state.elitists[0].fitness());
+        let best_so_far = **state.get::<BestFitness>();
+        assert_eq!(best_so_far, fittest);
     }
 }

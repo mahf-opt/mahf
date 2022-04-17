@@ -4,7 +4,6 @@
 use crate::{
     framework::{
         components::{AnyComponent, Component, Condition},
-        legacy,
         state::State,
         Fitness, Individual,
     },
@@ -18,7 +17,7 @@ use crate::{
 pub trait Initialization<P: Problem> {
     fn initialize(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         problem: &P,
         rng: &mut Random,
         population: &mut Vec<P::Encoding>,
@@ -44,7 +43,7 @@ where
 pub trait Selection {
     fn select<'p>(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         rng: &mut Random,
         population: &'p [Individual],
         selection: &mut Vec<&'p Individual>,
@@ -70,7 +69,7 @@ where
 pub trait Generation<P: Problem> {
     fn generate(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         problem: &P,
         rng: &mut Random,
         parents: &mut Vec<P::Encoding>,
@@ -106,7 +105,7 @@ pub trait Scheduler {
     /// Operators are represented by their index. Valid operators are thus in the range \[0..choices].
     fn schedule(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         rng: &mut Random,
         choices: usize,
         population: &[Individual],
@@ -134,7 +133,7 @@ where
 pub trait Replacement {
     fn replace(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         rng: &mut Random,
         population: &mut Vec<Individual>,
         offspring: &mut Vec<Individual>,
@@ -160,7 +159,7 @@ where
 pub trait Archiving<P: Problem> {
     fn archive(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         rng: &mut Random,
         _problem: &P,
         population: &mut Vec<Individual>,
@@ -185,7 +184,7 @@ where
 ///
 /// See [crate::operators::termination] for existing implementations.
 pub trait Termination<P: Problem> {
-    fn terminate(&self, state: &mut legacy::State, problem: &P) -> bool;
+    fn terminate(&self, state: &mut State, problem: &P) -> bool;
 }
 
 #[derive(serde::Serialize)]
@@ -208,7 +207,7 @@ pub trait Postprocess<P: Problem> {
     /// Called exactly once.
     fn initialize(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         problem: &P,
         rng: &mut Random,
         population: &[Individual],
@@ -217,7 +216,7 @@ pub trait Postprocess<P: Problem> {
     /// Called after initialization and every replacement.
     fn postprocess(
         &self,
-        state: &mut legacy::State,
+        state: &mut State,
         problem: &P,
         rng: &mut Random,
         population: &[Individual],
@@ -248,7 +247,7 @@ where
 pub trait Evaluator<P: Problem> {
     fn evaluate(
         &mut self,
-        state: &mut legacy::State,
+        state: &mut State,
         problem: &P,
         offspring: &mut Vec<P::Encoding>,
         evaluated: &mut Vec<Individual>,
@@ -259,7 +258,7 @@ pub struct SimpleEvaluator;
 impl<P: Problem> Evaluator<P> for SimpleEvaluator {
     fn evaluate(
         &mut self,
-        _state: &mut legacy::State,
+        _state: &mut State,
         problem: &P,
         offspring: &mut Vec<P::Encoding>,
         evaluated: &mut Vec<Individual>,

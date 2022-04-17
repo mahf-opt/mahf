@@ -1,5 +1,5 @@
 use crate::{
-    framework::{legacy::State, CustomState},
+    framework::{CustomState, State},
     tracking::trigger::*,
 };
 

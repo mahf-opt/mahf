@@ -4,11 +4,7 @@
 use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
 use crate::problems::VectorProblem;
 use crate::{
-    framework::{
-        components::*,
-        legacy::{components::*, State},
-        Individual,
-    },
+    framework::{components::*, legacy::components::*, Individual, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
@@ -94,7 +90,7 @@ where
             .map(Individual::clone)
             .unwrap();
 
-        state.custom.insert(PsoState {
+        state.insert(PsoState {
             velocities,
             bests,
             global_best,
@@ -108,7 +104,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let mut pso_state = state.custom.get_mut::<PsoState>();
+        let mut pso_state = state.get_mut::<PsoState>();
 
         for (i, individual) in population.iter().enumerate() {
             if pso_state.bests[i].fitness() > individual.fitness() {
@@ -155,7 +151,7 @@ where
         _rng: &mut Random,
         _population: &[Individual],
     ) {
-        state.custom.insert(DiversityState {
+        state.insert(DiversityState {
             diversity: 0.0,
             max_div: 0.0,
         });
@@ -168,7 +164,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let diversity_state = state.custom.get_mut::<DiversityState>();
+        let diversity_state = state.get_mut::<DiversityState>();
 
         if population.is_empty() {
             diversity_state.diversity = 0.0;
@@ -261,7 +257,7 @@ where
         _rng: &mut Random,
         _population: &[Individual],
     ) {
-        state.custom.insert(PopulationState {
+        state.insert(PopulationState {
             current_pop: vec![],
         });
     }
@@ -273,7 +269,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let population_state = state.custom.get_mut::<PopulationState>();
+        let population_state = state.get_mut::<PopulationState>();
 
         population_state.current_pop = population
             .iter()

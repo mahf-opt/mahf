@@ -133,11 +133,7 @@ impl std::ops::MulAssign<f64> for PheromoneMatrix {
 mod ant_ops {
     use super::PheromoneMatrix;
     use crate::{
-        framework::{
-            components::*,
-            legacy::{components::*, State},
-            Fitness, Individual,
-        },
+        framework::{components::*, legacy::components::*, Fitness, Individual, State},
         problems::{
             tsp::{Route, SymmetricTsp},
             Problem,
@@ -163,7 +159,7 @@ mod ant_ops {
             _rng: &mut Random,
             _population: &mut Vec<Route>,
         ) {
-            state.custom.insert(PheromoneMatrix::new(
+            state.insert(PheromoneMatrix::new(
                 problem.dimension,
                 self.default_pheromones,
             ));
@@ -198,7 +194,7 @@ mod ant_ops {
             _parents: &mut Vec<Route>,
             offspring: &mut Vec<Route>,
         ) {
-            let pm = state.custom.get_mut::<PheromoneMatrix>();
+            let pm = state.get_mut::<PheromoneMatrix>();
 
             // Greedy route
             {
@@ -265,7 +261,7 @@ mod ant_ops {
             _population: &mut Vec<Individual>,
             offspring: &mut Vec<Individual>,
         ) {
-            let pm = state.custom.get_mut::<PheromoneMatrix>();
+            let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
@@ -310,7 +306,7 @@ mod ant_ops {
             _population: &mut Vec<Individual>,
             offspring: &mut Vec<Individual>,
         ) {
-            let pm = state.custom.get_mut::<PheromoneMatrix>();
+            let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;

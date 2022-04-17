@@ -1,11 +1,7 @@
 //! Selection methods
 
 use crate::{
-    framework::{
-        components::*,
-        legacy::{components::*, State},
-        Individual,
-    },
+    framework::{components::*, legacy::components::*, Individual, State},
     problems::Problem,
     random::Random,
 };
@@ -117,7 +113,7 @@ mod fully_random {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = FullyRandom { offspring: 4 };
@@ -220,7 +216,12 @@ mod deterministic_fitness_proportional {
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let mut rng = Random::testing();
         let mut selection = Vec::new();
-        comp.select(&mut State::new(), &mut rng, &population, &mut selection);
+        comp.select(
+            &mut State::new_root(),
+            &mut rng,
+            &population,
+            &mut selection,
+        );
         let selection = collect_population_fitness(&selection);
 
         assert!(selection.len() > (comp.min_offspring as usize * population.len()));
@@ -297,7 +298,7 @@ mod roulette_wheel {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = RouletteWheel { offspring: 4 };
@@ -381,7 +382,7 @@ mod stochastic_universal_sampling {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = StochasticUniversalSampling { offspring: 4 };
@@ -436,7 +437,7 @@ mod tournament {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = Tournament {
@@ -494,7 +495,7 @@ mod linear_rank {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = LinearRank { offspring: 4 };
@@ -558,7 +559,7 @@ mod exponential_rank {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = ExponentialRank {

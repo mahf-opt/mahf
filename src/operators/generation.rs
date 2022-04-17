@@ -1,11 +1,9 @@
 //! Generation methods
 
+use crate::framework::common_state::Progress;
 use crate::operators::custom_state::PsoState;
 use crate::{
-    framework::{
-        components::*,
-        legacy::{components::*, State},
-    },
+    framework::{components::*, legacy::components::*, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };
@@ -190,7 +188,7 @@ where
         parents: &mut Vec<Vec<f64>>,
         offspring: &mut Vec<Vec<f64>>,
     ) {
-        let deviation = self.deviation(state.progress);
+        let deviation = self.deviation(**state.get::<Progress>());
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
         for solution in parents.iter_mut() {
@@ -263,7 +261,7 @@ mod uniform_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = UniformMutation { rm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = parents.len();
@@ -328,7 +326,7 @@ mod gaussian_mutation {
             rm: 1.0,
             deviation: 0.1,
         };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = parents.len();
@@ -431,7 +429,7 @@ mod swap_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = SwapMutation { pm: 1.0, n_swap: 2 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -486,7 +484,7 @@ mod scramble_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = ScrambleMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -542,7 +540,7 @@ mod insertion_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = InsertionMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -602,7 +600,7 @@ mod inversion_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = InversionMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -671,7 +669,7 @@ mod translocation_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = TranslocationMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -718,7 +716,7 @@ where
     ) {
         let &PsoGeneration { a, b, c, v_max } = self;
 
-        let mut pso_state = state.custom.get_mut::<PsoState>();
+        let mut pso_state = state.get_mut::<PsoState>();
         let pso_state = pso_state.deref_mut();
 
         let rs = rng.gen_range(0.0..=1.0);
@@ -816,7 +814,7 @@ mod npoint_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = NPointCrossover { pc: 1.0, points: 3 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -901,7 +899,7 @@ mod uniform_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = UniformCrossover { pc: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -990,7 +988,7 @@ mod cycle_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = CycleCrossover { pc: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![
             vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],

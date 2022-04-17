@@ -6,10 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::problems::VectorProblem;
 use crate::{
-    framework::{
-        components::*,
-        legacy::{components::*, State},
-    },
+    framework::{components::*, legacy::components::*, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };

@@ -1,11 +1,7 @@
 //! Scheduling methods
 
 use crate::{
-    framework::{
-        components::*,
-        legacy::{components::*, State},
-        Individual,
-    },
+    framework::{components::*, legacy::components::*, Individual, State},
     problems::Problem,
     random::Random,
 };

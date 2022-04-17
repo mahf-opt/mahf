@@ -2,8 +2,10 @@
 
 use crate::{
     framework::{
+        common_state::{BestFitness, Evaluations, Iterations, Progress},
         components::Condition,
-        legacy::{components::*, State},
+        legacy::components::*,
+        State,
     },
     operators::custom_state::FitnessImprovementState,
     problems::{HasKnownOptimum, Problem},
@@ -56,8 +58,9 @@ where
     P: Problem,
 {
     fn terminate(&self, state: &mut State, _problem: &P) -> bool {
-        state.progress = state.iterations as f64 / self.max_iterations as f64;
-        state.iterations >= self.max_iterations
+        let iterations = state.get_value::<Iterations>();
+        state.set_value::<Progress>(iterations as f64 / self.max_iterations as f64);
+        iterations >= self.max_iterations
     }
 }
 #[cfg(test)]
@@ -68,29 +71,29 @@ mod fixed_iterations {
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
-        let mut state = State::new();
+        let mut state = State::new_root();
         let comp = FixedIterations {
             max_iterations: 200,
         };
-        state.iterations = 100;
+        state.set_value::<Iterations>(100);
         assert!(!comp.terminate(&mut state, &problem));
-        state.iterations = 200;
+        state.set_value::<Iterations>(200);
         assert!(comp.terminate(&mut state, &problem));
     }
 
     #[test]
     fn updates_progress() {
         let problem = BenchmarkFunction::sphere(3);
-        let mut state = State::new();
+        let mut state = State::new_root();
         let comp = FixedIterations {
             max_iterations: 200,
         };
-        state.iterations = 100;
+        state.set_value::<Iterations>(100);
         comp.terminate(&mut state, &problem);
-        float_eq::assert_float_eq!(state.progress, 0.5, ulps <= 2);
-        state.iterations = 200;
+        float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
+        state.set_value::<Iterations>(200);
         comp.terminate(&mut state, &problem);
-        float_eq::assert_float_eq!(state.progress, 1.0, ulps <= 2);
+        float_eq::assert_float_eq!(state.get_value::<Progress>(), 1.0, ulps <= 2);
     }
 }
 
@@ -107,8 +110,9 @@ where
     P: Problem,
 {
     fn terminate(&self, state: &mut State, _problem: &P) -> bool {
-        state.progress = state.evaluations as f64 / self.max_evaluations as f64;
-        state.evaluations >= self.max_evaluations
+        let evaluations = state.get_value::<Evaluations>();
+        state.set_value::<Progress>(evaluations as f64 / self.max_evaluations as f64);
+        evaluations >= self.max_evaluations
     }
 }
 #[cfg(test)]
@@ -119,29 +123,29 @@ mod fixed_evaluations {
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
-        let mut state = State::new();
+        let mut state = State::new_root();
         let comp = FixedEvaluations {
             max_evaluations: 200,
         };
-        state.evaluations = 100;
+        state.set_value::<Evaluations>(100);
         assert!(!comp.terminate(&mut state, &problem));
-        state.evaluations = 200;
+        state.set_value::<Evaluations>(200);
         assert!(comp.terminate(&mut state, &problem));
     }
 
     #[test]
     fn updates_progress() {
         let problem = BenchmarkFunction::sphere(3);
-        let mut state = State::new();
+        let mut state = State::new_root();
         let comp = FixedEvaluations {
             max_evaluations: 200,
         };
-        state.evaluations = 100;
+        state.set_value::<Evaluations>(100);
         comp.terminate(&mut state, &problem);
-        float_eq::assert_float_eq!(state.progress, 0.5, ulps <= 2);
-        state.evaluations = 200;
+        float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
+        state.set_value::<Evaluations>(200);
         comp.terminate(&mut state, &problem);
-        float_eq::assert_float_eq!(state.progress, 1.0, ulps <= 2);
+        float_eq::assert_float_eq!(state.get_value::<Progress>(), 1.0, ulps <= 2);
     }
 }
 
@@ -160,7 +164,7 @@ where
     P: Problem,
 {
     fn terminate(&self, state: &mut State, problem: &P) -> bool {
-        state.best_so_far.into() < problem.known_optimum() + self.distance
+        state.get_value::<BestFitness>().into() < problem.known_optimum() + self.distance
     }
 }
 #[cfg(test)]
@@ -172,14 +176,14 @@ mod distance_to_opt {
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
-        let mut state = State::new();
+        let mut state = State::new_root();
         let comp = DistanceToOpt {
             distance: 0.1,
             optimum: 0.0,
         };
-        state.best_so_far = Fitness::try_from(2.0).unwrap();
+        state.set_value::<BestFitness>(Fitness::try_from(2.0).unwrap());
         assert!(!comp.terminate(&mut state, &problem));
-        state.best_so_far = Fitness::try_from(0.05).unwrap();
+        state.set_value::<BestFitness>(Fitness::try_from(0.05).unwrap());
         assert!(comp.terminate(&mut state, &problem));
     }
 }
@@ -197,18 +201,20 @@ where
     P: Problem,
 {
     fn terminate(&self, state: &mut State, _problem: &P) -> bool {
-        if !state.custom.has::<FitnessImprovementState>() {
-            state.custom.insert(FitnessImprovementState {
+        if !state.has::<FitnessImprovementState>() {
+            state.insert(FitnessImprovementState {
                 current_steps: 0,
-                current_fitness: state.best_so_far.into(),
+                current_fitness: state.get_value::<BestFitness>().into(),
             });
         }
-        let termination_state = state.custom.get_mut::<FitnessImprovementState>();
+        let termination_state = state.get_mut::<FitnessImprovementState>();
         let error_margin = f64::EPSILON;
-        if (state.best_so_far.into() - termination_state.current_fitness).abs() < error_margin {
+        if (state.get_value::<BestFitness>().into() - termination_state.current_fitness).abs()
+            < error_margin
+        {
             termination_state.current_steps += 1;
         } else {
-            termination_state.current_fitness = state.best_so_far.into();
+            termination_state.current_fitness = state.get_value::<BestFitness>().into();
             termination_state.current_steps = 0;
         }
         termination_state.current_steps >= self.steps
@@ -223,17 +229,17 @@ mod steps_without_improvement {
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
-        let mut state = State::new();
+        let mut state = State::new_root();
         let comp = StepsWithoutImprovement { steps: 20 };
-        state.custom.insert(FitnessImprovementState {
+        state.insert(FitnessImprovementState {
             current_steps: 0,
             current_fitness: 0.5,
         });
-        state.best_so_far = Fitness::try_from(0.5).unwrap();
-        state.iterations = 10;
+        state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
+        state.set_value::<Iterations>(10);
         assert!(!comp.terminate(&mut state, &problem));
-        state.best_so_far = Fitness::try_from(0.5).unwrap();
-        let test_state = state.custom.get_mut::<FitnessImprovementState>();
+        state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
+        let test_state = state.get_mut::<FitnessImprovementState>();
         test_state.current_steps = 20;
         assert!(comp.terminate(&mut state, &problem));
     }
