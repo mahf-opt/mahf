@@ -4,7 +4,7 @@ use crate::{
     random::Random,
 };
 
-pub fn insert_common_state(state: &mut StateTree) {
+pub fn common_state(state: &mut StateTree) {
     state.insert(Evaluations(0));
     state.insert(Iterations(0));
     state.insert(Progress(0.0));

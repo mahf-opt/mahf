@@ -1,5 +1,6 @@
 //! Termination methods
 
+use crate::framework::config::Condition;
 use crate::framework::{components::*, State};
 use crate::operators::custom_state::FitnessImprovementState;
 use crate::problems::{HasKnownOptimum, Problem};
@@ -11,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Undefined;
 impl Undefined {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>>
+    pub fn new<P: Problem>() -> Box<dyn Condition<P>>
     where
         P: Problem,
     {
@@ -39,7 +40,7 @@ pub struct FixedIterations {
     pub max_iterations: u32,
 }
 impl FixedIterations {
-    pub fn new<P: Problem>(max_iterations: u32) -> Box<dyn Component<P>>
+    pub fn new<P: Problem>(max_iterations: u32) -> Box<dyn Condition<P>>
     where
         P: Problem,
     {

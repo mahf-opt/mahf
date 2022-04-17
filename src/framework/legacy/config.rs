@@ -1,7 +1,8 @@
 use crate::{
     framework::{
-        components::*,
-        config::{self, *},
+        common_state::common_state,
+        components::Component,
+        config::{self, Block, Condition, Loop, Scope},
     },
     operators::*,
     problems::Problem,
@@ -67,7 +68,7 @@ pub struct Configuration<P: Problem + 'static> {
 
     /// Decides when to terminate the process.
     #[serde(with = "erased_serde")]
-    pub termination: Box<dyn Component<P>>,
+    pub termination: Box<dyn Condition<P>>,
 }
 
 impl<P: Problem> Default for Configuration<P> {
@@ -88,18 +89,21 @@ impl<P: Problem> Default for Configuration<P> {
 
 impl<P: Problem> From<Configuration<P>> for config::Configuration<P> {
     fn from(cfg: Configuration<P>) -> Self {
-        Block::new(vec![
-            cfg.initialization,
-            Loop::new(
-                cfg.termination,
-                Block::new(vec![
-                    cfg.selection,
-                    Block::new(cfg.generation),
-                    cfg.replacement,
-                    cfg.archiving,
-                    cfg.post_replacement,
-                ]),
-            ),
-        ])
+        Scope::new_with(
+            common_state,
+            vec![
+                cfg.initialization,
+                Loop::new(
+                    cfg.termination,
+                    vec![
+                        cfg.selection,
+                        Block::new(cfg.generation),
+                        cfg.replacement,
+                        cfg.archiving,
+                        cfg.post_replacement,
+                    ],
+                ),
+            ],
+        )
     }
 }

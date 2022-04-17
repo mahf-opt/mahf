@@ -1,7 +1,7 @@
 //! Ant Colony Optimization
 
 use crate::{
-    framework::{legacy::Configuration, CustomState},
+    framework::{legacy, CustomState},
     operators::*,
     problems::tsp::SymmetricTsp,
     tracking::log::CustomLog,
@@ -19,8 +19,8 @@ pub fn ant_system(
     evaporation: f64,
     decay_coefficient: f64,
     max_iterations: u32,
-) -> Configuration<SymmetricTsp> {
-    Configuration {
+) -> legacy::Configuration<SymmetricTsp> {
+    legacy::Configuration {
         initialization: ant_ops::AcoInitialization::new(default_pheromones),
         selection: selection::FullyRandom::new(0),
         generation: vec![ant_ops::AcoGeneration::new(number_of_ants, alpha, beta)],
@@ -43,13 +43,13 @@ pub fn min_max_ant_system(
     max_pheromones: f64,
     min_pheromones: f64,
     max_iterations: u32,
-) -> Configuration<SymmetricTsp> {
+) -> legacy::Configuration<SymmetricTsp> {
     assert!(
         min_pheromones < max_pheromones,
         "min_pheromones must be less than max_pheromones"
     );
 
-    Configuration {
+    legacy::Configuration {
         initialization: ant_ops::AcoInitialization::new(default_pheromones),
         selection: selection::FullyRandom::new(0),
         generation: vec![ant_ops::AcoGeneration::new(number_of_ants, alpha, beta)],

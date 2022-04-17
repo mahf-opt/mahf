@@ -2,7 +2,7 @@
 //! Framework components.
 
 use crate::{
-    framework::{state::StateTree, Fitness, Individual, State},
+    framework::{config::Condition, state::StateTree, Fitness, Individual, State},
     problems::Problem,
     random::Random,
 };
@@ -213,12 +213,12 @@ pub trait Termination<P: Problem> {
 #[derive(serde::Serialize)]
 pub struct Terminator<T>(pub T);
 
-impl<T, P> Component<P> for Terminator<T>
+impl<T, P> Condition<P> for Terminator<T>
 where
     P: Problem,
     T: AnyComponent + Termination<P>,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn evaluate(&self, problem: &P, state: &mut StateTree) -> bool {
         todo!()
     }
 }

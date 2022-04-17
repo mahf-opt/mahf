@@ -70,7 +70,7 @@ pub fn evaluate_suite(
                         .context("creating experiment")?;
 
                     for _ in 0..runs {
-                        framework::run(&problem, &configuration, None);
+                        framework::run(&problem, &configuration, None, Some(random));
                         experiment.log_run(logger)?;
                         logger.clear();
                         let _ = tx.send(Ok(()));

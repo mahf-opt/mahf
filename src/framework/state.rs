@@ -13,12 +13,10 @@ pub struct StateTree {
 
 impl StateTree {
     pub fn new_root() -> Self {
-        let mut tree = StateTree {
+        StateTree {
             parent: None,
             map: CustomStateMap::new(),
-        };
-        common::insert_common_state(&mut tree);
-        tree
+        }
     }
 
     pub fn with_substate(&mut self, fun: impl FnOnce(&mut StateTree)) {
