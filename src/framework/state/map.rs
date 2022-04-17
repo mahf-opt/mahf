@@ -1,23 +1,10 @@
-use crate::tracking::log::CustomLog;
+use crate::{framework::CustomState, tracking::log::CustomLog};
 use std::{
     any::{Any, TypeId},
     collections::BTreeMap,
 };
 
-/// Makes custom state trackable.
-pub trait CustomState: AsAny {
-    /// Called after each evaluation.
-    fn evaluation_log(&self) -> Vec<CustomLog> {
-        Vec::default()
-    }
-
-    /// Called after each iteration.
-    fn iteration_log(&self) -> Vec<CustomLog> {
-        Vec::default()
-    }
-}
-
-/// Utility trait to upcast [CustomState] to [Any].
+/// Utility trait to upcast [CustomState](CustomState) to [Any].
 pub trait AsAny: Any {
     fn as_any(&self) -> &dyn Any;
     fn as_mut_any(&mut self) -> &mut dyn Any;
@@ -39,13 +26,13 @@ impl<S: CustomState> AsAny for S {
 ///
 /// [new type]: https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html
 #[derive(Default)]
-pub struct CustomStateMap {
+pub struct StateMap {
     map: BTreeMap<TypeId, Box<dyn CustomState>>,
 }
 
-impl CustomStateMap {
+impl StateMap {
     pub(crate) fn new() -> Self {
-        CustomStateMap {
+        StateMap {
             map: BTreeMap::new(),
         }
     }

@@ -1,26 +1,42 @@
-mod custom;
-pub use custom::{CustomState, CustomStateMap};
+use crate::tracking::log::CustomLog;
+
+mod map;
+use map::AsAny;
+pub(crate) use map::StateMap;
 
 pub mod common;
 
-#[derive(Default)]
-pub struct StateTree {
-    parent: Option<Box<StateTree>>,
-    map: CustomStateMap,
+/// Makes custom state trackable.
+pub trait CustomState: AsAny {
+    /// Called after each evaluation.
+    fn evaluation_log(&self) -> Vec<CustomLog> {
+        Vec::default()
+    }
+
+    /// Called after each iteration.
+    fn iteration_log(&self) -> Vec<CustomLog> {
+        Vec::default()
+    }
 }
 
-impl StateTree {
+#[derive(Default)]
+pub struct State {
+    parent: Option<Box<State>>,
+    map: StateMap,
+}
+
+impl State {
     pub fn new_root() -> Self {
-        StateTree {
+        State {
             parent: None,
-            map: CustomStateMap::new(),
+            map: StateMap::new(),
         }
     }
 
-    pub fn with_substate(&mut self, fun: impl FnOnce(&mut StateTree)) {
-        let mut substate: StateTree = Self {
+    pub fn with_substate(&mut self, fun: impl FnOnce(&mut State)) {
+        let mut substate: State = Self {
             parent: Some(Box::new(std::mem::take(self))),
-            map: CustomStateMap::new(),
+            map: StateMap::new(),
         };
         fun(&mut substate);
         *self = *substate.parent.unwrap()

@@ -3,7 +3,7 @@
 
 //! Framework components.
 
-use crate::{framework::state::StateTree, problems::Problem};
+use crate::{framework::state::State, problems::Problem};
 use std::any::Any;
 use trait_set::trait_set;
 
@@ -27,15 +27,15 @@ trait_set! {
 ///
 pub trait Component<P>: AnyComponent {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut StateTree) {}
-    fn execute(&self, problem: &P, state: &mut StateTree);
+    fn initialize(&self, problem: &P, state: &mut State) {}
+    fn execute(&self, problem: &P, state: &mut State);
 }
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 
 pub trait Condition<P>: AnyComponent {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut StateTree) {}
-    fn evaluate(&self, problem: &P, state: &mut StateTree) -> bool;
+    fn initialize(&self, problem: &P, state: &mut State) {}
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
 }
 erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
 
@@ -43,14 +43,14 @@ pub type Configuration<P> = Box<dyn Component<P>>;
 
 pub struct Scope<P> {
     body: Box<dyn Component<P>>,
-    init: fn(&mut StateTree),
+    init: fn(&mut State),
 }
 
 impl<P> Component<P> for Scope<P>
 where
     P: Problem + 'static,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         state.with_substate(|state| {
             (self.init)(state);
             self.body.initialize(problem, state);
@@ -65,7 +65,7 @@ impl<P: Problem + 'static> Scope<P> {
     }
 
     pub fn new_with(
-        init: fn(&mut StateTree),
+        init: fn(&mut State),
         body: Vec<Box<dyn Component<P>>>,
     ) -> Box<dyn Component<P>> {
         let body = Block::new(body);
@@ -79,13 +79,13 @@ impl<P> Component<P> for Block<P>
 where
     P: Problem + 'static,
 {
-    fn initialize(&self, problem: &P, state: &mut StateTree) {
+    fn initialize(&self, problem: &P, state: &mut State) {
         for component in &self.0 {
             component.initialize(problem, state);
         }
     }
 
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         for component in &self.0 {
             component.execute(problem, state);
         }
@@ -107,12 +107,12 @@ impl<P> Component<P> for Loop<P>
 where
     P: Problem + 'static,
 {
-    fn initialize(&self, problem: &P, state: &mut StateTree) {
+    fn initialize(&self, problem: &P, state: &mut State) {
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
     }
 
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         self.condition.initialize(problem, state);
         while self.condition.evaluate(problem, state) {
             self.body.execute(problem, state);

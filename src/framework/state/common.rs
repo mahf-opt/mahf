@@ -1,10 +1,10 @@
-use super::{CustomState, StateTree};
+use super::{CustomState, State};
 use crate::{
     framework::{Fitness, Individual},
     random::Random,
 };
 
-pub fn common_state(state: &mut StateTree) {
+pub fn common_state(state: &mut State) {
     state.insert(Evaluations(0));
     state.insert(Iterations(0));
     state.insert(Progress(0.0));

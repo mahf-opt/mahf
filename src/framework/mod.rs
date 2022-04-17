@@ -9,14 +9,14 @@ pub use fitness::{Fitness, IllegalFitness};
 
 mod state;
 pub use state::common as common_state;
-pub use state::{CustomState, CustomStateMap};
+pub use state::CustomState;
 
 mod individual;
 pub use individual::Individual;
 
 use crate::tracking::Log;
 use crate::{
-    framework::{components::Configuration, state::StateTree},
+    framework::{components::Configuration, state::State},
     problems::Problem,
     random::Random,
 };
@@ -26,8 +26,8 @@ pub fn run<P: Problem>(
     config: &Configuration<P>,
     log: Option<Log>,
     rng: Option<Random>,
-) -> StateTree {
-    let mut state = StateTree::new_root();
+) -> State {
+    let mut state = State::new_root();
 
     state.insert(common_state::Rng(rng.unwrap_or_default()));
 

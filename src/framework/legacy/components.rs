@@ -5,7 +5,7 @@ use crate::{
     framework::{
         components::{AnyComponent, Component, Condition},
         legacy,
-        state::StateTree,
+        state::State,
         Fitness, Individual,
     },
     problems::Problem,
@@ -33,7 +33,7 @@ where
     P: Problem,
     T: AnyComponent + Initialization<P>,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }
@@ -59,7 +59,7 @@ where
     P: Problem,
     T: AnyComponent + Selection,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }
@@ -86,7 +86,7 @@ where
     P: Problem,
     T: AnyComponent + Generation<P>,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }
@@ -123,7 +123,7 @@ where
     P: Problem,
     T: AnyComponent + Scheduler,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }
@@ -149,7 +149,7 @@ where
     P: Problem,
     T: AnyComponent + Replacement,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }
@@ -176,7 +176,7 @@ where
     P: Problem,
     T: AnyComponent + Archiving<P>,
 {
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }
@@ -196,7 +196,7 @@ where
     P: Problem,
     T: AnyComponent + Termination<P>,
 {
-    fn evaluate(&self, problem: &P, state: &mut StateTree) -> bool {
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
         todo!()
     }
 }
@@ -232,11 +232,11 @@ where
     P: Problem,
     T: AnyComponent + Postprocess<P>,
 {
-    fn initialize(&self, problem: &P, state: &mut StateTree) {
+    fn initialize(&self, problem: &P, state: &mut State) {
         todo!()
     }
 
-    fn execute(&self, problem: &P, state: &mut StateTree) {
+    fn execute(&self, problem: &P, state: &mut State) {
         todo!()
     }
 }

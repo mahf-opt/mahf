@@ -1,5 +1,5 @@
 use crate::{
-    framework::{CustomStateMap, Fitness},
+    framework::{state::StateMap, Fitness},
     tracking::Log,
 };
 
@@ -16,7 +16,7 @@ pub struct State {
     /// Best fitness reached so far.
     pub best_so_far: Fitness,
     /// Custom state
-    pub custom: CustomStateMap,
+    pub custom: StateMap,
 }
 
 impl State {
@@ -26,7 +26,7 @@ impl State {
             iterations: 0,
             progress: 0.0,
             best_so_far: Fitness::try_from(f64::INFINITY).unwrap(),
-            custom: CustomStateMap::new(),
+            custom: StateMap::new(),
         }
     }
 
