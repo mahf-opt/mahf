@@ -1,10 +1,11 @@
 //! Ant Colony Optimization
 
+use serde::Serialize;
+
 use crate::{
     framework::{legacy, CustomState},
     operators::*,
     problems::tsp::SymmetricTsp,
-    tracking::log::CustomLog,
 };
 
 /// Ant Colony Optimization - Ant System
@@ -59,48 +60,18 @@ pub fn min_max_ant_system(
     }
 }
 
+#[derive(Clone, Serialize)]
 struct PheromoneMatrix {
     dimension: usize,
     inner: Vec<f64>,
 }
+impl CustomState for PheromoneMatrix {}
 impl PheromoneMatrix {
     pub fn new(dimension: usize, initial_value: f64) -> Self {
         PheromoneMatrix {
             dimension,
             inner: vec![initial_value; dimension * dimension],
         }
-    }
-}
-impl CustomState for PheromoneMatrix {
-    fn iteration_log(&self) -> Vec<CustomLog> {
-        let mut min = self.inner[0];
-        let mut max = self.inner[0];
-        let mut sum = 0.0;
-
-        for &x in &self.inner {
-            min = f64::min(min, x);
-            max = f64::max(max, x);
-            sum += x;
-        }
-        let avg = sum / (self.inner.len() as f64);
-
-        vec![
-            CustomLog {
-                name: "avg_pheromone",
-                value: Some(avg),
-                solutions: None,
-            },
-            CustomLog {
-                name: "min_pheromone",
-                value: Some(min),
-                solutions: None,
-            },
-            CustomLog {
-                name: "max_pheromone",
-                value: Some(max),
-                solutions: None,
-            },
-        ]
     }
 }
 impl std::ops::Index<usize> for PheromoneMatrix {

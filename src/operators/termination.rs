@@ -201,20 +201,19 @@ where
     P: Problem,
 {
     fn terminate(&self, state: &mut State, _problem: &P) -> bool {
+        let current_fitness = state.get_value::<BestFitness>().into();
         if !state.has::<FitnessImprovementState>() {
             state.insert(FitnessImprovementState {
                 current_steps: 0,
-                current_fitness: state.get_value::<BestFitness>().into(),
+                current_fitness,
             });
         }
         let termination_state = state.get_mut::<FitnessImprovementState>();
         let error_margin = f64::EPSILON;
-        if (state.get_value::<BestFitness>().into() - termination_state.current_fitness).abs()
-            < error_margin
-        {
+        if (current_fitness - termination_state.current_fitness).abs() < error_margin {
             termination_state.current_steps += 1;
         } else {
-            termination_state.current_fitness = state.get_value::<BestFitness>().into();
+            termination_state.current_fitness = current_fitness;
             termination_state.current_steps = 0;
         }
         termination_state.current_steps >= self.steps

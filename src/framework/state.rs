@@ -1,6 +1,5 @@
+use crate::tracking::log::Logger;
 use std::ops::{Deref, DerefMut};
-
-use crate::tracking::log::CustomLog;
 
 mod map;
 use map::AsAny;
@@ -10,14 +9,8 @@ pub mod common;
 
 /// Makes custom state trackable.
 pub trait CustomState: AsAny {
-    /// Called after each evaluation.
-    fn evaluation_log(&self) -> Vec<CustomLog> {
-        Vec::default()
-    }
-
-    /// Called after each iteration.
-    fn iteration_log(&self) -> Vec<CustomLog> {
-        Vec::default()
+    fn auto_logger(&self) -> Option<Logger> {
+        None
     }
 }
 
@@ -71,7 +64,7 @@ impl State {
     pub fn get_value<T>(&self) -> T::Target
     where
         T: CustomState + Deref,
-        T::Target: Sized,
+        T::Target: Sized + Copy,
     {
         if self.map.has::<T>() {
             *self.map.get::<T>().deref()

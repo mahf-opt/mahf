@@ -3,13 +3,8 @@ use crate::{
     problems::coco_bound::CocoInstance,
     random::Random,
     threads::SyncThreadPool,
-    tracking::{
-        runtime_analysis::Experiment,
-        trigger::{EvalTrigger, IterTrigger},
-        Log,
-    },
+    tracking::Log,
 };
-use anyhow::Context;
 use coco_rs::{Suite, SuiteName};
 use std::{
     fs,
@@ -39,15 +34,6 @@ pub fn evaluate_suite(
     let total_runs = suite.number_of_problems() * (runs as usize);
     let (tx, rx) = mpsc::channel();
 
-    let eval_trigger = EvalTrigger {
-        improvement: true,
-        interval: None,
-    };
-    let iter_trigger = IterTrigger {
-        improvement: false,
-        interval: Some(10),
-    };
-
     coco_rs::set_log_level(coco_rs::LogLevel::Warning);
 
     let configuration = Arc::new(configuration);
@@ -60,19 +46,13 @@ pub fn evaluate_suite(
             let problem: CocoInstance = problem.into();
             pool.enqueue(move || {
                 let result: anyhow::Result<()> = (|| {
-                    let logger = &mut Log::new(eval_trigger, iter_trigger);
+                    let logger = &mut Log::new();
 
                     let experiment_desc = problem.format_name();
                     let data_dir = data_dir.join(experiment_desc);
 
-                    let random = Random::default();
-                    let experiment = &mut Experiment::create(data_dir, &problem, &random, todo!())
-                        .context("creating experiment")?;
-
                     for _ in 0..runs {
-                        framework::run(&problem, &configuration, None, Some(random));
-                        experiment.log_run(logger)?;
-                        logger.clear();
+                        framework::run(&problem, &configuration, None, Some(Random::default()));
                         let _ = tx.send(Ok(()));
                     }
 

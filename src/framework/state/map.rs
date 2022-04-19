@@ -1,4 +1,4 @@
-use crate::{framework::CustomState, tracking::log::CustomLog};
+use crate::framework::CustomState;
 use std::{
     any::{Any, TypeId},
     collections::BTreeMap,
@@ -61,21 +61,5 @@ impl StateMap {
             .as_mut_any()
             .downcast_mut()
             .unwrap()
-    }
-
-    pub(crate) fn collect_evaluation_log(&self) -> Vec<CustomLog> {
-        let mut entries = Vec::new();
-        for state in self.map.values() {
-            entries.append(&mut state.evaluation_log());
-        }
-        entries
-    }
-
-    pub(crate) fn collect_iteration_log(&self) -> Vec<CustomLog> {
-        let mut entries = Vec::new();
-        for state in self.map.values() {
-            entries.append(&mut state.iteration_log());
-        }
-        entries
     }
 }
