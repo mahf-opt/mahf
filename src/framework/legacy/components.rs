@@ -10,6 +10,7 @@ use crate::{
     problems::Problem,
     random::Random,
 };
+use serde::Serialize;
 
 /// Initializes the population.
 ///
@@ -24,13 +25,13 @@ pub trait Initialization<P: Problem> {
     );
 }
 
-#[derive(serde::Serialize)]
+#[derive(Serialize)]
 pub struct Initializer<T>(pub T);
 
 impl<T, P> Component<P> for Initializer<T>
 where
     P: Problem,
-    T: AnyComponent + Initialization<P>,
+    T: AnyComponent + Initialization<P> + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         todo!()
@@ -56,7 +57,7 @@ pub struct Selector<T>(pub T);
 impl<T, P> Component<P> for Selector<T>
 where
     P: Problem,
-    T: AnyComponent + Selection,
+    T: AnyComponent + Selection + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         todo!()
@@ -83,7 +84,7 @@ pub struct Generator<T>(pub T);
 impl<T, P> Component<P> for Generator<T>
 where
     P: Problem,
-    T: AnyComponent + Generation<P>,
+    T: AnyComponent + Generation<P> + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         todo!()
@@ -120,7 +121,7 @@ pub struct Schedule<T>(pub T);
 impl<T, P> Component<P> for Schedule<T>
 where
     P: Problem,
-    T: AnyComponent + Scheduler,
+    T: AnyComponent + Scheduler + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         todo!()
@@ -146,7 +147,7 @@ pub struct Replacer<T>(pub T);
 impl<T, P> Component<P> for Replacer<T>
 where
     P: Problem,
-    T: AnyComponent + Replacement,
+    T: AnyComponent + Replacement + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         todo!()
@@ -173,7 +174,7 @@ pub struct Archiver<T>(pub T);
 impl<T, P> Component<P> for Archiver<T>
 where
     P: Problem,
-    T: AnyComponent + Archiving<P>,
+    T: AnyComponent + Archiving<P> + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         todo!()
@@ -193,7 +194,7 @@ pub struct Terminator<T>(pub T);
 impl<T, P> Condition<P> for Terminator<T>
 where
     P: Problem,
-    T: AnyComponent + Termination<P>,
+    T: AnyComponent + Termination<P> + Serialize,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
         todo!()
@@ -229,7 +230,7 @@ pub struct Postprocessor<T>(pub T);
 impl<T, P> Component<P> for Postprocessor<T>
 where
     P: Problem,
-    T: AnyComponent + Postprocess<P>,
+    T: AnyComponent + Postprocess<P> + Serialize,
 {
     fn initialize(&self, problem: &P, state: &mut State) {
         todo!()

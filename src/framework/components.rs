@@ -4,11 +4,12 @@
 //! Framework components.
 
 use crate::{framework::state::State, problems::Problem};
+use serde::Serialize;
 use std::any::Any;
 use trait_set::trait_set;
 
 trait_set! {
-    pub trait AnyComponent = Any + Send + Sync;
+    pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync;
 }
 
 /// Defines the traits required by any component.
@@ -41,8 +42,12 @@ erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
 
 pub type Configuration<P> = Box<dyn Component<P>>;
 
-pub struct Scope<P> {
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Scope<P: Problem> {
     body: Box<dyn Component<P>>,
+
+    #[serde(skip)]
     init: fn(&mut State),
 }
 
@@ -73,7 +78,9 @@ impl<P: Problem + 'static> Scope<P> {
     }
 }
 
-pub struct Block<P>(Vec<Box<dyn Component<P>>>);
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
 impl<P> Component<P> for Block<P>
 where
@@ -98,7 +105,9 @@ impl<P: Problem + 'static> Block<P> {
     }
 }
 
-pub struct Loop<P> {
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Loop<P: Problem> {
     condition: Box<dyn Condition<P>>,
     body: Box<dyn Component<P>>,
 }
