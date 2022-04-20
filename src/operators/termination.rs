@@ -50,16 +50,24 @@ impl FixedIterations {
     where
         P: Problem,
     {
-        Box::new(Terminator(Self { max_iterations }))
+        Box::new(Self { max_iterations })
     }
 }
-impl<P> Termination<P> for FixedIterations
+impl<P> Condition<P> for FixedIterations
 where
     P: Problem,
 {
-    fn terminate(&self, state: &mut State, _problem: &P) -> bool {
-        let iterations = state.get_value::<Iterations>();
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.insert(Iterations(0));
+        state.insert(Progress(0.0));
+    }
+
+    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+        let iterations = state.get_value::<Iterations>() + 1;
+
+        state.set_value::<Iterations>(iterations);
         state.set_value::<Progress>(iterations as f64 / self.max_iterations as f64);
+
         iterations >= self.max_iterations
     }
 }
@@ -76,9 +84,9 @@ mod fixed_iterations {
             max_iterations: 200,
         };
         state.set_value::<Iterations>(100);
-        assert!(!comp.terminate(&mut state, &problem));
+        assert!(comp.evaluate(&problem, &mut state));
         state.set_value::<Iterations>(200);
-        assert!(comp.terminate(&mut state, &problem));
+        assert!(!comp.evaluate(&problem, &mut state));
     }
 
     #[test]
@@ -89,10 +97,10 @@ mod fixed_iterations {
             max_iterations: 200,
         };
         state.set_value::<Iterations>(100);
-        comp.terminate(&mut state, &problem);
+        comp.evaluate(&problem, &mut state);
         float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
         state.set_value::<Iterations>(200);
-        comp.terminate(&mut state, &problem);
+        comp.evaluate(&problem, &mut state);
         float_eq::assert_float_eq!(state.get_value::<Progress>(), 1.0, ulps <= 2);
     }
 }

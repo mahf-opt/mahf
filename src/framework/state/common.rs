@@ -1,11 +1,9 @@
 use super::{CustomState, State};
-use crate::{
-    framework::{Fitness, Individual},
-    random::Random,
-};
+use crate::framework::{Fitness, Individual};
 use derive_deref::{Deref, DerefMut};
 
-pub fn common_state(state: &mut State) {
+pub fn default(state: &mut State) {
+    state.insert(Population::new());
     state.insert(Evaluations(0));
     state.insert(Iterations(0));
     state.insert(Progress(0.0));
@@ -13,28 +11,8 @@ pub fn common_state(state: &mut State) {
 }
 
 #[derive(Deref, DerefMut)]
-pub struct Rng(pub Random);
-impl CustomState for Rng {}
-
-#[derive(Deref, DerefMut)]
-pub struct Population(pub Vec<Individual>);
-impl CustomState for Population {}
-
-#[derive(Deref, DerefMut)]
 pub struct BestIndividual(pub Individual);
 impl CustomState for BestIndividual {}
-
-#[derive(Deref, DerefMut)]
-pub struct Selection(pub Vec<Individual>);
-impl CustomState for Selection {}
-
-#[derive(Deref, DerefMut)]
-pub struct RawGeneration<E>(pub Vec<E>);
-impl<E: 'static> CustomState for RawGeneration<E> {}
-
-#[derive(Deref, DerefMut)]
-pub struct Offspring(pub Individual);
-impl CustomState for Offspring {}
 
 #[derive(Deref, DerefMut)]
 pub struct Evaluations(pub u32);
@@ -55,3 +33,30 @@ impl CustomState for BestFitness {}
 #[derive(Deref, DerefMut)]
 pub struct Loop(pub bool);
 impl CustomState for Loop {}
+
+#[derive(Default)]
+pub struct Population {
+    stack: Vec<Vec<Individual>>,
+}
+impl CustomState for Population {}
+impl Population {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn current(&self) -> &[Individual] {
+        self.stack.last().unwrap()
+    }
+
+    pub fn current_mut(&mut self) -> &mut Vec<Individual> {
+        self.stack.last_mut().unwrap()
+    }
+
+    pub fn push(&mut self, population: Vec<Individual>) {
+        self.stack.push(population);
+    }
+
+    pub fn pop(&mut self) -> Vec<Individual> {
+        self.stack.pop().unwrap()
+    }
+}

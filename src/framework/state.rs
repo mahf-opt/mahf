@@ -53,6 +53,15 @@ impl State {
         self.map.has::<T>() || self.parent().map(|p| p.has::<T>()).unwrap_or_default()
     }
 
+    #[track_caller]
+    pub fn require<T: CustomState>(&self) {
+        assert!(
+            self.has::<T>(),
+            "operator requires {} state",
+            std::any::type_name::<T>()
+        );
+    }
+
     pub fn get<T: CustomState>(&self) -> &T {
         if self.map.has::<T>() {
             self.map.get::<T>()

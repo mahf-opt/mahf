@@ -3,7 +3,10 @@
 
 //! Framework components.
 
-use crate::{framework::state::State, problems::Problem};
+use crate::{
+    framework::{common_state::Population, state::State, Fitness},
+    problems::Problem,
+};
 use serde::Serialize;
 use std::any::Any;
 use trait_set::trait_set;
@@ -136,5 +139,30 @@ impl<P: Problem + 'static> Loop<P> {
     ) -> Box<dyn Component<P>> {
         let body = Block::new(body);
         Box::new(Loop { condition, body })
+    }
+}
+
+#[derive(Serialize)]
+pub struct SimpleEvaluator;
+
+impl SimpleEvaluator {
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Self)
+    }
+}
+
+impl<P: Problem> Component<P> for SimpleEvaluator {
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<Population>();
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        let population = state.get_mut::<Population>().current_mut();
+
+        for individual in population {
+            let solution = individual.solution::<P::Encoding>();
+            let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
+            individual.evaluate(fitness);
+        }
     }
 }

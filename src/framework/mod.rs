@@ -26,7 +26,7 @@ pub fn run<P: Problem>(
 ) -> State {
     let mut state = State::new_root();
 
-    state.insert(common_state::Rng(rng.unwrap_or_default()));
+    state.insert(rng.unwrap_or_default());
 
     if let Some(log) = log {
         state.insert(log);

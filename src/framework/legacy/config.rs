@@ -1,8 +1,7 @@
 use crate::{
     framework::{
-        common_state::common_state,
-        components::{self, Component},
-        components::{Block, Condition, Loop, Scope},
+        common_state,
+        components::{self, Block, Component, Condition, Loop, Scope},
     },
     operators::*,
     problems::Problem,
@@ -90,7 +89,7 @@ impl<P: Problem> Default for Configuration<P> {
 impl<P: Problem> From<Configuration<P>> for components::Configuration<P> {
     fn from(cfg: Configuration<P>) -> Self {
         Scope::new_with(
-            common_state,
+            common_state::default,
             vec![
                 cfg.initialization,
                 Loop::new(
@@ -98,6 +97,7 @@ impl<P: Problem> From<Configuration<P>> for components::Configuration<P> {
                     vec![
                         cfg.selection,
                         Block::new(cfg.generation),
+                        components::SimpleEvaluator::new(),
                         cfg.replacement,
                         cfg.archiving,
                         cfg.post_replacement,

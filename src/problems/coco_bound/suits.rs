@@ -46,8 +46,6 @@ pub fn evaluate_suite(
             let problem: CocoInstance = problem.into();
             pool.enqueue(move || {
                 let result: anyhow::Result<()> = (|| {
-                    let logger = &mut Log::new();
-
                     let experiment_desc = problem.format_name();
                     let data_dir = data_dir.join(experiment_desc);
 

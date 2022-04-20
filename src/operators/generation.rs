@@ -1,6 +1,7 @@
 //! Generation methods
 
-use crate::framework::common_state::Progress;
+use crate::framework::common_state::{Population, Progress};
+use crate::framework::Individual;
 use crate::operators::custom_state::PsoState;
 use crate::{
     framework::{components::*, legacy::components::*, State},
@@ -163,11 +164,11 @@ impl IWOAdaptiveDeviationDelta {
     where
         P: Problem<Encoding = Vec<f64>>,
     {
-        Box::new(Generator(Self {
+        Box::new(Self {
             initial_deviation,
             final_deviation,
             modulation_index,
-        }))
+        })
     }
 
     fn deviation(&self, progress: f64) -> f64 {
@@ -176,28 +177,33 @@ impl IWOAdaptiveDeviationDelta {
                 * (self.initial_deviation - self.final_deviation)
     }
 }
-impl<P> Generation<P> for IWOAdaptiveDeviationDelta
+impl<P> Component<P> for IWOAdaptiveDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
 {
-    fn generate(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        rng: &mut Random,
-        parents: &mut Vec<Vec<f64>>,
-        offspring: &mut Vec<Vec<f64>>,
-    ) {
-        let deviation = self.deviation(**state.get::<Progress>());
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<Population>();
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let deviation = self.deviation(state.get_value::<Progress>());
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
-        for solution in parents.iter_mut() {
-            for x in solution {
+        let mut parents = state.get_mut::<Population>().pop();
+        let mut offspring = Vec::new();
+
+        let rng = state.get_mut::<Random>();
+        for solution in parents.drain(..) {
+            let mut solution = solution.into_solution::<P::Encoding>();
+
+            for x in &mut solution {
                 *x += distribution.sample(rng)
             }
+
+            offspring.push(Individual::new_unevaluated(solution));
         }
 
-        offspring.append(parents)
+        state.get_mut::<Population>().push(offspring);
     }
 }
 #[cfg(test)]
