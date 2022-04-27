@@ -1,10 +1,24 @@
 //! Invasive Weed Optimization
 
 use crate::{
-    framework::{components, Configuration},
+    framework::{
+        components::{self, Component, Condition},
+        Configuration,
+    },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
+
+#[derive(Clone, Copy, Debug)]
+pub struct Parameters {
+    pub initial_population_size: u32,
+    pub max_population_size: u32,
+    pub min_number_of_seeds: u32,
+    pub max_number_of_seeds: u32,
+    pub initial_deviation: f64,
+    pub final_deviation: f64,
+    pub modulation_index: u32,
+}
 
 /// Invasive Weed Optimization
 ///
@@ -16,39 +30,35 @@ use crate::{
 /// # References
 /// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
 pub fn iwo<P>(
-    initial_population_size: u32,
-    max_population_size: u32,
-    min_number_of_seeds: u32,
-    max_number_of_seeds: u32,
-    initial_deviation: f64,
-    final_deviation: f64,
-    modulation_index: u32,
-    max_iterations: u32,
+    params: Parameters,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    assert!(initial_population_size <= max_population_size);
-    assert!(min_number_of_seeds <= max_number_of_seeds);
-    assert!(final_deviation <= initial_deviation);
+    assert!(params.initial_population_size <= params.max_population_size);
+    assert!(params.min_number_of_seeds <= params.max_number_of_seeds);
+    assert!(params.final_deviation <= params.initial_deviation);
 
     components::Block::new(vec![
-        initialization::RandomSpread::new(initial_population_size),
+        initialization::RandomSpread::new(params.initial_population_size),
         components::SimpleEvaluator::new(),
         components::Loop::new(
-            termination::FixedIterations::new(max_iterations),
+            termination,
             vec![
                 selection::DeterministicFitnessProportional::new(
-                    min_number_of_seeds,
-                    max_number_of_seeds,
+                    params.min_number_of_seeds,
+                    params.max_number_of_seeds,
                 ),
                 generation::IWOAdaptiveDeviationDelta::new(
-                    initial_deviation,
-                    final_deviation,
-                    modulation_index,
+                    params.initial_deviation,
+                    params.final_deviation,
+                    params.modulation_index,
                 ),
                 components::SimpleEvaluator::new(),
-                replacement::MuPlusLambda::new(max_population_size),
+                replacement::MuPlusLambda::new(params.max_population_size),
+                logger,
             ],
         ),
     ])

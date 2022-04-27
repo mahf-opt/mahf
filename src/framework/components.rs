@@ -4,8 +4,17 @@
 //! Framework components.
 
 use crate::{
-    framework::{common_state::Population, state::State, Fitness},
+    framework::{
+        common_state::{BestFitness, Evaluations, Iterations, Population, Progress},
+        state::State,
+        CustomState, Fitness,
+    },
     problems::Problem,
+    tracking::{
+        log::{LogEntry, LoggerFunction, LoggerSet},
+        trigger::LoggerCriteria,
+        Log,
+    },
 };
 use serde::Serialize;
 use std::any::Any;
@@ -163,6 +172,83 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
             let solution = individual.solution::<P::Encoding>();
             let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
             individual.evaluate(fitness);
+        }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Logger<P: Problem> {
+    criteria: Vec<Box<dyn Condition<P>>>,
+
+    #[serde(skip)]
+    loggers: Vec<LoggerFunction>,
+}
+
+impl<P: Problem + 'static> Logger<P> {
+    pub fn builder() -> Self {
+        Self {
+            criteria: Vec::new(),
+            loggers: Vec::new(),
+        }
+    }
+
+    pub fn add_criteria(&mut self, criteria: Box<dyn Condition<P>>) {
+        self.criteria.push(criteria);
+    }
+
+    pub fn with_criteria(mut self, criteria: Box<dyn Condition<P>>) -> Self {
+        self.add_criteria(criteria);
+        self
+    }
+
+    pub fn add_logger(&mut self, logger: LoggerFunction) {
+        self.loggers.push(logger);
+    }
+
+    pub fn with_logger(mut self, logger: LoggerFunction) -> Self {
+        self.add_logger(logger);
+        self
+    }
+
+    pub fn with_auto_logger<T: CustomState + Clone + Serialize>(self) -> Self {
+        self.with_logger(LoggerFunction::auto::<T>())
+    }
+
+    pub fn with_common_loggers(self) -> Self {
+        self.with_auto_logger::<Iterations>()
+            .with_auto_logger::<Evaluations>()
+            .with_auto_logger::<BestFitness>()
+            .with_auto_logger::<Progress>()
+    }
+
+    pub fn build(self) -> Box<dyn Component<P>> {
+        Box::new(self)
+    }
+}
+
+impl<P: Problem + 'static> Component<P> for Logger<P> {
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for criteria in &self.criteria {
+            criteria.initialize(problem, state);
+        }
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        let criteria = self
+            .criteria
+            .iter()
+            .map(|c| c.evaluate(problem, state))
+            .any(|b| b); // normal any would be short-circuiting
+
+        if criteria {
+            let mut entry = LogEntry::default();
+
+            for logger in &self.loggers {
+                entry.state.push((logger.function)(state));
+            }
+
+            state.get_mut::<Log>().push(entry);
         }
     }
 }

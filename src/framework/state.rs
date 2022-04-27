@@ -1,6 +1,6 @@
 use crate::{
     framework::{Fitness, Individual},
-    tracking::log::Logger,
+    tracking::log::LoggerFunction,
 };
 use std::ops::{Deref, DerefMut};
 
@@ -12,7 +12,7 @@ pub mod common;
 
 /// Makes custom state trackable.
 pub trait CustomState: AsAny {
-    fn auto_logger(&self) -> Option<Logger> {
+    fn auto_logger(&self) -> Option<LoggerFunction> {
         None
     }
 }

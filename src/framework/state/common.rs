@@ -1,6 +1,7 @@
 use super::{CustomState, State};
 use crate::framework::{Fitness, Individual};
 use derive_deref::{Deref, DerefMut};
+use serde::Serialize;
 
 pub fn default(state: &mut State) {
     state.insert(Population::new());
@@ -14,19 +15,19 @@ pub fn default(state: &mut State) {
 pub struct BestIndividual(pub Individual);
 impl CustomState for BestIndividual {}
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct Evaluations(pub u32);
 impl CustomState for Evaluations {}
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct Iterations(pub u32);
 impl CustomState for Iterations {}
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct Progress(pub f64);
 impl CustomState for Progress {}
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct BestFitness(pub Fitness);
 impl CustomState for BestFitness {}
 
