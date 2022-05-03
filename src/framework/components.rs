@@ -143,6 +143,55 @@ impl<P: Problem + 'static> Loop<P> {
 }
 
 #[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Branch<P: Problem> {
+    condition: Box<dyn Condition<P>>,
+    if_body: Box<dyn Component<P>>,
+    else_body: Option<Box<dyn Component<P>>>,
+}
+
+impl<P> Component<P> for Branch<P>
+    where
+        P: Problem + 'static,
+{
+    fn initialize(&self, problem: &P, state: &mut State) {
+        self.condition.initialize(problem, state);
+        self.if_body.initialize(problem, state);
+        if let Some(else_body) = &self.else_body {
+            else_body.initialize(problem, state);
+        }
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        if self.condition.evaluate(problem, state) {
+            self.if_body.execute(problem, state);
+        } else if let Some(else_body) = &self.else_body {
+            else_body.execute(problem, state);
+        }
+    }
+}
+
+impl<P: Problem + 'static> Branch<P> {
+    pub fn new(
+        condition: Box<dyn Condition<P>>,
+        body: Vec<Box<dyn Component<P>>>,
+    ) -> Box<dyn Component<P>> {
+        let if_body = Block::new(body);
+        Box::new(Branch { condition, if_body, else_body: None })
+    }
+
+    pub fn new_with_else(
+        condition: Box<dyn Condition<P>>,
+        if_body: Vec<Box<dyn Component<P>>>,
+        else_body: Vec<Box<dyn Component<P>>>,
+    ) -> Box<dyn Component<P>> {
+        let if_body = Block::new(if_body);
+        let else_body = Some(Block::new(else_body));
+        Box::new(Branch { condition, if_body, else_body })
+    }
+}
+
+#[derive(Serialize)]
 pub struct SimpleEvaluator;
 
 impl SimpleEvaluator {
