@@ -6,6 +6,8 @@ pub mod legacy;
 pub mod components;
 pub use components::Configuration;
 
+pub mod builder;
+
 mod fitness;
 pub use fitness::{Fitness, IllegalFitness};
 
