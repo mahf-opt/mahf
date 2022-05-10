@@ -63,23 +63,24 @@ where
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        let iterations = state.get_value::<Iterations>() + 1;
+        let iterations = state.get_value::<Iterations>();
 
-        state.set_value::<Iterations>(iterations);
+        state.set_value::<Iterations>(iterations + 1);
         state.set_value::<Progress>(iterations as f64 / self.max_iterations as f64);
 
-        iterations >= self.max_iterations
+        iterations < self.max_iterations
     }
 }
 #[cfg(test)]
 mod fixed_iterations {
     use super::*;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::{framework::common_state, problems::bmf::BenchmarkFunction};
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
+        common_state::default(&mut state);
         let comp = FixedIterations {
             max_iterations: 200,
         };
@@ -93,6 +94,7 @@ mod fixed_iterations {
     fn updates_progress() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
+        common_state::default(&mut state);
         let comp = FixedIterations {
             max_iterations: 200,
         };
@@ -126,12 +128,13 @@ where
 #[cfg(test)]
 mod fixed_evaluations {
     use super::*;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::{framework::common_state, problems::bmf::BenchmarkFunction};
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
+        common_state::default(&mut state);
         let comp = FixedEvaluations {
             max_evaluations: 200,
         };
@@ -145,6 +148,7 @@ mod fixed_evaluations {
     fn updates_progress() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
+        common_state::default(&mut state);
         let comp = FixedEvaluations {
             max_evaluations: 200,
         };
@@ -178,13 +182,16 @@ where
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::framework::Fitness;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::{
+        framework::{common_state, Fitness},
+        problems::bmf::BenchmarkFunction,
+    };
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
+        common_state::default(&mut state);
         let comp = DistanceToOpt {
             distance: 0.1,
             optimum: 0.0,
@@ -230,13 +237,16 @@ where
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::framework::Fitness;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::{
+        framework::{common_state, Fitness},
+        problems::bmf::BenchmarkFunction,
+    };
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
+        common_state::default(&mut state);
         let comp = StepsWithoutImprovement { steps: 20 };
         state.insert(FitnessImprovementState {
             current_steps: 0,

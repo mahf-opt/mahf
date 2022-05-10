@@ -16,7 +16,7 @@ use serde::Serialize;
 /// A simple GA could look like this:
 /// ```
 ///# use mahf::operators::*;
-///# use mahf::framework::Configuration;
+///# use mahf::framework::legacy::Configuration;
 ///# use mahf::problems::bmf::BenchmarkFunction;
 ///# let config: Configuration<BenchmarkFunction> =
 /// Configuration {
