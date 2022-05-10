@@ -92,6 +92,7 @@ impl<P: Problem> From<Configuration<P>> for components::Configuration<P> {
             common_state::default,
             vec![
                 cfg.initialization,
+                components::SimpleEvaluator::new(),
                 Loop::new(
                     cfg.termination,
                     vec![

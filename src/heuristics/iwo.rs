@@ -34,6 +34,7 @@ where
 
     components::Block::new(vec![
         initialization::RandomSpread::new(initial_population_size),
+        components::SimpleEvaluator::new(),
         components::Loop::new(
             termination::FixedIterations::new(max_iterations),
             vec![
