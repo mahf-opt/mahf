@@ -3,7 +3,6 @@ use crate::{
     problems::coco_bound::CocoInstance,
     random::Random,
     threads::SyncThreadPool,
-    tracking::Log,
 };
 use coco_rs::{Suite, SuiteName};
 use std::{
@@ -45,9 +44,10 @@ pub fn evaluate_suite(
             let configuration = configuration.clone();
             let problem: CocoInstance = problem.into();
             pool.enqueue(move || {
+                #[allow(clippy::redundant_closure_call)]
                 let result: anyhow::Result<()> = (|| {
                     let experiment_desc = problem.format_name();
-                    let data_dir = data_dir.join(experiment_desc);
+                    let _data_dir = data_dir.join(experiment_desc);
 
                     for _ in 0..runs {
                         framework::run(&problem, &configuration, None, Some(Random::default()));

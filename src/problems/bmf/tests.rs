@@ -171,12 +171,10 @@ mod bmf_tests {
             let problem = BenchmarkFunction::alpine_n2(x.len());
             // let random_fitness = problem.evaluate(&x);
             // for now, in 1D calculated optimum is truncated to 3 decimal places
-            let random_fitness;
-            if x.len() == 1 {
-                random_fitness = (problem.evaluate(&x) * 1000.0).trunc() / 1000.0;
-            } else {
-                random_fitness = problem.evaluate(&x);
-            }
+            let random_fitness = match x.len() {
+                1 => (problem.evaluate(&x) * 1000.0).trunc() / 1000.0,
+                _ => problem.evaluate(&x),
+            };
             prop_assert!(random_fitness >= problem.known_optimum());
         }
     }

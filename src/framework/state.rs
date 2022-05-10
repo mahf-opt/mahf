@@ -1,4 +1,7 @@
-use crate::tracking::log::Logger;
+use crate::{
+    framework::{Fitness, Individual},
+    tracking::log::Logger,
+};
 use std::ops::{Deref, DerefMut};
 
 mod map;
@@ -100,5 +103,43 @@ impl State {
         } else {
             *self.parent_mut().unwrap().get_mut::<T>().deref_mut() = value;
         }
+    }
+}
+
+/// Convenience functions for often required state.
+///
+/// If some state does not exist, the function will panic.
+///
+/// The following functions are basically guaranteed to work:
+/// - [best_fitness](State::best_fitness)
+impl State {
+    /// Returns [Iterations](common::Iterations) state.
+    pub fn iterations(&self) -> u32 {
+        self.get_value::<common::Iterations>()
+    }
+
+    /// Returns [Evaluations](common::Evaluations) state.
+    pub fn evaluations(&self) -> u32 {
+        self.get_value::<common::Evaluations>()
+    }
+
+    /// Returns [BestFitness](common::BestFitness) state.
+    pub fn best_fitness(&self) -> Fitness {
+        self.get_value::<common::BestFitness>()
+    }
+
+    /// Returns [BestIndividual](common::BestIndividual) state.
+    pub fn best_individual(&self) -> &Individual {
+        self.get::<common::BestIndividual>()
+    }
+
+    /// Returns [Population](common::Population) state.
+    pub fn population_stack(&self) -> &common::Population {
+        self.get::<common::Population>()
+    }
+
+    /// Returns mutable [Population](common::Population) state.
+    pub fn population_stack_mut(&mut self) -> &mut common::Population {
+        self.get_mut::<common::Population>()
     }
 }
