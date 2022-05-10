@@ -1,12 +1,19 @@
+#![allow(unused_variables)]
+#![allow(clippy::new_ret_no_self)]
+
 //! Framework components.
 
 use crate::{
-    framework::{Individual, State},
+    framework::{common_state::Population, state::State, Fitness},
     problems::Problem,
-    random::Random,
 };
-use erased_serde::Serialize as DynSerialize;
+use serde::Serialize;
 use std::any::Any;
+use trait_set::trait_set;
+
+trait_set! {
+    pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync;
+}
 
 /// Defines the traits required by any component.
 ///
@@ -22,134 +29,140 @@ use std::any::Any;
 /// Most of the time, execution should be multi threaded and having
 /// components implement [Send] makes this much easier.
 ///
-pub trait Component: Any + DynSerialize + Send + Sync {}
-impl<T> Component for T where T: Any + DynSerialize + Send + Sync {}
-
-/// Initializes the population.
-///
-/// See [crate::operators::initialization] for existing implementations.
-pub trait Initialization<P: Problem>: Component {
-    fn initialize(
-        &self,
-        state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        population: &mut Vec<P::Encoding>,
-    );
+pub trait Component<P>: AnyComponent {
+    #[allow(unused_variables)]
+    fn initialize(&self, problem: &P, state: &mut State) {}
+    fn execute(&self, problem: &P, state: &mut State);
 }
-erased_serde::serialize_trait_object!(<P: Problem> Initialization<P>);
+erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 
-/// Selects individuals for reproduction or modification.
-///
-/// See [crate::operators::selection] for existing implementations.
-pub trait Selection: Component {
-    fn select<'p>(
-        &self,
-        state: &mut State,
-        rng: &mut Random,
-        population: &'p [Individual],
-        selection: &mut Vec<&'p Individual>,
-    );
+pub trait Condition<P>: AnyComponent {
+    #[allow(unused_variables)]
+    fn initialize(&self, problem: &P, state: &mut State) {}
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
 }
-erased_serde::serialize_trait_object!(Selection);
+erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
 
-/// Generates new solutions from the selected population.
-///
-/// See [crate::operators::generation] for existing implementations.
-pub trait Generation<P: Problem>: Component {
-    fn generate(
-        &self,
-        state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        parents: &mut Vec<P::Encoding>,
-        offspring: &mut Vec<P::Encoding>,
-    );
+pub type Configuration<P> = Box<dyn Component<P>>;
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Scope<P: Problem> {
+    body: Box<dyn Component<P>>,
+
+    #[serde(skip)]
+    init: fn(&mut State),
 }
-erased_serde::serialize_trait_object!(<P: Problem> Generation<P>);
 
-/// Schedules the [Generation] operators.
-///
-/// This function defines which operators should be called how often and in what order.
-///
-/// See [crate::operators::schedulers] for existing implementations.
-pub trait Scheduler: Component {
-    /// Schedule the operators.
-    ///
-    /// `choices` is the number of operators to choose from.
-    /// The selected operators must be added to `schedule` in the order they should be called in.
-    /// Operators can be added multiple times to the `schedule`.
-    ///
-    /// Operators are represented by their index. Valid operators are thus in the range \[0..choices].
-    fn schedule(
-        &self,
-        state: &mut State,
-        rng: &mut Random,
-        choices: usize,
-        population: &[Individual],
-        parents: &[&Individual],
-        schedule: &mut Vec<usize>,
-    );
+impl<P> Component<P> for Scope<P>
+where
+    P: Problem + 'static,
+{
+    fn execute(&self, problem: &P, state: &mut State) {
+        state.with_substate(|state| {
+            (self.init)(state);
+            self.body.initialize(problem, state);
+            self.body.execute(problem, state);
+        });
+    }
 }
-erased_serde::serialize_trait_object!(Scheduler);
 
-/// Replaces old individuals with new ones.
-///
-/// See [crate::operators::replacement] for existing implementations.
-pub trait Replacement: Component {
-    fn replace(
-        &self,
-        state: &mut State,
-        rng: &mut Random,
-        population: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
-    );
+impl<P: Problem + 'static> Scope<P> {
+    pub fn new(body: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
+        Self::new_with(|_| {}, body)
+    }
+
+    pub fn new_with(
+        init: fn(&mut State),
+        body: Vec<Box<dyn Component<P>>>,
+    ) -> Box<dyn Component<P>> {
+        let body = Block::new(body);
+        Box::new(Scope { body, init })
+    }
 }
-erased_serde::serialize_trait_object!(Replacement);
 
-/// Exchanges individuals between population and archive after replacement.
-///
-/// See [crate::operators::archive] for existing implementations.
-pub trait Archiving<P: Problem>: Component {
-    fn archive(
-        &self,
-        state: &mut State,
-        rng: &mut Random,
-        _problem: &P,
-        population: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
-    );
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
+
+impl<P> Component<P> for Block<P>
+where
+    P: Problem + 'static,
+{
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for component in &self.0 {
+            component.initialize(problem, state);
+        }
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        for component in &self.0 {
+            component.execute(problem, state);
+        }
+    }
 }
-erased_serde::serialize_trait_object!(<P: Problem> Archiving<P>);
 
-/// Decides when to terminate.
-///
-/// See [crate::operators::termination] for existing implementations.
-pub trait Termination<P: Problem>: Component {
-    fn terminate(&self, state: &mut State, problem: &P) -> bool;
+impl<P: Problem + 'static> Block<P> {
+    pub fn new(components: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
+        Box::new(Block(components))
+    }
 }
-erased_serde::serialize_trait_object!(<P: Problem> Termination<P>);
 
-/// Can be inserted between steps.
-///
-/// See [crate::operators::postprocess] for existing implementations.
-pub trait Postprocess<P: Problem>: Component {
-    /// Called exactly once.
-    fn initialize(
-        &self,
-        state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        population: &[Individual],
-    );
-
-    /// Called after initialization and every replacement.
-    fn postprocess(
-        &self,
-        state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        population: &[Individual],
-    );
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Loop<P: Problem> {
+    condition: Box<dyn Condition<P>>,
+    body: Box<dyn Component<P>>,
 }
-erased_serde::serialize_trait_object!(<P: Problem> Postprocess<P>);
+
+impl<P> Component<P> for Loop<P>
+where
+    P: Problem + 'static,
+{
+    fn initialize(&self, problem: &P, state: &mut State) {
+        self.condition.initialize(problem, state);
+        self.body.initialize(problem, state);
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        self.condition.initialize(problem, state);
+        while self.condition.evaluate(problem, state) {
+            self.body.execute(problem, state);
+        }
+    }
+}
+
+impl<P: Problem + 'static> Loop<P> {
+    pub fn new(
+        condition: Box<dyn Condition<P>>,
+        body: Vec<Box<dyn Component<P>>>,
+    ) -> Box<dyn Component<P>> {
+        let body = Block::new(body);
+        Box::new(Loop { condition, body })
+    }
+}
+
+#[derive(Serialize)]
+pub struct SimpleEvaluator;
+
+impl SimpleEvaluator {
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Self)
+    }
+}
+
+impl<P: Problem> Component<P> for SimpleEvaluator {
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<Population>();
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        let population = state.get_mut::<Population>().current_mut();
+
+        for individual in population {
+            let solution = individual.solution::<P::Encoding>();
+            let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
+            individual.evaluate(fitness);
+        }
+    }
+}

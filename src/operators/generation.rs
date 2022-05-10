@@ -1,8 +1,10 @@
 //! Generation methods
 
+use crate::framework::common_state::{Population, Progress};
+use crate::framework::Individual;
 use crate::operators::custom_state::PsoState;
 use crate::{
-    framework::{components::*, State},
+    framework::{components::*, legacy::components::*, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };
@@ -10,12 +12,13 @@ use rand::{prelude::SliceRandom, Rng};
 use rand_distr::{uniform::SampleUniform, Distribution};
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
+use std::ops::DerefMut;
 
 #[derive(Serialize)]
 pub struct Noop;
 impl Noop {
-    pub fn new<P: Problem>() -> Box<dyn Generation<P>> {
-        Box::new(Self)
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Generator(Self))
     }
 }
 impl<P: Problem> Generation<P> for Noop {
@@ -36,12 +39,12 @@ impl<P: Problem> Generation<P> for Noop {
 #[derive(Serialize)]
 pub struct RandomSpread;
 impl RandomSpread {
-    pub fn new<P, D>() -> Box<dyn Generation<P>>
+    pub fn new<P, D>() -> Box<dyn Component<P>>
     where
         D: SampleUniform + PartialOrd,
         P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
     {
-        Box::new(Self)
+        Box::new(Generator(Self))
     }
 }
 impl<P, D> Generation<P> for RandomSpread
@@ -68,11 +71,11 @@ where
 #[derive(Serialize)]
 pub struct RandomPermutation;
 impl RandomPermutation {
-    pub fn new<P>() -> Box<dyn Generation<P>>
+    pub fn new<P>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
     {
-        Box::new(Self)
+        Box::new(Generator(Self))
     }
 }
 impl<P> Generation<P> for RandomPermutation
@@ -104,11 +107,11 @@ pub struct FixedDeviationDelta {
     pub deviation: f64,
 }
 impl FixedDeviationDelta {
-    pub fn new<P>(deviation: f64) -> Box<dyn Generation<P>>
+    pub fn new<P>(deviation: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<f64>>,
     {
-        Box::new(Self { deviation })
+        Box::new(Generator(Self { deviation }))
     }
 }
 impl<P> Generation<P> for FixedDeviationDelta
@@ -157,7 +160,7 @@ impl IWOAdaptiveDeviationDelta {
         initial_deviation: f64,
         final_deviation: f64,
         modulation_index: u32,
-    ) -> Box<dyn Generation<P>>
+    ) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<f64>>,
     {
@@ -174,28 +177,33 @@ impl IWOAdaptiveDeviationDelta {
                 * (self.initial_deviation - self.final_deviation)
     }
 }
-impl<P> Generation<P> for IWOAdaptiveDeviationDelta
+impl<P> Component<P> for IWOAdaptiveDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
 {
-    fn generate(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        rng: &mut Random,
-        parents: &mut Vec<Vec<f64>>,
-        offspring: &mut Vec<Vec<f64>>,
-    ) {
-        let deviation = self.deviation(state.progress);
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<Population>();
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let deviation = self.deviation(state.get_value::<Progress>());
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
-        for solution in parents.iter_mut() {
-            for x in solution {
+        let mut parents = state.get_mut::<Population>().pop();
+        let mut offspring = Vec::new();
+
+        let rng = state.get_mut::<Random>();
+        for solution in parents.drain(..) {
+            let mut solution = solution.into_solution::<P::Encoding>();
+
+            for x in &mut solution {
                 *x += distribution.sample(rng)
             }
+
+            offspring.push(Individual::new_unevaluated(solution));
         }
 
-        offspring.append(parents)
+        state.get_mut::<Population>().push(offspring);
     }
 }
 #[cfg(test)]
@@ -259,7 +267,7 @@ mod uniform_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = UniformMutation { rm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = parents.len();
@@ -324,7 +332,7 @@ mod gaussian_mutation {
             rm: 1.0,
             deviation: 0.1,
         };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = parents.len();
@@ -427,7 +435,7 @@ mod swap_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = SwapMutation { pm: 1.0, n_swap: 2 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -482,7 +490,7 @@ mod scramble_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = ScrambleMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -538,7 +546,7 @@ mod insertion_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = InsertionMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -598,7 +606,7 @@ mod inversion_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = InversionMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -667,7 +675,7 @@ mod translocation_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = TranslocationMutation { pm: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = parents.len();
@@ -693,11 +701,11 @@ pub struct PsoGeneration {
     pub v_max: f64,
 }
 impl PsoGeneration {
-    pub fn new<P>(a: f64, b: f64, c: f64, v_max: f64) -> Box<dyn Generation<P>>
+    pub fn new<P>(a: f64, b: f64, c: f64, v_max: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<f64>>,
     {
-        Box::new(Self { a, b, c, v_max })
+        Box::new(Generator(Self { a, b, c, v_max }))
     }
 }
 impl<P> Generation<P> for PsoGeneration
@@ -713,7 +721,10 @@ where
         offspring: &mut Vec<P::Encoding>,
     ) {
         let &PsoGeneration { a, b, c, v_max } = self;
-        let pso_state = state.custom.get_mut::<PsoState>();
+
+        let mut pso_state = state.get_mut::<PsoState>();
+        let pso_state = pso_state.deref_mut();
+
         let rs = rng.gen_range(0.0..=1.0);
         let rt = rng.gen_range(0.0..=1.0);
 
@@ -809,7 +820,7 @@ mod npoint_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = NPointCrossover { pc: 1.0, points: 3 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -832,12 +843,12 @@ pub struct UniformCrossover {
     pub pc: f64,
 }
 impl UniformCrossover {
-    pub fn new<P, D>(pc: f64) -> Box<dyn Generation<P>>
+    pub fn new<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
         D: std::clone::Clone,
     {
-        Box::new(Self { pc })
+        Box::new(Generator(Self { pc }))
     }
 }
 impl<P, D> Generation<P> for UniformCrossover
@@ -894,7 +905,7 @@ mod uniform_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = UniformCrossover { pc: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -983,7 +994,7 @@ mod cycle_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = CycleCrossover { pc: 1.0 };
-        let mut state = State::new();
+        let mut state = State::new_root();
         let mut rng = Random::testing();
         let mut parents = vec![
             vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],

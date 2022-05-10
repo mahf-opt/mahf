@@ -1,4 +1,11 @@
-use crate::{framework::components::*, operators::*, problems::Problem};
+use crate::{
+    framework::{
+        common_state,
+        components::{self, Block, Component, Condition, Loop, Scope},
+    },
+    operators::*,
+    problems::Problem,
+};
 use serde::Serialize;
 
 /// A set of components, representing a heuristic.
@@ -9,7 +16,7 @@ use serde::Serialize;
 /// A simple GA could look like this:
 /// ```
 ///# use mahf::operators::*;
-///# use mahf::framework::Configuration;
+///# use mahf::framework::legacy::Configuration;
 ///# use mahf::problems::bmf::BenchmarkFunction;
 ///# let config: Configuration<BenchmarkFunction> =
 /// Configuration {
@@ -31,39 +38,41 @@ use serde::Serialize;
 pub struct Configuration<P: Problem + 'static> {
     /// Initializes the population.
     #[serde(with = "erased_serde")]
-    pub initialization: Box<dyn Initialization<P>>,
+    pub initialization: Box<dyn Component<P>>,
 
     /// Selects individuals from the population.
     #[serde(with = "erased_serde")]
-    pub selection: Box<dyn Selection>,
+    pub selection: Box<dyn Component<P>>,
 
     /// Generates new solutions based on selection.
     #[serde(with = "erased_serde")]
-    pub generation: Vec<Box<dyn Generation<P>>>,
+    pub generation: Vec<Box<dyn Component<P>>>,
 
     /// Decides which generations should be called.
+    #[deprecated(note = "Will allways use AllInOrder. The new framework should be used instead.")]
     #[serde(with = "erased_serde")]
-    pub generation_scheduler: Box<dyn Scheduler>,
+    pub generation_scheduler: Box<dyn Component<P>>,
 
     /// Replaces old solutions with newly generated.
     #[serde(with = "erased_serde")]
-    pub replacement: Box<dyn Replacement>,
+    pub replacement: Box<dyn Component<P>>,
 
     /// Exchanges solutions with population after replacement.
     #[serde(with = "erased_serde")]
-    pub archiving: Box<dyn Archiving<P>>,
+    pub archiving: Box<dyn Component<P>>,
 
     /// Updates (custom) state after an iteration.
     #[serde(with = "erased_serde")]
-    pub post_replacement: Box<dyn Postprocess<P>>,
+    pub post_replacement: Box<dyn Component<P>>,
 
     /// Decides when to terminate the process.
     #[serde(with = "erased_serde")]
-    pub termination: Box<dyn Termination<P>>,
+    pub termination: Box<dyn Condition<P>>,
 }
 
 impl<P: Problem> Default for Configuration<P> {
     fn default() -> Self {
+        #[allow(deprecated)]
         Self {
             initialization: initialization::Noop::new(),
             selection: selection::None::new(),
@@ -74,5 +83,28 @@ impl<P: Problem> Default for Configuration<P> {
             post_replacement: postprocess::None::new(),
             termination: termination::Undefined::new(),
         }
+    }
+}
+
+impl<P: Problem> From<Configuration<P>> for components::Configuration<P> {
+    fn from(cfg: Configuration<P>) -> Self {
+        Scope::new_with(
+            common_state::default,
+            vec![
+                cfg.initialization,
+                components::SimpleEvaluator::new(),
+                Loop::new(
+                    cfg.termination,
+                    vec![
+                        cfg.selection,
+                        Block::new(cfg.generation),
+                        components::SimpleEvaluator::new(),
+                        cfg.replacement,
+                        cfg.archiving,
+                        cfg.post_replacement,
+                    ],
+                ),
+            ],
+        )
     }
 }

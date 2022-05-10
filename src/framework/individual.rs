@@ -23,6 +23,17 @@ impl Individual {
         }
     }
 
+    pub fn new_unevaluated<T: Any + Clone + PartialEq>(solution: T) -> Self {
+        Self::new(solution, Fitness::default())
+    }
+
+    pub fn evaluate(&mut self, fitness: Fitness) {
+        if self.fitness.is_finite() {
+            panic!("Individual got evaluated twice");
+        }
+        self.fitness = fitness;
+    }
+
     /// Construct a pseudo individual.
     ///
     /// Should only be used for testing.

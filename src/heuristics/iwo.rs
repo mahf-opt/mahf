@@ -1,7 +1,7 @@
 //! Invasive Weed Optimization
 
 use crate::{
-    framework::Configuration,
+    framework::{components, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -26,25 +26,30 @@ pub fn iwo<P>(
     max_iterations: u32,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
     assert!(initial_population_size <= max_population_size);
     assert!(min_number_of_seeds <= max_number_of_seeds);
     assert!(final_deviation <= initial_deviation);
 
-    Configuration {
-        initialization: initialization::RandomSpread::new(initial_population_size),
-        selection: selection::DeterministicFitnessProportional::new(
-            min_number_of_seeds,
-            max_number_of_seeds,
+    components::Block::new(vec![
+        initialization::RandomSpread::new(initial_population_size),
+        components::SimpleEvaluator::new(),
+        components::Loop::new(
+            termination::FixedIterations::new(max_iterations),
+            vec![
+                selection::DeterministicFitnessProportional::new(
+                    min_number_of_seeds,
+                    max_number_of_seeds,
+                ),
+                generation::IWOAdaptiveDeviationDelta::new(
+                    initial_deviation,
+                    final_deviation,
+                    modulation_index,
+                ),
+                components::SimpleEvaluator::new(),
+                replacement::MuPlusLambda::new(max_population_size),
+            ],
         ),
-        generation: vec![generation::IWOAdaptiveDeviationDelta::new(
-            initial_deviation,
-            final_deviation,
-            modulation_index,
-        )],
-        replacement: replacement::MuPlusLambda::new(max_population_size),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ])
 }

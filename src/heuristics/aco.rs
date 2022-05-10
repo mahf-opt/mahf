@@ -1,10 +1,11 @@
 //! Ant Colony Optimization
 
+use serde::Serialize;
+
 use crate::{
-    framework::{Configuration, CustomState},
+    framework::{legacy, CustomState},
     operators::*,
     problems::tsp::SymmetricTsp,
-    tracking::log::CustomLog,
 };
 
 /// Ant Colony Optimization - Ant System
@@ -19,8 +20,8 @@ pub fn ant_system(
     evaporation: f64,
     decay_coefficient: f64,
     max_iterations: u32,
-) -> Configuration<SymmetricTsp> {
-    Configuration {
+) -> legacy::Configuration<SymmetricTsp> {
+    legacy::Configuration {
         initialization: ant_ops::AcoInitialization::new(default_pheromones),
         selection: selection::FullyRandom::new(0),
         generation: vec![ant_ops::AcoGeneration::new(number_of_ants, alpha, beta)],
@@ -43,13 +44,13 @@ pub fn min_max_ant_system(
     max_pheromones: f64,
     min_pheromones: f64,
     max_iterations: u32,
-) -> Configuration<SymmetricTsp> {
+) -> legacy::Configuration<SymmetricTsp> {
     assert!(
         min_pheromones < max_pheromones,
         "min_pheromones must be less than max_pheromones"
     );
 
-    Configuration {
+    legacy::Configuration {
         initialization: ant_ops::AcoInitialization::new(default_pheromones),
         selection: selection::FullyRandom::new(0),
         generation: vec![ant_ops::AcoGeneration::new(number_of_ants, alpha, beta)],
@@ -59,48 +60,18 @@ pub fn min_max_ant_system(
     }
 }
 
+#[derive(Clone, Serialize)]
 struct PheromoneMatrix {
     dimension: usize,
     inner: Vec<f64>,
 }
+impl CustomState for PheromoneMatrix {}
 impl PheromoneMatrix {
     pub fn new(dimension: usize, initial_value: f64) -> Self {
         PheromoneMatrix {
             dimension,
             inner: vec![initial_value; dimension * dimension],
         }
-    }
-}
-impl CustomState for PheromoneMatrix {
-    fn iteration_log(&self) -> Vec<CustomLog> {
-        let mut min = self.inner[0];
-        let mut max = self.inner[0];
-        let mut sum = 0.0;
-
-        for &x in &self.inner {
-            min = f64::min(min, x);
-            max = f64::max(max, x);
-            sum += x;
-        }
-        let avg = sum / (self.inner.len() as f64);
-
-        vec![
-            CustomLog {
-                name: "avg_pheromone",
-                value: Some(avg),
-                solutions: None,
-            },
-            CustomLog {
-                name: "min_pheromone",
-                value: Some(min),
-                solutions: None,
-            },
-            CustomLog {
-                name: "max_pheromone",
-                value: Some(max),
-                solutions: None,
-            },
-        ]
     }
 }
 impl std::ops::Index<usize> for PheromoneMatrix {
@@ -133,8 +104,11 @@ impl std::ops::MulAssign<f64> for PheromoneMatrix {
 mod ant_ops {
     use super::PheromoneMatrix;
     use crate::{
-        framework::{components::*, Fitness, Individual, State},
-        problems::tsp::{Route, SymmetricTsp},
+        framework::{components::*, legacy::components::*, Fitness, Individual, State},
+        problems::{
+            tsp::{Route, SymmetricTsp},
+            Problem,
+        },
         random::Random,
     };
     use rand::distributions::{weighted::WeightedIndex, Distribution};
@@ -144,8 +118,8 @@ mod ant_ops {
         pub default_pheromones: f64,
     }
     impl AcoInitialization {
-        pub fn new(default_pheromones: f64) -> Box<dyn Initialization<SymmetricTsp>> {
-            Box::new(Self { default_pheromones })
+        pub fn new(default_pheromones: f64) -> Box<dyn Component<SymmetricTsp>> {
+            Box::new(Initializer(Self { default_pheromones }))
         }
     }
     impl Initialization<SymmetricTsp> for AcoInitialization {
@@ -156,7 +130,7 @@ mod ant_ops {
             _rng: &mut Random,
             _population: &mut Vec<Route>,
         ) {
-            state.custom.insert(PheromoneMatrix::new(
+            state.insert(PheromoneMatrix::new(
                 problem.dimension,
                 self.default_pheromones,
             ));
@@ -174,12 +148,12 @@ mod ant_ops {
             number_of_ants: usize,
             alpha: f64,
             beta: f64,
-        ) -> Box<dyn Generation<SymmetricTsp>> {
-            Box::new(Self {
+        ) -> Box<dyn Component<SymmetricTsp>> {
+            Box::new(Generator(Self {
                 number_of_ants,
                 alpha,
                 beta,
-            })
+            }))
         }
     }
     impl Generation<SymmetricTsp> for AcoGeneration {
@@ -191,7 +165,7 @@ mod ant_ops {
             _parents: &mut Vec<Route>,
             offspring: &mut Vec<Route>,
         ) {
-            let pm = state.custom.get_mut::<PheromoneMatrix>();
+            let pm = state.get_mut::<PheromoneMatrix>();
 
             // Greedy route
             {
@@ -243,11 +217,11 @@ mod ant_ops {
         pub decay_coefficient: f64,
     }
     impl AsReplacement {
-        pub fn new(evaporation: f64, decay_coefficient: f64) -> Box<dyn Replacement> {
-            Box::new(Self {
+        pub fn new<P: Problem>(evaporation: f64, decay_coefficient: f64) -> Box<dyn Component<P>> {
+            Box::new(Replacer(Self {
                 evaporation,
                 decay_coefficient,
-            })
+            }))
         }
     }
     impl Replacement for AsReplacement {
@@ -258,7 +232,7 @@ mod ant_ops {
             _population: &mut Vec<Individual>,
             offspring: &mut Vec<Individual>,
         ) {
-            let pm = state.custom.get_mut::<PheromoneMatrix>();
+            let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
@@ -283,16 +257,16 @@ mod ant_ops {
         pub min_pheromones: f64,
     }
     impl MinMaxReplacement {
-        pub fn new(
+        pub fn new<P: Problem>(
             evaporation: f64,
             max_pheromones: f64,
             min_pheromones: f64,
-        ) -> Box<dyn Replacement> {
-            Box::new(Self {
+        ) -> Box<dyn Component<P>> {
+            Box::new(Replacer(Self {
                 evaporation,
                 max_pheromones,
                 min_pheromones,
-            })
+            }))
         }
     }
     impl Replacement for MinMaxReplacement {
@@ -303,7 +277,7 @@ mod ant_ops {
             _population: &mut Vec<Individual>,
             offspring: &mut Vec<Individual>,
         ) {
-            let pm = state.custom.get_mut::<PheromoneMatrix>();
+            let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;

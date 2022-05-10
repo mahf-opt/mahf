@@ -3,8 +3,11 @@ use crate::{
     util::{print_result, ArgsIter, Setup},
 };
 use mahf::{
-    float_eq::float_eq, framework, heuristics::pso, problems::bmf::BenchmarkFunction,
-    random::Random, tracking::Log,
+    float_eq::float_eq,
+    framework::{self, Configuration},
+    heuristics::pso,
+    problems::bmf::BenchmarkFunction,
+    random::Random,
 };
 use std::time::Instant;
 
@@ -21,20 +24,19 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
 
     let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
-    let config = pso::pso(
+    let config = Configuration::from(pso::pso(
         params.population_size,
         params.a,
         params.b,
         params.c,
         params.v_max,
         setup.cutoff_length,
-    );
+    ));
 
-    let logger = &mut Log::none();
     let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
-    framework::run(&problem, logger, &config, Some(rng), None);
+    let state = framework::run(&problem, &config, None, Some(rng));
     let end = Instant::now();
     let runtime = end - start;
 
@@ -48,12 +50,12 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     print_result(
         float_eq!(
             problem.known_optimum(),
-            logger.final_best_fx(),
+            state.best_fitness().into(),
             abs <= allowed_error
         ),
         runtime.as_secs_f64(),
-        logger.final_iteration().iteration,
-        logger.final_best_fx(),
+        state.iterations(),
+        state.best_fitness().into(),
         setup.seed,
     );
 }

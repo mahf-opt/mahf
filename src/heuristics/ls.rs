@@ -1,7 +1,7 @@
 //! Local Search
 
 use crate::{
-    framework::{components::Generation, Configuration},
+    framework::{components::Component, legacy::Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -10,7 +10,7 @@ use crate::{
 pub fn local_search<P>(
     max_iterations: u32,
     n_neighbors: u32,
-    neighbors: Box<dyn Generation<P>>,
+    neighbors: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
@@ -29,7 +29,7 @@ where
 pub fn local_permutation_search<P>(
     max_iterations: u32,
     n_neighbors: u32,
-    neighbors: Box<dyn Generation<P>>,
+    neighbors: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,

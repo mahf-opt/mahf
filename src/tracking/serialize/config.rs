@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 
 use crate::{
-    framework::Configuration,
+    framework::legacy::Configuration,
     problems::Problem,
     tracking::serialize::{
         component,

@@ -4,6 +4,8 @@ use rand::{RngCore, SeedableRng};
 use serde::Serialize;
 use std::any::type_name;
 
+use crate::framework::CustomState;
+
 /// A random number generator.
 ///
 /// This can only be backed by seedable rngs to allow reconstruction.
@@ -11,6 +13,7 @@ pub struct Random {
     config: RandomConfig,
     inner: Box<dyn RngCore>,
 }
+impl CustomState for Random {}
 
 /// Describes a [Random] generator.
 ///

@@ -4,7 +4,7 @@
 use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
 use crate::problems::VectorProblem;
 use crate::{
-    framework::{components::Postprocess, Individual, State},
+    framework::{components::*, legacy::components::*, Individual, State},
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
@@ -13,11 +13,11 @@ use rand::Rng;
 #[derive(Debug, serde::Serialize)]
 pub struct None;
 impl None {
-    pub fn new<P>() -> Box<dyn Postprocess<P>>
+    pub fn new<P: Problem>() -> Box<dyn Component<P>>
     where
         P: Problem,
     {
-        Box::new(Self)
+        Box::new(Postprocessor(Self))
     }
 }
 impl<P> Postprocess<P> for None
@@ -51,11 +51,11 @@ pub struct PsoPostprocess {
     pub v_max: f64,
 }
 impl PsoPostprocess {
-    pub fn new<P>(v_max: f64) -> Box<dyn Postprocess<P>>
+    pub fn new<P: Problem>(v_max: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
     {
-        Box::new(Self { v_max })
+        Box::new(Postprocessor(Self { v_max }))
     }
 }
 impl<P> Postprocess<P> for PsoPostprocess
@@ -90,7 +90,7 @@ where
             .map(Individual::clone)
             .unwrap();
 
-        state.custom.insert(PsoState {
+        state.insert(PsoState {
             velocities,
             bests,
             global_best,
@@ -104,7 +104,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let pso_state = state.custom.get_mut::<PsoState>();
+        let mut pso_state = state.get_mut::<PsoState>();
 
         for (i, individual) in population.iter().enumerate() {
             if pso_state.bests[i].fitness() > individual.fitness() {
@@ -151,7 +151,7 @@ where
         _rng: &mut Random,
         _population: &[Individual],
     ) {
-        state.custom.insert(DiversityState {
+        state.insert(DiversityState {
             diversity: 0.0,
             max_div: 0.0,
         });
@@ -164,7 +164,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let diversity_state = state.custom.get_mut::<DiversityState>();
+        let diversity_state = state.get_mut::<DiversityState>();
 
         if population.is_empty() {
             diversity_state.diversity = 0.0;
@@ -257,7 +257,7 @@ where
         _rng: &mut Random,
         _population: &[Individual],
     ) {
-        state.custom.insert(PopulationState {
+        state.insert(PopulationState {
             current_pop: vec![],
         });
     }
@@ -269,7 +269,7 @@ where
         _rng: &mut Random,
         population: &[Individual],
     ) {
-        let population_state = state.custom.get_mut::<PopulationState>();
+        let population_state = state.get_mut::<PopulationState>();
 
         population_state.current_pop = population
             .iter()

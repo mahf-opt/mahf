@@ -1,7 +1,7 @@
 //! Random Walk
 
 use crate::{
-    framework::{components::Generation, Configuration},
+    framework::{components::Component, legacy::Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -11,7 +11,7 @@ use crate::{
 /// # Arguments
 ///
 /// * mutation: The mutation method used to move in the search space.
-pub fn random_walk<P>(max_iterations: u32, mutation: Box<dyn Generation<P>>) -> Configuration<P>
+pub fn random_walk<P>(max_iterations: u32, mutation: Box<dyn Component<P>>) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
@@ -32,7 +32,7 @@ where
 /// * mutation: The mutation method used to move in the search space.
 pub fn random_permutation_walk<P>(
     max_iterations: u32,
-    mutation: Box<dyn Generation<P>>,
+    mutation: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,

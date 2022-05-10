@@ -1,7 +1,7 @@
 //! Genetic Algorithm
 
 use crate::{
-    framework::Configuration,
+    framework::legacy::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -27,7 +27,6 @@ where
             generation::UniformCrossover::new(pc),
             generation::FixedDeviationDelta::new(deviation),
         ],
-        generation_scheduler: schedulers::AllInOrder::new(),
         replacement: replacement::Generational::new(population_size),
         termination: termination::FixedIterations::new(max_iterations),
         ..Default::default()
