@@ -2,9 +2,12 @@
 
 #![allow(clippy::new_ret_no_self)]
 
-use crate::framework::components::Component;
-use crate::framework::State;
-use crate::problems::Problem;
+use serde::Serialize;
+
+use crate::{
+    framework::{components::Component, State},
+    problems::Problem,
+};
 
 pub mod archive;
 pub mod custom_state;

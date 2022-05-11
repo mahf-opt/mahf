@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::framework::common_state::Population;
 use crate::framework::components::{AnyComponent, Component};
 use crate::framework::{Individual, State};
-use crate::problems::{LimitedVectorProblem, Problem};
+use crate::problems::Problem;
 
 /// Specialized component trait to initialize a new population on the stack.
 ///
@@ -15,7 +15,7 @@ pub trait Initialization<P: Problem>: AnyComponent {
 }
 
 #[derive(Serialize)]
-pub struct Initializer<T>(T);
+pub struct Initializer<T>(pub T);
 
 impl<T, P> Component<P> for Initializer<T>
 where
@@ -43,7 +43,7 @@ pub trait Selection<P: Problem> {
 }
 
 #[derive(serde::Serialize)]
-pub struct Selector<T>(T);
+pub struct Selector<T>(pub T);
 
 impl<T, P> Component<P> for Selector<T>
 where
@@ -55,9 +55,7 @@ where
         let selection: Vec<_> = self
             .0
             .select_offspring(&population, problem, state)
-            .iter()
-            .cloned()
-            .collect();
+            .to_vec();
         state.get_mut::<Population>().push(population);
         state.get_mut::<Population>().push(selection);
     }
@@ -73,7 +71,7 @@ pub trait Generation<P> {
 }
 
 #[derive(serde::Serialize)]
-pub struct Generator<T>(T);
+pub struct Generator<T>(pub T);
 
 impl<T, P> Component<P> for Generator<T>
 where
@@ -105,7 +103,7 @@ pub trait Replacement<P> {
 }
 
 #[derive(serde::Serialize)]
-pub struct Replacer<T>(T);
+pub struct Replacer<T>(pub T);
 
 impl<T, P> Component<P> for Replacer<T>
 where
