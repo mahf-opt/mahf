@@ -151,8 +151,8 @@ pub struct Branch<P: Problem> {
 }
 
 impl<P> Component<P> for Branch<P>
-    where
-        P: Problem + 'static,
+where
+    P: Problem + 'static,
 {
     fn initialize(&self, problem: &P, state: &mut State) {
         self.condition.initialize(problem, state);
@@ -177,7 +177,11 @@ impl<P: Problem + 'static> Branch<P> {
         body: Vec<Box<dyn Component<P>>>,
     ) -> Box<dyn Component<P>> {
         let if_body = Block::new(body);
-        Box::new(Branch { condition, if_body, else_body: None })
+        Box::new(Branch {
+            condition,
+            if_body,
+            else_body: None,
+        })
     }
 
     pub fn new_with_else(
@@ -187,7 +191,11 @@ impl<P: Problem + 'static> Branch<P> {
     ) -> Box<dyn Component<P>> {
         let if_body = Block::new(if_body);
         let else_body = Some(Block::new(else_body));
-        Box::new(Branch { condition, if_body, else_body })
+        Box::new(Branch {
+            condition,
+            if_body,
+            else_body,
+        })
     }
 }
 
