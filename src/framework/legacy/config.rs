@@ -74,7 +74,7 @@ impl<P: Problem> Default for Configuration<P> {
     fn default() -> Self {
         #[allow(deprecated)]
         Self {
-            initialization: initialization::Noop::new(),
+            initialization: initialization::Empty::new(),
             selection: selection::None::new(),
             generation: vec![generation::Noop::new()],
             generation_scheduler: schedulers::AllInOrder::new(),

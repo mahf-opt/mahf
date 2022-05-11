@@ -4,19 +4,22 @@ use rand::seq::SliceRandom;
 use rand::{distributions::uniform::SampleUniform, Rng};
 use serde::{Deserialize, Serialize};
 
-use crate::framework::common_state::Population;
 use crate::framework::Individual;
 use crate::problems::VectorProblem;
 use crate::{
-    framework::{components::*, legacy::components::*, State},
+    framework::{
+        components::*,
+        specializations::{Initialization, Initializer},
+        State,
+    },
     problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 
-/// Doesn't do anything.
+/// Initializes an empty population.
 #[derive(Serialize)]
-pub struct Noop;
-impl Noop {
+pub struct Empty;
+impl Empty {
     pub fn new<P>() -> Box<dyn Component<P>>
     where
         P: Problem,
@@ -24,15 +27,9 @@ impl Noop {
         Box::new(Initializer(Self))
     }
 }
-impl<P: Problem> Initialization<P> for Noop {
-    fn initialize(
-        &self,
-        _state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &mut Vec<P::Encoding>,
-    ) {
-        // Noop
+impl<P: Problem> Initialization<P> for Empty {
+    fn initialize_population(&self, _problem: &P, _state: &mut State) -> Vec<Individual> {
+        Vec::new()
     }
 }
 
@@ -48,23 +45,17 @@ impl RandomSpread {
         D: SampleUniform + Clone + PartialOrd + 'static,
         P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
     {
-        Box::new(Self {
+        Box::new(Initializer(Self {
             initial_population_size,
-        })
+        }))
     }
 }
-impl<P, D> Component<P> for RandomSpread
+impl<P, D> Initialization<P> for RandomSpread
 where
     D: SampleUniform + Clone + PartialOrd + 'static,
     P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        if !state.has::<Population>() {
-            state.insert(Population::new());
-        }
-    }
-
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
         let rng = state.get_mut::<Random>();
         let mut population = Vec::new();
 
@@ -75,8 +66,7 @@ where
 
             population.push(Individual::new_unevaluated(solution));
         }
-
-        state.get_mut::<Population>().push(population);
+        population
     }
 }
 
@@ -100,17 +90,14 @@ impl<P> Initialization<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    fn initialize(
-        &self,
-        _state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        population: &mut Vec<Vec<usize>>,
-    ) {
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
+        let rng = state.get_mut::<Random>();
+        let mut population = Vec::new();
         for _ in 0..self.initial_population_size {
             let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
             solution.shuffle(rng);
-            population.push(solution);
+            population.push(Individual::new_unevaluated(solution));
         }
+        population
     }
 }
