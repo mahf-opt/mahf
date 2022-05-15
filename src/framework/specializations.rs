@@ -24,7 +24,7 @@ where
 {
     fn execute(&self, problem: &P, state: &mut State) {
         let population = self.0.initialize_population(problem, state);
-        state.get_mut::<Population>().push(population);
+        state.population_stack_mut().push(population);
     }
 }
 
@@ -34,12 +34,12 @@ where
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Selector].
 pub trait Selection<P: Problem> {
-    fn select_offspring(
+    fn select_offspring<'p>(
         &self,
-        population: &[Individual],
+        population: &'p [Individual],
         problem: &P,
         state: &mut State,
-    ) -> &[Individual];
+    ) -> Vec<&'p Individual>;
 }
 
 #[derive(serde::Serialize)]
@@ -51,13 +51,15 @@ where
     T: AnyComponent + Selection<P> + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.get_mut::<Population>().pop();
+        let population = state.population_stack_mut().pop();
         let selection: Vec<_> = self
             .0
             .select_offspring(&population, problem, state)
-            .to_vec();
-        state.get_mut::<Population>().push(population);
-        state.get_mut::<Population>().push(selection);
+            .into_iter()
+            .cloned()
+            .collect();
+        state.population_stack_mut().push(population);
+        state.population_stack_mut().push(selection);
     }
 }
 
@@ -79,9 +81,9 @@ where
     T: AnyComponent + Generation<P> + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
-        let mut population = state.get_mut::<Population>().pop();
+        let mut population = state.population_stack_mut().pop();
         self.0.generate_population(&mut population, problem, state);
-        state.get_mut::<Population>().push(population);
+        state.population_stack_mut().push(population);
     }
 }
 
@@ -115,6 +117,6 @@ where
         let mut parents = state.get_mut::<Population>().pop();
         self.0
             .replace_population(&mut parents, offspring, problem, state);
-        state.get_mut::<Population>().push(parents);
+        state.population_stack_mut().push(parents);
     }
 }
