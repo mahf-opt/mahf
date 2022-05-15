@@ -7,8 +7,6 @@ use rand::{
 };
 use serde::{Deserialize, Serialize};
 
-// random::Random is marked as unused, even though it is used by test modules
-#[allow(unused_imports)]
 use crate::{
     framework::{
         components::*,
@@ -16,7 +14,6 @@ use crate::{
         Individual, State,
     },
     problems::Problem,
-    random::Random,
 };
 
 // Macro is marked as unused, even though it is used by test modules
@@ -25,12 +22,11 @@ macro_rules! impl_selects_right_number_of_children {
     ($component: expr) => {
         #[test]
         fn selects_right_number_of_children() {
-            let problem = BenchmarkFunction::sphere(3);
             let mut state = State::new_root();
             state.insert(Random::testing());
             let population = new_test_population(&[1.0, 2.0, 3.0]);
             let comp = $component;
-            let selection = comp.select_offspring(&population, &problem, &mut state);
+            let selection = comp.select_offspring(&population, &mut state);
             assert_eq!(selection.len(), comp.offspring as usize);
         }
     };
@@ -102,11 +98,10 @@ impl All {
         Box::new(Selector(Self))
     }
 }
-impl<P: Problem> Selection<P> for All {
+impl Selection for All {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         _state: &mut State,
     ) -> Vec<&'p Individual> {
         population.iter().collect()
@@ -121,11 +116,10 @@ impl None {
         Box::new(Selector(Self))
     }
 }
-impl<P: Problem> Selection<P> for None {
+impl Selection for None {
     fn select_offspring<'p>(
         &self,
         _population: &'p [Individual],
-        _problem: &P,
         _state: &mut State,
     ) -> Vec<&'p Individual> {
         Vec::new()
@@ -143,11 +137,10 @@ impl DuplicateSingle {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl<P: Problem> Selection<P> for DuplicateSingle {
+impl Selection for DuplicateSingle {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         _state: &mut State,
     ) -> Vec<&'p Individual> {
         assert_eq!(population.len(), 1);
@@ -162,18 +155,16 @@ impl<P: Problem> Selection<P> for DuplicateSingle {
 #[cfg(test)]
 mod duplicate_single {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
 
     use super::*;
 
     #[test]
     fn selects_right_number_of_children() {
-        let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
         // Note that the population contains exactly one element
         let population = new_test_population(&[1.0]);
         let comp = DuplicateSingle { offspring: 4 };
-        let selection = comp.select_offspring(&population, &problem, &mut state);
+        let selection = comp.select_offspring(&population, &mut state);
         assert_eq!(selection.len(), comp.offspring as usize);
     }
 }
@@ -191,11 +182,10 @@ impl FullyRandom {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl<P: Problem> Selection<P> for FullyRandom {
+impl Selection for FullyRandom {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual> {
         let rng = state.random_mut();
@@ -209,7 +199,7 @@ impl<P: Problem> Selection<P> for FullyRandom {
 #[cfg(test)]
 mod fully_random {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::random::Random;
 
     use super::*;
 
@@ -252,11 +242,10 @@ impl DeterministicFitnessProportional {
     }
 }
 
-impl<P: Problem> Selection<P> for DeterministicFitnessProportional {
+impl Selection for DeterministicFitnessProportional {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         _state: &mut State,
     ) -> Vec<&'p Individual> {
         let (worst, best) = get_fitness_range(population);
@@ -289,16 +278,13 @@ impl<P: Problem> Selection<P> for DeterministicFitnessProportional {
 
 #[cfg(test)]
 mod deterministic_fitness_proportional {
-    use crate::framework::specializations::Selection;
-    use crate::framework::State;
-    use crate::operators::selection::DeterministicFitnessProportional;
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
     use crate::random::Random;
+
+    use super::*;
 
     #[test]
     fn selects_right_children() {
-        let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
@@ -306,7 +292,7 @@ mod deterministic_fitness_proportional {
             min_offspring: 1,
             max_offspring: 3,
         };
-        let selection = comp.select_offspring(&population, &problem, &mut state);
+        let selection = comp.select_offspring(&population, &mut state);
         let selection: Vec<f64> = selection.into_iter().map(|i| i.fitness().into()).collect();
 
         assert!(selection.len() > (comp.min_offspring as usize * population.len()));
@@ -332,11 +318,10 @@ impl RouletteWheel {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl<P: Problem> Selection<P> for RouletteWheel {
+impl Selection for RouletteWheel {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual> {
         let rng = state.random_mut();
@@ -352,7 +337,7 @@ impl<P: Problem> Selection<P> for RouletteWheel {
 #[cfg(test)]
 mod roulette_wheel {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::random::Random;
 
     use super::*;
 
@@ -368,11 +353,10 @@ pub struct StochasticUniversalSampling {
     /// Offspring per iteration.
     pub offspring: u32,
 }
-impl<P: Problem> Selection<P> for StochasticUniversalSampling {
+impl Selection for StochasticUniversalSampling {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual> {
         let rng = state.random_mut();
@@ -403,7 +387,7 @@ impl<P: Problem> Selection<P> for StochasticUniversalSampling {
 #[cfg(test)]
 mod stochastic_universal_sampling {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::random::Random;
 
     use super::*;
 
@@ -420,11 +404,10 @@ pub struct Tournament {
     /// Tournament size.
     pub size: u32,
 }
-impl<P: Problem> Selection<P> for Tournament {
+impl Selection for Tournament {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual> {
         assert!(population.len() >= self.size as usize);
@@ -452,7 +435,7 @@ impl<P: Problem> Selection<P> for Tournament {
 #[cfg(test)]
 mod tournament {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::random::Random;
 
     use super::*;
 
@@ -470,11 +453,10 @@ pub struct LinearRank {
     /// Offspring per iteration.
     pub offspring: u32,
 }
-impl<P: Problem> Selection<P> for LinearRank {
+impl Selection for LinearRank {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual> {
         let rng = state.random_mut();
@@ -497,7 +479,7 @@ impl<P: Problem> Selection<P> for LinearRank {
 #[cfg(test)]
 mod linear_rank {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::random::Random;
 
     use super::*;
 
@@ -516,11 +498,10 @@ pub struct ExponentialRank {
     /// Base of exponent within (0,1).
     pub base: f64,
 }
-impl<P: Problem> Selection<P> for ExponentialRank {
+impl Selection for ExponentialRank {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        _problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual> {
         let rng = state.random_mut();
@@ -547,7 +528,7 @@ impl<P: Problem> Selection<P> for ExponentialRank {
 #[cfg(test)]
 mod exponential_rank {
     use crate::operators::testing::new_test_population;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::random::Random;
 
     use super::*;
 

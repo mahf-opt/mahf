@@ -33,11 +33,10 @@ where
 /// # Implementing [Component]
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Selector].
-pub trait Selection<P: Problem> {
+pub trait Selection {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
-        problem: &P,
         state: &mut State,
     ) -> Vec<&'p Individual>;
 }
@@ -48,13 +47,13 @@ pub struct Selector<T>(pub T);
 impl<T, P> Component<P> for Selector<T>
 where
     P: Problem,
-    T: AnyComponent + Selection<P> + Serialize,
+    T: AnyComponent + Selection + Serialize,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State) {
         let population = state.population_stack_mut().pop();
         let selection: Vec<_> = self
             .0
-            .select_offspring(&population, problem, state)
+            .select_offspring(&population, state)
             .into_iter()
             .cloned()
             .collect();
@@ -94,12 +93,11 @@ where
 /// # Implementing [Component]
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Replacer].
-pub trait Replacement<P> {
+pub trait Replacement {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual>,
-        offspring: Vec<Individual>,
-        problem: &P,
+        offspring: &mut Vec<Individual>,
         state: &mut State,
     );
 }
@@ -110,13 +108,13 @@ pub struct Replacer<T>(pub T);
 impl<T, P> Component<P> for Replacer<T>
 where
     P: Problem,
-    T: AnyComponent + Replacement<P> + Serialize,
+    T: AnyComponent + Replacement + Serialize,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
-        let offspring = state.get_mut::<Population>().pop();
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let mut offspring = state.get_mut::<Population>().pop();
         let mut parents = state.get_mut::<Population>().pop();
         self.0
-            .replace_population(&mut parents, offspring, problem, state);
+            .replace_population(&mut parents, &mut offspring, state);
         state.population_stack_mut().push(parents);
     }
 }
