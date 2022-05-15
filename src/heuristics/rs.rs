@@ -12,7 +12,7 @@ where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     Configuration {
-        generation: vec![generation::RandomSpread::new()],
+        generation: vec![generation::RandomSpread::new_gen()],
         termination: termination::FixedIterations::new(max_iterations),
         ..Default::default()
     }
@@ -23,7 +23,7 @@ where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
     Configuration {
-        generation: vec![generation::RandomPermutation::new()],
+        generation: vec![generation::RandomPermutation::new_gen()],
         termination: termination::FixedIterations::new(max_iterations),
         ..Default::default()
     }

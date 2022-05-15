@@ -16,8 +16,8 @@ where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     Configuration {
-        initialization: initialization::RandomSpread::new(1),
-        selection: selection::CopySingle::new(n_neighbors),
+        initialization: initialization::RandomSpread::new_init(1),
+        selection: selection::DuplicateSingle::new(n_neighbors),
         generation: vec![neighbors],
         replacement: replacement::MuPlusLambda::new(1),
         termination: termination::FixedIterations::new(max_iterations),
@@ -35,8 +35,8 @@ where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
     Configuration {
-        initialization: initialization::RandomPermutation::new(1),
-        selection: selection::CopySingle::new(n_neighbors),
+        initialization: initialization::RandomPermutation::new_init(1),
+        selection: selection::DuplicateSingle::new(n_neighbors),
         generation: vec![neighbors],
         replacement: replacement::MuPlusLambda::new(1),
         termination: termination::FixedIterations::new(max_iterations),

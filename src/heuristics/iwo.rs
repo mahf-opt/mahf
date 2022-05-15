@@ -33,7 +33,7 @@ where
     assert!(final_deviation <= initial_deviation);
 
     components::Block::new(vec![
-        initialization::RandomSpread::new(initial_population_size),
+        initialization::RandomSpread::new_init(initial_population_size),
         components::SimpleEvaluator::new(),
         components::Loop::new(
             termination::FixedIterations::new(max_iterations),

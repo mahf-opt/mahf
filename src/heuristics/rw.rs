@@ -16,7 +16,7 @@ where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     Configuration {
-        initialization: initialization::RandomSpread::new(1),
+        initialization: initialization::RandomSpread::new_init(1),
         selection: selection::All::new(),
         generation: vec![mutation],
         replacement: replacement::Generational::new(1),
@@ -38,7 +38,7 @@ where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
     Configuration {
-        initialization: initialization::RandomPermutation::new(1),
+        initialization: initialization::RandomPermutation::new_init(1),
         selection: selection::All::new(),
         generation: vec![mutation],
         replacement: replacement::Generational::new(1),

@@ -21,7 +21,7 @@ where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     Configuration {
-        initialization: initialization::RandomSpread::new(population_size),
+        initialization: initialization::RandomSpread::new_init(population_size),
         selection: selection::FullyRandom::new(population_size),
         generation: vec![
             generation::UniformCrossover::new(pc),

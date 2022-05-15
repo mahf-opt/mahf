@@ -20,7 +20,7 @@ where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     Configuration {
-        initialization: initialization::RandomSpread::new(population_size),
+        initialization: initialization::RandomSpread::new_init(population_size),
         selection: selection::FullyRandom::new(lambda),
         generation: vec![generation::FixedDeviationDelta::new(deviation)],
         replacement: replacement::MuPlusLambda::new(population_size),

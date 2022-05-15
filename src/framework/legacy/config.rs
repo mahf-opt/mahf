@@ -20,7 +20,7 @@ use serde::Serialize;
 ///# use mahf::problems::bmf::BenchmarkFunction;
 ///# let config: Configuration<BenchmarkFunction> =
 /// Configuration {
-///     initialization: initialization::RandomSpread::new(25),
+///     initialization: initialization::RandomSpread::new_init(25),
 ///     selection: selection::RouletteWheel::new(25),
 ///     generation: vec![
 ///         generation::UniformCrossover::new(0.8),
@@ -76,7 +76,7 @@ impl<P: Problem> Default for Configuration<P> {
         Self {
             initialization: initialization::Empty::new(),
             selection: selection::None::new(),
-            generation: vec![generation::Noop::new()],
+            generation: vec![Noop::new()],
             generation_scheduler: schedulers::AllInOrder::new(),
             replacement: replacement::Noop::new(),
             archiving: archive::None::new(),

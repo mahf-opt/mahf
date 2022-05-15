@@ -18,7 +18,7 @@ where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
     Configuration {
-        initialization: initialization::RandomSpread::new(num_particles),
+        initialization: initialization::RandomSpread::new_init(num_particles),
         selection: selection::All::new(),
         generation: vec![generation::PsoGeneration::new(a, b, c, v_max)],
         replacement: replacement::Generational::new(num_particles),
