@@ -1,100 +1,27 @@
 //! Generation methods
 
-use crate::framework::common_state::{Population, Progress};
-use crate::framework::Individual;
 use crate::operators::custom_state::PsoState;
 use crate::{
-    framework::{components::*, legacy::components::*, State},
-    problems::{LimitedVectorProblem, Problem, VectorProblem},
+    framework::{
+        common_state::{Population, Progress},
+        components::*,
+        legacy::components::*,
+        Individual, State,
+    },
+    problems::{LimitedVectorProblem, Problem},
     random::Random,
 };
 use rand::{prelude::SliceRandom, Rng};
-use rand_distr::{uniform::SampleUniform, Distribution};
+use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 use std::cmp::max;
 use std::ops::DerefMut;
 
-#[derive(Serialize)]
-pub struct Noop;
-impl Noop {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
-        Box::new(Generator(Self))
-    }
-}
-impl<P: Problem> Generation<P> for Noop {
-    fn generate(
-        &self,
-        _state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _parents: &mut Vec<<P as Problem>::Encoding>,
-        _offspring: &mut Vec<<P as Problem>::Encoding>,
-    ) {
-    }
-}
+// Random Operators without state //
+pub use crate::operators::initialization::RandomPermutation;
+pub use crate::operators::initialization::RandomSpread;
 
 // Mutation-like Operators //
-
-/// Generates new random solutions in the search space.
-#[derive(Serialize)]
-pub struct RandomSpread;
-impl RandomSpread {
-    pub fn new<P, D>() -> Box<dyn Component<P>>
-    where
-        D: SampleUniform + PartialOrd,
-        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
-    {
-        Box::new(Generator(Self))
-    }
-}
-impl<P, D> Generation<P> for RandomSpread
-where
-    D: SampleUniform + PartialOrd,
-    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
-{
-    fn generate(
-        &self,
-        _state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        _parents: &mut Vec<Vec<D>>,
-        offspring: &mut Vec<Vec<D>>,
-    ) {
-        let solution = (0..problem.dimension())
-            .map(|d| rng.gen_range(problem.range(d)))
-            .collect::<Vec<D>>();
-        offspring.push(solution);
-    }
-}
-
-/// Generates new random permutations.
-#[derive(Serialize)]
-pub struct RandomPermutation;
-impl RandomPermutation {
-    pub fn new<P>() -> Box<dyn Component<P>>
-    where
-        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
-    {
-        Box::new(Generator(Self))
-    }
-}
-impl<P> Generation<P> for RandomPermutation
-where
-    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
-{
-    fn generate(
-        &self,
-        _state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        _parents: &mut Vec<Vec<usize>>,
-        offspring: &mut Vec<Vec<usize>>,
-    ) {
-        let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
-        solution.shuffle(rng);
-        offspring.push(solution);
-    }
-}
 
 /// Applies a fixed, component wise delta from a normal distribution.
 ///
