@@ -59,4 +59,8 @@ impl Population {
     pub fn pop(&mut self) -> Vec<Individual> {
         self.stack.pop().unwrap()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.stack.is_empty()
+    }
 }

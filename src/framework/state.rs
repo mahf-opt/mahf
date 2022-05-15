@@ -1,5 +1,6 @@
 use crate::{
     framework::{Fitness, Individual},
+    random,
     tracking::log::Logger,
 };
 use std::ops::{Deref, DerefMut};
@@ -141,5 +142,10 @@ impl State {
     /// Returns mutable [Population](common::Population) state.
     pub fn population_stack_mut(&mut self) -> &mut common::Population {
         self.get_mut::<common::Population>()
+    }
+
+    /// Returns mutable [Random](random::Random) state.
+    pub fn random_mut(&mut self) -> &mut random::Random {
+        self.get_mut::<random::Random>()
     }
 }
