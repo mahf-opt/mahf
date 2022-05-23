@@ -23,6 +23,9 @@ pub mod termination;
 pub mod testing;
 
 /// Doesn't do anything.
+///
+/// Note that this component is different from [initialization::Empty] as it doesn't modify
+/// the state at all, while [Empty][initialization::Empty] pushes an empty population on the stack.
 #[derive(Serialize)]
 pub struct Noop;
 impl Noop {
