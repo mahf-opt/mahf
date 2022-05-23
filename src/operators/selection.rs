@@ -16,8 +16,7 @@ use crate::{
     problems::Problem,
 };
 
-// Macro is marked as unused, even though it is used by test modules
-#[allow(unused_macros)]
+#[cfg(test)]
 macro_rules! impl_selects_right_number_of_children {
     ($component: expr) => {
         #[test]
