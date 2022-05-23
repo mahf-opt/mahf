@@ -106,8 +106,7 @@ where
         state: &mut State,
     ) {
         let population_size = population.len() as u32;
-        population.drain(..);
-        population.extend(self.random_spread(problem, state.random_mut(), population_size));
+        *population = self.random_spread(problem, state.random_mut(), population_size);
     }
 }
 
@@ -174,7 +173,6 @@ where
         state: &mut State,
     ) {
         let population_size = population.len() as u32;
-        population.drain(..);
-        population.extend(self.random_permutation(problem, state.random_mut(), population_size));
+        *population = self.random_permutation(problem, state.random_mut(), population_size);
     }
 }
