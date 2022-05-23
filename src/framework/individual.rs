@@ -50,6 +50,15 @@ impl Individual {
         self.solution.downcast_ref().unwrap()
     }
 
+    /// Returns the mutable individuals solution, resetting the fitness.
+    ///
+    /// # Panics
+    /// This will panic when `E` is not the right type.
+    pub fn solution_mut<E: Any>(&mut self) -> &mut E {
+        self.fitness = Fitness::default();
+        self.solution.downcast_mut().unwrap()
+    }
+
     /// Returns the individuals solution.
     ///
     /// # Panics
