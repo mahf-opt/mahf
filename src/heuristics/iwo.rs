@@ -42,7 +42,7 @@ where
                     min_number_of_seeds,
                     max_number_of_seeds,
                 ),
-                generation::IWOAdaptiveDeviationDelta::new(
+                generation::mutation::IWOAdaptiveDeviationDelta::new(
                     initial_deviation,
                     final_deviation,
                     modulation_index,

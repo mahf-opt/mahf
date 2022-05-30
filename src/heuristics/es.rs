@@ -22,7 +22,7 @@ where
     Configuration {
         initialization: initialization::RandomSpread::new_init(population_size),
         selection: selection::FullyRandom::new(lambda),
-        generation: vec![generation::FixedDeviationDelta::new(deviation)],
+        generation: vec![generation::mutation::FixedDeviationDelta::new(deviation)],
         replacement: replacement::MuPlusLambda::new(population_size),
         termination: termination::FixedIterations::new(max_iterations),
         ..Default::default()

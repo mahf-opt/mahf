@@ -20,7 +20,7 @@ where
     Configuration {
         initialization: initialization::RandomSpread::new_init(num_particles),
         selection: selection::All::new(),
-        generation: vec![generation::PsoGeneration::new(a, b, c, v_max)],
+        generation: vec![generation::swarm::PsoGeneration::new(a, b, c, v_max)],
         replacement: replacement::Generational::new(num_particles),
         post_replacement: postprocess::PsoPostprocess::new(v_max),
         termination: termination::FixedIterations::new(max_iterations),

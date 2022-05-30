@@ -23,8 +23,8 @@ use serde::Serialize;
 ///     initialization: initialization::RandomSpread::new_init(25),
 ///     selection: selection::RouletteWheel::new(25),
 ///     generation: vec![
-///         generation::UniformCrossover::new(0.8),
-///         generation::FixedDeviationDelta::new(0.2),
+///         generation::recombination::UniformCrossover::new(0.8),
+///         generation::mutation::FixedDeviationDelta::new(0.2),
 ///     ],
 ///     replacement: replacement::Generational::new(25),
 ///     termination: termination::FixedIterations::new(500),

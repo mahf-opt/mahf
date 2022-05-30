@@ -67,7 +67,7 @@ impl RandomSpread {
         problem: &P,
         rng: &mut Random,
         population_size: u32,
-    ) -> Vec<Individual>
+    ) -> Vec<P::Encoding>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
         P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
@@ -79,7 +79,7 @@ impl RandomSpread {
                 .map(|d| rng.gen_range(problem.range(d)))
                 .collect::<Vec<D>>();
 
-            population.push(Individual::new_unevaluated(solution));
+            population.push(solution);
         }
         population
     }
@@ -92,6 +92,9 @@ where
     fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
         let population_size = self.initial_population_size.unwrap();
         self.random_spread(problem, state.random_mut(), population_size)
+            .into_iter()
+            .map(Individual::new_unevaluated)
+            .collect()
     }
 }
 impl<P, D> Generation<P> for RandomSpread
@@ -101,7 +104,7 @@ where
 {
     fn generate_population(
         &self,
-        population: &mut Vec<Individual>,
+        population: &mut Vec<P::Encoding>,
         problem: &P,
         state: &mut State,
     ) {
@@ -140,7 +143,7 @@ impl RandomPermutation {
         problem: &P,
         rng: &mut Random,
         population_size: u32,
-    ) -> Vec<Individual>
+    ) -> Vec<P::Encoding>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
     {
@@ -148,7 +151,7 @@ impl RandomPermutation {
         for _ in 0..population_size {
             let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
             solution.shuffle(rng);
-            population.push(Individual::new_unevaluated(solution));
+            population.push(solution);
         }
         population
     }
@@ -160,6 +163,9 @@ where
     fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
         let population_size = self.initial_population_size.unwrap();
         self.random_permutation(problem, state.random_mut(), population_size)
+            .into_iter()
+            .map(Individual::new_unevaluated)
+            .collect()
     }
 }
 impl<P> Generation<P> for RandomPermutation
@@ -168,7 +174,7 @@ where
 {
     fn generate_population(
         &self,
-        population: &mut Vec<Individual>,
+        population: &mut Vec<P::Encoding>,
         problem: &P,
         state: &mut State,
     ) {

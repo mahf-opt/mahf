@@ -24,8 +24,8 @@ where
         initialization: initialization::RandomSpread::new_init(population_size),
         selection: selection::FullyRandom::new(population_size),
         generation: vec![
-            generation::UniformCrossover::new(pc),
-            generation::FixedDeviationDelta::new(deviation),
+            generation::recombination::UniformCrossover::new(pc),
+            generation::mutation::FixedDeviationDelta::new(deviation),
         ],
         replacement: replacement::Generational::new(population_size),
         termination: termination::FixedIterations::new(max_iterations),
