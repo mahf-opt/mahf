@@ -74,6 +74,10 @@ impl State {
         }
     }
 
+    pub fn get_or_default<T: CustomState + Default>(&mut self) -> &mut T {
+        self.map.get_or_default()
+    }
+
     pub fn get_value<T>(&self) -> T::Target
     where
         T: CustomState + Deref,
@@ -103,6 +107,18 @@ impl State {
             *self.map.get_mut::<T>().deref_mut() = value;
         } else {
             *self.parent_mut().unwrap().get_mut::<T>().deref_mut() = value;
+        }
+    }
+
+    pub fn get_value_mut<T>(&mut self) -> &mut T::Target
+    where
+        T: CustomState + DerefMut,
+        T::Target: Sized,
+    {
+        if self.map.has::<T>() {
+            self.map.get_mut::<T>().deref_mut()
+        } else {
+            self.parent_mut().unwrap().get_mut::<T>().deref_mut()
         }
     }
 }
