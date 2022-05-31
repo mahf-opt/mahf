@@ -18,7 +18,10 @@ fn main() -> anyhow::Result<()> {
             final_deviation: 0.001,
             modulation_index: 3,
         },
-        termination::FixedIterations::new(500),
+        termination::And::new(vec![
+            termination::FixedIterations::new(500),
+            termination::TargetHit::new(),
+        ]),
         components::Logger::builder()
             .with_set(
                 LogSet::new()
