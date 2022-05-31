@@ -6,7 +6,7 @@ use crate::{
         Configuration,
     },
     operators::*,
-    problems::{LimitedVectorProblem, Problem, VectorProblem},
+    problems::{HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem},
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -35,7 +35,11 @@ pub fn iwo<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
+    P: Problem<Encoding = Vec<f64>>
+        + VectorProblem<T = f64>
+        + LimitedVectorProblem
+        + HasKnownTarget
+        + 'static,
 {
     assert!(params.initial_population_size <= params.max_population_size);
     assert!(params.min_number_of_seeds <= params.max_number_of_seeds);
@@ -45,7 +49,7 @@ where
         initialization::RandomSpread::new(params.initial_population_size),
         components::SimpleEvaluator::new(),
         components::Loop::new(
-            termination,
+            termination::And::new(vec![termination, termination::TargetHit::new()]),
             vec![
                 selection::DeterministicFitnessProportional::new(
                     params.min_number_of_seeds,

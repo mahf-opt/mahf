@@ -197,7 +197,7 @@ where
     T: AnyComponent + Termination<P> + Serialize,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        todo!()
+        !self.0.terminate(state, problem)
     }
 }
 

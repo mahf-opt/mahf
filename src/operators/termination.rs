@@ -8,7 +8,7 @@ use crate::{
         State,
     },
     operators::custom_state::FitnessImprovementState,
-    problems::{HasKnownOptimum, Problem},
+    problems::{HasKnownOptimum, HasKnownTarget, Problem},
 };
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Undefined;
 impl Undefined {
-    pub fn new<P: Problem>() -> Box<dyn Condition<P>>
+    pub fn new<P>() -> Box<dyn Condition<P>>
     where
         P: Problem,
     {
@@ -34,6 +34,51 @@ where
             "Heuristic with no termination criteria was run. ",
             "Please specify a termination criteria."
         ));
+    }
+}
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct And<P: Problem> {
+    inner: Vec<Box<dyn Condition<P>>>,
+}
+impl<P: Problem + 'static> And<P> {
+    pub fn new(terminators: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
+        Box::new(Self { inner: terminators })
+    }
+}
+impl<P> Condition<P> for And<P>
+where
+    P: Problem + 'static,
+{
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for condition in &self.inner {
+            condition.initialize(problem, state);
+        }
+    }
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        self.inner
+            .iter()
+            .all(|condition| condition.evaluate(problem, state))
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TargetHit;
+impl TargetHit {
+    pub fn new<P>() -> Box<dyn Condition<P>>
+    where
+        P: Problem + HasKnownTarget,
+    {
+        Box::new(Terminator(Self))
+    }
+}
+impl<P> Termination<P> for TargetHit
+where
+    P: Problem + HasKnownTarget,
+{
+    fn terminate(&self, state: &mut State, problem: &P) -> bool {
+        problem.target_hit(state.best_fitness())
     }
 }
 

@@ -2,8 +2,8 @@ use mahf::{
     framework::components,
     heuristics::iwo,
     operators::termination,
-    problems::coco_bound::suits,
-    tracking::{logfn::LogSet, trigger},
+    problems::coco_bound::{suits, CocoInstance},
+    tracking::{logfn::LogSet, trigger, LoggerFunction},
 };
 
 fn main() -> anyhow::Result<()> {
@@ -24,6 +24,11 @@ fn main() -> anyhow::Result<()> {
                 LogSet::new()
                     .with_criteria(trigger::OnNthIteration::new(10))
                     .with_common_loggers(),
+            )
+            .with_set(
+                LogSet::new()
+                    .with_criteria(trigger::OnNthIteration::new(50))
+                    .with_logger(LoggerFunction::best_individual::<CocoInstance, _>()),
             )
             .build(),
     );

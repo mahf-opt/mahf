@@ -5,12 +5,12 @@
 
 use crate::{
     framework::{
-        common_state::{BestFitness, Evaluations, Population},
+        common_state::{BestFitness, BestIndividual, Evaluations, Population},
         state::State,
-        Fitness, Individual,
+        Fitness,
     },
     problems::Problem,
-    tracking::logfn::LogSet,
+    tracking::{log::LogEntry, logfn::LogSet, Log},
 };
 use serde::Serialize;
 use std::any::Any;
@@ -160,11 +160,17 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Population>();
         state.insert(Evaluations(0));
-        state.insert(BestFitness(Fitness::default()))
+        state.insert(BestFitness(Fitness::default()));
+        state.insert(BestIndividual(None));
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
+        let current_best_fitness = state.get_value::<BestFitness>();
         let population = state.get_mut::<Population>().current_mut();
+
+        if population.is_empty() {
+            return;
+        }
 
         for individual in population.iter_mut() {
             let solution = individual.solution::<P::Encoding>();
@@ -173,14 +179,16 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
         }
 
         let evaluations = population.len() as u32;
-        let best_fitness = population
-            .iter()
-            .map(Individual::fitness)
-            .min()
-            .unwrap_or_default();
-        let best_fitness = Ord::min(best_fitness, state.get_value::<BestFitness>());
+        let best_individual = population.iter().min_by_key(|i| i.fitness()).unwrap();
 
-        state.set_value::<BestFitness>(best_fitness);
+        if best_individual.fitness() < current_best_fitness {
+            let best_fitness = best_individual.fitness();
+            let best_individual = best_individual.clone();
+
+            state.set_value::<BestFitness>(best_fitness);
+            state.set_value::<BestIndividual>(Some(best_individual));
+        }
+
         state.get_mut::<Evaluations>().0 += evaluations;
     }
 }
@@ -217,8 +225,14 @@ impl<P: Problem + 'static> Component<P> for Logger<P> {
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
+        let mut entry = LogEntry::default();
+
         for set in &self.sets {
-            set.execute(problem, state);
+            set.execute(problem, state, &mut entry);
+        }
+
+        if !entry.state.is_empty() {
+            state.get_mut::<Log>().push(entry);
         }
     }
 }

@@ -35,6 +35,10 @@ pub trait LimitedVectorProblem: VectorProblem {
     fn range(&self, dimension: usize) -> Range<Self::T>;
 }
 
+pub trait HasKnownTarget {
+    fn target_hit(&self, fitness: Fitness) -> bool;
+}
+
 pub trait HasKnownOptimum {
     fn known_optimum(&self) -> f64;
 }

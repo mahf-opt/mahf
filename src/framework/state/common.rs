@@ -12,7 +12,7 @@ pub fn default(state: &mut State) {
 }
 
 #[derive(Deref, DerefMut)]
-pub struct BestIndividual(pub Individual);
+pub struct BestIndividual(pub Option<Individual>);
 impl CustomState for BestIndividual {}
 
 #[derive(Deref, DerefMut, Clone, Serialize)]

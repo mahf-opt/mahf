@@ -1,14 +1,11 @@
-use std::any::type_name;
+use std::{any::type_name, ops::Deref};
 
 use crate::{
     framework::{
         common_state, common_state::BestIndividual, components::Condition, CustomState, State,
     },
     problems::Problem,
-    tracking::{
-        log::{LogEntry, LoggedState},
-        Log,
-    },
+    tracking::log::{LogEntry, LoggedState},
 };
 use serde::Serialize;
 
@@ -47,7 +44,7 @@ impl<P: Problem + 'static> LogSet<P> {
             .with_auto_logger::<common_state::Progress>()
     }
 
-    pub(crate) fn execute(&self, problem: &P, state: &mut State) {
+    pub(crate) fn execute(&self, problem: &P, state: &mut State, entry: &mut LogEntry) {
         let criteria = self
             .criteria
             .iter()
@@ -55,13 +52,9 @@ impl<P: Problem + 'static> LogSet<P> {
             .any(|b| b); // normal any would be short-circuiting
 
         if criteria {
-            let mut entry = LogEntry::default();
-
             for logger in &self.loggers {
                 entry.state.push((logger.function)(state));
             }
-
-            state.get_mut::<Log>().push(entry);
         }
     }
 }
@@ -86,7 +79,11 @@ impl LoggerFunction {
         }
     }
 
-    pub fn best_individual<E: Clone + Serialize + Sized + 'static>() -> LoggerFunction {
+    pub fn best_individual<P, E>() -> LoggerFunction
+    where
+        P: Problem<Encoding = E>,
+        E: Clone + Serialize + Sized + 'static,
+    {
         fn log_fn<E: Clone + Serialize + Sized + 'static>(state: &State) -> LoggedState {
             debug_assert!(
                 state.has::<BestIndividual>(),
@@ -95,8 +92,13 @@ impl LoggerFunction {
             );
 
             let instance = state.get::<BestIndividual>();
-            let individual = instance.solution::<E>().clone();
-            let value = Box::new(individual);
+            let value = Box::new(if let Some(instance) = instance.deref() {
+                let individual = instance.solution::<E>().clone();
+                Some(individual)
+            } else {
+                None
+            });
+
             let name = std::any::type_name::<BestIndividual>();
             LoggedState { name, value }
         }

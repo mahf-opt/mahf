@@ -126,7 +126,7 @@ impl State {
     }
 
     /// Returns [BestIndividual](common::BestIndividual) state.
-    pub fn best_individual(&self) -> &Individual {
+    pub fn best_individual(&self) -> &Option<Individual> {
         self.get::<common::BestIndividual>()
     }
 
