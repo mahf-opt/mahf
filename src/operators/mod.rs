@@ -1,7 +1,5 @@
 //! Implementations of [crate::framework::components].
 
-#![allow(clippy::new_ret_no_self)]
-
 pub mod archive;
 pub mod custom_state;
 pub mod generation;

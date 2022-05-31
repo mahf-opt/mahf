@@ -1,6 +1,3 @@
-#![allow(unused_variables)]
-#![allow(clippy::new_ret_no_self)]
-
 //! Framework components.
 
 use crate::{
