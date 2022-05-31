@@ -5,16 +5,12 @@
 
 use crate::{
     framework::{
-        common_state::{BestFitness, Evaluations, Iterations, Population, Progress},
+        common_state::{BestFitness, Evaluations, Population},
         state::State,
-        CustomState, Fitness,
+        Fitness, Individual,
     },
     problems::Problem,
-    tracking::{
-        log::{LogEntry, LoggerFunction, LoggerSet},
-        trigger::LoggerCriteria,
-        Log,
-    },
+    tracking::logfn::LogSet,
 };
 use serde::Serialize;
 use std::any::Any;
@@ -163,63 +159,47 @@ impl SimpleEvaluator {
 impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Population>();
+        state.insert(Evaluations(0));
+        state.insert(BestFitness(Fitness::default()))
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
         let population = state.get_mut::<Population>().current_mut();
 
-        for individual in population {
+        for individual in population.iter_mut() {
             let solution = individual.solution::<P::Encoding>();
             let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
             individual.evaluate(fitness);
         }
+
+        let evaluations = population.len() as u32;
+        let best_fitness = population
+            .iter()
+            .map(Individual::fitness)
+            .min()
+            .unwrap_or_default();
+        let best_fitness = Ord::min(best_fitness, state.get_value::<BestFitness>());
+
+        state.set_value::<BestFitness>(best_fitness);
+        state.get_mut::<Evaluations>().0 += evaluations;
     }
 }
 
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Logger<P: Problem> {
-    criteria: Vec<Box<dyn Condition<P>>>,
-
     #[serde(skip)]
-    loggers: Vec<LoggerFunction>,
+    sets: Vec<LogSet<P>>,
 }
 
 impl<P: Problem + 'static> Logger<P> {
     pub fn builder() -> Self {
-        Self {
-            criteria: Vec::new(),
-            loggers: Vec::new(),
-        }
+        Logger { sets: Vec::new() }
     }
 
-    pub fn add_criteria(&mut self, criteria: Box<dyn Condition<P>>) {
-        self.criteria.push(criteria);
-    }
-
-    pub fn with_criteria(mut self, criteria: Box<dyn Condition<P>>) -> Self {
-        self.add_criteria(criteria);
+    pub fn with_set(mut self, set: LogSet<P>) -> Self {
+        self.sets.push(set);
         self
-    }
-
-    pub fn add_logger(&mut self, logger: LoggerFunction) {
-        self.loggers.push(logger);
-    }
-
-    pub fn with_logger(mut self, logger: LoggerFunction) -> Self {
-        self.add_logger(logger);
-        self
-    }
-
-    pub fn with_auto_logger<T: CustomState + Clone + Serialize>(self) -> Self {
-        self.with_logger(LoggerFunction::auto::<T>())
-    }
-
-    pub fn with_common_loggers(self) -> Self {
-        self.with_auto_logger::<Iterations>()
-            .with_auto_logger::<Evaluations>()
-            .with_auto_logger::<BestFitness>()
-            .with_auto_logger::<Progress>()
     }
 
     pub fn build(self) -> Box<dyn Component<P>> {
@@ -229,26 +209,16 @@ impl<P: Problem + 'static> Logger<P> {
 
 impl<P: Problem + 'static> Component<P> for Logger<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
-        for criteria in &self.criteria {
-            criteria.initialize(problem, state);
+        for set in &self.sets {
+            for criteria in &set.criteria {
+                criteria.initialize(problem, state);
+            }
         }
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        let criteria = self
-            .criteria
-            .iter()
-            .map(|c| c.evaluate(problem, state))
-            .any(|b| b); // normal any would be short-circuiting
-
-        if criteria {
-            let mut entry = LogEntry::default();
-
-            for logger in &self.loggers {
-                entry.state.push((logger.function)(state));
-            }
-
-            state.get_mut::<Log>().push(entry);
+        for set in &self.sets {
+            set.execute(problem, state);
         }
     }
 }

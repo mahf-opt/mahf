@@ -21,6 +21,10 @@ pub fn bbob() -> Suite {
     Suite::new(SuiteName::Bbob, "", "").unwrap()
 }
 
+pub fn largescale() -> Suite {
+    Suite::new(SuiteName::BbobLargescale, "", "").unwrap()
+}
+
 pub fn evaluate_suite(
     mut suite: Suite,
     configuration: Configuration<CocoInstance>,
@@ -50,7 +54,7 @@ pub fn evaluate_suite(
                     let _data_dir = data_dir.join(experiment_desc);
 
                     for _ in 0..runs {
-                        framework::run(&problem, &configuration, None, Some(Random::default()));
+                        framework::run(&problem, &configuration, Some(Random::default()));
                         let _ = tx.send(Ok(()));
                     }
 

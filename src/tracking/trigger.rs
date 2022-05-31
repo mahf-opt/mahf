@@ -1,48 +1,18 @@
-use crate::framework::{CustomState, State};
+use crate::framework::{components::Condition, State};
 
-#[derive(Default)]
-pub struct LoggerCriteria {
-    set: Vec<Box<dyn Criteria>>,
-}
+#[derive(serde::Serialize)]
+pub struct OnNthIteration(u32);
 
-impl CustomState for LoggerCriteria {}
-
-impl LoggerCriteria {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn with(mut self, criteria: impl Criteria + 'static) -> Self {
-        self.add(criteria);
-        self
-    }
-
-    pub fn add(&mut self, criteria: impl Criteria + 'static) {
-        // TODO: check that the criteria is unique
-        self.set.push(Box::new(criteria));
-    }
-
-    pub fn evaluate(&mut self, state: &State) -> bool {
-        let mut log = false;
-        for criteria in &mut self.set {
-            log |= criteria.evaluate(state);
-        }
-        log
+impl OnNthIteration {
+    pub fn new<P>(iterations: u32) -> Box<dyn Condition<P>> {
+        Box::new(OnNthIteration(iterations))
     }
 }
 
-pub trait Criteria {
-    fn evaluate(&mut self, state: &State) -> bool;
-}
-
-impl<F> Criteria for F
-where
-    F: FnMut(&State) -> bool,
-{
-    fn evaluate(&mut self, state: &State) -> bool {
-        (self)(state)
+impl<P> Condition<P> for OnNthIteration {
+    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+        state.iterations() % self.0 == 0
     }
 }
 
-pub struct OnNthIteration(pub usize);
 pub struct OnImprovement {}

@@ -1,7 +1,4 @@
-use crate::{
-    framework::{Fitness, Individual},
-    tracking::log::LoggerFunction,
-};
+use crate::framework::{Fitness, Individual};
 use std::ops::{Deref, DerefMut};
 
 mod map;
@@ -11,11 +8,7 @@ pub(crate) use map::StateMap;
 pub mod common;
 
 /// Makes custom state trackable.
-pub trait CustomState: AsAny {
-    fn auto_logger(&self) -> Option<LoggerFunction> {
-        None
-    }
-}
+pub trait CustomState: AsAny {}
 
 #[derive(Default)]
 pub struct State {
@@ -65,6 +58,7 @@ impl State {
         );
     }
 
+    #[track_caller]
     pub fn get<T: CustomState>(&self) -> &T {
         if self.map.has::<T>() {
             self.map.get::<T>()
@@ -73,6 +67,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn get_value<T>(&self) -> T::Target
     where
         T: CustomState + Deref,
@@ -85,6 +80,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
         if self.map.has::<T>() {
             self.map.get_mut::<T>()
@@ -93,6 +89,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn set_value<T>(&mut self, value: T::Target)
     where
         T: CustomState + DerefMut,

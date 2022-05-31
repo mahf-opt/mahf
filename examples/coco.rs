@@ -1,5 +1,9 @@
 use mahf::{
-    framework::components, heuristics::iwo, operators::termination, problems::coco_bound::suits,
+    framework::components,
+    heuristics::iwo,
+    operators::termination,
+    problems::coco_bound::suits,
+    tracking::{logfn::LogSet, trigger},
 };
 
 fn main() -> anyhow::Result<()> {
@@ -15,7 +19,13 @@ fn main() -> anyhow::Result<()> {
             modulation_index: 3,
         },
         termination::FixedIterations::new(500),
-        components::Logger::builder().with_common_loggers().build(),
+        components::Logger::builder()
+            .with_set(
+                LogSet::new()
+                    .with_criteria(trigger::OnNthIteration::new(10))
+                    .with_common_loggers(),
+            )
+            .build(),
     );
     let suite = suits::bbob();
 

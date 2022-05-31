@@ -16,11 +16,17 @@ pub use state::{CustomState, State};
 mod individual;
 pub use individual::Individual;
 
+use crate::tracking::Log;
 use crate::{problems::Problem, random::Random};
 
-pub fn run<P: Problem>(problem: &P, config: &Configuration<P>, rng: Option<Random>) -> State {
+pub fn run<P: Problem + 'static>(
+    problem: &P,
+    config: &Configuration<P>,
+    rng: Option<Random>,
+) -> State {
     let mut state = State::new_root();
 
+    state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
 
     config.initialize(problem, &mut state);
