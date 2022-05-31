@@ -213,6 +213,10 @@ impl<P: Problem + 'static> Logger<P> {
     pub fn build(self) -> Box<dyn Component<P>> {
         Box::new(self)
     }
+
+    pub fn default() -> Box<dyn Component<P>> {
+        Logger::builder().build()
+    }
 }
 
 impl<P: Problem + 'static> Component<P> for Logger<P> {

@@ -36,7 +36,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
-    let state = framework::run(&problem, &config, None, Some(rng));
+    let state = framework::run(&problem, &config, Some(rng));
     let end = Instant::now();
     let runtime = end - start;
 
