@@ -6,6 +6,7 @@ use crate::{
     tracking::Log,
 };
 use coco_rs::{Suite, SuiteName};
+use serde::Serialize;
 use std::{
     fs::{self, File},
     io::{BufWriter, Write},
@@ -33,6 +34,13 @@ pub fn evaluate_suite(
 ) -> anyhow::Result<()> {
     let data_dir = Arc::new(PathBuf::from(output_dir));
     fs::create_dir_all(data_dir.as_ref())?;
+
+    let config_log_file = data_dir.join("configuration.ron");
+    configuration.serialize(&mut ron::Serializer::new(
+        BufWriter::new(File::create(config_log_file)?),
+        Some(ron::ser::PrettyConfig::default()),
+        true,
+    )?)?;
 
     let total_runs = suite.number_of_problems();
     let (tx, rx) = mpsc::channel();

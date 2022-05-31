@@ -88,6 +88,7 @@ impl<P: Problem + 'static> Scope<P> {
 
 #[derive(Serialize)]
 #[serde(bound = "")]
+#[serde(transparent)]
 pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
 impl<P> Component<P> for Block<P>
@@ -116,7 +117,9 @@ impl<P: Problem + 'static> Block<P> {
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Loop<P: Problem> {
+    #[serde(rename = "while")]
     condition: Box<dyn Condition<P>>,
+    #[serde(rename = "do")]
     body: Box<dyn Component<P>>,
 }
 
