@@ -1,9 +1,7 @@
 //! Archiving methods
 
 use crate::{
-    framework::{
-        common_state::BestFitness, components::*, legacy::components::*, Individual, State,
-    },
+    framework::{components::*, legacy::components::*, Individual, State},
     operators::custom_state::ElitismState,
     problems::Problem,
     random::Random,
@@ -33,35 +31,30 @@ where
     }
 }
 
-/// Adds elitists after replacement
+/// Adds elitists of the population to [ElitismState].
 #[derive(Serialize, Deserialize)]
 pub struct Elitists {
     pub n_elitists: usize,
 }
 impl Elitists {
     pub fn new<P: Problem>(n_elitists: usize) -> Box<dyn Component<P>> {
-        Box::new(Archiver(Self { n_elitists }))
+        Box::new(Self { n_elitists })
     }
 }
-impl<P> Archiving<P> for Elitists
+impl<P> Component<P> for Elitists
 where
     P: Problem,
 {
-    fn archive(
-        &self,
-        state: &mut State,
-        _rng: &mut Random,
-        _problem: &P,
-        population: &mut Vec<Individual>,
-        _offspring: &mut Vec<Individual>,
-    ) {
-        if !state.has::<ElitismState>() {
-            state.insert(ElitismState { elitists: vec![] });
-        }
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.get_or_default::<ElitismState>();
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let mut population = state.population_stack_mut().pop();
         let mut elitism_state = state.get_mut::<ElitismState>();
 
         for elitist in elitism_state.elitists.drain(..) {
-            if population.iter().all(|ind| ind != &elitist) {
+            if !population.contains(&elitist) {
                 population.push(elitist);
             }
         }
@@ -71,9 +64,12 @@ where
         pop.truncate(self.n_elitists);
         let elitists = pop.into_iter().map(Individual::clone).collect();
         elitism_state.elitists = elitists;
+
         let fittest = elitism_state.elitists[0].fitness();
 
-        let best_so_far = **state.get::<BestFitness>();
+        let best_so_far = state.best_fitness();
         assert_eq!(best_so_far, fittest);
+
+        state.population_stack_mut().push(population);
     }
 }
