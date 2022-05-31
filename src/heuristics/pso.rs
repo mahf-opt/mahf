@@ -32,8 +32,8 @@ where
 mod pso_ops {
     use crate::{
         framework::{components::*, Individual, State},
-        problems::{LimitedVectorProblem, Problem},
         operators::custom_state::PsoState,
+        problems::{LimitedVectorProblem, Problem},
     };
     use rand::Rng;
 
