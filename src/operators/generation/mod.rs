@@ -8,8 +8,10 @@ pub mod mutation;
 pub mod recombination;
 
 pub mod swarm {
+    use rand::distributions::Uniform;
     use rand::Rng;
 
+    use crate::random::Random;
     use crate::{
         framework::{components::*, Individual, State},
         operators::custom_state::PsoState,
@@ -18,7 +20,7 @@ pub mod swarm {
 
     /// Applies the PSO specific generation operator.
     ///
-    /// Requires PsoPostInitialization and PsoPostReplacement!
+    /// Requires [PsoStateUpdate][crate::heuristics::pso::pso_ops::PsoStateUpdate].
     #[derive(serde::Serialize)]
     pub struct PsoGeneration {
         pub a: f64,
@@ -49,10 +51,14 @@ pub mod swarm {
             let mut parents = state.population_stack_mut().pop();
 
             let rng = state.random_mut();
-            // let pso_state = pso_state.deref_mut();
+            let rng_iter = |rng: &mut Random| {
+                rng.sample_iter(Uniform::new(0., 1.))
+                    .take(parents.len())
+                    .collect::<Vec<_>>()
+            };
 
-            let rs = rng.gen_range(0.0..=1.0);
-            let rt = rng.gen_range(0.0..=1.0);
+            let rs = rng_iter(rng);
+            let rt = rng_iter(rng);
 
             let pso_state = state.get_mut::<PsoState>();
 
@@ -63,7 +69,7 @@ pub mod swarm {
                 let xg = pso_state.global_best.solution::<Vec<f64>>();
 
                 for i in 0..v.len() {
-                    v[i] = a * v[i] + b * rs * (xg[i] - x[i]) + c * rt * (xl[i] - x[i]);
+                    v[i] = a * v[i] + b * rs[i] * (xg[i] - x[i]) + c * rt[i] * (xl[i] - x[i]);
                     v[i] = v[i].clamp(-v_max, v_max);
                 }
 
