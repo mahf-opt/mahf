@@ -3,13 +3,19 @@
 
 //! Framework components.
 
+use std::any::Any;
+
+use serde::Serialize;
+use trait_set::trait_set;
+
 use crate::{
-    framework::{common_state::Population, state::State, Fitness},
+    framework::{
+        common_state::{self, Population},
+        state::State,
+        Fitness, Individual,
+    },
     problems::Problem,
 };
-use serde::Serialize;
-use std::any::Any;
-use trait_set::trait_set;
 
 trait_set! {
     pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync;
@@ -120,6 +126,8 @@ where
     P: Problem + 'static,
 {
     fn initialize(&self, problem: &P, state: &mut State) {
+        state.insert(common_state::Iterations(0));
+
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
     }
@@ -128,6 +136,7 @@ where
         self.condition.initialize(problem, state);
         while self.condition.evaluate(problem, state) {
             self.body.execute(problem, state);
+            *state.get_value_mut::<common_state::Iterations>() += 1;
         }
     }
 }
@@ -211,15 +220,61 @@ impl SimpleEvaluator {
 impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Population>();
+        state.require::<common_state::Evaluations>();
+        state.require::<common_state::BestFitness>();
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
+        // Evaluate population
         let population = state.get_mut::<Population>().current_mut();
 
-        for individual in population {
+        for individual in population.iter_mut() {
             let solution = individual.solution::<P::Encoding>();
             let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
             individual.evaluate(fitness);
         }
+
+        let population_len = population.len();
+
+        // Update best fitness
+        let best_fitness = population.iter().map(Individual::fitness).max().unwrap();
+        state.set_value::<common_state::BestFitness>(best_fitness);
+
+        // Update evaluations
+        *state.get_value_mut::<common_state::Evaluations>() += population_len as u32;
+    }
+}
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
+impl<P: Problem + 'static> Condition<P> for And<P> {
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for condition in self.0.iter() {
+            condition.initialize(problem, state);
+        }
+    }
+
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        self.0
+            .iter()
+            .all(|condition| condition.evaluate(problem, state))
+    }
+}
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
+impl<P: Problem + 'static> Condition<P> for Or<P> {
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for condition in self.0.iter() {
+            condition.initialize(problem, state);
+        }
+    }
+
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        self.0
+            .iter()
+            .any(|condition| condition.evaluate(problem, state))
     }
 }
