@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    framework::legacy::Configuration,
+    framework::{components, Configuration, ConfigurationBuilder},
     operators::*,
     problems::{LimitedVectorProblem, Problem},
 };
@@ -15,17 +15,23 @@ pub fn pso<P>(
     max_iterations: u32,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
-    Configuration {
-        initialization: initialization::RandomSpread::new_init(num_particles),
-        selection: selection::All::new(),
-        generation: vec![generation::swarm::PsoGeneration::new(a, b, c, v_max)],
-        replacement: replacement::Generational::new(num_particles),
-        post_replacement: pso_ops::PsoStateUpdate::new(v_max),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(initialization::RandomSpread::new_init(num_particles))
+        .do_(pso_ops::PsoStateInitialization::new(v_max))
+        .do_(components::SimpleEvaluator::new())
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(pso_ops::PsoStateUpdate::new())
+            },
+        )
+        .do_(pso_ops::AddPsoStateGlobalBest::new())
+        .build()
 }
 
 #[allow(clippy::new_ret_no_self)]
@@ -37,14 +43,11 @@ mod pso_ops {
     };
     use rand::Rng;
 
-    /// State update for PSO.
-    ///
-    /// Updates best found solutions of particles and global best in [PsoState].
     #[derive(Debug, serde::Serialize)]
-    pub struct PsoStateUpdate {
-        pub v_max: f64,
+    pub struct PsoStateInitialization {
+        v_max: f64,
     }
-    impl PsoStateUpdate {
+    impl PsoStateInitialization {
         pub fn new<P: Problem>(v_max: f64) -> Box<dyn Component<P>>
         where
             P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
@@ -52,11 +55,20 @@ mod pso_ops {
             Box::new(Self { v_max })
         }
     }
-    impl<P> Component<P> for PsoStateUpdate
+    impl<P> Component<P> for PsoStateInitialization
     where
         P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
     {
-        fn initialize(&self, problem: &P, state: &mut State) {
+        fn initialize(&self, _problem: &P, state: &mut State) {
+            // Initialize with empty state to satisfy `state.require()` statements
+            state.insert(PsoState {
+                velocities: vec![],
+                bests: vec![],
+                global_best: Individual::new_unevaluated(()),
+            })
+        }
+
+        fn execute(&self, problem: &P, state: &mut State) {
             let population = state.population_stack_mut().pop();
             let rng = state.random_mut();
 
@@ -86,6 +98,28 @@ mod pso_ops {
                 global_best,
             });
         }
+    }
+
+    /// State update for PSO.
+    ///
+    /// Updates best found solutions of particles and global best in [PsoState].
+    #[derive(Debug, serde::Serialize)]
+    pub struct PsoStateUpdate;
+    impl PsoStateUpdate {
+        pub fn new<P: Problem>() -> Box<dyn Component<P>>
+        where
+            P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+        {
+            Box::new(Self)
+        }
+    }
+    impl<P> Component<P> for PsoStateUpdate
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    {
+        fn initialize(&self, _problem: &P, state: &mut State) {
+            state.require::<PsoState>();
+        }
 
         fn execute(&self, _problem: &P, state: &mut State) {
             let population = state.population_stack_mut().pop();
@@ -102,6 +136,31 @@ mod pso_ops {
             }
 
             state.population_stack_mut().push(population);
+        }
+    }
+
+    /// Adds the global best from [PsoState] to the population.
+    #[derive(Debug, serde::Serialize)]
+    pub struct AddPsoStateGlobalBest;
+    impl AddPsoStateGlobalBest {
+        pub fn new<P: Problem>() -> Box<dyn Component<P>>
+        where
+            P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+        {
+            Box::new(Self)
+        }
+    }
+    impl<P> Component<P> for AddPsoStateGlobalBest
+    where
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    {
+        fn initialize(&self, _problem: &P, state: &mut State) {
+            state.require::<PsoState>();
+        }
+
+        fn execute(&self, _problem: &P, state: &mut State) {
+            let global_best = state.get::<PsoState>().global_best.clone();
+            state.population_stack_mut().current_mut().push(global_best);
         }
     }
 }
