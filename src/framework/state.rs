@@ -1,14 +1,16 @@
+use std::ops::{Deref, DerefMut};
+
+use map::AsAny;
+pub(crate) use map::StateMap;
+
 use crate::{
     framework::{Fitness, Individual},
     random,
     tracking::log::Logger,
 };
-use std::ops::{Deref, DerefMut};
+use crate::framework::state::map::{MutCustomStates, MutCustomStates2};
 
 mod map;
-use map::AsAny;
-pub(crate) use map::StateMap;
-
 pub mod common;
 
 /// Makes custom state trackable.
@@ -96,6 +98,18 @@ impl State {
         } else {
             self.parent_mut().unwrap().get_mut::<T>()
         }
+    }
+
+    pub fn get2_mut<T1: CustomState, T2: CustomState>(&mut self) -> (&mut T1, &mut T2) {
+        if self.map.has::<T1>() && self.map.has::<T2>() {
+            self.map.get2_mut::<T1, T2>()
+        } else {
+            self.parent_mut().unwrap().get2_mut::<T1, T2>()
+        }
+    }
+
+    pub fn get_multiple_mut(&mut self) -> MutCustomStates<'_> {
+        self.map.get_multiple_mut()
     }
 
     pub fn set_value<T>(&mut self, value: T::Target)

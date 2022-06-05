@@ -1,8 +1,10 @@
-use crate::framework::CustomState;
 use std::{
     any::{Any, TypeId},
     collections::BTreeMap,
 };
+
+use splitmut::{GetMuts, SplitMut};
+use crate::framework::CustomState;
 
 /// Utility trait to upcast [CustomState](CustomState) to [Any].
 pub trait AsAny: Any {
@@ -15,6 +17,18 @@ impl<S: CustomState> AsAny for S {
     }
     fn as_mut_any(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+pub type MutCustomStates2<'a> = GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>;
+
+pub struct MutCustomStates<'a>(
+    GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>
+);
+impl<'a> MutCustomStates<'a> {
+    pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
+        let result = self.0.at(Box::leak(Box::new(TypeId::of::<T>()))).unwrap();
+        result.as_mut_any().downcast_mut().unwrap()
     }
 }
 
@@ -63,6 +77,17 @@ impl StateMap {
             .unwrap()
     }
 
+    pub fn get2_mut<T1: CustomState, T2: CustomState>(&mut self) -> (&mut T1, &mut T2) {
+        let (state1, state2) = self.map.get2_mut(&TypeId::of::<T1>(), &TypeId::of::<T2>());
+        let state1 = state1.unwrap().as_mut_any().downcast_mut().unwrap();
+        let state2 = state2.unwrap().as_mut_any().downcast_mut().unwrap();
+        (state1, state2)
+    }
+
+    pub fn get_multiple_mut(&mut self) -> MutCustomStates<'_> {
+        MutCustomStates(self.map.get_muts())
+    }
+
     pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
         self.map
             .entry(TypeId::of::<T>())
@@ -70,5 +95,21 @@ impl StateMap {
             .as_mut_any()
             .downcast_mut()
             .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use splitmut::SplitMut;
+    use crate::framework::state::StateMap;
+
+    #[test]
+    fn multiple_mut() {
+        let mut h = vec!["Hello", "world", "!"];
+        let mut z = h.get_muts();
+        let a = z.at(0);
+        let b = z.at(1);
+        assert_eq!(a, Ok(&mut "Hello"));
+        assert_eq!(b, Ok(&mut "world"));
     }
 }
