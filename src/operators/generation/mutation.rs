@@ -5,14 +5,11 @@ use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{
-        common_state::Progress,
-        components::*,
-        specializations::{Generation, Generator},
-        State,
-    },
+    framework::{common_state::Progress, components::*, State},
     problems::{LimitedVectorProblem, Problem},
 };
+
+use super::{Generation, Generator};
 
 /// Applies a fixed, component wise delta from a normal distribution.
 ///

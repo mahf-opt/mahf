@@ -6,13 +6,11 @@ use rand::{seq::IteratorRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{
-        components::*,
-        specializations::{Recombination, Recombinator},
-        State,
-    },
+    framework::{components::*, State},
     problems::Problem,
 };
+
+use super::{Recombination, Recombinator};
 
 /// Applies a n-point crossover to two parent solutions depending on crossover probability.
 ///

@@ -6,8 +6,6 @@ pub mod legacy;
 pub mod components;
 pub use components::Configuration;
 
-pub mod specializations;
-
 mod builder;
 pub use builder::ConfigurationBuilder;
 

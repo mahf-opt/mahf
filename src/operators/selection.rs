@@ -8,27 +8,42 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{
-        components::*,
-        specializations::{Selection, Selector},
-        Fitness, Individual, State,
-    },
+    framework::{components::*, Fitness, Individual, State},
     problems::Problem,
 };
 
-#[cfg(test)]
-macro_rules! impl_selects_right_number_of_children {
-    ($component: expr) => {
-        #[test]
-        fn selects_right_number_of_children() {
-            let mut state = State::new_root();
-            state.insert(Random::testing());
-            let population = new_test_population(&[1.0, 2.0, 3.0]);
-            let comp = $component;
-            let selection = comp.select_offspring(&population, &mut state);
-            assert_eq!(selection.len(), comp.offspring as usize);
-        }
-    };
+/// Specialized component trait to select a subset of the current population and push it on the stack.
+///
+/// # Implementing [Component]
+///
+/// Types implementing this trait can implement [Component] by wrapping the type in a [Selector].
+pub trait Selection {
+    fn select_offspring<'p>(
+        &self,
+        population: &'p [Individual],
+        state: &mut State,
+    ) -> Vec<&'p Individual>;
+}
+
+#[derive(serde::Serialize)]
+pub struct Selector<T>(pub T);
+
+impl<T, P> Component<P> for Selector<T>
+where
+    P: Problem,
+    T: AnyComponent + Selection + Serialize,
+{
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let population = state.population_stack_mut().pop();
+        let selection: Vec<_> = self
+            .0
+            .select_offspring(&population, state)
+            .into_iter()
+            .cloned()
+            .collect();
+        state.population_stack_mut().push(population);
+        state.population_stack_mut().push(selection);
+    }
 }
 
 /// Helper function to obtain minimum and maximum fitness ranges for normalization.
@@ -198,7 +213,15 @@ mod fully_random {
 
     use super::*;
 
-    impl_selects_right_number_of_children!(FullyRandom { offspring: 4 });
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = FullyRandom { offspring: 4 };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
 }
 
 /// Deterministically selects individuals proporional to their fitness.
@@ -336,7 +359,15 @@ mod roulette_wheel {
 
     use super::*;
 
-    impl_selects_right_number_of_children!(RouletteWheel { offspring: 4 });
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = RouletteWheel { offspring: 4 };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
 }
 
 /// Selects `offspring` solutions using stochastic universal sampling.
@@ -391,7 +422,15 @@ mod stochastic_universal_sampling {
 
     use super::*;
 
-    impl_selects_right_number_of_children!(FullyRandom { offspring: 4 });
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = StochasticUniversalSampling { offspring: 4 };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
 }
 
 /// Selects `offspring` using deterministic Tournament selection.
@@ -444,10 +483,18 @@ mod tournament {
 
     use super::*;
 
-    impl_selects_right_number_of_children!(Tournament {
-        offspring: 4,
-        size: 2,
-    });
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = Tournament {
+            offspring: 4,
+            size: 2,
+        };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
 }
 
 /// Selects `offspring` solutions using linear ranking.
@@ -487,7 +534,15 @@ mod linear_rank {
 
     use super::*;
 
-    impl_selects_right_number_of_children!(LinearRank { offspring: 4 });
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = LinearRank { offspring: 4 };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
 }
 
 /// Selects `offspring` solutions using exponential ranking.
@@ -539,8 +594,16 @@ mod exponential_rank {
 
     use super::*;
 
-    impl_selects_right_number_of_children!(ExponentialRank {
-        offspring: 4,
-        base: 0.5,
-    });
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = ExponentialRank {
+            offspring: 4,
+            base: 0.5,
+        };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
 }
