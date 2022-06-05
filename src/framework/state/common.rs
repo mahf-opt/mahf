@@ -63,4 +63,8 @@ impl Population {
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }
+
+    pub fn best(&self) -> &Individual {
+        self.current().iter().min_by_key(|i| i.fitness()).unwrap()
+    }
 }

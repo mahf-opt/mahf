@@ -248,6 +248,11 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
+impl<P: Problem + 'static> And<P> {
+    pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
+        Box::new(Self(conditions))
+    }
+}
 impl<P: Problem + 'static> Condition<P> for And<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         for condition in self.0.iter() {
@@ -265,6 +270,11 @@ impl<P: Problem + 'static> Condition<P> for And<P> {
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
+impl<P: Problem + 'static> Or<P> {
+    pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
+        Box::new(Self(conditions))
+    }
+}
 impl<P: Problem + 'static> Condition<P> for Or<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         for condition in self.0.iter() {
