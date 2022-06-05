@@ -11,7 +11,7 @@ use crate::{
     framework::{
         components::*,
         specializations::{Selection, Selector},
-        Individual, State,
+        Fitness, Individual, State,
     },
     problems::Problem,
 };
@@ -72,21 +72,17 @@ fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
 }
 
 /// Helper function to obtain a ranking from the population.
-/// The elements are the indices of the individuals, ordered by fitness.
-/// The first element is therefore the index of the best individual in the population.
 fn get_ranking(population: &[Individual]) -> Vec<usize> {
-    // Get positions in population and fitness of all individuals
-    let mut weight_pos: Vec<(usize, f64)> = population
-        .iter()
-        .enumerate()
-        .map(|(i, f)| (i, f.fitness().into()))
-        .collect();
+    // First descending argsort with fitness
+    let mut positions: Vec<_> = (1..=population.len()).collect();
+    positions
+        .sort_unstable_by_key(|&i| Fitness::try_from(-population[i - 1].fitness().into()).unwrap());
 
-    // Sort those by their fitness values from worst to best
-    weight_pos.sort_by(|a, b| (b.1).partial_cmp(&a.1).unwrap());
+    // Second argsort with positions obtains ranking
+    let mut ranking: Vec<_> = (1..=population.len()).collect();
+    ranking.sort_unstable_by_key(|&i| positions[i - 1]);
 
-    // Discard the fitness
-    weight_pos.into_iter().map(|(i, _f)| i).collect()
+    ranking
 }
 
 /// Selects all individuals once.
@@ -352,6 +348,11 @@ pub struct StochasticUniversalSampling {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+impl StochasticUniversalSampling {
+    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring }))
+    }
+}
 impl Selection for StochasticUniversalSampling {
     fn select_offspring<'p>(
         &self,
@@ -403,6 +404,11 @@ pub struct Tournament {
     /// Tournament size.
     pub size: u32,
 }
+impl Tournament {
+    pub fn new<P: Problem>(offspring: u32, size: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring, size }))
+    }
+}
 impl Selection for Tournament {
     fn select_offspring<'p>(
         &self,
@@ -419,9 +425,9 @@ impl Selection for Tournament {
                 .choose_multiple(rng, self.size as usize)
                 .collect();
             // and evaluate them against each other, placing the winner first
-            tournament.sort_by(|x, y| {
-                (y.fitness().into())
-                    .partial_cmp(&(x.fitness().into()))
+            tournament.sort_unstable_by(|x, y| {
+                (x.fitness().into())
+                    .partial_cmp(&(y.fitness().into()))
                     .unwrap()
             });
             // Add winner (first) to selection
@@ -452,6 +458,11 @@ pub struct LinearRank {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+impl LinearRank {
+    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring }))
+    }
+}
 impl Selection for LinearRank {
     fn select_offspring<'p>(
         &self,
@@ -459,17 +470,11 @@ impl Selection for LinearRank {
         state: &mut State,
     ) -> Vec<&'p Individual> {
         let rng = state.random_mut();
-        // Get positions in population and fitness of all individuals
-        let weight_pos = get_ranking(population);
-        // Weights are new positions after sorting by fitness, worst has smallest weight
-        let weights: Vec<usize> = weight_pos.iter().enumerate().map(|(i, _k)| 1 + i).collect();
+        let weights = get_ranking(population);
         let wheel = WeightedIndex::new(&weights).unwrap();
         let mut selection = Vec::new();
         for _ in 0..self.offspring {
-            // Sample individuals by their ranks but select them from the initial population by the
-            // positions marked in weight_pos
-            let position = weight_pos[wheel.sample(rng)];
-            selection.push(&population[position]);
+            selection.push(&population[wheel.sample(rng)]);
         }
         assert_eq!(selection.len(), self.offspring as usize);
         selection
@@ -497,6 +502,11 @@ pub struct ExponentialRank {
     /// Base of exponent within (0,1).
     pub base: f64,
 }
+impl ExponentialRank {
+    pub fn new<P: Problem>(offspring: u32, base: f64) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring, base }))
+    }
+}
 impl Selection for ExponentialRank {
     fn select_offspring<'p>(
         &self,
@@ -508,8 +518,7 @@ impl Selection for ExponentialRank {
         // Weight ranking by exponential equation, worst has smallest weight
         let weights: Vec<f64> = ranking
             .iter()
-            .enumerate()
-            .map(|(i, _k)| {
+            .map(|i| {
                 (self.base - 1.0) / (self.base.powi(population.len() as i32) - 1.0)
                     * (self.base.powi((population.len() - i) as i32))
             })
@@ -517,8 +526,7 @@ impl Selection for ExponentialRank {
         let wheel = WeightedIndex::new(&weights).unwrap();
         let mut selection = Vec::new();
         for _ in 0..self.offspring {
-            let position = ranking[wheel.sample(rng)];
-            selection.push(&population[position]);
+            selection.push(&population[wheel.sample(rng)]);
         }
         assert_eq!(selection.len(), self.offspring as usize);
         selection
