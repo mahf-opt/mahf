@@ -2,7 +2,7 @@
 
 use crate::{
     framework::{components::*, legacy::components::*, Individual, State},
-    operators::custom_state::ElitismState,
+    operators::custom_state::ElitistArchiveState,
     problems::Problem,
     random::Random,
 };
@@ -31,44 +31,56 @@ where
     }
 }
 
-/// Adds elitists of the population to [ElitismState].
+/// Updates the [ElitistArchiveState] with the current population.
 #[derive(Serialize, Deserialize)]
-pub struct Elitists {
+pub struct ElitistArchive {
     pub n_elitists: usize,
 }
-impl Elitists {
+impl ElitistArchive {
     pub fn new<P: Problem>(n_elitists: usize) -> Box<dyn Component<P>> {
         Box::new(Self { n_elitists })
     }
 }
-impl<P> Component<P> for Elitists
+impl<P> Component<P> for ElitistArchive
 where
     P: Problem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.get_or_default::<ElitismState>();
+        state.insert::<ElitistArchiveState>(ElitistArchiveState::new(self.n_elitists));
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let population = state.population_stack_mut().pop();
+        state.get_mut::<ElitistArchiveState>().update(&population);
+        state.population_stack_mut().push(population);
+    }
+}
+
+/// Adds elitists from [ElitistArchiveState] to the population.
+#[derive(Serialize, Deserialize)]
+pub struct AddElitists;
+impl AddElitists {
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Self)
+    }
+}
+impl<P> Component<P> for AddElitists
+where
+    P: Problem,
+{
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<ElitistArchiveState>();
     }
 
     fn execute(&self, _problem: &P, state: &mut State) {
         let mut population = state.population_stack_mut().pop();
-        let mut elitism_state = state.get_mut::<ElitismState>();
+        let elitism_state = state.get::<ElitistArchiveState>();
 
-        for elitist in elitism_state.elitists.drain(..) {
-            if !population.contains(&elitist) {
-                population.push(elitist);
+        for elitist in elitism_state.elitists() {
+            if !population.contains(elitist) {
+                population.push(elitist.clone());
             }
         }
-
-        let mut pop = population.iter().collect::<Vec<&Individual>>();
-        pop.sort_unstable_by_key(|i| i.fitness());
-        pop.truncate(self.n_elitists);
-        let elitists = pop.into_iter().map(Individual::clone).collect();
-        elitism_state.elitists = elitists;
-
-        let fittest = elitism_state.elitists[0].fitness();
-
-        let best_so_far = state.best_fitness();
-        assert_eq!(best_so_far, fittest);
 
         state.population_stack_mut().push(population);
     }
