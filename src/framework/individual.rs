@@ -1,5 +1,6 @@
 use crate::framework::Fitness;
 use std::any::Any;
+use std::fmt::{Debug, Formatter};
 
 /// An encoded solution with its associated fitness value.
 pub struct Individual {
@@ -115,5 +116,24 @@ where
         let this: &T = this.downcast_ref().unwrap();
         let other: &T = other.downcast_ref().unwrap();
         this == other
+    }
+}
+
+impl Debug for Individual {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let solution_repr = if let Some(solution) = self.solution.downcast_ref::<Vec<usize>>() {
+            format!("{:?}", solution)
+        } else if let Some(solution) = self.solution.downcast_ref::<Vec<f64>>() {
+            format!("{:?}", solution)
+        } else {
+            "Unimplemented".to_string()
+        };
+
+        write!(
+            f,
+            "Individual(fitness={:?}, solution={})",
+            self.fitness(),
+            solution_repr
+        )
     }
 }
