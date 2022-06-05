@@ -1,7 +1,7 @@
 //! Random Search
 
 use crate::{
-    framework::legacy::Configuration,
+    framework::{components, Configuration, ConfigurationBuilder},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -9,22 +9,38 @@ use crate::{
 /// Random Search
 pub fn random_search<P>(max_iterations: u32) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    Configuration {
-        generation: vec![generation::RandomSpread::new_gen()],
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(generation::RandomSpread::new_init(1))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(selection::All::new())
+                    .do_(generation::RandomSpread::new_gen())
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::MuPlusLambda::new(1))
+            },
+        )
+        .build()
 }
 
 pub fn random_permutation_search<P>(max_iterations: u32) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    Configuration {
-        generation: vec![generation::RandomPermutation::new_gen()],
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(generation::RandomPermutation::new_init(1))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(selection::All::new())
+                    .do_(generation::RandomPermutation::new_gen())
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::MuPlusLambda::new(1))
+            },
+        )
+        .build()
 }
