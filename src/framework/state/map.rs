@@ -20,10 +20,12 @@ impl<S: CustomState> AsAny for S {
     }
 }
 
-pub type MutCustomStates2<'a> = GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>;
+#[allow(dead_code)]
+pub type MutCustomStates2<'a> =
+    GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>;
 
 pub struct MutCustomStates<'a>(
-    GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>
+    GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>,
 );
 impl<'a> MutCustomStates<'a> {
     pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
@@ -95,21 +97,5 @@ impl StateMap {
             .as_mut_any()
             .downcast_mut()
             .unwrap()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use splitmut::SplitMut;
-    use crate::framework::state::StateMap;
-
-    #[test]
-    fn multiple_mut() {
-        let mut h = vec!["Hello", "world", "!"];
-        let mut z = h.get_muts();
-        let a = z.at(0);
-        let b = z.at(1);
-        assert_eq!(a, Ok(&mut "Hello"));
-        assert_eq!(b, Ok(&mut "world"));
     }
 }

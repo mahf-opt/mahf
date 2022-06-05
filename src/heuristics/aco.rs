@@ -129,7 +129,7 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, Fitness, Individual, State},
+        framework::{common_state::Population, components::*, Fitness, Individual, State},
         problems::tsp::{Route, SymmetricTsp},
     };
 
@@ -241,8 +241,12 @@ mod ant_ops {
         }
 
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
-            let population = state.population_stack_mut().pop();
-            let pm = state.get_mut::<PheromoneMatrix>();
+            let mut custom = state.get_multiple_mut();
+            let pm = custom.get_mut::<PheromoneMatrix>();
+            let population = custom.get_mut::<Population>().current();
+
+            // let population = state.population_stack_mut().pop();
+            // let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
@@ -258,7 +262,7 @@ mod ant_ops {
                 }
             }
 
-            state.population_stack_mut().push(population);
+            // state.population_stack_mut().push(population);
         }
     }
 

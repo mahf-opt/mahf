@@ -1,17 +1,16 @@
 use std::ops::{Deref, DerefMut};
 
-use map::AsAny;
 pub(crate) use map::StateMap;
+use map::{AsAny, MutCustomStates};
 
 use crate::{
     framework::{Fitness, Individual},
     random,
     tracking::log::Logger,
 };
-use crate::framework::state::map::{MutCustomStates, MutCustomStates2};
 
-mod map;
 pub mod common;
+mod map;
 
 /// Makes custom state trackable.
 pub trait CustomState: AsAny {
