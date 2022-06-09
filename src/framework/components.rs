@@ -3,11 +3,6 @@
 
 //! Framework components.
 
-use std::any::Any;
-
-use serde::Serialize;
-use trait_set::trait_set;
-
 use crate::{
     framework::{
         common_state::{self, Population},
@@ -16,6 +11,9 @@ use crate::{
     },
     problems::Problem,
 };
+use serde::Serialize;
+use std::any::Any;
+use trait_set::trait_set;
 
 trait_set! {
     pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync;
@@ -266,6 +264,13 @@ impl<P: Problem + 'static> Condition<P> for And<P> {
             .all(|condition| condition.evaluate(problem, state))
     }
 }
+impl<P: Problem + 'static> std::ops::BitAnd for Box<dyn Condition<P>> {
+    type Output = Box<dyn Condition<P>>;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        And::new(vec![self, rhs])
+    }
+}
 
 #[derive(Serialize)]
 #[serde(bound = "")]
@@ -286,5 +291,12 @@ impl<P: Problem + 'static> Condition<P> for Or<P> {
         self.0
             .iter()
             .any(|condition| condition.evaluate(problem, state))
+    }
+}
+impl<P: Problem + 'static> std::ops::BitOr for Box<dyn Condition<P>> {
+    type Output = Box<dyn Condition<P>>;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Or::new(vec![self, rhs])
     }
 }

@@ -113,6 +113,14 @@ pub struct FixedEvaluations {
     /// Maximum number of evaluations.
     pub max_evaluations: u32,
 }
+impl FixedEvaluations {
+    pub fn new<P: Problem>(max_evaluations: u32) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self { max_evaluations })
+    }
+}
 impl<P> Condition<P> for FixedEvaluations
 where
     P: Problem,
@@ -173,6 +181,14 @@ pub struct DistanceToOpt {
     /// Distance to known optimum.
     pub distance: f64,
 }
+impl DistanceToOpt {
+    pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self { distance })
+    }
+}
 impl<P: HasKnownOptimum> Condition<P> for DistanceToOpt
 where
     P: Problem,
@@ -209,6 +225,14 @@ mod distance_to_opt {
 pub struct StepsWithoutImprovement {
     /// Number of steps without improvement.
     pub steps: usize,
+}
+impl StepsWithoutImprovement {
+    pub fn new<P: Problem>(steps: usize) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self { steps })
+    }
 }
 impl<P> Condition<P> for StepsWithoutImprovement
 where
