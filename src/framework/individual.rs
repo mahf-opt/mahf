@@ -121,19 +121,6 @@ where
 
 impl Debug for Individual {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let solution_repr = if let Some(solution) = self.solution.downcast_ref::<Vec<usize>>() {
-            format!("{:?}", solution)
-        } else if let Some(solution) = self.solution.downcast_ref::<Vec<f64>>() {
-            format!("{:?}", solution)
-        } else {
-            "Unimplemented".to_string()
-        };
-
-        write!(
-            f,
-            "Individual(fitness={:?}, solution={})",
-            self.fitness(),
-            solution_repr
-        )
+        write!(f, "Individual(fitness={:?})", self.fitness(),)
     }
 }

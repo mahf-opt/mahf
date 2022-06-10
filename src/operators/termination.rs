@@ -58,8 +58,8 @@ where
     P: Problem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Progress>();
         state.require::<Iterations>();
+        state.insert(Progress(0.));
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
@@ -72,16 +72,17 @@ where
 #[cfg(test)]
 mod fixed_iterations {
     use super::*;
-    use crate::{framework::common_state, problems::bmf::BenchmarkFunction};
+    use crate::problems::bmf::BenchmarkFunction;
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
-        common_state::default(&mut state);
+        state.insert(Iterations(0));
         let comp = FixedIterations {
             max_iterations: 200,
         };
+        comp.initialize(&problem, &mut state);
         state.set_value::<Iterations>(100);
         assert!(comp.evaluate(&problem, &mut state));
         state.set_value::<Iterations>(200);
@@ -92,10 +93,11 @@ mod fixed_iterations {
     fn updates_progress() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
-        common_state::default(&mut state);
+        state.insert(Iterations(0));
         let comp = FixedIterations {
             max_iterations: 200,
         };
+        comp.initialize(&problem, &mut state);
         state.set_value::<Iterations>(100);
         comp.evaluate(&problem, &mut state);
         float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
@@ -126,8 +128,8 @@ where
     P: Problem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Progress>();
         state.require::<Evaluations>();
+        state.insert(Progress(0.));
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
@@ -139,16 +141,17 @@ where
 #[cfg(test)]
 mod fixed_evaluations {
     use super::*;
-    use crate::{framework::common_state, problems::bmf::BenchmarkFunction};
+    use crate::problems::bmf::BenchmarkFunction;
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
-        common_state::default(&mut state);
+        state.insert(Evaluations(0));
         let comp = FixedEvaluations {
             max_evaluations: 200,
         };
+        comp.initialize(&problem, &mut state);
         state.set_value::<Evaluations>(100);
         assert!(comp.evaluate(&problem, &mut state));
         state.set_value::<Evaluations>(200);
@@ -159,10 +162,11 @@ mod fixed_evaluations {
     fn updates_progress() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
-        common_state::default(&mut state);
+        state.insert(Evaluations(0));
         let comp = FixedEvaluations {
             max_evaluations: 200,
         };
+        comp.initialize(&problem, &mut state);
         state.set_value::<Evaluations>(100);
         comp.evaluate(&problem, &mut state);
         float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
@@ -200,16 +204,13 @@ where
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::{
-        framework::{common_state, Fitness},
-        problems::bmf::BenchmarkFunction,
-    };
+    use crate::{framework::Fitness, problems::bmf::BenchmarkFunction};
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
-        common_state::default(&mut state);
+        state.insert(BestFitness(Fitness::default()));
         let comp = DistanceToOpt { distance: 0.1 };
         state.set_value::<BestFitness>(Fitness::try_from(2.0).unwrap());
         assert!(comp.evaluate(&problem, &mut state));
@@ -261,21 +262,19 @@ where
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::{
-        framework::{common_state, Fitness},
-        problems::bmf::BenchmarkFunction,
-    };
+    use crate::{framework::Fitness, problems::bmf::BenchmarkFunction};
 
     #[test]
     fn terminates() {
         let problem = BenchmarkFunction::sphere(3);
         let mut state = State::new_root();
-        common_state::default(&mut state);
         let comp = StepsWithoutImprovement { steps: 20 };
         state.insert(FitnessImprovementState {
             current_steps: 0,
             current_fitness: 0.5.try_into().unwrap(),
         });
+        state.insert(BestFitness(Fitness::default()));
+        state.insert(Iterations(0));
         state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
         state.set_value::<Iterations>(10);
         assert!(comp.evaluate(&problem, &mut state));

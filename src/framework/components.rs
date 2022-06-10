@@ -4,11 +4,7 @@
 //! Framework components.
 
 use crate::{
-    framework::{
-        common_state::{self, Population},
-        state::State,
-        Fitness, Individual,
-    },
+    framework::{common_state, state::State, Fitness},
     problems::Problem,
 };
 use serde::Serialize;
@@ -217,14 +213,20 @@ impl SimpleEvaluator {
 
 impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Population>();
-        state.require::<common_state::Evaluations>();
-        state.require::<common_state::BestFitness>();
+        state.require::<common_state::Population>();
+        state.insert(common_state::Evaluations(0));
+        state.insert(common_state::BestFitness(Fitness::default()));
+        state.insert(common_state::BestIndividual(None));
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
         // Evaluate population
-        let population = state.get_mut::<Population>().current_mut();
+        let current_best_fitness = state.get_value::<common_state::BestFitness>();
+        let population = state.population_stack_mut().current_mut();
+
+        if population.is_empty() {
+            return;
+        }
 
         for individual in population.iter_mut() {
             let solution = individual.solution::<P::Encoding>();
@@ -232,14 +234,21 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
             individual.evaluate(fitness);
         }
 
-        let population_len = population.len();
+        let evaluations = population.len() as u32;
 
-        // Update best fitness
-        let best_fitness = population.iter().map(Individual::fitness).max().unwrap();
-        state.set_value::<common_state::BestFitness>(best_fitness);
+        // Update best fitness and individual
+        let best_individual = population.iter().min_by_key(|i| i.fitness()).unwrap();
+
+        if best_individual.fitness() < current_best_fitness {
+            let best_fitness = best_individual.fitness();
+            let best_individual = best_individual.clone();
+
+            state.set_value::<common_state::BestFitness>(best_fitness);
+            state.set_value::<common_state::BestIndividual>(Some(best_individual));
+        }
 
         // Update evaluations
-        *state.get_value_mut::<common_state::Evaluations>() += population_len as u32;
+        *state.get_value_mut::<common_state::Evaluations>() += evaluations;
     }
 }
 
