@@ -24,13 +24,41 @@ impl<S: CustomState> AsAny for S {
 pub type MutCustomStates2<'a> =
     GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>;
 
-pub struct MutCustomStates<'a>(
+/// Wrapper struct for [splitmut::GetMuts].
+/// Currently only possible by leaking the [TypeId].
+pub struct MutCustomStates1<'a>(
     GetMuts<'a, &'static TypeId, Box<dyn CustomState>, BTreeMap<TypeId, Box<dyn CustomState>>>,
 );
-impl<'a> MutCustomStates<'a> {
+impl<'a> MutCustomStates1<'a> {
     pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
         let result = self.0.at(Box::leak(Box::new(TypeId::of::<T>()))).unwrap();
         result.as_mut_any().downcast_mut().unwrap()
+    }
+}
+
+/// Adaption of [splitmut::GetMuts] to the use case of obtaining multiple [CustomState] types from the [StateMap].
+/// Requires the use of `unsafe`, although in the same (probably ok) way [splitmut] handles it.
+pub struct MutCustomStates<'a>(
+    &'a mut BTreeMap<TypeId, Box<dyn CustomState>>,
+    std::collections::HashSet<*mut Box<dyn CustomState>>,
+);
+
+impl<'a> MutCustomStates<'a> {
+    pub fn try_get_mut<T: CustomState>(&mut self) -> Result<&'a mut T, splitmut::SplitMutError> {
+        let p = self
+            .0
+            .get1_mut(&TypeId::of::<T>())
+            .map(|s| s as *mut Box<dyn CustomState>)
+            .ok_or(splitmut::SplitMutError::NoValue)?;
+        if !self.1.insert(p) {
+            return Err(splitmut::SplitMutError::SameValue);
+        };
+        let p = unsafe { &mut *p };
+        Ok(p.as_mut_any().downcast_mut().unwrap())
+    }
+
+    pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
+        self.try_get_mut::<T>().unwrap()
     }
 }
 
@@ -87,7 +115,7 @@ impl StateMap {
     }
 
     pub fn get_multiple_mut(&mut self) -> MutCustomStates<'_> {
-        MutCustomStates(self.map.get_muts())
+        MutCustomStates(&mut self.map, std::collections::HashSet::new())
     }
 
     pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
