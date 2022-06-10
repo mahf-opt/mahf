@@ -8,7 +8,10 @@ fn main() -> anyhow::Result<()> {
 
     let state = framework::run(&problem, &config, None, None);
 
-    println!("{:?}", state.population_stack().best());
+    println!(
+        "Found Solution: {:?}",
+        state.best_individual().unwrap().fitness().into()
+    );
 
     Ok(())
 }
