@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
+use map::{AsAny, GetMutStates};
 pub(crate) use map::StateMap;
-use map::{AsAny, MutCustomStates};
 
 use crate::{
     framework::{Fitness, Individual},
@@ -18,6 +18,46 @@ pub trait CustomState: AsAny {
         None
     }
 }
+
+pub struct MutState<'a>(GetMutStates<'a>);
+impl<'a> MutState<'a> {
+    pub fn new(map: &'a mut StateMap) -> Self {
+        Self(map.get_multiple_mut())
+    }
+
+    pub fn get<T: CustomState>(&mut self) -> &'a T {
+        self.0.get()
+    }
+
+    pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
+        self.0.get_mut()
+    }
+
+    pub fn get_value<T>(&mut self) -> T::Target
+        where
+            T: CustomState + Deref,
+            T::Target: Sized + Copy,
+    {
+        *self.0.get::<T>().deref()
+    }
+
+    pub fn set_value<T>(&mut self, value: T::Target)
+        where
+            T: CustomState + DerefMut,
+            T::Target: Sized,
+    {
+        *self.0.get_mut::<T>().deref_mut() = value;
+    }
+
+    pub fn get_value_mut<T>(&mut self) -> &'a mut T::Target
+        where
+            T: CustomState + DerefMut,
+            T::Target: Sized,
+    {
+        self.0.get_mut::<T>().deref_mut()
+    }
+}
+
 
 #[derive(Default)]
 pub struct State {
@@ -107,8 +147,8 @@ impl State {
         }
     }
 
-    pub fn get_multiple_mut(&mut self) -> MutCustomStates<'_> {
-        self.map.get_multiple_mut()
+    pub fn get_multiple_mut(&mut self) -> MutState<'_> {
+        MutState::new(&mut self.map)
     }
 
     pub fn set_value<T>(&mut self, value: T::Target)

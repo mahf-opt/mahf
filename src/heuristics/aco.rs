@@ -243,7 +243,7 @@ mod ant_ops {
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
             let mut custom = state.get_multiple_mut();
             let pm = custom.get_mut::<PheromoneMatrix>();
-            let population = custom.get_mut::<Population>().current();
+            let population = custom.get::<Population>().current();
 
             // let population = state.population_stack_mut().pop();
             // let pm = state.get_mut::<PheromoneMatrix>();
