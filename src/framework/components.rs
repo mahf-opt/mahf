@@ -4,7 +4,11 @@
 //! Framework components.
 
 use crate::{
-    framework::{common_state::Population, state::State, Fitness},
+    framework::{
+        common_state::{self, Population},
+        state::State,
+        Fitness,
+    },
     problems::Problem,
 };
 use serde::Serialize;
@@ -211,15 +215,37 @@ impl SimpleEvaluator {
 impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Population>();
+        state.insert(common_state::Evaluations(0));
+        state.insert(common_state::BestFitness(Fitness::default()));
+        state.insert(common_state::BestIndividual(None));
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.get_mut::<Population>().current_mut();
+        let (population_stack, best_fitness, best_individual) = state.get_many::<(
+            common_state::Population,
+            common_state::BestFitness,
+            common_state::BestIndividual,
+        )>();
 
-        for individual in population {
+        let population = population_stack.current_mut();
+
+        if population.is_empty() {
+            return;
+        }
+
+        for individual in population.iter_mut() {
             let solution = individual.solution::<P::Encoding>();
             let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
             individual.evaluate(fitness);
         }
+
+        let current_best_individual = population.iter().min_by_key(|i| i.fitness()).unwrap();
+
+        if current_best_individual.fitness() < **best_fitness {
+            **best_fitness = current_best_individual.fitness();
+            **best_individual = Some(current_best_individual.clone());
+        }
+
+        state.get_mut::<common_state::Evaluations>().0 += population.len() as u32;
     }
 }

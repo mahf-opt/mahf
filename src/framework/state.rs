@@ -1,9 +1,10 @@
 use crate::{
-    framework::{Fitness, Individual},
+    framework::{state::many::MultiStateTuple, Fitness, Individual},
     tracking::log::Logger,
 };
 use std::ops::{Deref, DerefMut};
 
+mod many;
 mod map;
 use map::AsAny;
 pub(crate) use map::StateMap;
@@ -104,6 +105,10 @@ impl State {
             *self.parent_mut().unwrap().get_mut::<T>().deref_mut() = value;
         }
     }
+
+    pub fn get_many<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
+        T::fetch(self)
+    }
 }
 
 /// Convenience functions for often required state.
@@ -129,7 +134,7 @@ impl State {
     }
 
     /// Returns [BestIndividual](common::BestIndividual) state.
-    pub fn best_individual(&self) -> &Individual {
+    pub fn best_individual(&self) -> &Option<Individual> {
         self.get::<common::BestIndividual>()
     }
 
