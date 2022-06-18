@@ -1,7 +1,7 @@
 //! Evolutionary Strategy
 
 use crate::{
-    framework::legacy::Configuration,
+    framework::{components, Configuration, ConfigurationBuilder},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -17,14 +17,19 @@ pub fn mu_plus_lambda<P>(
     max_iterations: u32,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    Configuration {
-        initialization: initialization::RandomSpread::new(population_size),
-        selection: selection::FullyRandom::new(lambda),
-        generation: vec![generation::FixedDeviationDelta::new(deviation)],
-        replacement: replacement::MuPlusLambda::new(population_size),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(initialization::RandomSpread::new_init(population_size))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(selection::FullyRandom::new(lambda))
+                    .do_(generation::mutation::FixedDeviationDelta::new(deviation))
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::MuPlusLambda::new(population_size))
+            },
+        )
+        .build()
 }

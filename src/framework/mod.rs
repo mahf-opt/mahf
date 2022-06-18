@@ -30,6 +30,7 @@ pub fn run<P: Problem>(
     let mut state = State::new_root();
 
     state.insert(rng.unwrap_or_default());
+    state.insert(common_state::Population::new());
 
     if let Some(log) = log {
         state.insert(log);

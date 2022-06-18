@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{legacy, CustomState},
+    framework::{components, Configuration, ConfigurationBuilder, CustomState},
     operators::*,
     problems::tsp::SymmetricTsp,
 };
@@ -20,15 +20,27 @@ pub fn ant_system(
     evaporation: f64,
     decay_coefficient: f64,
     max_iterations: u32,
-) -> legacy::Configuration<SymmetricTsp> {
-    legacy::Configuration {
-        initialization: ant_ops::AcoInitialization::new(default_pheromones),
-        selection: selection::FullyRandom::new(0),
-        generation: vec![ant_ops::AcoGeneration::new(number_of_ants, alpha, beta)],
-        replacement: ant_ops::AsReplacement::new(evaporation, decay_coefficient),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+) -> Configuration<SymmetricTsp> {
+    ConfigurationBuilder::new()
+        .do_(initialization::Empty::new())
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(ant_ops::AcoGeneration::new(
+                        number_of_ants,
+                        alpha,
+                        beta,
+                        default_pheromones,
+                    ))
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(ant_ops::AsPheromoneUpdate::new(
+                        evaporation,
+                        decay_coefficient,
+                    ))
+            },
+        )
+        .build()
 }
 
 /// Ant Colony Optimization - Ant System
@@ -44,20 +56,32 @@ pub fn min_max_ant_system(
     max_pheromones: f64,
     min_pheromones: f64,
     max_iterations: u32,
-) -> legacy::Configuration<SymmetricTsp> {
+) -> Configuration<SymmetricTsp> {
     assert!(
         min_pheromones < max_pheromones,
         "min_pheromones must be less than max_pheromones"
     );
-
-    legacy::Configuration {
-        initialization: ant_ops::AcoInitialization::new(default_pheromones),
-        selection: selection::FullyRandom::new(0),
-        generation: vec![ant_ops::AcoGeneration::new(number_of_ants, alpha, beta)],
-        replacement: ant_ops::MinMaxReplacement::new(evaporation, max_pheromones, min_pheromones),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(initialization::Empty::new())
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(ant_ops::AcoGeneration::new(
+                        number_of_ants,
+                        alpha,
+                        beta,
+                        default_pheromones,
+                    ))
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(ant_ops::MinMaxPheromoneUpdate::new(
+                        evaporation,
+                        max_pheromones,
+                        min_pheromones,
+                    ))
+            },
+        )
+        .build()
 }
 
 #[derive(Clone, Serialize)]
@@ -102,70 +126,47 @@ impl std::ops::MulAssign<f64> for PheromoneMatrix {
 
 #[allow(clippy::new_ret_no_self)]
 mod ant_ops {
-    use super::PheromoneMatrix;
-    use crate::{
-        framework::{components::*, legacy::components::*, Fitness, Individual, State},
-        problems::{
-            tsp::{Route, SymmetricTsp},
-            Problem,
-        },
-        random::Random,
-    };
-    use rand::distributions::{weighted::WeightedIndex, Distribution};
+    use rand::distributions::{Distribution, WeightedIndex};
 
-    #[derive(serde::Serialize)]
-    pub struct AcoInitialization {
-        pub default_pheromones: f64,
-    }
-    impl AcoInitialization {
-        pub fn new(default_pheromones: f64) -> Box<dyn Component<SymmetricTsp>> {
-            Box::new(Initializer(Self { default_pheromones }))
-        }
-    }
-    impl Initialization<SymmetricTsp> for AcoInitialization {
-        fn initialize(
-            &self,
-            state: &mut State,
-            problem: &SymmetricTsp,
-            _rng: &mut Random,
-            _population: &mut Vec<Route>,
-        ) {
-            state.insert(PheromoneMatrix::new(
-                problem.dimension,
-                self.default_pheromones,
-            ));
-        }
-    }
+    use crate::{
+        framework::{components::*, Fitness, Individual, State},
+        problems::tsp::{Route, SymmetricTsp},
+    };
+
+    use super::PheromoneMatrix;
 
     #[derive(serde::Serialize)]
     pub struct AcoGeneration {
         pub number_of_ants: usize,
         pub alpha: f64,
         pub beta: f64,
+        pub default_pheromones: f64,
     }
     impl AcoGeneration {
         pub fn new(
             number_of_ants: usize,
             alpha: f64,
             beta: f64,
+            default_pheromones: f64,
         ) -> Box<dyn Component<SymmetricTsp>> {
-            Box::new(Generator(Self {
+            Box::new(Self {
                 number_of_ants,
                 alpha,
                 beta,
-            }))
+                default_pheromones,
+            })
         }
     }
-    impl Generation<SymmetricTsp> for AcoGeneration {
-        fn generate(
-            &self,
-            state: &mut State,
-            problem: &SymmetricTsp,
-            rng: &mut Random,
-            _parents: &mut Vec<Route>,
-            offspring: &mut Vec<Route>,
-        ) {
-            let pm = state.get_mut::<PheromoneMatrix>();
+    impl Component<SymmetricTsp> for AcoGeneration {
+        fn initialize(&self, problem: &SymmetricTsp, state: &mut State) {
+            state.insert(PheromoneMatrix::new(
+                problem.dimension,
+                self.default_pheromones,
+            ));
+        }
+
+        fn execute(&self, problem: &SymmetricTsp, state: &mut State) {
+            let mut routes = Vec::new();
 
             // Greedy route
             {
@@ -174,7 +175,9 @@ mod ant_ops {
                 route.push(0);
                 while !remaining.is_empty() {
                     let last = *route.last().unwrap();
-                    let pheromones = remaining.iter().map(|&r| pm[last][r]);
+                    let pheromones = remaining
+                        .iter()
+                        .map(|&r| state.get_mut::<PheromoneMatrix>()[last][r]);
                     let next_index = pheromones
                         .enumerate()
                         .max_by_key(|(_, f)| Fitness::try_from(*f).unwrap())
@@ -183,7 +186,7 @@ mod ant_ops {
                     let next = remaining.remove(next_index);
                     route.push(next);
                 }
-                offspring.push(route);
+                routes.push(route);
             }
 
             // Probabilistic routes
@@ -196,49 +199,56 @@ mod ant_ops {
                     let distances = remaining
                         .iter()
                         .map(|&r| problem.distance((last, r)) as f64);
-                    let pheromones = remaining.iter().map(|&r| pm[last][r]);
+                    let pheromones = remaining
+                        .iter()
+                        .map(|&r| state.get_mut::<PheromoneMatrix>()[last][r]);
                     let weights = pheromones.zip(distances).map(|(m, d)| {
                         // TODO: This should not be zero.
-                        m.powf(self.alpha) * (1.0 / d).powf(self.beta) + 0.000000000000001
+                        m.powf(self.alpha) * (1.0 / d).powf(self.beta) + 1e-15
                     });
                     let dist = WeightedIndex::new(weights).unwrap();
-                    let next_index = dist.sample(rng);
+                    let next_index = dist.sample(state.random_mut());
                     let next = remaining.remove(next_index);
                     route.push(next);
                 }
-                offspring.push(route);
+                routes.push(route);
             }
+
+            let population = routes
+                .into_iter()
+                .map(Individual::new_unevaluated)
+                .collect();
+            *state.population_stack_mut().current_mut() = population;
         }
     }
 
     #[derive(serde::Serialize)]
-    pub struct AsReplacement {
+    pub struct AsPheromoneUpdate {
         pub evaporation: f64,
         pub decay_coefficient: f64,
     }
-    impl AsReplacement {
-        pub fn new<P: Problem>(evaporation: f64, decay_coefficient: f64) -> Box<dyn Component<P>> {
-            Box::new(Replacer(Self {
+    impl AsPheromoneUpdate {
+        pub fn new(evaporation: f64, decay_coefficient: f64) -> Box<dyn Component<SymmetricTsp>> {
+            Box::new(Self {
                 evaporation,
                 decay_coefficient,
-            }))
+            })
         }
     }
-    impl Replacement for AsReplacement {
-        fn replace(
-            &self,
-            state: &mut State,
-            _rng: &mut Random,
-            _population: &mut Vec<Individual>,
-            offspring: &mut Vec<Individual>,
-        ) {
+    impl Component<SymmetricTsp> for AsPheromoneUpdate {
+        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State) {
+            state.require::<PheromoneMatrix>();
+        }
+
+        fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
+            let population = state.population_stack_mut().pop();
             let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
 
             // Update pheromones for probabilistic routes
-            for individual in offspring.iter().skip(1) {
+            for individual in population.iter().skip(1) {
                 let fitness = individual.fitness().into();
                 let route = individual.solution::<Route>();
                 let delta = self.decay_coefficient / fitness;
@@ -247,43 +257,44 @@ mod ant_ops {
                     pm[b][a] += delta;
                 }
             }
+
+            state.population_stack_mut().push(population);
         }
     }
 
     #[derive(serde::Serialize)]
-    pub struct MinMaxReplacement {
+    pub struct MinMaxPheromoneUpdate {
         pub evaporation: f64,
         pub max_pheromones: f64,
         pub min_pheromones: f64,
     }
-    impl MinMaxReplacement {
-        pub fn new<P: Problem>(
+    impl MinMaxPheromoneUpdate {
+        pub fn new(
             evaporation: f64,
             max_pheromones: f64,
             min_pheromones: f64,
-        ) -> Box<dyn Component<P>> {
-            Box::new(Replacer(Self {
+        ) -> Box<dyn Component<SymmetricTsp>> {
+            Box::new(Self {
                 evaporation,
                 max_pheromones,
                 min_pheromones,
-            }))
+            })
         }
     }
-    impl Replacement for MinMaxReplacement {
-        fn replace(
-            &self,
-            state: &mut State,
-            _rng: &mut Random,
-            _population: &mut Vec<Individual>,
-            offspring: &mut Vec<Individual>,
-        ) {
+    impl Component<SymmetricTsp> for MinMaxPheromoneUpdate {
+        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State) {
+            state.require::<PheromoneMatrix>();
+        }
+
+        fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
+            let population = state.population_stack_mut().pop();
             let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
 
             // Update pheromones for probabilistic routes
-            let individual = offspring
+            let individual = population
                 .iter()
                 .skip(1)
                 .min_by_key(|i| i.fitness())
@@ -296,6 +307,8 @@ mod ant_ops {
                 pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);
                 pm[b][a] = (pm[b][a] + delta).clamp(self.min_pheromones, self.max_pheromones);
             }
+
+            state.population_stack_mut().push(population);
         }
     }
 }

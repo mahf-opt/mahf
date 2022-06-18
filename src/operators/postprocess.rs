@@ -1,14 +1,12 @@
 //! Postprocess variants
 //!
 
-use crate::operators::custom_state::{DiversityState, PopulationState, PsoState};
-use crate::problems::VectorProblem;
 use crate::{
     framework::{components::*, legacy::components::*, Individual, State},
-    problems::{LimitedVectorProblem, Problem},
+    operators::custom_state::{DiversityState, PopulationState},
+    problems::{Problem, VectorProblem},
     random::Random,
 };
-use rand::Rng;
 
 #[derive(Debug, serde::Serialize)]
 pub struct None;
@@ -40,81 +38,6 @@ where
         _rng: &mut Random,
         _population: &[Individual],
     ) {
-    }
-}
-
-/// PsoPostprocess for PSO.
-///
-/// Updates best found solutions of particles and global best in PsoState.
-#[derive(Debug, serde::Serialize)]
-pub struct PsoPostprocess {
-    pub v_max: f64,
-}
-impl PsoPostprocess {
-    pub fn new<P: Problem>(v_max: f64) -> Box<dyn Component<P>>
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-    {
-        Box::new(Postprocessor(Self { v_max }))
-    }
-}
-impl<P> Postprocess<P> for PsoPostprocess
-where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-{
-    fn initialize(
-        &self,
-        state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let velocities = population
-            .iter()
-            .map(|_| {
-                (0..problem.dimension())
-                    .into_iter()
-                    .map(|_| rng.gen_range(-self.v_max..=self.v_max))
-                    .collect::<Vec<f64>>()
-            })
-            .collect::<Vec<Vec<f64>>>();
-
-        let bests = population
-            .iter()
-            .map(Individual::clone)
-            .collect::<Vec<Individual>>();
-
-        let global_best = bests
-            .iter()
-            .min_by_key(|i| Individual::fitness(i))
-            .map(Individual::clone)
-            .unwrap();
-
-        state.insert(PsoState {
-            velocities,
-            bests,
-            global_best,
-        });
-    }
-
-    fn postprocess(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let mut pso_state = state.get_mut::<PsoState>();
-
-        for (i, individual) in population.iter().enumerate() {
-            if pso_state.bests[i].fitness() > individual.fitness() {
-                pso_state.bests[i] = individual.clone();
-
-                if pso_state.global_best.fitness() > individual.fitness() {
-                    pso_state.global_best = individual.clone();
-                }
-            }
-        }
     }
 }
 

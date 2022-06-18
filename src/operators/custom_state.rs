@@ -1,6 +1,6 @@
 //! Custom states required for specific metaheuristics and evaluation procedures
 
-use crate::framework::{CustomState, Individual};
+use crate::framework::{CustomState, Fitness, Individual};
 
 // Custom States for Specific Metaheuristics //
 
@@ -19,17 +19,42 @@ impl CustomState for PsoState {}
 /// State required for Elitism.
 ///
 /// For preserving n elitist individuals.
-pub struct ElitismState {
-    pub elitists: Vec<Individual>,
+pub struct ElitistArchiveState {
+    elitists: Vec<Individual>,
+    n_elitists: usize,
 }
-impl CustomState for ElitismState {}
+impl CustomState for ElitistArchiveState {}
+
+impl ElitistArchiveState {
+    pub fn new(n_elitists: usize) -> Self {
+        Self {
+            elitists: Vec::new(),
+            n_elitists,
+        }
+    }
+
+    pub fn update(&mut self, population: &[Individual]) {
+        let mut pop = population.iter().collect::<Vec<_>>();
+        pop.sort_unstable_by_key(|i| i.fitness());
+        pop.truncate(self.n_elitists);
+        self.elitists = pop.into_iter().cloned().collect();
+    }
+
+    pub fn elitists(&self) -> &[Individual] {
+        &self.elitists
+    }
+
+    pub fn elitists_mut(&mut self) -> &mut [Individual] {
+        &mut self.elitists
+    }
+}
 
 /// State required for Termination by Steps without Improvement.
 ///
 /// For preserving current number of steps without improvement and corresponding fitness value.
 pub struct FitnessImprovementState {
     pub current_steps: usize,
-    pub current_fitness: f64,
+    pub current_fitness: Fitness,
 }
 impl CustomState for FitnessImprovementState {}
 

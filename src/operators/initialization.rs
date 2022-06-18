@@ -4,19 +4,39 @@ use rand::seq::SliceRandom;
 use rand::{distributions::uniform::SampleUniform, Rng};
 use serde::{Deserialize, Serialize};
 
-use crate::framework::common_state::Population;
-use crate::framework::Individual;
-use crate::problems::VectorProblem;
 use crate::{
-    framework::{components::*, legacy::components::*, State},
-    problems::{LimitedVectorProblem, Problem},
+    framework::{components::*, Individual, State},
+    problems::{LimitedVectorProblem, Problem, VectorProblem},
     random::Random,
 };
 
-/// Doesn't do anything.
+/// Specialized component trait to initialize a new population on the stack.
+///
+/// # Implementing [Component]
+///
+/// Types implementing this trait can implement [Component] by wrapping the type in a [Initializer].
+pub trait Initialization<P: Problem>: AnyComponent {
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual>;
+}
+
 #[derive(Serialize)]
-pub struct Noop;
-impl Noop {
+pub struct Initializer<T>(pub T);
+
+impl<T, P> Component<P> for Initializer<T>
+where
+    P: Problem,
+    T: AnyComponent + Initialization<P> + Serialize,
+{
+    fn execute(&self, problem: &P, state: &mut State) {
+        let population = self.0.initialize_population(problem, state);
+        state.population_stack_mut().push(population);
+    }
+}
+
+/// Initializes an empty population.
+#[derive(Serialize)]
+pub struct Empty;
+impl Empty {
     pub fn new<P>() -> Box<dyn Component<P>>
     where
         P: Problem,
@@ -24,93 +44,109 @@ impl Noop {
         Box::new(Initializer(Self))
     }
 }
-impl<P: Problem> Initialization<P> for Noop {
-    fn initialize(
-        &self,
-        _state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &mut Vec<P::Encoding>,
-    ) {
-        // Noop
+impl<P: Problem> Initialization<P> for Empty {
+    fn initialize_population(&self, _problem: &P, _state: &mut State) -> Vec<Individual> {
+        Vec::new()
     }
 }
 
-/// Uniformly distributes initial solutions in the search space.
+/// Generates new random solutions in the search space.
 #[derive(Serialize, Deserialize)]
 pub struct RandomSpread {
     /// Size of the initial population.
-    pub initial_population_size: u32,
+    pub initial_population_size: Option<u32>,
 }
 impl RandomSpread {
-    pub fn new<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
+    /// Create this component as an initializer, pushing a new population on the stack.
+    pub fn new_init<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
         P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
     {
-        Box::new(Self {
-            initial_population_size,
-        })
-    }
-}
-impl<P, D> Component<P> for RandomSpread
-where
-    D: SampleUniform + Clone + PartialOrd + 'static,
-    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
-{
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        if !state.has::<Population>() {
-            state.insert(Population::new());
-        }
+        Box::new(Initializer(Self {
+            initial_population_size: Some(initial_population_size),
+        }))
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
-        let rng = state.get_mut::<Random>();
+    pub(crate) fn random_spread<P, D>(
+        &self,
+        problem: &P,
+        rng: &mut Random,
+        population_size: u32,
+    ) -> Vec<P::Encoding>
+    where
+        D: SampleUniform + Clone + PartialOrd + 'static,
+        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+    {
         let mut population = Vec::new();
 
-        for _ in 0..self.initial_population_size {
+        for _ in 0..population_size {
             let solution = (0..problem.dimension())
                 .map(|d| rng.gen_range(problem.range(d)))
                 .collect::<Vec<D>>();
 
-            population.push(Individual::new_unevaluated(solution));
+            population.push(solution);
         }
-
-        state.get_mut::<Population>().push(population);
+        population
+    }
+}
+impl<P, D> Initialization<P> for RandomSpread
+where
+    D: SampleUniform + Clone + PartialOrd + 'static,
+    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+{
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
+        let population_size = self.initial_population_size.unwrap();
+        self.random_spread(problem, state.random_mut(), population_size)
+            .into_iter()
+            .map(Individual::new_unevaluated)
+            .collect()
     }
 }
 
-/// Random initialization of combinatorial solutions.
+/// Generates new random permutations for combinatorial problems.
 #[derive(Serialize, Deserialize)]
 pub struct RandomPermutation {
     /// Size of the initial population.
-    pub initial_population_size: u32,
+    pub initial_population_size: Option<u32>,
 }
 impl RandomPermutation {
-    pub fn new<P>(initial_population_size: u32) -> Box<dyn Component<P>>
+    pub fn new_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
     {
         Box::new(Initializer(Self {
-            initial_population_size,
+            initial_population_size: Some(initial_population_size),
         }))
+    }
+
+    pub(crate) fn random_permutation<P>(
+        &self,
+        problem: &P,
+        rng: &mut Random,
+        population_size: u32,
+    ) -> Vec<P::Encoding>
+    where
+        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    {
+        let mut population = Vec::new();
+        for _ in 0..population_size {
+            let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
+            solution.shuffle(rng);
+            population.push(solution);
+        }
+        population
     }
 }
 impl<P> Initialization<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    fn initialize(
-        &self,
-        _state: &mut State,
-        problem: &P,
-        rng: &mut Random,
-        population: &mut Vec<Vec<usize>>,
-    ) {
-        for _ in 0..self.initial_population_size {
-            let mut solution = (0..problem.dimension()).collect::<Vec<usize>>();
-            solution.shuffle(rng);
-            population.push(solution);
-        }
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
+        let population_size = self.initial_population_size.unwrap();
+        self.random_permutation(problem, state.random_mut(), population_size)
+            .into_iter()
+            .map(Individual::new_unevaluated)
+            .collect()
     }
 }

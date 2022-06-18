@@ -4,7 +4,7 @@
 //! Framework components.
 
 use crate::{
-    framework::{common_state::Population, state::State, Fitness},
+    framework::{common_state, state::State, Fitness},
     problems::Problem,
 };
 use serde::Serialize;
@@ -120,6 +120,8 @@ where
     P: Problem + 'static,
 {
     fn initialize(&self, problem: &P, state: &mut State) {
+        state.insert(common_state::Iterations(0));
+
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
     }
@@ -128,6 +130,7 @@ where
         self.condition.initialize(problem, state);
         while self.condition.evaluate(problem, state) {
             self.body.execute(problem, state);
+            *state.get_value_mut::<common_state::Iterations>() += 1;
         }
     }
 }
@@ -210,16 +213,99 @@ impl SimpleEvaluator {
 
 impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Population>();
+        state.require::<common_state::Population>();
+        state.insert(common_state::Evaluations(0));
+        state.insert(common_state::BestFitness(Fitness::default()));
+        state.insert(common_state::BestIndividual(None));
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.get_mut::<Population>().current_mut();
+        // Evaluate population
+        let current_best_fitness = state.get_value::<common_state::BestFitness>();
+        let population = state.population_stack_mut().current_mut();
 
-        for individual in population {
+        if population.is_empty() {
+            return;
+        }
+
+        for individual in population.iter_mut() {
             let solution = individual.solution::<P::Encoding>();
             let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
             individual.evaluate(fitness);
         }
+
+        let evaluations = population.len() as u32;
+
+        // Update best fitness and individual
+        let best_individual = population.iter().min_by_key(|i| i.fitness()).unwrap();
+
+        if best_individual.fitness() < current_best_fitness {
+            let best_fitness = best_individual.fitness();
+            let best_individual = best_individual.clone();
+
+            state.set_value::<common_state::BestFitness>(best_fitness);
+            state.set_value::<common_state::BestIndividual>(Some(best_individual));
+        }
+
+        // Update evaluations
+        *state.get_value_mut::<common_state::Evaluations>() += evaluations;
+    }
+}
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
+impl<P: Problem + 'static> And<P> {
+    pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
+        Box::new(Self(conditions))
+    }
+}
+impl<P: Problem + 'static> Condition<P> for And<P> {
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for condition in self.0.iter() {
+            condition.initialize(problem, state);
+        }
+    }
+
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        self.0
+            .iter()
+            .all(|condition| condition.evaluate(problem, state))
+    }
+}
+impl<P: Problem + 'static> std::ops::BitAnd for Box<dyn Condition<P>> {
+    type Output = Box<dyn Condition<P>>;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        And::new(vec![self, rhs])
+    }
+}
+
+#[derive(Serialize)]
+#[serde(bound = "")]
+pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
+impl<P: Problem + 'static> Or<P> {
+    pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
+        Box::new(Self(conditions))
+    }
+}
+impl<P: Problem + 'static> Condition<P> for Or<P> {
+    fn initialize(&self, problem: &P, state: &mut State) {
+        for condition in self.0.iter() {
+            condition.initialize(problem, state);
+        }
+    }
+
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        self.0
+            .iter()
+            .any(|condition| condition.evaluate(problem, state))
+    }
+}
+impl<P: Problem + 'static> std::ops::BitOr for Box<dyn Condition<P>> {
+    type Output = Box<dyn Condition<P>>;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Or::new(vec![self, rhs])
     }
 }

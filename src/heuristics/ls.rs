@@ -1,7 +1,10 @@
 //! Local Search
 
 use crate::{
-    framework::{components::Component, legacy::Configuration},
+    framework::{
+        components::{self, Component},
+        Configuration, ConfigurationBuilder,
+    },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -13,16 +16,21 @@ pub fn local_search<P>(
     neighbors: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    Configuration {
-        initialization: initialization::RandomSpread::new(1),
-        selection: selection::CopySingle::new(n_neighbors),
-        generation: vec![neighbors],
-        replacement: replacement::MuPlusLambda::new(1),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(initialization::RandomSpread::new_init(1))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(selection::DuplicateSingle::new(n_neighbors))
+                    .do_(neighbors)
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::MuPlusLambda::new(1))
+            },
+        )
+        .build()
 }
 
 /// Local Permutation Search
@@ -32,14 +40,19 @@ pub fn local_permutation_search<P>(
     neighbors: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    Configuration {
-        initialization: initialization::RandomPermutation::new(1),
-        selection: selection::CopySingle::new(n_neighbors),
-        generation: vec![neighbors],
-        replacement: replacement::MuPlusLambda::new(1),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(initialization::RandomPermutation::new_init(1))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(selection::DuplicateSingle::new(n_neighbors))
+                    .do_(neighbors)
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::MuPlusLambda::new(1))
+            },
+        )
+        .build()
 }
