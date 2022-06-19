@@ -4,13 +4,17 @@ use map::{AsAny, GetMutStates};
 pub(crate) use map::StateMap;
 
 use crate::{
-    framework::{Fitness, Individual},
+    framework::{state::many::MultiStateTuple, Fitness, Individual},
     random,
     tracking::log::Logger,
 };
 
+mod many;
+
+use map::{self, AsAny};
+pub(crate) use map::StateMap;
+
 pub mod common;
-mod map;
 
 /// Makes custom state trackable.
 pub trait CustomState: AsAny {
@@ -173,6 +177,10 @@ impl State {
         } else {
             self.parent_mut().unwrap().get_mut::<T>().deref_mut()
         }
+    }
+
+    pub fn get_many<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
+        T::fetch(self)
     }
 }
 

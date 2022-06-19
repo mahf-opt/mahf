@@ -4,7 +4,11 @@
 //! Framework components.
 
 use crate::{
-    framework::{common_state, state::State, Fitness},
+    framework::{
+        common_state::{self, Population},
+        state::State,
+        Fitness,
+    },
     problems::Problem,
 };
 use serde::Serialize;
