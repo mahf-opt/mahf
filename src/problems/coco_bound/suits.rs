@@ -5,8 +5,8 @@ use crate::{
     threads::SyncThreadPool,
     tracking::Log,
 };
+use anyhow::Context;
 use coco_rs::{Suite, SuiteName};
-use serde::Serialize;
 use std::{
     fs::{self, File},
     io::{BufWriter, Write},
@@ -36,11 +36,14 @@ pub fn evaluate_suite(
     fs::create_dir_all(data_dir.as_ref())?;
 
     let config_log_file = data_dir.join("configuration.ron");
-    configuration.serialize(&mut ron::Serializer::new(
-        BufWriter::new(File::create(config_log_file)?),
-        Some(ron::ser::PrettyConfig::default()),
-        true,
-    )?)?;
+    ron::ser::to_writer_pretty(
+        BufWriter::new(
+            File::create(config_log_file).context("failed to create configuration file")?,
+        ),
+        &configuration,
+        ron::ser::PrettyConfig::default().struct_names(true),
+    )
+    .context("failed to serialize configuration")?;
 
     let total_runs = suite.number_of_problems();
     let (tx, rx) = mpsc::channel();
