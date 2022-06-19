@@ -5,7 +5,7 @@
 
 extern "C" {
     unsafe fn bbob2009_compute_xopt(xopt: *mut f64, seed: i64, dim: isize);
-    fn bbob2009_compute_fopt(function: isize, instance: isize) -> f64;
+    unsafe fn bbob2009_compute_fopt(function: isize, instance: isize) -> f64;
 }
 
 pub fn compute_xopt(seed: usize, dimension: usize) -> Vec<f64> {

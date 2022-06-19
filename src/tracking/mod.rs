@@ -1,12 +1,13 @@
 //! Tracking and logging.
 
+pub mod function;
 pub mod trigger;
-
-mod logger;
-pub use logger::Logger;
 
 pub mod log;
 pub use log::Log;
 
-pub mod set;
-pub use set::LoggerFunction;
+mod logger;
+pub use logger::Logger;
+
+mod set;
+pub use set::LogSet;

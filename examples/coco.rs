@@ -2,7 +2,7 @@ use mahf::{
     heuristics::iwo,
     operators::termination,
     problems::coco_bound::{suits, CocoInstance},
-    tracking::{self, set::LogSet, trigger, LoggerFunction},
+    tracking::{self, trigger, LogSet},
 };
 
 fn main() -> anyhow::Result<()> {
@@ -23,11 +23,10 @@ fn main() -> anyhow::Result<()> {
         ]),
         tracking::Logger::builder()
             .log_common_sets()
-            .log_set(LogSet::new().with_trigger(trigger::Iteration::new(10)))
             .log_set(
                 LogSet::new()
                     .with_trigger(trigger::Iteration::new(50))
-                    .with_logger(LoggerFunction::best_individual::<CocoInstance, _>()),
+                    .with_logger(tracking::function::best_individual::<CocoInstance>),
             )
             .build(),
     );
