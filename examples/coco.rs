@@ -25,12 +25,12 @@ fn main() -> anyhow::Result<()> {
         components::Logger::builder()
             .with_set(
                 LogSet::new()
-                    .with_criteria(trigger::OnNthIteration::new(10))
+                    .with_criteria(trigger::Iteration::new(10))
                     .with_common_loggers(),
             )
             .with_set(
                 LogSet::new()
-                    .with_criteria(trigger::OnNthIteration::new(50))
+                    .with_criteria(trigger::Iteration::new(50))
                     .with_logger(LoggerFunction::best_individual::<CocoInstance, _>()),
             )
             .build(),

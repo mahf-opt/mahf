@@ -4,15 +4,15 @@ use crate::framework::{common_state::Iterations, components::Condition, CustomSt
 use derive_deref::Deref;
 
 #[derive(serde::Serialize)]
-pub struct OnNthIteration(u32);
+pub struct Iteration(u32);
 
-impl OnNthIteration {
+impl Iteration {
     pub fn new<P>(iterations: u32) -> Box<dyn Condition<P>> {
-        Box::new(OnNthIteration(iterations))
+        Box::new(Iteration(iterations))
     }
 }
 
-impl<P> Condition<P> for OnNthIteration {
+impl<P> Condition<P> for Iteration {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Iterations>();
     }
@@ -27,31 +27,31 @@ struct Previous<S>(S);
 impl<S: 'static> CustomState for Previous<S> {}
 
 #[derive(serde::Serialize)]
-pub struct OnImprovement<S> {
+pub struct Change<S> {
     #[serde(skip)]
     check: Box<dyn Fn(&S, &S) -> bool + Send + Sync>,
 }
 
-impl<S> OnImprovement<S>
+impl<S> Change<S>
 where
     S: CustomState + Clone,
 {
     pub fn custom<P>(
         check: impl Fn(&S, &S) -> bool + Send + Sync + 'static,
     ) -> Box<dyn Condition<P>> {
-        Box::new(OnImprovement {
+        Box::new(Change {
             check: Box::new(check),
         })
     }
 }
 
-impl<S, I> OnImprovement<S>
+impl<S, I> Change<S>
 where
     I: Clone + Sub<Output = I> + Ord + Send + Sync + 'static,
     S: CustomState + Clone + Deref<Target = I>,
 {
     pub fn new<P>(threshhold: I) -> Box<dyn Condition<P>> {
-        Box::new(OnImprovement {
+        Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {
                 let old = old.deref();
                 let new = new.deref();
@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<S, P> Condition<P> for OnImprovement<S>
+impl<S, P> Condition<P> for Change<S>
 where
     S: CustomState + Clone,
 {

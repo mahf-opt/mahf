@@ -1,7 +1,7 @@
 use crate::{
     framework::{components::Component, State},
     problems::Problem,
-    tracking::{log::LogEntry, logfn::LogSet, Log},
+    tracking::{log::Step, logfn::LogSet, Log},
 };
 use serde::Serialize;
 
@@ -41,14 +41,14 @@ impl<P: Problem + 'static> Component<P> for Logger<P> {
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        let mut entry = LogEntry::default();
+        let mut step = Step::default();
 
         for set in &self.sets {
-            set.execute(problem, state, &mut entry);
+            set.execute(problem, state, &mut step);
         }
 
-        if !entry.state.is_empty() {
-            state.get_mut::<Log>().push(entry);
+        if !step.entries().is_empty() {
+            state.get_mut::<Log>().push(step);
         }
     }
 }

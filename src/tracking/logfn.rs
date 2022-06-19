@@ -5,7 +5,7 @@ use crate::{
         common_state, common_state::BestIndividual, components::Condition, CustomState, State,
     },
     problems::Problem,
-    tracking::log::{LogEntry, LoggedState},
+    tracking::log::{Entry, Step},
 };
 use serde::Serialize;
 
@@ -44,7 +44,7 @@ impl<P: Problem + 'static> LogSet<P> {
             .with_auto_logger::<common_state::Progress>()
     }
 
-    pub(crate) fn execute(&self, problem: &P, state: &mut State, entry: &mut LogEntry) {
+    pub(crate) fn execute(&self, problem: &P, state: &mut State, step: &mut Step) {
         let criteria = self
             .criteria
             .iter()
@@ -53,25 +53,25 @@ impl<P: Problem + 'static> LogSet<P> {
 
         if criteria {
             for logger in &self.loggers {
-                entry.state.push((logger.function)(state));
+                step.push((logger.function)(state));
             }
         }
     }
 }
 
 pub struct LoggerFunction {
-    pub(crate) function: fn(&State) -> LoggedState,
+    pub(crate) function: fn(&State) -> Entry,
 }
 
 impl LoggerFunction {
     pub fn auto<T: CustomState + Clone + Serialize>() -> LoggerFunction {
-        fn log_fn<T: CustomState + Clone + Serialize>(state: &State) -> LoggedState {
+        fn log_fn<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
             debug_assert!(state.has::<T>(), "missing state: {}", type_name::<T>());
 
             let instance = state.get::<T>();
             let value = Box::new(instance.clone());
             let name = std::any::type_name::<T>();
-            LoggedState { name, value }
+            Entry { name, value }
         }
 
         LoggerFunction {
@@ -84,7 +84,7 @@ impl LoggerFunction {
         P: Problem<Encoding = E>,
         E: Clone + Serialize + Sized + 'static,
     {
-        fn log_fn<E: Clone + Serialize + Sized + 'static>(state: &State) -> LoggedState {
+        fn log_fn<E: Clone + Serialize + Sized + 'static>(state: &State) -> Entry {
             debug_assert!(
                 state.has::<BestIndividual>(),
                 "missing state: {}",
@@ -100,7 +100,7 @@ impl LoggerFunction {
             });
 
             let name = std::any::type_name::<BestIndividual>();
-            LoggedState { name, value }
+            Entry { name, value }
         }
 
         LoggerFunction {
@@ -108,7 +108,7 @@ impl LoggerFunction {
         }
     }
 
-    pub fn custom(function: fn(&State) -> LoggedState) -> LoggerFunction {
+    pub fn custom(function: fn(&State) -> Entry) -> LoggerFunction {
         Self { function }
     }
 }
