@@ -1,10 +1,11 @@
 use crate::{
     framework::{
         common_state,
-        components::{self, Block, Component, Condition, Logger, Loop, Scope},
+        components::{self, Block, Component, Condition, Loop, Scope},
     },
     operators::*,
     problems::Problem,
+    tracking::Logger,
 };
 use serde::Serialize;
 

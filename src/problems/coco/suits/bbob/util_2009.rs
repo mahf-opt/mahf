@@ -4,7 +4,7 @@
 //! as the official coco benchmark suite.
 
 extern "C" {
-    fn bbob2009_compute_xopt(xopt: *mut f64, seed: i64, dim: isize);
+    unsafe fn bbob2009_compute_xopt(xopt: *mut f64, seed: i64, dim: isize);
     fn bbob2009_compute_fopt(function: isize, instance: isize) -> f64;
 }
 

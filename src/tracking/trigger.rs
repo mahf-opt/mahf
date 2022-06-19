@@ -45,12 +45,12 @@ where
     }
 }
 
-impl<S, I> Change<S>
+impl<S> Change<S>
 where
-    I: Clone + Sub<Output = I> + Ord + Send + Sync + 'static,
-    S: CustomState + Clone + Deref<Target = I>,
+    S: CustomState + Clone + Deref,
+    S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
 {
-    pub fn new<P>(threshhold: I) -> Box<dyn Condition<P>> {
+    pub fn new<P>(threshhold: S::Target) -> Box<dyn Condition<P>> {
         Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {
                 let old = old.deref();

@@ -3,12 +3,8 @@ use crate::{
     util::{print_result, ArgsIter, Setup},
 };
 use mahf::{
-    float_eq::float_eq,
-    framework::{self, components::Logger},
-    heuristics::iwo,
-    operators::termination,
-    problems::bmf::BenchmarkFunction,
-    random::Random,
+    float_eq::float_eq, framework, heuristics::iwo, operators::termination,
+    problems::bmf::BenchmarkFunction, random::Random, tracking,
 };
 use std::time::Instant;
 
@@ -46,7 +42,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
             modulation_index: params.modulation_index,
         },
         termination::FixedIterations::new(setup.cutoff_length),
-        Logger::default(),
+        tracking::Logger::default(),
     );
 
     let rng = Random::seeded(setup.seed);

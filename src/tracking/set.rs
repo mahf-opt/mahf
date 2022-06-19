@@ -1,9 +1,7 @@
 use std::{any::type_name, ops::Deref};
 
 use crate::{
-    framework::{
-        common_state, common_state::BestIndividual, components::Condition, CustomState, State,
-    },
+    framework::{common_state, components::Condition, CustomState, State},
     problems::Problem,
     tracking::log::{Entry, Step},
 };
@@ -23,7 +21,7 @@ impl<P: Problem + 'static> LogSet<P> {
         }
     }
 
-    pub fn with_criteria(mut self, criteria: Box<dyn Condition<P>>) -> Self {
+    pub fn with_trigger(mut self, criteria: Box<dyn Condition<P>>) -> Self {
         self.criteria.push(criteria);
         self
     }
@@ -35,13 +33,6 @@ impl<P: Problem + 'static> LogSet<P> {
 
     pub fn with_auto_logger<T: CustomState + Clone + Serialize>(self) -> Self {
         self.with_logger(LoggerFunction::auto::<T>())
-    }
-
-    pub fn with_common_loggers(self) -> Self {
-        self.with_auto_logger::<common_state::Iterations>()
-            .with_auto_logger::<common_state::Evaluations>()
-            .with_auto_logger::<common_state::BestFitness>()
-            .with_auto_logger::<common_state::Progress>()
     }
 
     pub(crate) fn execute(&self, problem: &P, state: &mut State, step: &mut Step) {
@@ -86,12 +77,12 @@ impl LoggerFunction {
     {
         fn log_fn<E: Clone + Serialize + Sized + 'static>(state: &State) -> Entry {
             debug_assert!(
-                state.has::<BestIndividual>(),
+                state.has::<common_state::BestIndividual>(),
                 "missing state: {}",
-                type_name::<BestIndividual>()
+                type_name::<common_state::BestIndividual>()
             );
 
-            let instance = state.get::<BestIndividual>();
+            let instance = state.get::<common_state::BestIndividual>();
             let value = Box::new(if let Some(instance) = instance.deref() {
                 let individual = instance.solution::<E>().clone();
                 Some(individual)
@@ -99,7 +90,7 @@ impl LoggerFunction {
                 None
             });
 
-            let name = std::any::type_name::<BestIndividual>();
+            let name = std::any::type_name::<common_state::BestIndividual>();
             Entry { name, value }
         }
 
