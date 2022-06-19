@@ -1,5 +1,6 @@
 use crate::framework::Fitness;
 use std::any::Any;
+use std::fmt::{Debug, Formatter};
 
 /// An encoded solution with its associated fitness value.
 pub struct Individual {
@@ -48,6 +49,15 @@ impl Individual {
     /// This will panic when `E` is not the right type.
     pub fn solution<E: Any>(&self) -> &E {
         self.solution.downcast_ref().unwrap()
+    }
+
+    /// Returns the mutable individuals solution, resetting the fitness.
+    ///
+    /// # Panics
+    /// This will panic when `E` is not the right type.
+    pub fn solution_mut<E: Any>(&mut self) -> &mut E {
+        self.fitness = Fitness::default();
+        self.solution.downcast_mut().unwrap()
     }
 
     /// Returns the individuals solution.
@@ -106,5 +116,11 @@ where
         let this: &T = this.downcast_ref().unwrap();
         let other: &T = other.downcast_ref().unwrap();
         this == other
+    }
+}
+
+impl Debug for Individual {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Individual(fitness={:?})", self.fitness(),)
     }
 }

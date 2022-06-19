@@ -3,7 +3,7 @@
 use crate::{
     framework::{
         components::{self, Component, Condition},
-        Configuration,
+        Configuration, ConfigurationBuilder,
     },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -41,25 +41,25 @@ where
     assert!(params.min_number_of_seeds <= params.max_number_of_seeds);
     assert!(params.final_deviation <= params.initial_deviation);
 
-    components::Block::new(vec![
-        initialization::RandomSpread::new(params.initial_population_size),
-        components::SimpleEvaluator::new(),
-        components::Loop::new(
-            termination,
-            vec![
-                selection::DeterministicFitnessProportional::new(
+    ConfigurationBuilder::new()
+        .do_(initialization::RandomSpread::new_init(
+            params.initial_population_size,
+        ))
+        .do_(components::SimpleEvaluator::new())
+        .while_(termination, |builder| {
+            builder
+                .do_(selection::DeterministicFitnessProportional::new(
                     params.min_number_of_seeds,
                     params.max_number_of_seeds,
-                ),
-                generation::IWOAdaptiveDeviationDelta::new(
+                ))
+                .do_(generation::mutation::IWOAdaptiveDeviationDelta::new(
                     params.initial_deviation,
                     params.final_deviation,
                     params.modulation_index,
-                ),
-                components::SimpleEvaluator::new(),
-                replacement::MuPlusLambda::new(params.max_population_size),
-                logger,
-            ],
-        ),
-    ])
+                ))
+                .do_(components::SimpleEvaluator::new())
+                .do_(replacement::MuPlusLambda::new(params.max_population_size))
+                .do_(logger)
+        })
+        .build()
 }

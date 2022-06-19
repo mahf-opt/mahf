@@ -1,15 +1,17 @@
-use crate::{
-    declare_parameters,
-    util::{print_result, ArgsIter, Setup},
-};
+use std::time::Instant;
+
 use mahf::{
     float_eq::float_eq,
-    framework::{self, Configuration},
+    framework::{self},
     heuristics::pso,
     problems::bmf::BenchmarkFunction,
     random::Random,
 };
-use std::time::Instant;
+
+use crate::{
+    declare_parameters,
+    util::{print_result, ArgsIter, Setup},
+};
 
 declare_parameters! {
     population_size: u32,
@@ -24,14 +26,14 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
 
     let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
-    let config = Configuration::from(pso::pso(
+    let config = pso::pso(
         params.population_size,
         params.a,
         params.b,
         params.c,
         params.v_max,
         setup.cutoff_length,
-    ));
+    );
 
     let rng = Random::seeded(setup.seed);
 

@@ -1,7 +1,10 @@
 //! Random Walk
 
 use crate::{
-    framework::{components::Component, legacy::Configuration},
+    framework::{
+        components::{self, Component},
+        Configuration, ConfigurationBuilder,
+    },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -13,16 +16,23 @@ use crate::{
 /// * mutation: The mutation method used to move in the search space.
 pub fn random_walk<P>(max_iterations: u32, mutation: Box<dyn Component<P>>) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    Configuration {
-        initialization: initialization::RandomSpread::new(1),
-        selection: selection::All::new(),
-        generation: vec![mutation],
-        replacement: replacement::Generational::new(1),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(generation::RandomSpread::new_init(1))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(archive::ElitistArchive::new(1))
+                    .do_(selection::All::new())
+                    .do_(mutation)
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::Generational::new(1))
+            },
+        )
+        .do_(archive::AddElitists::new())
+        .build()
 }
 
 /// Random Permutation Walk
@@ -35,14 +45,21 @@ pub fn random_permutation_walk<P>(
     mutation: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    Configuration {
-        initialization: initialization::RandomPermutation::new(1),
-        selection: selection::All::new(),
-        generation: vec![mutation],
-        replacement: replacement::Generational::new(1),
-        termination: termination::FixedIterations::new(max_iterations),
-        ..Default::default()
-    }
+    ConfigurationBuilder::new()
+        .do_(generation::RandomPermutation::new_init(1))
+        .while_(
+            termination::FixedIterations::new(max_iterations),
+            |builder| {
+                builder
+                    .do_(archive::ElitistArchive::new(1))
+                    .do_(selection::All::new())
+                    .do_(mutation)
+                    .do_(components::SimpleEvaluator::new())
+                    .do_(replacement::Generational::new(1))
+            },
+        )
+        .do_(archive::AddElitists::new())
+        .build()
 }

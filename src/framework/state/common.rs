@@ -13,6 +13,17 @@ pub fn default(state: &mut State) {
 
 #[derive(Deref, DerefMut)]
 pub struct BestIndividual(pub Option<Individual>);
+impl BestIndividual {
+    pub fn replace_if_better(&mut self, candidate: &Individual) {
+        if let Some(individual) = &mut self.0 {
+            if candidate.fitness() < individual.fitness() {
+                *individual = candidate.clone();
+            }
+        } else {
+            self.0 = Some(candidate.clone());
+        }
+    }
+}
 impl CustomState for BestIndividual {}
 
 #[derive(Deref, DerefMut, Clone, Serialize)]
@@ -29,6 +40,13 @@ impl CustomState for Progress {}
 
 #[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct BestFitness(pub Fitness);
+impl BestFitness {
+    pub fn replace_if_better(&mut self, fitness: Fitness) {
+        if fitness < self.0 {
+            self.0 = fitness;
+        }
+    }
+}
 impl CustomState for BestFitness {}
 
 #[derive(Deref, DerefMut)]
@@ -59,5 +77,13 @@ impl Population {
 
     pub fn pop(&mut self) -> Vec<Individual> {
         self.stack.pop().unwrap()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.stack.is_empty()
+    }
+
+    pub fn best(&self) -> &Individual {
+        self.current().iter().min_by_key(|i| i.fitness()).unwrap()
     }
 }

@@ -6,6 +6,9 @@ pub mod legacy;
 pub mod components;
 pub use components::Configuration;
 
+mod builder;
+pub use builder::ConfigurationBuilder;
+
 mod fitness;
 pub use fitness::{Fitness, IllegalFitness};
 
@@ -28,6 +31,7 @@ pub fn run<P: Problem + 'static>(
 
     state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
+    state.insert(common_state::Population::new());
 
     config.initialize(problem, &mut state);
     config.execute(problem, &mut state);

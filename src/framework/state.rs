@@ -1,4 +1,7 @@
-use crate::framework::{Fitness, Individual};
+use crate::{
+    framework::{Fitness, Individual},
+    random,
+};
 use std::ops::{Deref, DerefMut};
 
 mod map;
@@ -67,6 +70,10 @@ impl State {
         }
     }
 
+    pub fn get_or_default<T: CustomState + Default>(&mut self) -> &mut T {
+        self.map.get_or_insert_default()
+    }
+
     #[track_caller]
     pub fn get_value<T>(&self) -> T::Target
     where
@@ -101,6 +108,18 @@ impl State {
             *self.parent_mut().unwrap().get_mut::<T>().deref_mut() = value;
         }
     }
+
+    pub fn get_value_mut<T>(&mut self) -> &mut T::Target
+    where
+        T: CustomState + DerefMut,
+        T::Target: Sized,
+    {
+        if self.map.has::<T>() {
+            self.map.get_mut::<T>().deref_mut()
+        } else {
+            self.parent_mut().unwrap().get_mut::<T>().deref_mut()
+        }
+    }
 }
 
 /// Convenience functions for often required state.
@@ -126,8 +145,8 @@ impl State {
     }
 
     /// Returns [BestIndividual](common::BestIndividual) state.
-    pub fn best_individual(&self) -> &Option<Individual> {
-        self.get::<common::BestIndividual>()
+    pub fn best_individual(&self) -> Option<&Individual> {
+        self.get::<common::BestIndividual>().as_ref()
     }
 
     /// Returns [Population](common::Population) state.
@@ -138,5 +157,10 @@ impl State {
     /// Returns mutable [Population](common::Population) state.
     pub fn population_stack_mut(&mut self) -> &mut common::Population {
         self.get_mut::<common::Population>()
+    }
+
+    /// Returns mutable [Random](random::Random) state.
+    pub fn random_mut(&mut self) -> &mut random::Random {
+        self.get_mut::<random::Random>()
     }
 }
