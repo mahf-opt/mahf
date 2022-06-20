@@ -4,11 +4,7 @@
 //! Framework components.
 
 use crate::{
-    framework::{
-        common_state::{self, Population},
-        state::State,
-        Fitness,
-    },
+    framework::{common_state, state::State, Fitness},
     problems::Problem,
 };
 use serde::Serialize;
@@ -224,35 +220,34 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
+        let mut mut_state = state.get_states_mut();
+
         // Evaluate population
-        let current_best_fitness = state.get_value::<common_state::BestFitness>();
-        let population = state.population_stack_mut().current_mut();
+        let population = mut_state.population_stack_mut();
 
         if population.is_empty() {
             return;
         }
 
-        for individual in population.iter_mut() {
+        for individual in population.current_mut().iter_mut() {
             let solution = individual.solution::<P::Encoding>();
             let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
             individual.evaluate(fitness);
         }
 
-        let evaluations = population.len() as u32;
-
         // Update best fitness and individual
-        let best_individual = population.iter().min_by_key(|i| i.fitness()).unwrap();
+        let best_individual = population.best();
 
-        if best_individual.fitness() < current_best_fitness {
-            let best_fitness = best_individual.fitness();
-            let best_individual = best_individual.clone();
-
-            state.set_value::<common_state::BestFitness>(best_fitness);
-            state.set_value::<common_state::BestIndividual>(Some(best_individual));
+        if mut_state
+            .get_mut::<common_state::BestIndividual>()
+            .replace_if_better(best_individual)
+        {
+            mut_state.set_value::<common_state::BestFitness>(best_individual.fitness());
         }
 
         // Update evaluations
-        *state.get_value_mut::<common_state::Evaluations>() += evaluations;
+        *mut_state.get_value_mut::<common_state::Evaluations>() +=
+            population.current().len() as u32;
     }
 }
 
