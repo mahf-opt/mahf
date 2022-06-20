@@ -1,18 +1,17 @@
 use std::ops::{Deref, DerefMut};
 
-use map::{AsAny, GetMutStates};
+use many::{MultiStateTuple, MutState};
+use map::AsAny;
 pub(crate) use map::StateMap;
 
 use crate::{
-    framework::{state::many::MultiStateTuple, Fitness, Individual},
+    framework::{Fitness, Individual},
     random,
     tracking::log::Logger,
 };
 
 mod many;
-
-use map::{self, AsAny};
-pub(crate) use map::StateMap;
+mod map;
 
 pub mod common;
 
@@ -22,46 +21,6 @@ pub trait CustomState: AsAny {
         None
     }
 }
-
-pub struct MutState<'a>(GetMutStates<'a>);
-impl<'a> MutState<'a> {
-    pub fn new(map: &'a mut StateMap) -> Self {
-        Self(map.get_multiple_mut())
-    }
-
-    pub fn get<T: CustomState>(&mut self) -> &'a T {
-        self.0.get()
-    }
-
-    pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
-        self.0.get_mut()
-    }
-
-    pub fn get_value<T>(&mut self) -> T::Target
-        where
-            T: CustomState + Deref,
-            T::Target: Sized + Copy,
-    {
-        *self.0.get::<T>().deref()
-    }
-
-    pub fn set_value<T>(&mut self, value: T::Target)
-        where
-            T: CustomState + DerefMut,
-            T::Target: Sized,
-    {
-        *self.0.get_mut::<T>().deref_mut() = value;
-    }
-
-    pub fn get_value_mut<T>(&mut self) -> &'a mut T::Target
-        where
-            T: CustomState + DerefMut,
-            T::Target: Sized,
-    {
-        self.0.get_mut::<T>().deref_mut()
-    }
-}
-
 
 #[derive(Default)]
 pub struct State {
@@ -119,7 +78,7 @@ impl State {
         }
     }
 
-    pub fn get_or_default<T: CustomState + Default>(&mut self) -> &mut T {
+    pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
         self.map.get_or_insert_default()
     }
 
@@ -143,16 +102,8 @@ impl State {
         }
     }
 
-    pub fn get2_mut<T1: CustomState, T2: CustomState>(&mut self) -> (&mut T1, &mut T2) {
-        if self.map.has::<T1>() && self.map.has::<T2>() {
-            self.map.get2_mut::<T1, T2>()
-        } else {
-            self.parent_mut().unwrap().get2_mut::<T1, T2>()
-        }
-    }
-
-    pub fn get_multiple_mut(&mut self) -> MutState<'_> {
-        MutState::new(&mut self.map)
+    pub fn get_states_mut(&mut self) -> MutState<'_> {
+        MutState::new(self)
     }
 
     pub fn set_value<T>(&mut self, value: T::Target)
@@ -179,7 +130,7 @@ impl State {
         }
     }
 
-    pub fn get_many<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
+    pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
         T::fetch(self)
     }
 }
@@ -190,39 +141,54 @@ impl State {
 ///
 /// The following functions are basically guaranteed to work:
 /// - [best_fitness](State::best_fitness)
-impl State {
-    /// Returns [Iterations](common::Iterations) state.
-    pub fn iterations(&self) -> u32 {
-        self.get_value::<common::Iterations>()
-    }
+macro_rules! impl_convenience_functions {
+    ($item:ident, $l:lifetime, $t:ty) => {
+        impl<$l> $item<$l> {
+            impl_convenience_functions!($l, $t);
+        }
+    };
+    ($item:ident) => {
+        impl $item {
+            impl_convenience_functions!('_, &Self);
+        }
+    };
+    ($l:lifetime, $t:ty) => {
+        /// Returns [Iterations](common::Iterations) state.
+            pub fn iterations(self: $t) -> u32 {
+                self.get_value::<common::Iterations>()
+            }
 
-    /// Returns [Evaluations](common::Evaluations) state.
-    pub fn evaluations(&self) -> u32 {
-        self.get_value::<common::Evaluations>()
-    }
+            /// Returns [Evaluations](common::Evaluations) state.
+            pub fn evaluations(self: $t) -> u32 {
+                self.get_value::<common::Evaluations>()
+            }
 
-    /// Returns [BestFitness](common::BestFitness) state.
-    pub fn best_fitness(&self) -> Fitness {
-        self.get_value::<common::BestFitness>()
-    }
+            /// Returns [BestFitness](common::BestFitness) state.
+            pub fn best_fitness(self: $t) -> Fitness {
+                self.get_value::<common::BestFitness>()
+            }
 
-    /// Returns [BestIndividual](common::BestIndividual) state.
-    pub fn best_individual(&self) -> Option<&Individual> {
-        self.get::<common::BestIndividual>().as_ref()
-    }
+            /// Returns [BestIndividual](common::BestIndividual) state.
+            pub fn best_individual(self: $t) -> Option<&Individual> {
+                self.get::<common::BestIndividual>().as_ref()
+            }
 
-    /// Returns [Population](common::Population) state.
-    pub fn population_stack(&self) -> &common::Population {
-        self.get::<common::Population>()
-    }
+            /// Returns [Population](common::Population) state.
+            pub fn population_stack(self: $t) -> &$l common::Population {
+                self.get::<common::Population>()
+            }
 
-    /// Returns mutable [Population](common::Population) state.
-    pub fn population_stack_mut(&mut self) -> &mut common::Population {
-        self.get_mut::<common::Population>()
-    }
+            /// Returns mutable [Population](common::Population) state.
+            pub fn population_stack_mut(&mut self) -> &$l mut common::Population {
+                self.get_mut::<common::Population>()
+            }
 
-    /// Returns mutable [Random](random::Random) state.
-    pub fn random_mut(&mut self) -> &mut random::Random {
-        self.get_mut::<random::Random>()
-    }
+            /// Returns mutable [Random](random::Random) state.
+            pub fn random_mut(&mut self) -> &$l mut random::Random {
+                self.get_mut::<random::Random>()
+            }
+    };
 }
+
+impl_convenience_functions!(State);
+impl_convenience_functions!(MutState, 'a, &mut Self);

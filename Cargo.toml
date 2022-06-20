@@ -26,7 +26,6 @@ rprompt = "1.0.5"
 ryu = "1.0.9"
 serde = {version = "1.0.131", features = ["derive"]}
 trait-set = "0.3.0"
-splitmut = "0.2.1"
 
 [dev-dependencies]
 proptest = "1.0.0"
