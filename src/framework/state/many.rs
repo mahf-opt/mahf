@@ -37,7 +37,8 @@ impl<'a> MutState<'a> {
         T: CustomState + Deref,
         T::Target: Sized + Copy,
     {
-        *self.get::<T>().deref()
+        assert!(!self.borrowed.contains(&TypeId::of::<T>()));
+        self.state.get_value::<T>()
     }
 
     pub fn set_value<T>(&mut self, value: T::Target)
@@ -45,7 +46,8 @@ impl<'a> MutState<'a> {
         T: CustomState + DerefMut,
         T::Target: Sized,
     {
-        *self.get_mut::<T>().deref_mut() = value;
+        assert!(!self.borrowed.contains(&TypeId::of::<T>()));
+        self.state.set_value::<T>(value);
     }
 
     pub fn get_value_mut<T>(&mut self) -> &'a mut T::Target
