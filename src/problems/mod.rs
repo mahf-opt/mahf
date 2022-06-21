@@ -1,6 +1,6 @@
 //! Collection of common test problems.
 
-use crate::framework::{Fitness, Individual2, Objective, MultiObjective, SingleObjective};
+use crate::framework::{Individual, Objective, MultiObjective, SingleObjective};
 use std::{any::Any, ops::Range};
 
 pub mod bmf;
@@ -19,25 +19,17 @@ pub struct Optimum<S> {
 
 pub trait Problem: 'static {
     type Encoding: Any + Clone + PartialEq;
-
-    fn evaluate(&self, solution: &Self::Encoding) -> f64;
-
-    fn name(&self) -> &str;
-}
-
-pub trait Problem2 {
-    type Encoding: Any + Clone + PartialEq;
     type Objective: Objective;
 
     fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective;
 
-    fn evaluate(&self, individual: &mut Individual2) {
+    fn evaluate(&self, individual: &mut Individual) {
         let solution = individual.solution::<Self::Encoding>();
         let objective = self.evaluate_solution(solution);
         individual.evaluate(objective);
     }
 
-    fn evaluate_population(&self, population: &mut [Individual2]) {
+    fn evaluate_population(&self, population: &mut [Individual]) {
         for individual in population.iter_mut() {
             self.evaluate(individual);
         }
@@ -46,9 +38,9 @@ pub trait Problem2 {
     fn name(&self) -> &str;
 }
 
-pub trait SingleObjectiveProblem: Problem2<Objective=SingleObjective> {}
+pub trait SingleObjectiveProblem: Problem<Objective=SingleObjective> {}
 
-pub trait MultiObjectiveProblem: Problem2<Objective=MultiObjective> {}
+pub trait MultiObjectiveProblem: Problem<Objective=MultiObjective> {}
 
 pub trait VectorProblem {
     type T: Any + Clone;

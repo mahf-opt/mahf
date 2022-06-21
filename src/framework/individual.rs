@@ -1,98 +1,9 @@
-use crate::framework::{Fitness, Objective};
+use crate::framework::{Objective, SingleObjective, MultiObjective};
 use std::any::Any;
 use std::fmt::{Debug, Formatter};
 
 /// An encoded solution with its associated fitness value.
 pub struct Individual {
-    solution: Box<dyn Any>,
-    fitness: Fitness,
-    clone: fn(&Box<dyn Any>) -> Box<dyn Any>,
-    partial_eq: fn(&Box<dyn Any>, &Box<dyn Any>) -> bool,
-}
-
-impl Individual {
-    /// Constructs a new `Individual`.
-    pub fn new<T: Any + Clone + PartialEq>(solution: T, fitness: Fitness) -> Self {
-        let solution = Box::new(solution);
-        let clone = T::typed_clone;
-        let partial_eq = T::typed_partial_eq;
-        Individual {
-            solution,
-            fitness,
-            clone,
-            partial_eq,
-        }
-    }
-
-    pub fn new_unevaluated<T: Any + Clone + PartialEq>(solution: T) -> Self {
-        Self::new(solution, Fitness::default())
-    }
-
-    pub fn evaluate(&mut self, fitness: Fitness) {
-        if self.fitness.is_finite() {
-            panic!("Individual got evaluated twice");
-        }
-        self.fitness = fitness;
-    }
-
-    /// Construct a pseudo individual.
-    ///
-    /// Should only be used for testing.
-    pub fn new_test_unit(fitness: f64) -> Self {
-        let fitness = Fitness::try_from(fitness).unwrap();
-        Individual::new((), fitness)
-    }
-
-    /// Returns the individuals solution.
-    ///
-    /// # Panics
-    /// This will panic when `E` is not the right type.
-    pub fn solution<E: Any>(&self) -> &E {
-        self.solution.downcast_ref().unwrap()
-    }
-
-    /// Returns the mutable individuals solution, resetting the fitness.
-    ///
-    /// # Panics
-    /// This will panic when `E` is not the right type.
-    pub fn solution_mut<E: Any>(&mut self) -> &mut E {
-        self.fitness = Fitness::default();
-        self.solution.downcast_mut().unwrap()
-    }
-
-    /// Returns the individuals solution.
-    ///
-    /// # Panics
-    /// This will panic when `E` is not the right type.
-    pub fn into_solution<E: Any>(self) -> E {
-        *self.solution.downcast().unwrap()
-    }
-
-    /// Returns the individuals fitness value.
-    pub fn fitness(&self) -> Fitness {
-        self.fitness
-    }
-}
-
-impl Clone for Individual {
-    fn clone(&self) -> Self {
-        Individual {
-            solution: (self.clone)(&self.solution),
-            fitness: self.fitness,
-            clone: self.clone,
-            partial_eq: self.partial_eq,
-        }
-    }
-}
-
-impl PartialEq for Individual {
-    fn eq(&self, other: &Self) -> bool {
-        self.fitness == other.fitness && (self.partial_eq)(&self.solution, &other.solution)
-    }
-}
-
-/// An encoded solution with its associated fitness value.
-pub struct Individual2 {
     solution: Box<dyn Any>,
     objective: Option<Box<dyn Any>>,
     clone_solution: fn(&Box<dyn Any>) -> Box<dyn Any>,
@@ -100,7 +11,7 @@ pub struct Individual2 {
     partial_eq_solution: fn(&Box<dyn Any>, &Box<dyn Any>) -> bool,
 }
 
-impl Individual2 {
+impl Individual {
     /// Constructs a new `Individual`.
     pub fn new<T: Any + Clone + PartialEq, O: Objective>(solution: T, objective: O) -> Self {
         Self::new_with_optional_objective(solution, Some(objective))
@@ -119,7 +30,7 @@ impl Individual2 {
         let clone_solution = T::typed_clone;
         let clone_objective = O::typed_clone;
         let partial_eq_solution = T::typed_partial_eq;
-        Individual2 {
+        Individual {
             solution,
             objective,
             clone_solution,
@@ -139,7 +50,7 @@ impl Individual2 {
     ///
     /// Should only be used for testing.
     pub fn new_test_unit<O: Objective>(objective: O) -> Self {
-        Individual2::new((), objective)
+        Individual::new((), objective)
     }
 
     /// Returns the individuals solution.
@@ -167,6 +78,10 @@ impl Individual2 {
         *self.solution.downcast().unwrap()
     }
 
+    pub fn is_evaluated(&self) -> bool {
+        self.objective.is_some()
+    }
+
     pub fn optional_objective<O: Any>(&self) -> Option<&O> {
         match self.objective.as_ref() {
             None => None,
@@ -179,9 +94,9 @@ impl Individual2 {
     }
 }
 
-impl Clone for Individual2 {
+impl Clone for Individual {
     fn clone(&self) -> Self {
-        Individual2 {
+        Individual {
             solution: (self.clone_solution)(&self.solution),
             objective: self.objective.as_ref().map(|o| (self.clone_objective)(o)),
             clone_solution: self.clone_solution,
@@ -191,7 +106,7 @@ impl Clone for Individual2 {
     }
 }
 
-impl PartialEq for Individual2 {
+impl PartialEq for Individual {
     fn eq(&self, other: &Self) -> bool {
         (self.partial_eq_solution)(&self.solution, &other.solution)
     }
@@ -227,6 +142,19 @@ where
 
 impl Debug for Individual {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Individual(fitness={:?})", self.fitness(),)
+        let objective_repr = if let Some(objective) = self.objective.as_ref() {
+            if let Some(single) = objective.downcast_ref::<SingleObjective>() {
+                single.value().to_string()
+            } else if let Some(multi) = objective.downcast_ref::<MultiObjective>() {
+                format!("{:?}", multi.value())
+            }
+            else {
+                format!("Unknown")
+            }
+        } else {
+            format!("Unevaluated")
+        };
+
+        write!(f, "Individual(objective={})", objective_repr)
     }
 }

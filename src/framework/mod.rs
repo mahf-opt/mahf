@@ -9,15 +9,15 @@ pub use components::Configuration;
 mod builder;
 pub use builder::ConfigurationBuilder;
 
-mod fitness;
-pub use fitness::{Fitness, IllegalFitness, Objective, IllegalObjective, SingleObjective, MultiObjective};
+mod objective;
+pub use objective::{IllegalObjective, MultiObjective, Objective, SingleObjective};
 
 mod state;
 pub use state::common as common_state;
 pub use state::{CustomState, MultiStateTuple, MutState, State};
 
 mod individual;
-pub use individual::{Individual, Individual2};
+pub use individual::Individual;
 
 use crate::{problems::Problem, random::Random, tracking::Log};
 

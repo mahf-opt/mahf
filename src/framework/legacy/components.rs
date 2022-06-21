@@ -5,7 +5,7 @@ use crate::{
     framework::{
         components::{AnyComponent, Component, Condition},
         state::State,
-        Fitness, Individual,
+        Individual,
     },
     problems::Problem,
     random::Random,
@@ -264,9 +264,6 @@ impl<P: Problem> Evaluator<P> for SimpleEvaluator {
         offspring: &mut Vec<P::Encoding>,
         evaluated: &mut Vec<Individual>,
     ) {
-        for solution in offspring.drain(..) {
-            let fitness = Fitness::try_from(problem.evaluate(&solution)).unwrap();
-            evaluated.push(Individual::new::<P::Encoding>(solution, fitness));
-        }
+        todo!();
     }
 }
