@@ -3,6 +3,15 @@ use std::{any::TypeId, collections::HashSet};
 
 use crate::framework::{CustomState, State};
 
+/// Allows borrowing multiple [CustomState]'s mutable at the same time.
+///
+/// # Panics
+///
+/// Panics on accessing the same [CustomState] twice, on both mutable and immutable access.
+/// References going out of scope do not change this behaviour.
+///
+/// The only exception to this rule are [get_value][MutState::get_value] and [set_value][MutState::set_value],
+/// which can be called repeatedly using the same [CustomState], given that no reference to it already exists.
 pub struct MutState<'a> {
     state: &'a mut State,
     borrowed: HashSet<TypeId>,
@@ -32,7 +41,7 @@ impl<'a> MutState<'a> {
         self.get_mut()
     }
 
-    pub fn get_value<T>(&mut self) -> T::Target
+    pub fn get_value<T>(&self) -> T::Target
     where
         T: CustomState + Deref,
         T::Target: Sized + Copy,

@@ -154,39 +154,39 @@ macro_rules! impl_convenience_functions {
     };
     ($l:lifetime, $t:ty) => {
         /// Returns [Iterations](common::Iterations) state.
-            pub fn iterations(self: $t) -> u32 {
-                self.get_value::<common::Iterations>()
-            }
+        pub fn iterations(self: $t) -> u32 {
+            self.get_value::<common::Iterations>()
+        }
 
-            /// Returns [Evaluations](common::Evaluations) state.
-            pub fn evaluations(self: $t) -> u32 {
-                self.get_value::<common::Evaluations>()
-            }
+        /// Returns [Evaluations](common::Evaluations) state.
+        pub fn evaluations(self: $t) -> u32 {
+            self.get_value::<common::Evaluations>()
+        }
 
-            /// Returns [BestFitness](common::BestFitness) state.
-            pub fn best_fitness(self: $t) -> Fitness {
-                self.get_value::<common::BestFitness>()
-            }
+        /// Returns [BestFitness](common::BestFitness) state.
+        pub fn best_fitness(self: $t) -> Fitness {
+            self.get_value::<common::BestFitness>()
+        }
 
-            /// Returns [BestIndividual](common::BestIndividual) state.
-            pub fn best_individual(self: $t) -> Option<&Individual> {
-                self.get::<common::BestIndividual>().as_ref()
-            }
+        /// Returns [BestIndividual](common::BestIndividual) state.
+        pub fn best_individual(self: $t) -> Option<&Individual> {
+            self.get::<common::BestIndividual>().as_ref()
+        }
 
-            /// Returns [Population](common::Population) state.
-            pub fn population_stack(self: $t) -> &$l common::Population {
-                self.get::<common::Population>()
-            }
+        /// Returns [Population](common::Population) state.
+        pub fn population_stack(self: $t) -> &$l common::Population {
+            self.get::<common::Population>()
+        }
 
-            /// Returns mutable [Population](common::Population) state.
-            pub fn population_stack_mut(&mut self) -> &$l mut common::Population {
-                self.get_mut::<common::Population>()
-            }
+        /// Returns mutable [Population](common::Population) state.
+        pub fn population_stack_mut(&mut self) -> &$l mut common::Population {
+            self.get_mut::<common::Population>()
+        }
 
-            /// Returns mutable [Random](random::Random) state.
-            pub fn random_mut(&mut self) -> &$l mut random::Random {
-                self.get_mut::<random::Random>()
-            }
+        /// Returns mutable [Random](random::Random) state.
+        pub fn random_mut(&mut self) -> &$l mut random::Random {
+            self.get_mut::<random::Random>()
+        }
     };
 }
 
