@@ -1,5 +1,6 @@
 //! Utility type to store an individuals fitness.
 
+use std::any::Any;
 use std::fmt;
 
 /// Fitness value of an [Individual](crate::framework::Individual)
@@ -91,23 +92,7 @@ impl fmt::Display for IllegalFitness {
     }
 }
 
-pub trait Objective: fmt::Debug + Clone + Eq {
-    fn is_finite(&self) -> bool;
-    fn is_valid(&self) -> bool;
-
-    fn is_single(&self) -> bool;
-    fn is_multi(&self) -> bool;
-
-    fn try_single(self) -> Result<Cost, IllegalObjective>;
-    fn try_multi(self) -> Result<Objectives, IllegalObjective>;
-
-    fn single(self) -> Cost {
-        self.try_single().unwrap()
-    }
-    fn multi(self) -> Objectives {
-        self.try_multi().unwrap()
-    }
-}
+pub trait Objective: fmt::Debug + Clone + Eq + Any {}
 
 /// Error type for illegal objective values.
 ///
@@ -136,71 +121,45 @@ impl fmt::Display for IllegalObjective {
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize)]
-pub struct Cost(Option<f64>);
+pub struct SingleObjective(f64);
 
-impl PartialEq for Cost {
+impl PartialEq for SingleObjective {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
-impl Eq for Cost {}
+impl Eq for SingleObjective {}
 
-impl PartialOrd for Cost {
+impl PartialOrd for SingleObjective {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.0.partial_cmp(&other.0)
     }
 }
-impl Ord for Cost {
+impl Ord for SingleObjective {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
     }
 }
 
-impl Objective for Cost {
+impl Objective for SingleObjective {}
+
+impl SingleObjective {
     fn is_finite(&self) -> bool {
-        self.is_valid() && self.0.unwrap().is_finite()
+        self.0.is_finite()
     }
 
-    fn is_valid(&self) -> bool {
-        self.0.is_some()
-    }
-
-    fn is_single(&self) -> bool {
-        true
-    }
-
-    fn is_multi(&self) -> bool {
-        false
-    }
-
-    fn try_single(self) -> Result<Cost, IllegalObjective> {
-        Ok(self)
-    }
-
-    fn try_multi(self) -> Result<Objectives, IllegalObjective> {
-        Err(IllegalObjective::WrongType)
-    }
-}
-
-impl Cost {
-    pub fn option(self) -> Option<f64> {
+    pub fn value(&self) -> f64 {
         self.0
     }
+}
 
-    pub fn value(self) -> f64 {
-        self.0.unwrap()
+impl From<SingleObjective> for f64 {
+    fn from(objective: SingleObjective) -> Self {
+        objective.value()
     }
 }
 
-impl TryFrom<Cost> for f64 {
-    type Error = IllegalObjective;
-
-    fn try_from(value: Cost) -> Result<Self, Self::Error> {
-        value.option().ok_or(IllegalObjective::Unevaluated)
-    }
-}
-
-impl TryFrom<f64> for Cost {
+impl TryFrom<f64> for SingleObjective {
     type Error = IllegalObjective;
 
     /// Tries to convert a float into a `Fitness` value.
@@ -213,61 +172,61 @@ impl TryFrom<f64> for Cost {
             _ if value.is_infinite() && value.is_sign_negative() => {
                 Err(IllegalObjective::NegativeInfinity)
             }
-            _ => Ok(Cost(Some(value))),
+            _ => Ok(SingleObjective(value)),
         }
     }
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
-pub struct Objectives(Option<Vec<f64>>);
+pub struct MultiObjective(Vec<f64>);
 
-impl PartialEq for Objectives {
+impl PartialEq for MultiObjective {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
-impl Eq for Objectives {}
+impl Eq for MultiObjective {}
 
-impl Objective for Objectives {
+/// Implements Pareto-Domination
+impl PartialOrd for MultiObjective {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        // Use Eq checking for equality
+        if self == other {
+            return Some(std::cmp::Ordering::Equal);
+        }
+
+        let dominates = self
+            .value()
+            .iter()
+            .zip(other.value().iter())
+            .filter(|(own, other)| own >= other)
+            .count();
+
+        match dominates {
+            // Self dominates
+            x if x == self.value().len() => Some(std::cmp::Ordering::Greater),
+            // Other dominates
+            0 => Some(std::cmp::Ordering::Less),
+            // None dominates
+            _ => None,
+        }
+    }
+}
+
+impl Objective for MultiObjective {}
+
+impl MultiObjective {
     fn is_finite(&self) -> bool {
-        self.is_valid() && self.0.as_ref().unwrap().iter().all(|o| o.is_finite())
+        self.0.iter().all(|o| o.is_finite())
     }
 
-    fn is_valid(&self) -> bool {
-        self.0.is_some()
-    }
-
-    fn is_single(&self) -> bool {
-        false
-    }
-
-    fn is_multi(&self) -> bool {
-        true
-    }
-
-    fn try_single(self) -> Result<Cost, IllegalObjective> {
-        Err(IllegalObjective::WrongType)
-    }
-
-    fn try_multi(self) -> Result<Objectives, IllegalObjective> {
-        Ok(self)
+    pub fn value(&self) -> &[f64] {
+        &self.0
     }
 }
 
-impl Objectives {
-    pub fn option(self) -> Option<Vec<f64>> {
-        self.0
-    }
-
-    pub fn value(self) -> Vec<f64> {
-        self.0.unwrap()
-    }
-}
-
-impl TryFrom<Objectives> for Vec<f64> {
-    type Error = IllegalObjective;
-
-    fn try_from(value: Objectives) -> Result<Self, Self::Error> {
-        value.option().ok_or(IllegalObjective::Unevaluated)
+impl From<MultiObjective> for Vec<f64> {
+    fn from(objective: MultiObjective) -> Self {
+        objective.0
     }
 }

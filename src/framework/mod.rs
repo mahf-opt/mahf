@@ -10,14 +10,14 @@ mod builder;
 pub use builder::ConfigurationBuilder;
 
 mod fitness;
-pub use fitness::{Fitness, IllegalFitness};
+pub use fitness::{Fitness, IllegalFitness, Objective, IllegalObjective, SingleObjective, MultiObjective};
 
 mod state;
 pub use state::common as common_state;
 pub use state::{CustomState, MultiStateTuple, MutState, State};
 
 mod individual;
-pub use individual::Individual;
+pub use individual::{Individual, Individual2};
 
 use crate::{problems::Problem, random::Random, tracking::Log};
 

@@ -1,6 +1,6 @@
 //! Collection of common test problems.
 
-use crate::framework::Fitness;
+use crate::framework::{Fitness, Individual2, Objective, MultiObjective, SingleObjective};
 use std::{any::Any, ops::Range};
 
 pub mod bmf;
@@ -24,6 +24,31 @@ pub trait Problem: 'static {
 
     fn name(&self) -> &str;
 }
+
+pub trait Problem2 {
+    type Encoding: Any + Clone + PartialEq;
+    type Objective: Objective;
+
+    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective;
+
+    fn evaluate(&self, individual: &mut Individual2) {
+        let solution = individual.solution::<Self::Encoding>();
+        let objective = self.evaluate_solution(solution);
+        individual.evaluate(objective);
+    }
+
+    fn evaluate_population(&self, population: &mut [Individual2]) {
+        for individual in population.iter_mut() {
+            self.evaluate(individual);
+        }
+    }
+
+    fn name(&self) -> &str;
+}
+
+pub trait SingleObjectiveProblem: Problem2<Objective=SingleObjective> {}
+
+pub trait MultiObjectiveProblem: Problem2<Objective=MultiObjective> {}
 
 pub trait VectorProblem {
     type T: Any + Clone;
