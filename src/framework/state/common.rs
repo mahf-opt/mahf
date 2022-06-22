@@ -1,5 +1,5 @@
 use super::{CustomState, State};
-use crate::framework::{Fitness, Individual};
+use crate::framework::{Individual, MultiObjective};
 use derive_deref::{Deref, DerefMut};
 
 pub fn default(state: &mut State) {
@@ -7,7 +7,6 @@ pub fn default(state: &mut State) {
     state.insert(Evaluations(0));
     state.insert(Iterations(0));
     state.insert(Progress(0.0));
-    state.insert(BestFitness(Fitness::default()));
 }
 
 #[derive(Deref, DerefMut)]
@@ -42,15 +41,37 @@ pub struct Progress(pub f64);
 impl CustomState for Progress {}
 
 #[derive(Deref, DerefMut)]
-pub struct BestFitness(pub Fitness);
-impl BestFitness {
-    pub fn replace_if_better(&mut self, fitness: Fitness) {
-        if fitness < self.0 {
-            self.0 = fitness;
+pub struct ParetoFront(Vec<Individual>);
+impl ParetoFront {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn update(&mut self, individual: &Individual) {
+        if !individual.is_evaluated() {
+            return;
+        }
+
+        let objective = individual.objective::<MultiObjective>();
+        let _comparisons: Vec<_> = self.front()
+            .iter()
+            .map(|other| objective.partial_cmp(other.objective::<MultiObjective>()))
+            .collect();
+
+        todo!("Finish implementation.");
+    }
+
+    pub fn update_multiple(&mut self, population: &[Individual]) {
+        for individual in population {
+            self.update(individual);
         }
     }
+
+    pub fn front(&self) -> &[Individual] {
+        &self.0
+    }
 }
-impl CustomState for BestFitness {}
+impl CustomState for ParetoFront {}
 
 #[derive(Deref, DerefMut)]
 pub struct Loop(pub bool);
@@ -84,9 +105,5 @@ impl Population {
 
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
-    }
-
-    pub fn best(&self) -> &Individual {
-        self.current().iter().min_by_key(|i| i.fitness()).unwrap()
     }
 }

@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    framework::{Fitness, Individual},
+    framework::{SingleObjective, Individual},
     random,
     tracking::log::Logger,
 };
@@ -200,14 +200,19 @@ macro_rules! impl_convenience_functions {
             self.get_value::<common::Evaluations>()
         }
 
-        /// Returns [BestFitness](common::BestFitness) state.
-        pub fn best_fitness(self: $t) -> Fitness {
-            self.get_value::<common::BestFitness>()
-        }
-
         /// Returns [BestIndividual](common::BestIndividual) state.
         pub fn best_individual(self: $t) -> Option<&Individual> {
             self.get::<common::BestIndividual>().as_ref()
+        }
+
+        /// Returns the objective value of the [BestIndividual](common::BestIndividual).
+        pub fn best_fitness(self: $t) -> Option<&SingleObjective> {
+            self.best_individual().map(|i| i.fitness())
+        }
+
+        /// Returns [BestIndividual](common::ParetoFront) state.
+        pub fn pareto(self: $t) -> &$l common::ParetoFront {
+            self.get::<common::ParetoFront>()
         }
 
         /// Returns [Population](common::Population) state.
