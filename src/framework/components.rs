@@ -258,7 +258,7 @@ impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
             .population_stack()
             .current()
             .iter()
-            .max_by_key(|i| i.fitness());
+            .min_by_key(|i| i.fitness());
 
         if let Some(best_individual) = best_individual {
             mut_state
