@@ -4,6 +4,10 @@ use std::{any::TypeId, collections::HashSet};
 use crate::framework::{CustomState, State};
 
 /// Allows borrowing multiple [CustomState]'s mutable at the same time.
+/// It is meant to significantly simplify the definition of [Component][crate::framework::components::Component]'s
+/// with multiple [CustomState]'s that are modified.
+///
+/// Implements most of the methods on [State], including convenience methods like [State::random_mut].
 ///
 /// # Panics
 ///

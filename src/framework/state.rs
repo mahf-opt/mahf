@@ -1,9 +1,5 @@
 use std::ops::{Deref, DerefMut};
 
-use many::{MultiStateTuple, MutState};
-use map::AsAny;
-pub(crate) use map::StateMap;
-
 use crate::{
     framework::{Fitness, Individual},
     random,
@@ -11,7 +7,12 @@ use crate::{
 };
 
 mod many;
+use many::MultiStateTuple;
+pub use many::MutState;
+
 mod map;
+use map::AsAny;
+pub(crate) use map::StateMap;
 
 pub mod common;
 
@@ -102,6 +103,22 @@ impl State {
         }
     }
 
+    /// Allows borrowing an arbitrary number of [CustomState]'s mutable at the same time.
+    /// For additional information and limitations, see [MutState].
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// use mahf::{framework::{State, common_state::Population}, random::Random};
+    /// let mut state = State::new_root();
+    /// state.insert(Random::testing());
+    /// state.insert(Population::new());
+    /// let mut mut_state = state.get_states_mut();
+    /// let rng = mut_state.random_mut();
+    /// let population = mut_state.population_stack_mut();
+    /// ```
     pub fn get_states_mut(&mut self) -> MutState<'_> {
         MutState::new(self)
     }
@@ -130,6 +147,24 @@ impl State {
         }
     }
 
+    /// Allows borrowing up to eight [CustomState]'s mutable at the same time, given they are different.
+    /// The types are supplied as tuples.
+    ///
+    /// # Panics
+    ///
+    /// Panics on type duplicates in the tuple.
+    ///
+    /// # Examples
+    ///
+    ///  Basic usage:
+    ///
+    /// ```
+    /// use mahf::{framework::{State, common_state::Population}, random::Random};
+    /// let mut state = State::new_root();
+    /// state.insert(Random::testing());
+    /// state.insert(Population::new());
+    /// let (rng, population) = state.get_multiple_mut::<(Random, Population)>();
+    /// ```
     pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
         T::fetch(self)
     }
@@ -138,9 +173,6 @@ impl State {
 /// Convenience functions for often required state.
 ///
 /// If some state does not exist, the function will panic.
-///
-/// The following functions are basically guaranteed to work:
-/// - [best_fitness](State::best_fitness)
 macro_rules! impl_convenience_functions {
     ($item:ident, $l:lifetime, $t:ty) => {
         impl<$l> $item<$l> {
