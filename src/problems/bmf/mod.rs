@@ -7,6 +7,7 @@ pub mod tests;
 use crate::problems::{HasKnownOptimum, LimitedVectorProblem, Problem, VectorProblem};
 use anyhow::anyhow;
 use std::convert::TryFrom;
+use crate::framework::SingleObjective;
 
 /// Wraps the benchmark functions as [`Problem`]s.
 ///
@@ -27,9 +28,10 @@ pub struct BenchmarkFunction {
 
 impl Problem for BenchmarkFunction {
     type Encoding = Vec<f64>;
+    type Objective = SingleObjective;
 
-    fn evaluate(&self, solution: &Self::Encoding) -> f64 {
-        (self.implementation)(solution)
+    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
+        (self.implementation)(solution).try_into().unwrap()
     }
 
     fn name(&self) -> &str {
@@ -52,8 +54,8 @@ impl LimitedVectorProblem for BenchmarkFunction {
 }
 
 impl HasKnownOptimum for BenchmarkFunction {
-    fn known_optimum(&self) -> f64 {
-        self.known_optimum
+    fn known_optimum(&self) -> SingleObjective {
+        self.known_optimum.try_into().unwrap()
     }
 }
 

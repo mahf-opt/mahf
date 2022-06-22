@@ -13,9 +13,9 @@ pub mod coco;
 
 /// Represents the (global) optimum of the search space.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub struct Optimum<P: Problem> {
-    pub value: P::Objective,
-    pub solution: Option<P::Encoding>,
+pub struct Optimum<S, O: Objective> {
+    pub objective: O,
+    pub solution: Option<S>,
 }
 
 pub trait Problem: 'static {
@@ -35,7 +35,11 @@ pub trait Problem: 'static {
 
 pub trait SingleObjectiveProblem: Problem<Objective = SingleObjective> {}
 
+impl<P: Problem<Objective = SingleObjective>> SingleObjectiveProblem for P {}
+
 pub trait MultiObjectiveProblem: Problem<Objective = MultiObjective> {}
+
+impl<P: Problem<Objective = MultiObjective>> MultiObjectiveProblem for P {}
 
 pub trait VectorProblem: Problem {
     type T: Any + Clone;
@@ -47,11 +51,11 @@ pub trait LimitedVectorProblem: VectorProblem {
     fn range(&self, dimension: usize) -> Range<Self::T>;
 }
 
-pub trait HasKnownOptimum: Problem {
-    fn known_optimum(&self) -> Optimum<Self>;
+pub trait HasKnownOptimum: Problem<Objective=SingleObjective> {
+    fn known_optimum(&self) -> Self::Objective;
 }
 
-pub trait DebugProblem: Problem<Encoding: Debug> {
+pub trait DebugProblem: Problem {
     fn debug_fmt(&self, individual: &Individual) -> String;
 }
 
