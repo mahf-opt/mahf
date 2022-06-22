@@ -5,7 +5,7 @@
 
 use crate::{
     framework::{common_state, state::State},
-    problems::Problem,
+    problems::{MultiObjectiveProblem, SingleObjectiveProblem, Problem},
 };
 use serde::Serialize;
 use std::any::Any;
@@ -215,8 +215,6 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<common_state::Population>();
         state.insert(common_state::Evaluations(0));
-        state.insert(common_state::BestFitness(Fitness::default()));
-        state.insert(common_state::BestIndividual(None));
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
@@ -230,24 +228,65 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
         }
 
         for individual in population.current_mut().iter_mut() {
-            let solution = individual.solution::<P::Encoding>();
-            let fitness = Fitness::try_from(problem.evaluate(solution)).unwrap();
-            individual.evaluate(fitness);
-        }
-
-        // Update best fitness and individual
-        let best_individual = population.best();
-
-        if mut_state
-            .get_mut::<common_state::BestIndividual>()
-            .replace_if_better(best_individual)
-        {
-            mut_state.set_value::<common_state::BestFitness>(best_individual.fitness());
+            problem.evaluate(individual);
         }
 
         // Update evaluations
         *mut_state.get_value_mut::<common_state::Evaluations>() +=
             population.current().len() as u32;
+    }
+}
+
+#[derive(Serialize)]
+pub struct UpdateBestIndividual;
+
+impl UpdateBestIndividual {
+    pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
+        Box::new(Self)
+    }
+}
+
+impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.insert(common_state::BestIndividual(None));
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        let mut mut_state = state.get_states_mut();
+
+        let best_individual = mut_state
+            .population_stack()
+            .current()
+            .iter()
+            .max_by_key(|i| i.fitness());
+
+        if let Some(best_individual) = best_individual {
+            mut_state
+                .get_mut::<common_state::BestIndividual>()
+                .replace_if_better(best_individual);
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub struct UpdateParetoFront;
+
+impl UpdateParetoFront {
+    pub fn new<P: MultiObjectiveProblem>() -> Box<dyn Component<P>> {
+        Box::new(Self)
+    }
+}
+
+impl<P: MultiObjectiveProblem> Component<P> for UpdateParetoFront {
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.insert(common_state::ParetoFront::new());
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        let mut mut_state = state.get_states_mut();
+
+        let front = mut_state.get_mut::<common_state::ParetoFront>();
+        front.update_multiple(mut_state.population_stack().current());
     }
 }
 

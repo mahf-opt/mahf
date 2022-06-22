@@ -5,25 +5,6 @@ use std::fmt;
 
 pub trait Objective: fmt::Debug + Clone + Eq + Any {}
 
-trait CloneObjective {
-    fn clone_objective<'a>(&self) -> Box<dyn Objective>;
-}
-
-impl<T> CloneObjective for T
-    where
-        T: Objective + 'static,
-{
-    fn clone_objective<'a>(&self) -> Box<dyn Objective> {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for Box<dyn Objective> {
-    fn clone(&self) -> Self {
-        self.clone_objective()
-    }
-}
-
 /// Error type for illegal objective values.
 ///
 /// Currently, `NaN` and `-Inf` are considered illegal.
@@ -67,9 +48,16 @@ impl Ord for SingleObjective {
     }
 }
 
+impl Default for SingleObjective {
+    fn default() -> Self {
+        Self(f64::INFINITY)
+    }
+}
+
 impl Objective for SingleObjective {}
 
 impl SingleObjective {
+    #[allow(dead_code)]
     fn is_finite(&self) -> bool {
         self.0.is_finite()
     }
@@ -88,9 +76,9 @@ impl From<SingleObjective> for f64 {
 impl TryFrom<f64> for SingleObjective {
     type Error = IllegalObjective;
 
-    /// Tries to convert a float into a `Fitness` value.
+    /// Tries to convert a float into a `SingleObjective` value.
     ///
-    /// See [IllegalFitness] for a list of illegal values.
+    /// See [IllegalObjective] for a list of illegal values.
     /// All other values will return `Ok`.
     fn try_from(value: f64) -> Result<Self, IllegalObjective> {
         match value {
@@ -142,6 +130,7 @@ impl PartialOrd for MultiObjective {
 impl Objective for MultiObjective {}
 
 impl MultiObjective {
+    #[allow(dead_code)]
     fn is_finite(&self) -> bool {
         self.0.iter().all(|o| o.is_finite())
     }
