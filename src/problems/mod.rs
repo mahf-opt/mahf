@@ -1,6 +1,7 @@
 //! Collection of common test problems.
 
-use crate::framework::{Individual, Objective, MultiObjective, SingleObjective};
+use crate::framework::{Individual, MultiObjective, Objective, SingleObjective};
+use std::fmt::Debug;
 use std::{any::Any, ops::Range};
 
 pub mod bmf;
@@ -12,9 +13,9 @@ pub mod coco;
 
 /// Represents the (global) optimum of the search space.
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub struct Optimum<S> {
-    pub fitness: Fitness,
-    pub solution: Option<S>,
+pub struct Optimum<P: Problem> {
+    pub value: P::Objective,
+    pub solution: Option<P::Encoding>,
 }
 
 pub trait Problem: 'static {
@@ -29,20 +30,14 @@ pub trait Problem: 'static {
         individual.evaluate(objective);
     }
 
-    fn evaluate_population(&self, population: &mut [Individual]) {
-        for individual in population.iter_mut() {
-            self.evaluate(individual);
-        }
-    }
-
     fn name(&self) -> &str;
 }
 
-pub trait SingleObjectiveProblem: Problem<Objective=SingleObjective> {}
+pub trait SingleObjectiveProblem: Problem<Objective = SingleObjective> {}
 
-pub trait MultiObjectiveProblem: Problem<Objective=MultiObjective> {}
+pub trait MultiObjectiveProblem: Problem<Objective = MultiObjective> {}
 
-pub trait VectorProblem {
+pub trait VectorProblem: Problem {
     type T: Any + Clone;
 
     fn dimension(&self) -> usize;
@@ -52,6 +47,18 @@ pub trait LimitedVectorProblem: VectorProblem {
     fn range(&self, dimension: usize) -> Range<Self::T>;
 }
 
-pub trait HasKnownOptimum {
-    fn known_optimum(&self) -> f64;
+pub trait HasKnownOptimum: Problem {
+    fn known_optimum(&self) -> Optimum<Self>;
+}
+
+pub trait DebugProblem: Problem<Encoding: Debug> {
+    fn debug_fmt(&self, individual: &Individual) -> String;
+}
+
+pub trait BatchEvaluationProblem: Problem {
+    fn evaluate_batch(&self, population: &mut [Individual]) {
+        for individual in population.iter_mut() {
+            self.evaluate(individual);
+        }
+    }
 }

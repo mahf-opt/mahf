@@ -5,6 +5,25 @@ use std::fmt;
 
 pub trait Objective: fmt::Debug + Clone + Eq + Any {}
 
+trait CloneObjective {
+    fn clone_objective<'a>(&self) -> Box<dyn Objective>;
+}
+
+impl<T> CloneObjective for T
+    where
+        T: Objective + 'static,
+{
+    fn clone_objective<'a>(&self) -> Box<dyn Objective> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Objective> {
+    fn clone(&self) -> Self {
+        self.clone_objective()
+    }
+}
+
 /// Error type for illegal objective values.
 ///
 /// Currently, `NaN` and `-Inf` are considered illegal.

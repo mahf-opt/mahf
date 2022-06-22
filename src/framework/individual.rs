@@ -1,14 +1,13 @@
-use crate::framework::{Objective, SingleObjective, MultiObjective};
+use crate::framework::{MultiObjective, Objective, SingleObjective};
 use std::any::Any;
 use std::fmt::{Debug, Formatter};
 
 /// An encoded solution with its associated fitness value.
 pub struct Individual {
     solution: Box<dyn Any>,
-    objective: Option<Box<dyn Any>>,
-    clone_solution: fn(&Box<dyn Any>) -> Box<dyn Any>,
-    clone_objective: fn(&Box<dyn Any>) -> Box<dyn Any>,
-    partial_eq_solution: fn(&Box<dyn Any>, &Box<dyn Any>) -> bool,
+    objective: Option<Box<dyn Objective>>,
+    clone: fn(&Box<dyn Any>) -> Box<dyn Any>,
+    partial_eq: fn(&Box<dyn Any>, &Box<dyn Any>) -> bool,
 }
 
 impl Individual {
@@ -26,16 +25,14 @@ impl Individual {
         objective: Option<O>,
     ) -> Self {
         let solution = Box::new(solution);
-        let objective = objective.map(|objective| -> Box<dyn Any> { Box::new(objective) });
-        let clone_solution = T::typed_clone;
-        let clone_objective = O::typed_clone;
-        let partial_eq_solution = T::typed_partial_eq;
+        let objective = objective.map(|objective| -> Box<dyn Objective> { Box::new(objective) });
+        let clone = T::typed_clone;
+        let partial_eq = T::typed_partial_eq;
         Individual {
             solution,
             objective,
-            clone_solution,
-            clone_objective,
-            partial_eq_solution,
+            clone,
+            partial_eq,
         }
     }
 
@@ -97,18 +94,17 @@ impl Individual {
 impl Clone for Individual {
     fn clone(&self) -> Self {
         Individual {
-            solution: (self.clone_solution)(&self.solution),
-            objective: self.objective.as_ref().map(|o| (self.clone_objective)(o)),
-            clone_solution: self.clone_solution,
-            clone_objective: self.clone_objective,
-            partial_eq_solution: self.partial_eq_solution,
+            solution: (self.clone)(&self.solution),
+            objective: self.objective.as_ref().map(|o| o.clone()),
+            clone: self.clone,
+            partial_eq: self.partial_eq,
         }
     }
 }
 
 impl PartialEq for Individual {
     fn eq(&self, other: &Self) -> bool {
-        (self.partial_eq_solution)(&self.solution, &other.solution)
+        (self.partial_eq)(&self.solution, &other.solution)
     }
 }
 
@@ -142,19 +138,6 @@ where
 
 impl Debug for Individual {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let objective_repr = if let Some(objective) = self.objective.as_ref() {
-            if let Some(single) = objective.downcast_ref::<SingleObjective>() {
-                single.value().to_string()
-            } else if let Some(multi) = objective.downcast_ref::<MultiObjective>() {
-                format!("{:?}", multi.value())
-            }
-            else {
-                format!("Unknown")
-            }
-        } else {
-            format!("Unevaluated")
-        };
-
-        write!(f, "Individual(objective={})", objective_repr)
+        write!(f, "Individual(value={:?})", self.objective)
     }
 }
