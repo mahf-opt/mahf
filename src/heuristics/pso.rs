@@ -3,7 +3,7 @@
 use crate::{
     framework::{components, Configuration, ConfigurationBuilder},
     operators::*,
-    problems::{LimitedVectorProblem, Problem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
 
 pub fn pso<P>(
@@ -15,18 +15,20 @@ pub fn pso<P>(
     max_iterations: u32,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
     ConfigurationBuilder::new()
         .do_(initialization::RandomSpread::new_init(num_particles))
-        .do_(pso_ops::PsoStateInitialization::new(v_max))
         .do_(components::SimpleEvaluator::new())
+        .do_(components::UpdateBestIndividual::new())
+        .do_(pso_ops::PsoStateInitialization::new(v_max))
         .while_(
             termination::FixedIterations::new(max_iterations),
             |builder| {
                 builder
                     .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
                     .do_(components::SimpleEvaluator::new())
+                    .do_(components::UpdateBestIndividual::new())
                     .do_(pso_ops::PsoStateUpdate::new())
             },
         )
@@ -42,6 +44,7 @@ mod pso_ops {
         problems::{LimitedVectorProblem, Problem},
     };
     use rand::Rng;
+    use crate::framework::SingleObjective;
 
     #[derive(Debug, serde::Serialize)]
     pub struct PsoStateInitialization {
@@ -64,7 +67,7 @@ mod pso_ops {
             state.insert(PsoState {
                 velocities: vec![],
                 bests: vec![],
-                global_best: Individual::new_unevaluated(()),
+                global_best: Individual::new_unevaluated::<(), SingleObjective>(()),
             })
         }
 

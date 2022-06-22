@@ -8,8 +8,12 @@ fn main() -> anyhow::Result<()> {
     let state = framework::run(&problem, &config, None, None);
 
     println!(
-        "Found Solution: {:?}",
-        state.best_individual().unwrap().fitness().into()
+        "Found Fitness: {:?}",
+        state.best_fitness().unwrap(),
+    );
+    println!(
+        "Found Individual: {:?}",
+        state.best_individual().unwrap(),
     );
     println!("Global Optimum: {}", problem.known_optimum());
 

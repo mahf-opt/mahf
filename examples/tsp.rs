@@ -10,7 +10,7 @@ fn main() -> anyhow::Result<()> {
 
     println!(
         "Found Solution: {:?}",
-        state.best_individual().unwrap().fitness().into()
+        state.best_fitness().unwrap().value()
     );
 
     Ok(())

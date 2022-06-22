@@ -34,6 +34,7 @@ pub fn ant_system(
                         default_pheromones,
                     ))
                     .do_(components::SimpleEvaluator::new())
+                    .do_(components::UpdateBestIndividual::new())
                     .do_(ant_ops::AsPheromoneUpdate::new(
                         evaporation,
                         decay_coefficient,
@@ -74,6 +75,7 @@ pub fn min_max_ant_system(
                         default_pheromones,
                     ))
                     .do_(components::SimpleEvaluator::new())
+                    .do_(components::UpdateBestIndividual::new())
                     .do_(ant_ops::MinMaxPheromoneUpdate::new(
                         evaporation,
                         max_pheromones,
@@ -129,10 +131,11 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, Fitness, Individual, State},
+        framework::{components::*, Individual, State},
         problems::tsp::{Route, SymmetricTsp},
         random::Random,
     };
+    use crate::framework::SingleObjective;
 
     use super::PheromoneMatrix;
 
@@ -180,7 +183,7 @@ mod ant_ops {
                     let pheromones = remaining.iter().map(|&r| pm[last][r]);
                     let next_index = pheromones
                         .enumerate()
-                        .max_by_key(|(_, f)| Fitness::try_from(*f).unwrap())
+                        .max_by_key(|(_, f)| SingleObjective::try_from(*f).unwrap())
                         .unwrap()
                         .0;
                     let next = remaining.remove(next_index);
@@ -214,7 +217,7 @@ mod ant_ops {
 
             let population = routes
                 .into_iter()
-                .map(Individual::new_unevaluated)
+                .map(Individual::new_unevaluated::<Route, SingleObjective>)
                 .collect();
             *state.population_stack_mut().current_mut() = population;
         }
@@ -248,7 +251,7 @@ mod ant_ops {
 
             // Update pheromones for probabilistic routes
             for individual in population.iter().skip(1) {
-                let fitness = individual.fitness().into();
+                let fitness = individual.fitness().value();
                 let route = individual.solution::<Route>();
                 let delta = self.decay_coefficient / fitness;
                 for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
@@ -297,7 +300,7 @@ mod ant_ops {
                 .min_by_key(|i| i.fitness())
                 .unwrap();
 
-            let fitness = individual.fitness().into();
+            let fitness = individual.fitness().value();
             let route = individual.solution::<Route>();
             let delta = 1.0 / fitness;
             for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
