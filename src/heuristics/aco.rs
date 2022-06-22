@@ -256,8 +256,6 @@ mod ant_ops {
                     pm[b][a] += delta;
                 }
             }
-
-            // state.population_stack_mut().push(population);
         }
     }
 
