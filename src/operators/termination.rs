@@ -2,13 +2,13 @@
 
 use crate::{
     framework::{
-        common_state::{BestFitness, Evaluations, Iterations, Progress},
+        common_state::{Evaluations, Iterations, Progress},
         components::Condition,
         legacy::components::*,
-        Fitness, State,
+        State,
     },
     operators::custom_state::FitnessImprovementState,
-    problems::{HasKnownOptimum, Problem},
+    problems::{HasKnownOptimum, Problem, SingleObjectiveProblem},
 };
 use serde::{Deserialize, Serialize};
 
@@ -193,12 +193,12 @@ impl DistanceToOpt {
         Box::new(Self { distance })
     }
 }
-impl<P: HasKnownOptimum> Condition<P> for DistanceToOpt
+impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
 where
     P: Problem,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        state.get_value::<BestFitness>().into() >= problem.known_optimum() + self.distance
+        state.best_fitness().unwrap().value() >= problem.known_optimum().value() + self.distance
     }
 }
 #[cfg(test)]
@@ -230,32 +230,27 @@ pub struct StepsWithoutImprovement {
 impl StepsWithoutImprovement {
     pub fn new<P: Problem>(steps: usize) -> Box<dyn Condition<P>>
     where
-        P: Problem,
+        P: SingleObjectiveProblem,
     {
         Box::new(Self { steps })
     }
 }
 impl<P> Condition<P> for StepsWithoutImprovement
 where
-    P: Problem,
+    P: SingleObjectiveProblem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.insert(FitnessImprovementState {
             current_steps: 0,
-            current_fitness: Fitness::default(),
+            current_objective: Default::default(),
         })
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        let best_fitness = state.best_fitness();
-
+        let best_fitness = *state.best_fitness().unwrap();
         let termination_state = state.get_mut::<FitnessImprovementState>();
-        if best_fitness >= termination_state.current_fitness {
-            termination_state.current_steps += 1;
-        } else {
-            termination_state.current_fitness = best_fitness;
-            termination_state.current_steps = 0;
-        }
+        termination_state.update(&best_fitness);
+
         termination_state.current_steps < self.steps
     }
 }

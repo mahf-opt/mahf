@@ -1,6 +1,6 @@
 //! Custom states required for specific metaheuristics and evaluation procedures
 
-use crate::framework::{CustomState, Fitness, Individual};
+use crate::framework::{CustomState, Individual, SingleObjective};
 
 // Custom States for Specific Metaheuristics //
 
@@ -54,7 +54,19 @@ impl ElitistArchiveState {
 /// For preserving current number of steps without improvement and corresponding fitness value.
 pub struct FitnessImprovementState {
     pub current_steps: usize,
-    pub current_fitness: Fitness,
+    pub current_objective: SingleObjective,
+}
+impl FitnessImprovementState {
+    pub fn update(&mut self, objective: &SingleObjective) -> bool {
+        if objective >= &self.current_objective {
+            self.current_steps += 1;
+            false
+        } else {
+            self.current_objective = *objective;
+            self.current_steps = 0;
+            true
+        }
+    }
 }
 impl CustomState for FitnessImprovementState {}
 

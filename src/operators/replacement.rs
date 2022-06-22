@@ -80,7 +80,7 @@ impl Replacement for MuPlusLambda {
         _state: &mut State,
     ) {
         parents.append(offspring);
-        parents.sort_unstable_by_key(Individual::fitness);
+        parents.sort_unstable_by_key(|i| *i.fitness());
         parents.truncate(self.max_population_size as usize);
     }
 }

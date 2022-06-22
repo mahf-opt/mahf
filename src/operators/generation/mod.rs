@@ -47,7 +47,7 @@ where
         self.0.generate_population(&mut population, problem, state);
         let population = population
             .into_iter()
-            .map(Individual::new_unevaluated)
+            .map(Individual::new_unevaluated::<P::Encoding, P::Objective>)
             .collect();
         state.population_stack_mut().push(population);
     }
@@ -91,7 +91,7 @@ where
             .recombine_solutions(population, &mut offspring, problem, state);
         let offspring = offspring
             .into_iter()
-            .map(Individual::new_unevaluated)
+            .map(Individual::new_unevaluated::<P::Encoding, P::Objective>)
             .collect();
         state.population_stack_mut().push(offspring);
     }
@@ -162,7 +162,7 @@ pub mod swarm {
     use crate::{
         framework::{components::*, Individual, State},
         operators::custom_state::PsoState,
-        problems::Problem,
+        problems::SingleObjectiveProblem,
     };
 
     /// Applies the PSO specific generation operator.
@@ -178,14 +178,14 @@ pub mod swarm {
     impl PsoGeneration {
         pub fn new<P>(a: f64, b: f64, c: f64, v_max: f64) -> Box<dyn Component<P>>
         where
-            P: Problem<Encoding = Vec<f64>>,
+            P: SingleObjectiveProblem<Encoding = Vec<f64>>,
         {
             Box::new(Self { a, b, c, v_max })
         }
     }
     impl<P> Component<P> for PsoGeneration
     where
-        P: Problem<Encoding = Vec<f64>>,
+        P: SingleObjectiveProblem<Encoding = Vec<f64>>,
     {
         fn initialize(&self, _problem: &P, state: &mut State) {
             state.require::<PsoState>();
@@ -224,7 +224,7 @@ pub mod swarm {
                     x[i] = (x[i] + v[i]).clamp(-1.0, 1.0);
                 }
 
-                offspring.push(Individual::new_unevaluated(x));
+                offspring.push(Individual::new_unevaluated::<P::Encoding, P::Objective>(x));
             }
 
             state.population_stack_mut().push(offspring);

@@ -8,7 +8,7 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Fitness, Individual, State},
+    framework::{components::*, SingleObjective, Individual, State},
     problems::Problem,
 };
 
@@ -46,27 +46,27 @@ where
     }
 }
 
-/// Helper function to obtain minimum and maximum fitness ranges for normalization.
-fn get_fitness_range(population: &[Individual]) -> (f64, f64) {
+/// Helper function to obtain minimum and maximum objective ranges for normalization.
+fn get_objective_range(population: &[Individual]) -> (f64, f64) {
     let best = population
         .iter()
-        .map(Individual::fitness)
+        .map(Individual::objective::<SingleObjective>)
         .min()
         .unwrap()
-        .into();
+        .value();
     let worst = population
         .iter()
-        .map(Individual::fitness)
+        .map(Individual::objective::<SingleObjective>)
         .max()
         .unwrap()
-        .into();
+        .value();
     (worst, best)
 }
 
 /// Helper function to calculate normalized fitness weights from the population,
 /// where individuals with lower fitness get more weight.
 fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
-    let (worst, best) = get_fitness_range(population);
+    let (worst, best) = get_objective_range(population);
     assert!(
         worst.is_finite(),
         "weighting does not work with Inf fitness values"
@@ -74,7 +74,7 @@ fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
     // Normalize fitness values
     let normalized: Vec<f64> = population
         .iter()
-        .map(|i| (i.fitness().into() - best) / (worst - best))
+        .map(|i| (i.fitness().value() - best) / (worst - best))
         .collect();
     // Calculate population fitness as sum of individuals' fitness
     let total: f64 = normalized.iter().sum();
@@ -91,7 +91,7 @@ fn get_ranking(population: &[Individual]) -> Vec<usize> {
     // First descending argsort with fitness
     let mut positions: Vec<_> = (1..=population.len()).collect();
     positions
-        .sort_unstable_by_key(|&i| Fitness::try_from(-population[i - 1].fitness().into()).unwrap());
+        .sort_unstable_by_key(|&i| SingleObjective::try_from(-population[i - 1].fitness().value()).unwrap());
 
     // Second argsort with positions obtains ranking
     let mut ranking: Vec<_> = (1..=population.len()).collect();
@@ -266,7 +266,7 @@ impl Selection for DeterministicFitnessProportional {
         population: &'p [Individual],
         _state: &mut State,
     ) -> Vec<&'p Individual> {
-        let (worst, best) = get_fitness_range(population);
+        let (worst, best) = get_objective_range(population);
 
         assert!(
             worst.is_finite(),
@@ -276,7 +276,7 @@ impl Selection for DeterministicFitnessProportional {
         let mut selection = Vec::new();
 
         for ind in population.iter() {
-            let bonus: f64 = (ind.fitness().into() - worst) / (best - worst);
+            let bonus: f64 = (ind.fitness().value() - worst) / (best - worst);
             let bonus_offspring = (self.max_offspring - self.min_offspring) as f64;
             let num_offspring = self.min_offspring
                 + if bonus.is_nan() {
@@ -465,8 +465,8 @@ impl Selection for Tournament {
                 .collect();
             // and evaluate them against each other, placing the winner first
             tournament.sort_unstable_by(|x, y| {
-                (x.fitness().into())
-                    .partial_cmp(&(y.fitness().into()))
+                (x.fitness().value())
+                    .partial_cmp(&(y.fitness().value()))
                     .unwrap()
             });
             // Add winner (first) to selection

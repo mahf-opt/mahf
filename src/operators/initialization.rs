@@ -99,7 +99,7 @@ where
         let population_size = self.initial_population_size.unwrap();
         self.random_spread(problem, state.random_mut(), population_size)
             .into_iter()
-            .map(Individual::new_unevaluated)
+            .map(Individual::new_unevaluated::<P::Encoding, P::Objective>)
             .collect()
     }
 }
@@ -146,7 +146,7 @@ where
         let population_size = self.initial_population_size.unwrap();
         self.random_permutation(problem, state.random_mut(), population_size)
             .into_iter()
-            .map(Individual::new_unevaluated)
+            .map(Individual::new_unevaluated::<P::Encoding, P::Objective>)
             .collect()
     }
 }
