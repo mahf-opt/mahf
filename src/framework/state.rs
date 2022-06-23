@@ -115,9 +115,12 @@ impl State {
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
     /// state.insert(Population::new());
+    ///
     /// let mut mut_state = state.get_states_mut();
     /// let rng = mut_state.random_mut();
     /// let population = mut_state.population_stack_mut();
+    ///
+    /// // Do something with rng and population, or borrow additional types.
     /// ```
     pub fn get_states_mut(&mut self) -> MutState<'_> {
         MutState::new(self)
@@ -163,7 +166,10 @@ impl State {
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
     /// state.insert(Population::new());
+    ///
     /// let (rng, population) = state.get_multiple_mut::<(Random, Population)>();
+    ///
+    /// // Do something with rng and population.
     /// ```
     pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
         T::fetch(self)
