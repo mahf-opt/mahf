@@ -3,7 +3,7 @@ use crate::{
     problems::{coco_bound::CocoInstance, HasKnownTarget},
     random::Random,
     threads::SyncThreadPool,
-    tracking::Log,
+    tracking::{files, Log},
 };
 use anyhow::Context;
 use coco_rs::{Suite, SuiteName};
@@ -61,13 +61,13 @@ pub fn evaluate_suite(
             pool.enqueue(move || {
                 let result: anyhow::Result<_> = (|| {
                     let experiment_desc = problem.format_name();
-                    let log_file = data_dir.join(format!("{}.json", experiment_desc));
+                    let log_file = data_dir.join(format!("{}.msg", experiment_desc));
 
                     let state = framework::run(&problem, &configuration, Some(Random::default()));
                     let log = state.get::<Log>();
-                    serde_json::to_writer_pretty(BufWriter::new(File::create(log_file)?), log)?;
-                    let target_hit = problem.target_hit(state.best_fitness());
+                    files::write_log_file(log_file, log)?;
 
+                    let target_hit = problem.target_hit(state.best_fitness());
                     Ok(target_hit)
                 })();
 
