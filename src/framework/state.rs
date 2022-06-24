@@ -7,8 +7,7 @@ use crate::{
 };
 
 mod many;
-use many::MultiStateTuple;
-pub use many::MutState;
+pub use many::{MultiStateTuple, MutState};
 
 mod map;
 use map::AsAny;

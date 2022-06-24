@@ -3,7 +3,7 @@ use std::{any::TypeId, collections::HashSet};
 
 use crate::framework::{CustomState, State};
 
-/// Allows borrowing multiple [CustomState]'s mutable at the same time.
+/// Allows borrowing multiple [CustomState]'s mutable from [State] at the same time.
 /// It is meant to significantly simplify the definition of [Component][crate::framework::components::Component]'s
 /// with multiple [CustomState]'s that are modified.
 ///
@@ -72,6 +72,13 @@ impl<'a> MutState<'a> {
     }
 }
 
+/// Allows borrowing up to eight [CustomState]'s mutable from [State] at the same time.
+///
+/// This trait is implemented for type tuples with size up to eight.
+///
+/// # Panics
+///
+/// Panics on type duplicates in the tuple.
 pub trait MultiStateTuple<'a>: 'a {
     type References: 'a;
 
