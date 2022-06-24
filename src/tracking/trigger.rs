@@ -1,18 +1,27 @@
-use std::ops::{Deref, Sub};
-
-use crate::framework::{common_state::Iterations, components::Condition, CustomState, State};
+use crate::framework::{common_state::Iterations, CustomState, State};
 use derive_deref::Deref;
+use std::{
+    any::Any,
+    ops::{Deref, Sub},
+};
+
+/// Like [Condition](crate::framework::components::Condition) but non-serializable.
+pub trait Trigger<P>: Any + Send + Sync {
+    #[allow(unused_variables)]
+    fn initialize(&self, problem: &P, state: &mut State) {}
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
+}
 
 #[derive(serde::Serialize)]
 pub struct Iteration(u32);
 
 impl Iteration {
-    pub fn new<P>(iterations: u32) -> Box<dyn Condition<P>> {
+    pub fn new<P>(iterations: u32) -> Box<dyn Trigger<P>> {
         Box::new(Iteration(iterations))
     }
 }
 
-impl<P> Condition<P> for Iteration {
+impl<P> Trigger<P> for Iteration {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Iterations>();
     }
@@ -38,7 +47,7 @@ where
 {
     pub fn custom<P>(
         check: impl Fn(&S, &S) -> bool + Send + Sync + 'static,
-    ) -> Box<dyn Condition<P>> {
+    ) -> Box<dyn Trigger<P>> {
         Box::new(Change {
             check: Box::new(check),
         })
@@ -50,7 +59,7 @@ where
     S: CustomState + Clone + Deref,
     S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
 {
-    pub fn new<P>(threshhold: S::Target) -> Box<dyn Condition<P>> {
+    pub fn new<P>(threshhold: S::Target) -> Box<dyn Trigger<P>> {
         Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {
                 let old = old.deref();
@@ -65,7 +74,7 @@ where
     }
 }
 
-impl<S, P> Condition<P> for Change<S>
+impl<S, P> Trigger<P> for Change<S>
 where
     S: CustomState + Clone,
 {

@@ -1,16 +1,17 @@
 use crate::{
-    framework::{components::Condition, CustomState, State},
+    framework::{CustomState, State},
     problems::Problem,
     tracking::{
         function::{self, LogFn},
         log::Step,
+        trigger::Trigger,
     },
 };
 use serde::Serialize;
 
 #[derive(Default)]
 pub struct LogSet<P> {
-    pub(crate) criteria: Vec<Box<dyn Condition<P>>>,
+    pub(crate) criteria: Vec<Box<dyn Trigger<P>>>,
     pub(crate) loggers: Vec<LogFn>,
 }
 
@@ -22,7 +23,7 @@ impl<P: Problem + 'static> LogSet<P> {
         }
     }
 
-    pub fn with_trigger(mut self, trigger: Box<dyn Condition<P>>) -> Self {
+    pub fn with_trigger(mut self, trigger: Box<dyn Trigger<P>>) -> Self {
         self.criteria.push(trigger);
         self
     }
