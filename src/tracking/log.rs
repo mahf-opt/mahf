@@ -32,9 +32,13 @@ pub struct Step {
 }
 
 impl Step {
+    pub fn contains(&self, name: &str) -> bool {
+        self.entries.iter().any(|entry| entry.name == name)
+    }
+
     pub fn push(&mut self, entry: Entry) {
         debug_assert!(
-            !self.entries.iter().any(|e| e.name == entry.name),
+            !self.contains(entry.name),
             "entry with name {} already exists",
             entry.name
         );
@@ -44,9 +48,11 @@ impl Step {
 
     pub fn push_iteration(&mut self, state: &State) {
         let name = type_name::<common_state::Iterations>();
-        let value = Box::new(state.iterations());
 
-        self.push(Entry { name, value });
+        if !self.contains(name) {
+            let value = Box::new(state.iterations());
+            self.entries.insert(0, Entry { name, value });
+        }
     }
 
     pub fn entries(&self) -> &[Entry] {

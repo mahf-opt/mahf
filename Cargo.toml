@@ -9,6 +9,7 @@ members = ["param-study"]
 
 [dependencies]
 anyhow = "1.0.51"
+ciborium = "0.2.0"
 coco-rs = "0.4"
 derive_deref = "1.1.1"
 embed-doc-image = "0.1.4"
@@ -21,7 +22,6 @@ pest_consume = "1.1.1"
 pest_derive = "2.1.0"
 rand = "0.8.4"
 rand_distr = "0.4.2"
-rmp-serde = "1.1.0"
 ron = "0.7.0"
 rprompt = "1.0.5"
 ryu = "1.0.9"

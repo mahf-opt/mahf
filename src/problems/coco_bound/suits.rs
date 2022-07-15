@@ -61,7 +61,7 @@ pub fn evaluate_suite(
             pool.enqueue(move || {
                 let result: anyhow::Result<_> = (|| {
                     let experiment_desc = problem.format_name();
-                    let log_file = data_dir.join(format!("{}.msg", experiment_desc));
+                    let log_file = data_dir.join(format!("{}.log", experiment_desc));
 
                     let state = framework::run(&problem, &configuration, Some(Random::default()));
                     let log = state.get::<Log>();

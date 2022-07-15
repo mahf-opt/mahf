@@ -13,7 +13,7 @@ use crate::tracking::Log;
 
 #[derive(Default, Serialize)]
 struct CompressedLog<'a> {
-    names: HashMap<usize, &'static str>,
+    names: Vec<&'static str>,
     entries: Vec<Vec<CompressedEntry<'a>>>,
 }
 
@@ -35,9 +35,10 @@ impl<'a> From<&'a Log> for CompressedLog<'a> {
 
             for entry in step.entries() {
                 let key = *keys.entry(entry.name).or_insert_with(|| {
+                    clog.names.push(entry.name);
+                    let key = next_key;
                     next_key += 1;
-                    clog.names.insert(next_key, entry.name);
-                    next_key
+                    key
                 });
                 let value = &entry.value;
 
@@ -51,8 +52,11 @@ impl<'a> From<&'a Log> for CompressedLog<'a> {
     }
 }
 
-pub fn write_log(output: &mut impl io::Write, log: &Log) -> Result<(), rmp_serde::encode::Error> {
-    rmp_serde::encode::write(output, &CompressedLog::from(log))
+pub fn write_log(
+    output: &mut impl io::Write,
+    log: &Log,
+) -> Result<(), ciborium::ser::Error<std::io::Error>> {
+    ciborium::ser::into_writer(&CompressedLog::from(log), output)
 }
 
 pub fn write_log_file(output: impl AsRef<Path>, log: &Log) -> anyhow::Result<()> {
