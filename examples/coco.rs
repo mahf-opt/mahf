@@ -26,7 +26,7 @@ fn main() -> anyhow::Result<()> {
             .log_set(
                 LogSet::new()
                     .with_trigger(trigger::Iteration::new(50))
-                    .with_logger(tracking::function::best_individual::<CocoInstance>),
+                    .with_logger(tracking::functions::best_individual::<CocoInstance>),
             )
             .build(),
     );

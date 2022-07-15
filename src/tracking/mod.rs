@@ -1,7 +1,7 @@
 //! Tracking and logging.
 
 pub mod files;
-pub mod function;
+pub mod functions;
 pub mod trigger;
 
 pub mod log;

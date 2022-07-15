@@ -2,7 +2,7 @@ use crate::{
     framework::{CustomState, State},
     problems::Problem,
     tracking::{
-        function::{self, LogFn},
+        functions::{self, LogFn},
         log::Step,
         trigger::Trigger,
     },
@@ -34,7 +34,7 @@ impl<P: Problem + 'static> LogSet<P> {
     }
 
     pub fn with_auto_logger<T: CustomState + Clone + Serialize>(self) -> Self {
-        self.with_logger(function::auto::<T>)
+        self.with_logger(functions::auto::<T>)
     }
 
     pub(crate) fn execute(&self, problem: &P, state: &mut State, step: &mut Step) {
