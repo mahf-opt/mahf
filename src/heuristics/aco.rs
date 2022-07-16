@@ -130,6 +130,7 @@ mod ant_ops {
     use crate::{
         framework::{components::*, Fitness, Individual, State},
         problems::tsp::{Route, SymmetricTsp},
+        random::Random,
     };
 
     use super::PheromoneMatrix;
@@ -165,6 +166,7 @@ mod ant_ops {
         }
 
         fn execute(&self, problem: &SymmetricTsp, state: &mut State) {
+            let (pm, rng) = state.get_multiple_mut::<(PheromoneMatrix, Random)>();
             let mut routes = Vec::new();
 
             // Greedy route
@@ -174,9 +176,7 @@ mod ant_ops {
                 route.push(0);
                 while !remaining.is_empty() {
                     let last = *route.last().unwrap();
-                    let pheromones = remaining
-                        .iter()
-                        .map(|&r| state.get_mut::<PheromoneMatrix>()[last][r]);
+                    let pheromones = remaining.iter().map(|&r| pm[last][r]);
                     let next_index = pheromones
                         .enumerate()
                         .max_by_key(|(_, f)| Fitness::try_from(*f).unwrap())
@@ -198,15 +198,13 @@ mod ant_ops {
                     let distances = remaining
                         .iter()
                         .map(|&r| problem.distance((last, r)) as f64);
-                    let pheromones = remaining
-                        .iter()
-                        .map(|&r| state.get_mut::<PheromoneMatrix>()[last][r]);
+                    let pheromones = remaining.iter().map(|&r| pm[last][r]);
                     let weights = pheromones.zip(distances).map(|(m, d)| {
                         // TODO: This should not be zero.
                         m.powf(self.alpha) * (1.0 / d).powf(self.beta) + 1e-15
                     });
                     let dist = WeightedIndex::new(weights).unwrap();
-                    let next_index = dist.sample(state.random_mut());
+                    let next_index = dist.sample(rng);
                     let next = remaining.remove(next_index);
                     route.push(next);
                 }
@@ -240,8 +238,9 @@ mod ant_ops {
         }
 
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
-            let population = state.population_stack_mut().pop();
-            let pm = state.get_mut::<PheromoneMatrix>();
+            let mut mut_state = state.get_states_mut();
+            let pm = mut_state.get_mut::<PheromoneMatrix>();
+            let population = mut_state.population_stack().current();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
@@ -256,8 +255,6 @@ mod ant_ops {
                     pm[b][a] += delta;
                 }
             }
-
-            state.population_stack_mut().push(population);
         }
     }
 

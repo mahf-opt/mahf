@@ -1,8 +1,9 @@
-use crate::framework::CustomState;
 use std::{
     any::{Any, TypeId},
     collections::BTreeMap,
 };
+
+use crate::framework::CustomState;
 
 /// Utility trait to upcast [CustomState](CustomState) to [Any].
 pub trait AsAny: Any {

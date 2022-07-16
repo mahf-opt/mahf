@@ -14,13 +14,17 @@ pub fn default(state: &mut State) {
 #[derive(Deref, DerefMut)]
 pub struct BestIndividual(pub Option<Individual>);
 impl BestIndividual {
-    pub fn replace_if_better(&mut self, candidate: &Individual) {
+    pub fn replace_if_better(&mut self, candidate: &Individual) -> bool {
         if let Some(individual) = &mut self.0 {
             if candidate.fitness() < individual.fitness() {
                 *individual = candidate.clone();
+                true
+            } else {
+                false
             }
         } else {
             self.0 = Some(candidate.clone());
+            true
         }
     }
 }

@@ -14,7 +14,7 @@ pub use fitness::{Fitness, IllegalFitness};
 
 mod state;
 pub use state::common as common_state;
-pub use state::{CustomState, State};
+pub use state::{CustomState, MultiStateTuple, MutState, State};
 
 mod individual;
 pub use individual::Individual;
