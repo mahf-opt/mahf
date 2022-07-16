@@ -37,30 +37,6 @@ where
     }
 }
 
-#[derive(Serialize)]
-#[serde(bound = "")]
-pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
-impl<P: Problem + 'static> And<P> {
-    pub fn new(terminators: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
-        Box::new(Self(terminators))
-    }
-}
-impl<P> Condition<P> for And<P>
-where
-    P: Problem + 'static,
-{
-    fn initialize(&self, problem: &P, state: &mut State) {
-        for condition in &self.0 {
-            condition.initialize(problem, state);
-        }
-    }
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        self.0
-            .iter()
-            .all(|condition| condition.evaluate(problem, state))
-    }
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct TargetHit;
 impl TargetHit {
