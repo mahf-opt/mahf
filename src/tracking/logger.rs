@@ -7,6 +7,12 @@ use crate::{
 };
 use serde::Serialize;
 
+/// A collection of [LogSet]s.
+///
+/// Can be created using [Logger::builder].
+///
+/// Implements [Component] and should be added to the end
+/// of an algorithms main loop.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Logger<P: Problem> {
@@ -15,10 +21,14 @@ pub struct Logger<P: Problem> {
 }
 
 impl<P: Problem + 'static> Logger<P> {
+    /// Creates a new logger.
+    ///
+    /// Can be finalized using [Logger::build].
     pub fn builder() -> Self {
         Logger { sets: Vec::new() }
     }
 
+    /// Log state `S` when `S` changes by `delta` or more.
     pub fn log_on_change<S>(self, delta: S::Target) -> Self
     where
         S: CustomState + Clone + Serialize + Deref,
@@ -31,25 +41,34 @@ impl<P: Problem + 'static> Logger<P> {
         )
     }
 
+    /// Add a custom [LogSet].
     pub fn log_set(mut self, set: LogSet<P>) -> Self {
         self.sets.push(set);
         self
     }
 
+    /// Add the most common sets.
+    ///
+    /// Currently encompases:
+    /// - [common_state::Evaluations]
+    /// - [common_state::Progress]
+    /// - [common_state::BestFitness]
     pub fn log_common_sets(self) -> Self {
         self.log_set(
             LogSet::new()
                 .with_trigger(trigger::Iteration::new(10))
                 .with_auto_logger::<common_state::Evaluations>()
-                .with_auto_logger::<common_state::BestFitness>()
-                .with_auto_logger::<common_state::Progress>(),
+                .with_auto_logger::<common_state::Progress>()
+                .with_auto_logger::<common_state::BestFitness>(),
         )
     }
 
+    /// Turns the logger into a [Component].
     pub fn build(self) -> Box<dyn Component<P>> {
         Box::new(self)
     }
 
+    /// Creates an empty [Logger] [Component].
     pub fn default() -> Box<dyn Component<P>> {
         Logger::builder().build()
     }

@@ -6,8 +6,10 @@ use crate::{
 use serde::Serialize;
 use std::{any::type_name, ops::Deref};
 
+/// A function to turn some state into an [Entry].
 pub type LogFn = fn(&State) -> Entry;
 
+/// A function to log anything that implements [Clone] + [Serialize]
 pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
     debug_assert!(state.has::<T>(), "missing state: {}", type_name::<T>());
 
@@ -17,6 +19,9 @@ pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
     Entry { name, value }
 }
 
+/// A function which logs the best individual.
+///
+/// Requires the [Problem::Encoding] to implement [Clone] and [Serialize].
 pub fn best_individual<P>(state: &State) -> Entry
 where
     P: Problem,

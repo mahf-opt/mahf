@@ -12,6 +12,7 @@ pub trait Trigger<P>: Any + Send + Sync {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool;
 }
 
+/// Triggers every `n` iterations.
 #[derive(serde::Serialize)]
 pub struct Iteration(u32);
 
@@ -35,6 +36,7 @@ impl<P> Trigger<P> for Iteration {
 struct Previous<S>(S);
 impl<S: 'static> CustomState for Previous<S> {}
 
+/// Triggers when `S` changes base on a predicate.
 #[derive(serde::Serialize)]
 pub struct Change<S> {
     #[serde(skip)]
@@ -45,6 +47,9 @@ impl<S> Change<S>
 where
     S: CustomState + Clone,
 {
+    /// Create a new [Change] [Trigger] with a custom predicate.
+    ///
+    /// Will trigger when the predicate evaluates to `true`.
     pub fn custom<P>(
         check: impl Fn(&S, &S) -> bool + Send + Sync + 'static,
     ) -> Box<dyn Trigger<P>> {
@@ -59,6 +64,9 @@ where
     S: CustomState + Clone + Deref,
     S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
 {
+    /// Create a new [Change] [Trigger] based on a threshhold.
+    ///
+    /// Requires `S` to dereference to something that implements [Sub] and [Ord].
     pub fn new<P>(threshhold: S::Target) -> Box<dyn Trigger<P>> {
         Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {

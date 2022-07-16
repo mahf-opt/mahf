@@ -52,6 +52,9 @@ impl<'a> From<&'a Log> for CompressedLog<'a> {
     }
 }
 
+/// Write the [Log] to the output.
+///
+/// When writing to files, [write_log_file] is more convenient.
 pub fn write_log(
     output: &mut impl io::Write,
     log: &Log,
@@ -59,6 +62,7 @@ pub fn write_log(
     ciborium::ser::into_writer(&CompressedLog::from(log), output)
 }
 
+/// Write the [Log] to a file.
 pub fn write_log_file(output: impl AsRef<Path>, log: &Log) -> anyhow::Result<()> {
     let file = File::create(output.as_ref()).context("failed to create log file")?;
     let writer = &mut BufWriter::new(file);

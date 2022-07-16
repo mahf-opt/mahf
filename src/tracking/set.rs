@@ -9,6 +9,7 @@ use crate::{
 };
 use serde::Serialize;
 
+/// A combination of [Trigger] and [LogFn].
 #[derive(Default)]
 pub struct LogSet<P> {
     pub(crate) criteria: Vec<Box<dyn Trigger<P>>>,
@@ -16,6 +17,7 @@ pub struct LogSet<P> {
 }
 
 impl<P: Problem + 'static> LogSet<P> {
+    /// Creates a new, empty instance.
     pub fn new() -> Self {
         Self {
             criteria: Vec::new(),
@@ -23,16 +25,25 @@ impl<P: Problem + 'static> LogSet<P> {
         }
     }
 
+    /// Adds a [Trigger].
+    ///
+    /// The logset will be executed whenever one of the [Trigger]s fires.
     pub fn with_trigger(mut self, trigger: Box<dyn Trigger<P>>) -> Self {
         self.criteria.push(trigger);
         self
     }
 
+    /// Adds a [LogFn].
+    ///
+    /// When a trigger fires the [LogFn] will be called.
     pub fn with_logger(mut self, logger: LogFn) -> Self {
         self.loggers.push(logger);
         self
     }
 
+    /// Adds a generated [LogFn] for the [CustomState] `T`.
+    ///
+    /// Works for any `T` implementing [CustomState] and [Clone] + [Serialize].
     pub fn with_auto_logger<T: CustomState + Clone + Serialize>(self) -> Self {
         self.with_logger(functions::auto::<T>)
     }
