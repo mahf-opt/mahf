@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use crate::{
     framework::{Fitness, Individual},
     random,
-    tracking::log::Logger,
+    tracking::Log,
 };
 
 mod many;
@@ -16,11 +16,7 @@ pub(crate) use map::StateMap;
 pub mod common;
 
 /// Makes custom state trackable.
-pub trait CustomState: AsAny {
-    fn auto_logger(&self) -> Option<Logger> {
-        None
-    }
-}
+pub trait CustomState: AsAny {}
 
 #[derive(Default)]
 pub struct State {
@@ -70,6 +66,7 @@ impl State {
         );
     }
 
+    #[track_caller]
     pub fn get<T: CustomState>(&self) -> &T {
         if self.map.has::<T>() {
             self.map.get::<T>()
@@ -82,6 +79,7 @@ impl State {
         self.map.get_or_insert_default()
     }
 
+    #[track_caller]
     pub fn get_value<T>(&self) -> T::Target
     where
         T: CustomState + Deref,
@@ -94,6 +92,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
         if self.map.has::<T>() {
             self.map.get_mut::<T>()
@@ -137,6 +136,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn get_value_mut<T>(&mut self) -> &mut T::Target
     where
         T: CustomState + DerefMut,
@@ -170,6 +170,7 @@ impl State {
     ///
     /// // Do something with rng and population.
     /// ```
+    #[track_caller]
     pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
         T::fetch(self)
     }
@@ -223,6 +224,11 @@ macro_rules! impl_convenience_functions {
         /// Returns mutable [Random](random::Random) state.
         pub fn random_mut(&mut self) -> &$l mut random::Random {
             self.get_mut::<random::Random>()
+        }
+
+        /// Returns the [Log].
+        pub fn log(self: $t) -> &$l Log {
+            self.get::<Log>()
         }
     };
 }

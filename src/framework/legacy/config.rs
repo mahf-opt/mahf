@@ -5,6 +5,7 @@ use crate::{
     },
     operators::*,
     problems::Problem,
+    tracking::Logger,
 };
 use serde::Serialize;
 
@@ -68,6 +69,10 @@ pub struct Configuration<P: Problem + 'static> {
     /// Decides when to terminate the process.
     #[serde(with = "erased_serde")]
     pub termination: Box<dyn Condition<P>>,
+
+    /// Logs the heuristic state.
+    #[serde(with = "erased_serde")]
+    pub logger: Box<dyn Component<P>>,
 }
 
 impl<P: Problem> Default for Configuration<P> {
@@ -82,6 +87,7 @@ impl<P: Problem> Default for Configuration<P> {
             archiving: archive::None::new(),
             post_replacement: postprocess::None::new(),
             termination: termination::Undefined::new(),
+            logger: Logger::builder().build(),
         }
     }
 }
@@ -102,6 +108,7 @@ impl<P: Problem> From<Configuration<P>> for components::Configuration<P> {
                         cfg.replacement,
                         cfg.archiving,
                         cfg.post_replacement,
+                        cfg.logger,
                     ],
                 ),
             ],

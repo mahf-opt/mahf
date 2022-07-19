@@ -8,7 +8,7 @@ use crate::{
         Fitness, State,
     },
     operators::custom_state::FitnessImprovementState,
-    problems::{HasKnownOptimum, Problem},
+    problems::{HasKnownOptimum, HasKnownTarget, Problem},
 };
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Undefined;
 impl Undefined {
-    pub fn new<P: Problem>() -> Box<dyn Condition<P>>
+    pub fn new<P>() -> Box<dyn Condition<P>>
     where
         P: Problem,
     {
@@ -34,6 +34,25 @@ where
             "Heuristic with no termination criteria was run. ",
             "Please specify a termination criteria."
         ));
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TargetHit;
+impl TargetHit {
+    pub fn new<P>() -> Box<dyn Condition<P>>
+    where
+        P: Problem + HasKnownTarget,
+    {
+        Box::new(Terminator(Self))
+    }
+}
+impl<P> Termination<P> for TargetHit
+where
+    P: Problem + HasKnownTarget,
+{
+    fn terminate(&self, state: &mut State, problem: &P) -> bool {
+        problem.target_hit(state.best_fitness())
     }
 }
 

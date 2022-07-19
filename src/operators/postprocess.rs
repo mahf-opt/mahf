@@ -3,7 +3,7 @@
 
 use crate::{
     framework::{components::*, legacy::components::*, Individual, State},
-    operators::custom_state::{DiversityState, PopulationState},
+    operators::custom_state::DiversityState,
     problems::{Problem, VectorProblem},
     random::Random,
 };
@@ -40,8 +40,6 @@ where
     ) {
     }
 }
-
-// General post-processes //
 
 /// Postprocess procedure for tracking population diversity
 ///
@@ -159,45 +157,5 @@ where
 
         // normalize by division with maximum diversity
         diversity_state.diversity /= diversity_state.max_div;
-    }
-}
-
-/// Postprocess procedure for tracking all individuals' solutions
-///
-/// Currently only for VectorProblem
-//TODO Independent of problem type
-#[derive(Debug, serde::Serialize)]
-pub struct FloatPopulation;
-
-impl<P> Postprocess<P> for FloatPopulation
-where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
-{
-    fn initialize(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &[Individual],
-    ) {
-        state.insert(PopulationState {
-            current_pop: vec![],
-        });
-    }
-
-    fn postprocess(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let population_state = state.get_mut::<PopulationState>();
-
-        population_state.current_pop = population
-            .iter()
-            .map(|i| i.solution::<Vec<f64>>())
-            .cloned()
-            .collect();
     }
 }

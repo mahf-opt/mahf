@@ -124,7 +124,6 @@ impl std::ops::MulAssign<f64> for PheromoneMatrix {
     }
 }
 
-#[allow(clippy::new_ret_no_self)]
 mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 

@@ -6,7 +6,7 @@ fn main() -> anyhow::Result<()> {
     let tau0 = 1. / problem.best_fitness().unwrap();
     let config = aco::min_max_ant_system(20, 1., 1., tau0, 0.1, 1., 0.1, 500);
 
-    let state = framework::run(&problem, &config, None, None);
+    let state = framework::run(&problem, &config, None);
 
     println!(
         "Found Solution: {:?}",

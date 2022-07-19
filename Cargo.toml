@@ -9,6 +9,7 @@ members = ["param-study"]
 
 [dependencies]
 anyhow = "1.0.51"
+ciborium = "0.2.0"
 coco-rs = "0.4"
 derive_deref = "1.1.1"
 embed-doc-image = "0.1.4"

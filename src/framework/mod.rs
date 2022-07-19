@@ -19,22 +19,19 @@ pub use state::{CustomState, MultiStateTuple, MutState, State};
 mod individual;
 pub use individual::Individual;
 
-use crate::{problems::Problem, random::Random, tracking::Log};
+use crate::tracking::Log;
+use crate::{problems::Problem, random::Random};
 
-pub fn run<P: Problem>(
+pub fn run<P: Problem + 'static>(
     problem: &P,
     config: &Configuration<P>,
-    log: Option<Log>,
     rng: Option<Random>,
 ) -> State {
     let mut state = State::new_root();
 
+    state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
     state.insert(common_state::Population::new());
-
-    if let Some(log) = log {
-        state.insert(log);
-    }
 
     config.initialize(problem, &mut state);
     config.execute(problem, &mut state);
