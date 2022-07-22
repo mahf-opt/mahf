@@ -2,6 +2,7 @@
 #![doc = include_str!("../../docs/heuristic.md")]
 
 pub mod components;
+pub mod conditions;
 pub mod state;
 
 mod configuration;
