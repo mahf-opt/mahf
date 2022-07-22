@@ -13,6 +13,7 @@ pub mod tracking;
 pub mod utils;
 
 // re-exports
+pub use derive_deref;
 pub use float_eq;
 pub use rand;
 pub use rand_distr;
