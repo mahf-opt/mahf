@@ -29,7 +29,7 @@ trait_set! {
 /// Most of the time, execution should be multi threaded and having
 /// components implement [Send] makes this much easier.
 ///
-pub trait Component<P>: AnyComponent {
+pub trait Component<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
     fn initialize(&self, problem: &P, state: &mut State) {}
     fn execute(&self, problem: &P, state: &mut State);
@@ -52,10 +52,7 @@ pub struct Scope<P: Problem> {
     init: fn(&mut State),
 }
 
-impl<P> Component<P> for Scope<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Scope<P> {
     fn execute(&self, problem: &P, state: &mut State) {
         state.with_substate(|state| {
             (self.init)(state);
@@ -65,7 +62,7 @@ where
     }
 }
 
-impl<P: Problem + 'static> Scope<P> {
+impl<P: Problem> Scope<P> {
     pub fn new(body: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
         Self::new_with(|_| {}, body)
     }
@@ -84,10 +81,7 @@ impl<P: Problem + 'static> Scope<P> {
 #[serde(transparent)]
 pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
-impl<P> Component<P> for Block<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Block<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         for component in &self.0 {
             component.initialize(problem, state);
@@ -101,7 +95,7 @@ where
     }
 }
 
-impl<P: Problem + 'static> Block<P> {
+impl<P: Problem> Block<P> {
     pub fn new(components: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
         Box::new(Block(components))
     }
@@ -116,10 +110,7 @@ pub struct Loop<P: Problem> {
     body: Box<dyn Component<P>>,
 }
 
-impl<P> Component<P> for Loop<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Loop<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         state.insert(common::Iterations(0));
 
@@ -136,7 +127,7 @@ where
     }
 }
 
-impl<P: Problem + 'static> Loop<P> {
+impl<P: Problem> Loop<P> {
     pub fn new(
         condition: Box<dyn Condition<P>>,
         body: Vec<Box<dyn Component<P>>>,
@@ -154,10 +145,7 @@ pub struct Branch<P: Problem> {
     else_body: Option<Box<dyn Component<P>>>,
 }
 
-impl<P> Component<P> for Branch<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Branch<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         self.condition.initialize(problem, state);
         self.if_body.initialize(problem, state);

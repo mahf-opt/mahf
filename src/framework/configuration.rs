@@ -13,8 +13,12 @@ impl<P: Problem + 'static> Default for ConfigurationBuilder<P> {
     }
 }
 
-impl<P: Problem + 'static> ConfigurationBuilder<P> {
-    pub fn new() -> Self {
+pub struct ConfigurationBuilder<P: Problem> {
+    components: Vec<Box<dyn Component<P>>>,
+}
+
+impl<P: Problem> ConfigurationBuilder<P> {
+    fn new() -> Self {
         Self {
             components: Vec::new(),
         }

@@ -19,7 +19,7 @@ pub use random::{Random, RandomConfig};
 use crate::problems::Problem;
 use crate::tracking::Log;
 
-pub fn run<P: Problem + 'static>(
+pub fn run<P: Problem>(
     problem: &P,
     config: &Configuration<P>,
     rng: Option<Random>,
