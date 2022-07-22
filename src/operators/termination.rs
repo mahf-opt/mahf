@@ -4,7 +4,6 @@ use crate::{
     framework::{
         common_state::{BestFitness, Evaluations, Iterations, Progress},
         components::Condition,
-        legacy::components::*,
         Fitness, State,
     },
     operators::custom_state::FitnessImprovementState,
@@ -22,14 +21,14 @@ impl Undefined {
     where
         P: Problem,
     {
-        Box::new(Terminator(Self))
+        Box::new(Self)
     }
 }
-impl<P> Termination<P> for Undefined
+impl<P> Condition<P> for Undefined
 where
     P: Problem,
 {
-    fn terminate(&self, _state: &mut State, _problem: &P) -> bool {
+    fn evaluate(&self, _problem: &P, _state: &mut State) -> bool {
         unimplemented!(concat!(
             "Heuristic with no termination criteria was run. ",
             "Please specify a termination criteria."
@@ -44,15 +43,15 @@ impl TargetHit {
     where
         P: Problem + HasKnownTarget,
     {
-        Box::new(Terminator(Self))
+        Box::new(Self)
     }
 }
-impl<P> Termination<P> for TargetHit
+impl<P> Condition<P> for TargetHit
 where
     P: Problem + HasKnownTarget,
 {
-    fn terminate(&self, state: &mut State, problem: &P) -> bool {
-        problem.target_hit(state.best_fitness())
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        !problem.target_hit(state.best_fitness())
     }
 }
 
