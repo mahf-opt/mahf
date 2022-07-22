@@ -1,6 +1,6 @@
 //! Custom states required for specific metaheuristics and evaluation procedures
 
-use crate::framework::{CustomState, Fitness, Individual};
+use crate::framework::{state::CustomState, Fitness, Individual};
 
 // Custom States for Specific Metaheuristics //
 

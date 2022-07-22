@@ -5,7 +5,10 @@ use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{common_state::Progress, components::*, State},
+    framework::{
+        components::*,
+        state::{common::Progress, State},
+    },
     problems::{LimitedVectorProblem, Problem},
 };
 

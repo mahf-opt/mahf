@@ -1,4 +1,4 @@
-use crate::framework::{common_state, CustomState, State};
+use crate::framework::state::{common, CustomState, State};
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
 use std::any::type_name;
@@ -66,7 +66,7 @@ impl Step {
     ///
     /// Will also ensure that the iteration is at index 0.
     pub(crate) fn push_iteration(&mut self, state: &State) {
-        let name = type_name::<common_state::Iterations>();
+        let name = type_name::<common::Iterations>();
 
         if !self.contains(name) {
             let value = Box::new(state.iterations());

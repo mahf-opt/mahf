@@ -2,16 +2,13 @@
 #![doc = include_str!("../../docs/heuristic.md")]
 
 pub mod components;
+pub mod state;
 
 mod configuration;
 pub use configuration::{Configuration, ConfigurationBuilder};
 
 mod fitness;
 pub use fitness::{Fitness, IllegalFitness};
-
-mod state;
-pub use state::common as common_state;
-pub use state::{CustomState, MultiStateTuple, MutState, State};
 
 mod individual;
 pub use individual::Individual;
@@ -26,12 +23,12 @@ pub fn run<P: Problem + 'static>(
     problem: &P,
     config: &Configuration<P>,
     rng: Option<Random>,
-) -> State {
-    let mut state = State::new_root();
+) -> state::State {
+    let mut state = state::State::new_root();
 
     state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
-    state.insert(common_state::Population::new());
+    state.insert(state::common::Population::new());
 
     config.initialize(problem, &mut state);
     config.execute(problem, &mut state);

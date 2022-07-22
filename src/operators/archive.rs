@@ -1,7 +1,7 @@
 //! Archiving methods
 
 use crate::{
-    framework::{components::*, State},
+    framework::{components::*, state::State},
     operators::custom_state::ElitistArchiveState,
     problems::Problem,
 };

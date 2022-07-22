@@ -6,7 +6,7 @@ use rand::{seq::IteratorRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, State},
+    framework::{components::*, state::State},
     problems::Problem,
 };
 

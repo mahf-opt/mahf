@@ -1,4 +1,4 @@
-use crate::framework::{common_state::Iterations, CustomState, State};
+use crate::framework::state::{common::Iterations, CustomState, State};
 use derive_deref::Deref;
 use std::{
     any::Any,

@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder, CustomState},
+    framework::{components, state::CustomState, Configuration, ConfigurationBuilder},
     operators::*,
     problems::tsp::SymmetricTsp,
 };
@@ -128,7 +128,7 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, Fitness, Individual, Random, State},
+        framework::{components::*, state::State, Fitness, Individual, Random},
         problems::tsp::{Route, SymmetricTsp},
     };
 

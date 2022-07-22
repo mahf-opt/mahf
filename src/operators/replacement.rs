@@ -1,8 +1,11 @@
 //! Replacement methods
 
-use crate::framework::common_state::Population;
 use crate::{
-    framework::{components::*, Individual, State},
+    framework::{
+        components::*,
+        state::{common::Population, State},
+        Individual,
+    },
     problems::Problem,
 };
 use rand::seq::SliceRandom;
@@ -87,7 +90,7 @@ impl Replacement for MuPlusLambda {
 
 #[cfg(test)]
 mod mupluslambda {
-    use crate::framework::State;
+    use crate::framework::state::State;
     use crate::operators::testing::{collect_population_fitness, new_test_population};
 
     use super::*;

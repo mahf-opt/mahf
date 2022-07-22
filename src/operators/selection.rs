@@ -8,7 +8,7 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Fitness, Individual, State},
+    framework::{components::*, state::State, Fitness, Individual},
     problems::Problem,
 };
 

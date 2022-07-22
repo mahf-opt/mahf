@@ -1,7 +1,10 @@
 //! Framework components.
 
 use crate::{
-    framework::{common_state, Fitness, State},
+    framework::{
+        state::{common, State},
+        Fitness,
+    },
     problems::Problem,
 };
 use serde::Serialize;
@@ -118,7 +121,7 @@ where
     P: Problem + 'static,
 {
     fn initialize(&self, problem: &P, state: &mut State) {
-        state.insert(common_state::Iterations(0));
+        state.insert(common::Iterations(0));
 
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
@@ -128,7 +131,7 @@ where
         self.condition.initialize(problem, state);
         while self.condition.evaluate(problem, state) {
             self.body.execute(problem, state);
-            *state.get_value_mut::<common_state::Iterations>() += 1;
+            *state.get_value_mut::<common::Iterations>() += 1;
         }
     }
 }
@@ -211,10 +214,10 @@ impl SimpleEvaluator {
 
 impl<P: Problem> Component<P> for SimpleEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<common_state::Population>();
-        state.insert(common_state::Evaluations(0));
-        state.insert(common_state::BestFitness(Fitness::default()));
-        state.insert(common_state::BestIndividual(None));
+        state.require::<common::Population>();
+        state.insert(common::Evaluations(0));
+        state.insert(common::BestFitness(Fitness::default()));
+        state.insert(common::BestIndividual(None));
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
@@ -237,15 +240,14 @@ impl<P: Problem> Component<P> for SimpleEvaluator {
         let best_individual = population.best();
 
         if mut_state
-            .get_mut::<common_state::BestIndividual>()
+            .get_mut::<common::BestIndividual>()
             .replace_if_better(best_individual)
         {
-            mut_state.set_value::<common_state::BestFitness>(best_individual.fitness());
+            mut_state.set_value::<common::BestFitness>(best_individual.fitness());
         }
 
         // Update evaluations
-        *mut_state.get_value_mut::<common_state::Evaluations>() +=
-            population.current().len() as u32;
+        *mut_state.get_value_mut::<common::Evaluations>() += population.current().len() as u32;
     }
 }
 

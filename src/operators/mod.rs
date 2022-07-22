@@ -5,7 +5,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{components::Component, State},
+    framework::{components::Component, state::State},
     problems::Problem,
 };
 

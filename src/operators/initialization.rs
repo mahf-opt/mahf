@@ -5,7 +5,7 @@ use rand::{distributions::uniform::SampleUniform, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Individual, Random, State},
+    framework::{components::*, state::State, Individual, Random},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
 

@@ -1,5 +1,5 @@
 use crate::{
-    framework::{common_state, CustomState, State},
+    framework::state::{common, CustomState, State},
     problems::Problem,
     tracking::log::Entry,
 };
@@ -28,12 +28,12 @@ where
     P::Encoding: Clone + Serialize + Sized + 'static,
 {
     debug_assert!(
-        state.has::<common_state::BestIndividual>(),
+        state.has::<common::BestIndividual>(),
         "missing state: {}",
-        type_name::<common_state::BestIndividual>()
+        type_name::<common::BestIndividual>()
     );
 
-    let instance = state.get::<common_state::BestIndividual>();
+    let instance = state.get::<common::BestIndividual>();
     let value = Box::new(if let Some(instance) = instance.deref() {
         let individual = instance.solution::<P::Encoding>().clone();
         Some(individual)
@@ -41,6 +41,6 @@ where
         None
     });
 
-    let name = std::any::type_name::<common_state::BestIndividual>();
+    let name = std::any::type_name::<common::BestIndividual>();
     Entry { name, value }
 }

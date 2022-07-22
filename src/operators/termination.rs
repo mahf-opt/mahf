@@ -2,9 +2,12 @@
 
 use crate::{
     framework::{
-        common_state::{BestFitness, Evaluations, Iterations, Progress},
         components::Condition,
-        Fitness, State,
+        state::{
+            common::{BestFitness, Evaluations, Iterations, Progress},
+            State,
+        },
+        Fitness,
     },
     operators::custom_state::FitnessImprovementState,
     problems::{HasKnownOptimum, HasKnownTarget, Problem},

@@ -37,7 +37,7 @@ where
 #[allow(clippy::new_ret_no_self)]
 mod pso_ops {
     use crate::{
-        framework::{components::*, Individual, State},
+        framework::{components::*, state::State, Individual},
         operators::custom_state::PsoState,
         problems::{LimitedVectorProblem, Problem},
     };
