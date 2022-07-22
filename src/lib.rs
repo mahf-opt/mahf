@@ -9,10 +9,9 @@ pub mod framework;
 pub mod heuristics;
 pub mod operators;
 pub mod problems;
-pub mod prompt;
 pub mod random;
-pub mod threads;
 pub mod tracking;
+pub mod utils;
 
 // re-exports
 pub use float_eq;

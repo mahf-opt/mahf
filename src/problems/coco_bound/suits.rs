@@ -2,8 +2,8 @@ use crate::{
     framework::{self, components::Configuration},
     problems::{coco_bound::CocoInstance, HasKnownTarget},
     random::Random,
-    threads::SyncThreadPool,
     tracking::{files, Log},
+    utils::threads::SyncThreadPool,
 };
 use anyhow::Context;
 use coco_rs::{Suite, SuiteName};
