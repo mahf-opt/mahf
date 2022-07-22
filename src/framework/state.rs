@@ -108,7 +108,7 @@ impl State {
     /// Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{State, common_state::Population}, random::Random};
+    /// use mahf::framework::{state::{State, common::Population}, Random};
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
     /// state.insert(Population::new());
@@ -160,7 +160,7 @@ impl State {
     ///  Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{State, common_state::Population}, random::Random};
+    /// use mahf::framework::{state::{State, common::Population}, Random};
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
     /// state.insert(Population::new());
