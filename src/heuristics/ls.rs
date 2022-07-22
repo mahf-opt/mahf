@@ -3,7 +3,7 @@
 use crate::{
     framework::{
         components::{self, Component},
-        Configuration, ConfigurationBuilder,
+        Configuration,
     },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -18,7 +18,7 @@ pub fn local_search<P>(
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -42,7 +42,7 @@ pub fn local_permutation_search<P>(
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomPermutation::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),

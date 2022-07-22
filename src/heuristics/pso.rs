@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder},
+    framework::{components, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem},
 };
@@ -17,7 +17,7 @@ pub fn pso<P>(
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
         .do_(pso_ops::PsoStateInitialization::new(v_max))
         .do_(components::SimpleEvaluator::new())

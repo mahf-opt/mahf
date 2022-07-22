@@ -3,7 +3,7 @@
 use crate::{
     framework::{
         components::{self, Component, Condition},
-        Configuration, ConfigurationBuilder,
+        Configuration,
     },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -41,7 +41,7 @@ where
     assert!(params.min_number_of_seeds <= params.max_number_of_seeds);
     assert!(params.final_deviation <= params.initial_deviation);
 
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))

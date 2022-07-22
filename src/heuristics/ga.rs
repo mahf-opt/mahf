@@ -1,7 +1,7 @@
 //! Genetic Algorithm
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder},
+    framework::{components, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -14,7 +14,7 @@ pub fn ga<P>(population_size: u32, deviation: f64, pc: f64, max_iterations: u32)
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
         .do_(components::SimpleEvaluator::new())
         .while_(

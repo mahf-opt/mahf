@@ -24,14 +24,15 @@ pub fn run<P: Problem>(
     config: &Configuration<P>,
     rng: Option<Random>,
 ) -> state::State {
+    let heuristic = config.heuristic();
     let mut state = state::State::new_root();
 
     state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
     state.insert(state::common::Population::new());
 
-    config.initialize(problem, &mut state);
-    config.execute(problem, &mut state);
+    heuristic.initialize(problem, &mut state);
+    heuristic.execute(problem, &mut state);
 
     state
 }

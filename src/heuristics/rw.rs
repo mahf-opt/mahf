@@ -3,7 +3,7 @@
 use crate::{
     framework::{
         components::{self, Component},
-        Configuration, ConfigurationBuilder,
+        Configuration,
     },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -18,7 +18,7 @@ pub fn random_walk<P>(max_iterations: u32, mutation: Box<dyn Component<P>>) -> C
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(generation::RandomSpread::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -47,7 +47,7 @@ pub fn random_permutation_walk<P>(
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),

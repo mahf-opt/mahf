@@ -39,7 +39,7 @@ pub fn evaluate_suite(
         BufWriter::new(
             File::create(config_log_file).context("failed to create configuration file")?,
         ),
-        &configuration,
+        configuration.heuristic(),
         ron::ser::PrettyConfig::default().struct_names(true),
     )
     .context("failed to serialize configuration")?;

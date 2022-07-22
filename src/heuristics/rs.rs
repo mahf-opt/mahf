@@ -1,7 +1,7 @@
 //! Random Search
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder},
+    framework::{components, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -11,7 +11,7 @@ pub fn random_search<P>(max_iterations: u32) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(generation::RandomSpread::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -30,7 +30,7 @@ pub fn random_permutation_search<P>(max_iterations: u32) -> Configuration<P>
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),
