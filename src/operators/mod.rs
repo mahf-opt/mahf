@@ -11,9 +11,9 @@ use crate::{
 
 pub mod archive;
 pub mod custom_state;
+pub mod diversity;
 pub mod generation;
 pub mod initialization;
-pub mod postprocess;
 pub mod replacement;
 pub mod selection;
 pub mod termination;
