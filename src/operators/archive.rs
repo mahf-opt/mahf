@@ -1,35 +1,11 @@
 //! Archiving methods
 
 use crate::{
-    framework::{components::*, legacy::components::*, Individual, State},
+    framework::{components::*, State},
     operators::custom_state::ElitistArchiveState,
     problems::Problem,
-    random::Random,
 };
 use serde::{Deserialize, Serialize};
-
-/// Do not use archive
-#[derive(Serialize, Deserialize)]
-pub struct None;
-impl None {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
-        Box::new(Archiver(Self))
-    }
-}
-impl<P> Archiving<P> for None
-where
-    P: Problem,
-{
-    fn archive(
-        &self,
-        _state: &mut State,
-        _rng: &mut Random,
-        _problem: &P,
-        _population: &mut Vec<Individual>,
-        _offspring: &mut Vec<Individual>,
-    ) {
-    }
-}
 
 /// Updates the [ElitistArchiveState] with the current population.
 #[derive(Serialize, Deserialize)]

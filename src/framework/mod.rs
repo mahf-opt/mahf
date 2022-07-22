@@ -1,8 +1,6 @@
 #![doc = embed_doc_image::embed_image!("module_system", "docs/MAHF-module-system.svg")]
 #![doc = include_str!("../../docs/heuristic.md")]
 
-pub mod legacy;
-
 pub mod components;
 pub use components::Configuration;
 
