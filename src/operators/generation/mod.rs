@@ -158,9 +158,8 @@ pub mod swarm {
     use rand::distributions::Uniform;
     use rand::Rng;
 
-    use crate::random::Random;
     use crate::{
-        framework::{components::*, Individual, State},
+        framework::{components::*, Individual, Random, State},
         operators::custom_state::PsoState,
         problems::Problem,
     };

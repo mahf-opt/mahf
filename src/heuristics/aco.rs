@@ -128,9 +128,8 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, Fitness, Individual, State},
+        framework::{components::*, Fitness, Individual, Random, State},
         problems::tsp::{Route, SymmetricTsp},
-        random::Random,
     };
 
     use super::PheromoneMatrix;

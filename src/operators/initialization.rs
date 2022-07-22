@@ -5,9 +5,8 @@ use rand::{distributions::uniform::SampleUniform, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Individual, State},
+    framework::{components::*, Individual, Random, State},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
-    random::Random,
 };
 
 /// Specialized component trait to initialize a new population on the stack.

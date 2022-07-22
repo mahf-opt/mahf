@@ -1,7 +1,6 @@
 use crate::{
-    framework::{self, components::Configuration},
+    framework::{self, Configuration, Random},
     problems::{coco_bound::CocoInstance, HasKnownTarget},
-    random::Random,
     tracking::{files, Log},
     utils::threads::SyncThreadPool,
 };

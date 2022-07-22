@@ -1,6 +1,7 @@
 use crate::framework::components::{Block, Branch, Component, Condition, Loop, Scope};
-use crate::framework::Configuration;
 use crate::problems::Problem;
+
+pub type Configuration<P> = Box<dyn Component<P>>;
 
 pub struct ConfigurationBuilder<P> {
     components: Vec<Box<dyn Component<P>>>,

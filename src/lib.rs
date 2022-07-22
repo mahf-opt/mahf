@@ -9,7 +9,6 @@ pub mod framework;
 pub mod heuristics;
 pub mod operators;
 pub mod problems;
-pub mod random;
 pub mod tracking;
 pub mod utils;
 

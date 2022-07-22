@@ -175,8 +175,8 @@ impl Replacement for RandomReplacement {
 #[cfg(test)]
 mod random_replacement {
     use super::*;
+    use crate::framework::Random;
     use crate::operators::testing::*;
-    use crate::random::Random;
 
     #[test]
     fn keeps_right_amount_of_children() {

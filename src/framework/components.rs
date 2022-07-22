@@ -40,8 +40,6 @@ pub trait Condition<P>: AnyComponent {
 }
 erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
 
-pub type Configuration<P> = Box<dyn Component<P>>;
-
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Scope<P: Problem> {
