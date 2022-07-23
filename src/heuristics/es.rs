@@ -1,7 +1,7 @@
 //! Evolutionary Strategy
 
 use crate::{
-    framework::{components, Configuration},
+    framework::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -27,7 +27,7 @@ where
                 builder
                     .do_(selection::FullyRandom::new(lambda))
                     .do_(generation::mutation::FixedDeviationDelta::new(deviation))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::MuPlusLambda::new(population_size))
             },
         )

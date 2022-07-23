@@ -1,7 +1,7 @@
 //! Random Search
 
 use crate::{
-    framework::{components, Configuration},
+    framework::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -19,7 +19,7 @@ where
                 builder
                     .do_(selection::All::new())
                     .do_(generation::RandomSpread::new_gen())
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::MuPlusLambda::new(1))
             },
         )
@@ -38,7 +38,7 @@ where
                 builder
                     .do_(selection::All::new())
                     .do_(generation::RandomPermutation::new_gen())
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::MuPlusLambda::new(1))
             },
         )

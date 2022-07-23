@@ -1,10 +1,7 @@
 //! Local Search
 
 use crate::{
-    framework::{
-        components::{self, Component},
-        Configuration,
-    },
+    framework::{components::Component, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -26,7 +23,7 @@ where
                 builder
                     .do_(selection::DuplicateSingle::new(n_neighbors))
                     .do_(neighbors)
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::MuPlusLambda::new(1))
             },
         )
@@ -50,7 +47,7 @@ where
                 builder
                     .do_(selection::DuplicateSingle::new(n_neighbors))
                     .do_(neighbors)
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::MuPlusLambda::new(1))
             },
         )

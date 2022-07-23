@@ -1,10 +1,7 @@
 //! Random Walk
 
 use crate::{
-    framework::{
-        components::{self, Component},
-        Configuration,
-    },
+    framework::{components::Component, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -27,7 +24,7 @@ where
                     .do_(archive::ElitistArchive::new(1))
                     .do_(selection::All::new())
                     .do_(mutation)
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::Generational::new(1))
             },
         )
@@ -56,7 +53,7 @@ where
                     .do_(archive::ElitistArchive::new(1))
                     .do_(selection::All::new())
                     .do_(mutation)
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::Generational::new(1))
             },
         )

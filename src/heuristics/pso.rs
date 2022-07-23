@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    framework::{components, Configuration},
+    framework::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem},
 };
@@ -20,13 +20,13 @@ where
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
         .do_(pso_ops::PsoStateInitialization::new(v_max))
-        .do_(components::SimpleEvaluator::new())
+        .do_(evaluation::SerialEvaluator::new())
         .while_(
             termination::FixedIterations::new(max_iterations),
             |builder| {
                 builder
                     .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(pso_ops::PsoStateUpdate::new())
             },
         )

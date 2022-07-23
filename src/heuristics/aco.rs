@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{components, state::CustomState, Configuration},
+    framework::{state::CustomState, Configuration},
     operators::*,
     problems::tsp::SymmetricTsp,
 };
@@ -33,7 +33,7 @@ pub fn ant_system(
                         beta,
                         default_pheromones,
                     ))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(ant_ops::AsPheromoneUpdate::new(
                         evaporation,
                         decay_coefficient,
@@ -73,7 +73,7 @@ pub fn min_max_ant_system(
                         beta,
                         default_pheromones,
                     ))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(ant_ops::MinMaxPheromoneUpdate::new(
                         evaporation,
                         max_pheromones,

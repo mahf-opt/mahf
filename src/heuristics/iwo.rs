@@ -2,7 +2,7 @@
 
 use crate::{
     framework::{
-        components::{self, Component, Condition},
+        components::{Component, Condition},
         Configuration,
     },
     operators::*,
@@ -45,7 +45,7 @@ where
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))
-        .do_(components::SimpleEvaluator::new())
+        .do_(evaluation::SerialEvaluator::new())
         .while_(termination, |builder| {
             builder
                 .do_(selection::DeterministicFitnessProportional::new(
@@ -57,7 +57,7 @@ where
                     params.final_deviation,
                     params.modulation_index,
                 ))
-                .do_(components::SimpleEvaluator::new())
+                .do_(evaluation::SerialEvaluator::new())
                 .do_(replacement::MuPlusLambda::new(params.max_population_size))
                 .do_(logger)
         })
