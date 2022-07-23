@@ -1,4 +1,4 @@
-use crate::problems;
+use crate::{framework::Fitness, problems};
 use std::sync::Mutex;
 
 pub use coco_rs::{Problem, Suite};
@@ -65,5 +65,11 @@ impl problems::LimitedVectorProblem for CocoInstance {
 
         let (start, end) = range.into_inner();
         start..end
+    }
+}
+
+impl problems::HasKnownTarget for CocoInstance {
+    fn target_hit(&self, _fitness: Fitness) -> bool {
+        self.problem.lock().unwrap().final_target_hit()
     }
 }

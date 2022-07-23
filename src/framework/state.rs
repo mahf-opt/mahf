@@ -1,9 +1,8 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    framework::{SingleObjective, Individual},
-    random,
-    tracking::log::Logger,
+    framework::{random, SingleObjective, Individual},
+    tracking::Log,
 };
 
 mod many;
@@ -16,11 +15,7 @@ pub(crate) use map::StateMap;
 pub mod common;
 
 /// Makes custom state trackable.
-pub trait CustomState: AsAny {
-    fn auto_logger(&self) -> Option<Logger> {
-        None
-    }
-}
+pub trait CustomState: AsAny {}
 
 #[derive(Default)]
 pub struct State {
@@ -70,6 +65,7 @@ impl State {
         );
     }
 
+    #[track_caller]
     pub fn get<T: CustomState>(&self) -> &T {
         if self.map.has::<T>() {
             self.map.get::<T>()
@@ -82,6 +78,7 @@ impl State {
         self.map.get_or_insert_default()
     }
 
+    #[track_caller]
     pub fn get_value<T>(&self) -> T::Target
     where
         T: CustomState + Deref,
@@ -94,6 +91,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
         if self.map.has::<T>() {
             self.map.get_mut::<T>()
@@ -110,7 +108,7 @@ impl State {
     /// Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{State, common_state::Population}, random::Random};
+    /// use mahf::framework::{state::{State, common::Population}, Random};
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
     /// state.insert(Population::new());
@@ -137,6 +135,7 @@ impl State {
         }
     }
 
+    #[track_caller]
     pub fn get_value_mut<T>(&mut self) -> &mut T::Target
     where
         T: CustomState + DerefMut,
@@ -161,7 +160,7 @@ impl State {
     ///  Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{State, common_state::Population}, random::Random};
+    /// use mahf::framework::{state::{State, common::Population}, Random};
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
     /// state.insert(Population::new());
@@ -170,6 +169,7 @@ impl State {
     ///
     /// // Do something with rng and population.
     /// ```
+    #[track_caller]
     pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
         T::fetch(self)
     }
@@ -211,7 +211,7 @@ macro_rules! impl_convenience_functions {
         }
 
         /// Returns [BestIndividual](common::ParetoFront) state.
-        pub fn pareto(self: $t) -> &$l common::ParetoFront {
+        pub fn pareto_front(self: $t) -> &$l common::ParetoFront {
             self.get::<common::ParetoFront>()
         }
 
@@ -228,6 +228,11 @@ macro_rules! impl_convenience_functions {
         /// Returns mutable [Random](random::Random) state.
         pub fn random_mut(&mut self) -> &$l mut random::Random {
             self.get_mut::<random::Random>()
+        }
+
+        /// Returns the [Log].
+        pub fn log(self: $t) -> &$l Log {
+            self.get::<Log>()
         }
     };
 }

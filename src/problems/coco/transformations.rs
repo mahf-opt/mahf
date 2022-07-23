@@ -1,4 +1,4 @@
-#![allow(clippy::new_ret_no_self, unused_variables)]
+#![allow(unused_variables)]
 
 pub mod input {
     use crate::problems::coco::InputTransformation;

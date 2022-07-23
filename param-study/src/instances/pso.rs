@@ -2,10 +2,9 @@ use std::time::Instant;
 
 use mahf::{
     float_eq::float_eq,
-    framework::{self},
+    framework::{self, Random},
     heuristics::pso,
     problems::bmf::BenchmarkFunction,
-    random::Random,
 };
 
 use crate::{
@@ -38,7 +37,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
-    let state = framework::run(&problem, &config, None, Some(rng));
+    let state = framework::run(&problem, &config, Some(rng));
     let end = Instant::now();
     let runtime = end - start;
 

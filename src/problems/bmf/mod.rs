@@ -4,7 +4,10 @@ pub mod implementations;
 #[cfg(test)]
 pub mod tests;
 
-use crate::problems::{HasKnownOptimum, LimitedVectorProblem, Problem, VectorProblem};
+use crate::{
+    framework::Fitness,
+    problems::{HasKnownOptimum, HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem},
+};
 use anyhow::anyhow;
 use std::convert::TryFrom;
 use crate::framework::SingleObjective;
@@ -50,6 +53,12 @@ impl VectorProblem for BenchmarkFunction {
 impl LimitedVectorProblem for BenchmarkFunction {
     fn range(&self, _dimension: usize) -> std::ops::Range<Self::T> {
         0.0..1.0
+    }
+}
+
+impl HasKnownTarget for BenchmarkFunction {
+    fn target_hit(&self, fitness: Fitness) -> bool {
+        float_eq::float_eq!(self.known_optimum, fitness.into(), ulps <= 10)
     }
 }
 

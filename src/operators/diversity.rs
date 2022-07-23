@@ -2,46 +2,13 @@
 //!
 
 use crate::{
-    framework::{components::*, legacy::components::*, Individual, State},
-    operators::custom_state::{DiversityState, PopulationState},
+    framework::{
+        components::*,
+        state::{common::Population, State},
+    },
+    operators::custom_state::DiversityState,
     problems::{Problem, VectorProblem},
-    random::Random,
 };
-
-#[derive(Debug, serde::Serialize)]
-pub struct None;
-impl None {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>>
-    where
-        P: Problem,
-    {
-        Box::new(Postprocessor(Self))
-    }
-}
-impl<P> Postprocess<P> for None
-where
-    P: Problem,
-{
-    fn initialize(
-        &self,
-        _state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &[Individual],
-    ) {
-    }
-
-    fn postprocess(
-        &self,
-        _state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &[Individual],
-    ) {
-    }
-}
-
-// General post-processes //
 
 /// Postprocess procedure for tracking population diversity
 ///
@@ -63,31 +30,22 @@ pub struct FloatVectorDiversity {
     pub measure: DiversityMeasure,
 }
 
-impl<P> Postprocess<P> for FloatVectorDiversity
+impl<P> Component<P> for FloatVectorDiversity
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
 {
-    fn initialize(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &[Individual],
-    ) {
+    fn initialize(&self, _problem: &P, state: &mut State) {
         state.insert(DiversityState {
             diversity: 0.0,
             max_div: 0.0,
         });
     }
 
-    fn postprocess(
-        &self,
-        state: &mut State,
-        problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let diversity_state = state.get_mut::<DiversityState>();
+    fn execute(&self, problem: &P, state: &mut State) {
+        let (population_stack, diversity_state) =
+            state.get_multiple_mut::<(Population, DiversityState)>();
+
+        let population = population_stack.current();
 
         if population.is_empty() {
             diversity_state.diversity = 0.0;
@@ -159,45 +117,5 @@ where
 
         // normalize by division with maximum diversity
         diversity_state.diversity /= diversity_state.max_div;
-    }
-}
-
-/// Postprocess procedure for tracking all individuals' solutions
-///
-/// Currently only for VectorProblem
-//TODO Independent of problem type
-#[derive(Debug, serde::Serialize)]
-pub struct FloatPopulation;
-
-impl<P> Postprocess<P> for FloatPopulation
-where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
-{
-    fn initialize(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        _population: &[Individual],
-    ) {
-        state.insert(PopulationState {
-            current_pop: vec![],
-        });
-    }
-
-    fn postprocess(
-        &self,
-        state: &mut State,
-        _problem: &P,
-        _rng: &mut Random,
-        population: &[Individual],
-    ) {
-        let population_state = state.get_mut::<PopulationState>();
-
-        population_state.current_pop = population
-            .iter()
-            .map(|i| i.solution::<Vec<f64>>())
-            .cloned()
-            .collect();
     }
 }

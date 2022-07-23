@@ -6,7 +6,7 @@ use rand::{seq::IteratorRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, State},
+    framework::{components::*, state::State},
     problems::Problem,
 };
 
@@ -83,8 +83,8 @@ where
 
 #[cfg(test)]
 mod npoint_crossover {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -168,8 +168,8 @@ where
 
 #[cfg(test)]
 mod uniform_crossover {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -267,8 +267,8 @@ where
 
 #[cfg(test)]
 mod cycle_crossover {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 

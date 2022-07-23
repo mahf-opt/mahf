@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder},
+    framework::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
@@ -17,9 +17,9 @@ pub fn pso<P>(
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
-        .do_(components::SimpleEvaluator::new())
+        .do_(evaluation::SerialEvaluator::new())
         .do_(components::UpdateBestIndividual::new())
         .do_(pso_ops::PsoStateInitialization::new(v_max))
         .while_(
@@ -27,7 +27,7 @@ where
             |builder| {
                 builder
                     .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(components::UpdateBestIndividual::new())
                     .do_(pso_ops::PsoStateUpdate::new())
             },
@@ -39,12 +39,11 @@ where
 #[allow(clippy::new_ret_no_self)]
 mod pso_ops {
     use crate::{
-        framework::{components::*, Individual, State},
+        framework::{components::*, state::State, Individual, SingleObjective},
         operators::custom_state::PsoState,
         problems::{LimitedVectorProblem, Problem},
     };
     use rand::Rng;
-    use crate::framework::SingleObjective;
 
     #[derive(Debug, serde::Serialize)]
     pub struct PsoStateInitialization {

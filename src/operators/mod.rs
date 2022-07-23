@@ -5,17 +5,17 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{components::Component, State},
+    framework::{components::Component, state::State},
     problems::Problem,
 };
 
 pub mod archive;
 pub mod custom_state;
+pub mod diversity;
+pub mod evaluation;
 pub mod generation;
 pub mod initialization;
-pub mod postprocess;
 pub mod replacement;
-pub mod schedulers;
 pub mod selection;
 pub mod termination;
 

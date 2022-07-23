@@ -1,76 +1,88 @@
+use crate::framework::state::{common, CustomState, State};
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
+use std::any::type_name;
 
-use crate::framework::{CustomState, State};
-
+/// A log tracking state throughout the run.
+///
+/// [Log] implements [CustomState] and will be
+/// automatically inserted for every run.
 #[derive(Default, Serialize)]
 #[serde(transparent)]
 pub struct Log {
-    entries: Vec<LogEntry>,
+    steps: Vec<Step>,
 }
 
 impl CustomState for Log {}
 
 impl Log {
+    /// Creates a new, empty log.
     pub fn new() -> Self {
         Self::default()
     }
+
+    /// Pushes a new [Step] to the log.
+    ///
+    /// There should be at most one [Step] per iteration.
+    pub fn push(&mut self, entry: Step) {
+        self.steps.push(entry);
+    }
+
+    /// Returns the currently recorded steps.
+    pub fn steps(&self) -> &[Step] {
+        &self.steps
+    }
 }
 
+/// A step (usually an interation).
 #[derive(Default, Serialize)]
 #[serde(transparent)]
-pub struct LogEntry {
-    state: Vec<LoggedState>,
+pub struct Step {
+    entries: Vec<Entry>,
 }
 
+impl Step {
+    /// Checks whether an entry with the given name already exists.
+    pub fn contains(&self, name: &str) -> bool {
+        self.entries.iter().any(|entry| entry.name == name)
+    }
+
+    /// Logs a new [Entry] at this [Step].
+    ///
+    /// # Panics
+    /// Will panic if an entry with the same name already exists.
+    /// This can be checked prior using [contains](Step::contains) if deemed necessary.
+    pub fn push(&mut self, entry: Entry) {
+        debug_assert!(
+            !self.contains(entry.name),
+            "entry with name {} already exists",
+            entry.name
+        );
+
+        self.entries.push(entry);
+    }
+
+    /// Pushes the current iteration if it has not been logged yet.
+    ///
+    /// Will also ensure that the iteration is at index 0.
+    pub(crate) fn push_iteration(&mut self, state: &State) {
+        let name = type_name::<common::Iterations>();
+
+        if !self.contains(name) {
+            let value = Box::new(state.iterations());
+            self.entries.insert(0, Entry { name, value });
+        }
+    }
+
+    /// Returns all entries.
+    pub fn entries(&self) -> &[Entry] {
+        &self.entries
+    }
+}
+
+/// A single log entry.
 #[derive(Serialize)]
-pub struct LoggedState {
-    name: &'static str,
-    value: Box<dyn DynSerialize>,
-}
-
-#[derive(Default)]
-pub struct LogConfig {
-    loggers: Vec<Logger>,
-}
-
-impl LogConfig {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn log(&self, entry: &mut LogEntry, state: &State) {
-        for logger in &self.loggers {
-            entry.state.push((logger.log_fn)(state));
-        }
-    }
-
-    pub fn with_logger(mut self, logger: Logger) -> Self {
-        self.add_logger(logger);
-        self
-    }
-
-    pub fn add_logger(&mut self, logger: Logger) {
-        // TODO: check that the logger is unique
-        self.loggers.push(logger);
-    }
-}
-
-pub struct Logger {
-    log_fn: fn(&State) -> LoggedState,
-}
-
-impl Logger {
-    pub fn new_for<T: CustomState + Clone + Serialize>() -> Logger {
-        fn log_fn<T: CustomState + Clone + Serialize>(state: &State) -> LoggedState {
-            let instance = state.get::<T>();
-            let value = Box::new(instance.clone());
-            let name = std::any::type_name::<T>();
-            LoggedState { name, value }
-        }
-
-        Logger {
-            log_fn: log_fn::<T>,
-        }
-    }
+pub struct Entry {
+    pub name: &'static str,
+    pub value: Box<dyn DynSerialize>,
 }

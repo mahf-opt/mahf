@@ -5,7 +5,10 @@ use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{common_state::Progress, components::*, State},
+    framework::{
+        components::*,
+        state::{common::Progress, State},
+    },
     problems::{LimitedVectorProblem, Problem},
 };
 
@@ -168,8 +171,8 @@ where
 
 #[cfg(test)]
 mod uniform_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -237,8 +240,8 @@ where
 
 #[cfg(test)]
 mod gaussian_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -358,8 +361,8 @@ where
 
 #[cfg(test)]
 mod swap_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -421,8 +424,8 @@ where
 
 #[cfg(test)]
 mod scramble_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -485,8 +488,8 @@ where
 
 #[cfg(test)]
 mod insertion_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -552,8 +555,8 @@ where
 
 #[cfg(test)]
 mod inversion_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 
@@ -628,8 +631,8 @@ where
 
 #[cfg(test)]
 mod translocation_mutation {
+    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::random::Random;
 
     use super::*;
 

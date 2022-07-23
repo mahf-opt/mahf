@@ -3,8 +3,8 @@ use crate::{
     util::{print_result, ArgsIter, Setup},
 };
 use mahf::{
-    float_eq::float_eq, framework, heuristics::iwo::iwo, problems::bmf::BenchmarkFunction,
-    random::Random,
+    float_eq::float_eq, framework, framework::Random, heuristics::iwo, operators::termination,
+    problems::bmf::BenchmarkFunction, tracking,
 };
 use std::time::Instant;
 
@@ -31,21 +31,24 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
 
     let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
-    let config = iwo(
-        params.initial_population_size,
-        params.max_population_size,
-        params.min_number_of_seeds,
-        params.max_number_of_seeds,
-        params.initial_deviation,
-        params.final_deviation,
-        params.modulation_index,
-        setup.cutoff_length,
+    let config = iwo::iwo(
+        iwo::Parameters {
+            initial_population_size: params.initial_population_size,
+            max_population_size: params.max_population_size,
+            min_number_of_seeds: params.min_number_of_seeds,
+            max_number_of_seeds: params.max_number_of_seeds,
+            initial_deviation: params.initial_deviation,
+            final_deviation: params.final_deviation,
+            modulation_index: params.modulation_index,
+        },
+        termination::FixedIterations::new(setup.cutoff_length),
+        tracking::Logger::default(),
     );
 
     let rng = Random::seeded(setup.seed);
 
     let start = Instant::now();
-    let state = framework::run(&problem, &config, None, Some(rng));
+    let state = framework::run(&problem, &config, Some(rng));
     let end = Instant::now();
     let runtime = end - start;
 

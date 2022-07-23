@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 use std::{any::TypeId, collections::HashSet};
 
-use crate::framework::{CustomState, State};
+use crate::framework::state::{CustomState, State};
 
 /// Allows borrowing multiple [CustomState]'s mutable from [State] at the same time.
 /// It is meant to significantly simplify the definition of [Component][crate::framework::components::Component]'s

@@ -1,10 +1,7 @@
-#![allow(unused_variables)]
-#![allow(clippy::new_ret_no_self)]
-
 //! Framework components.
 
 use crate::{
-    framework::{common_state, state::State},
+    framework::{state::{common, State}, conditions::Condition},
     problems::{MultiObjectiveProblem, SingleObjectiveProblem, Problem},
 };
 use serde::Serialize;
@@ -29,21 +26,12 @@ trait_set! {
 /// Most of the time, execution should be multi threaded and having
 /// components implement [Send] makes this much easier.
 ///
-pub trait Component<P>: AnyComponent {
+pub trait Component<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
     fn initialize(&self, problem: &P, state: &mut State) {}
     fn execute(&self, problem: &P, state: &mut State);
 }
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
-
-pub trait Condition<P>: AnyComponent {
-    #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State) {}
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
-}
-erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
-
-pub type Configuration<P> = Box<dyn Component<P>>;
 
 #[derive(Serialize)]
 #[serde(bound = "")]
@@ -54,10 +42,7 @@ pub struct Scope<P: Problem> {
     init: fn(&mut State),
 }
 
-impl<P> Component<P> for Scope<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Scope<P> {
     fn execute(&self, problem: &P, state: &mut State) {
         state.with_substate(|state| {
             (self.init)(state);
@@ -67,7 +52,7 @@ where
     }
 }
 
-impl<P: Problem + 'static> Scope<P> {
+impl<P: Problem> Scope<P> {
     pub fn new(body: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
         Self::new_with(|_| {}, body)
     }
@@ -83,12 +68,10 @@ impl<P: Problem + 'static> Scope<P> {
 
 #[derive(Serialize)]
 #[serde(bound = "")]
+#[serde(transparent)]
 pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
-impl<P> Component<P> for Block<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Block<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         for component in &self.0 {
             component.initialize(problem, state);
@@ -102,7 +85,7 @@ where
     }
 }
 
-impl<P: Problem + 'static> Block<P> {
+impl<P: Problem> Block<P> {
     pub fn new(components: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
         Box::new(Block(components))
     }
@@ -111,16 +94,15 @@ impl<P: Problem + 'static> Block<P> {
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Loop<P: Problem> {
+    #[serde(rename = "while")]
     condition: Box<dyn Condition<P>>,
+    #[serde(rename = "do")]
     body: Box<dyn Component<P>>,
 }
 
-impl<P> Component<P> for Loop<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Loop<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
-        state.insert(common_state::Iterations(0));
+        state.insert(common::Iterations(0));
 
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
@@ -130,12 +112,12 @@ where
         self.condition.initialize(problem, state);
         while self.condition.evaluate(problem, state) {
             self.body.execute(problem, state);
-            *state.get_value_mut::<common_state::Iterations>() += 1;
+            *state.get_value_mut::<common::Iterations>() += 1;
         }
     }
 }
 
-impl<P: Problem + 'static> Loop<P> {
+impl<P: Problem> Loop<P> {
     pub fn new(
         condition: Box<dyn Condition<P>>,
         body: Vec<Box<dyn Component<P>>>,
@@ -153,10 +135,7 @@ pub struct Branch<P: Problem> {
     else_body: Option<Box<dyn Component<P>>>,
 }
 
-impl<P> Component<P> for Branch<P>
-where
-    P: Problem + 'static,
-{
+impl<P: Problem> Component<P> for Branch<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         self.condition.initialize(problem, state);
         self.if_body.initialize(problem, state);
@@ -199,151 +178,5 @@ impl<P: Problem + 'static> Branch<P> {
             if_body,
             else_body,
         })
-    }
-}
-
-#[derive(Serialize)]
-pub struct SimpleEvaluator;
-
-impl SimpleEvaluator {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
-        Box::new(Self)
-    }
-}
-
-impl<P: Problem> Component<P> for SimpleEvaluator {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<common_state::Population>();
-        state.insert(common_state::Evaluations(0));
-    }
-
-    fn execute(&self, problem: &P, state: &mut State) {
-        let mut mut_state = state.get_states_mut();
-
-        // Evaluate population
-        let population = mut_state.population_stack_mut();
-
-        if population.is_empty() {
-            return;
-        }
-
-        for individual in population.current_mut().iter_mut() {
-            problem.evaluate(individual);
-        }
-
-        // Update evaluations
-        *mut_state.get_value_mut::<common_state::Evaluations>() +=
-            population.current().len() as u32;
-    }
-}
-
-#[derive(Serialize)]
-pub struct UpdateBestIndividual;
-
-impl UpdateBestIndividual {
-    pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
-        Box::new(Self)
-    }
-}
-
-impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert(common_state::BestIndividual(None));
-    }
-
-    fn execute(&self, problem: &P, state: &mut State) {
-        let mut mut_state = state.get_states_mut();
-
-        let best_individual = mut_state
-            .population_stack()
-            .current()
-            .iter()
-            .min_by_key(|i| i.fitness());
-
-        if let Some(best_individual) = best_individual {
-            mut_state
-                .get_mut::<common_state::BestIndividual>()
-                .replace_if_better(best_individual);
-        }
-    }
-}
-
-#[derive(Serialize)]
-pub struct UpdateParetoFront;
-
-impl UpdateParetoFront {
-    pub fn new<P: MultiObjectiveProblem>() -> Box<dyn Component<P>> {
-        Box::new(Self)
-    }
-}
-
-impl<P: MultiObjectiveProblem> Component<P> for UpdateParetoFront {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert(common_state::ParetoFront::new());
-    }
-
-    fn execute(&self, problem: &P, state: &mut State) {
-        let mut mut_state = state.get_states_mut();
-
-        let front = mut_state.get_mut::<common_state::ParetoFront>();
-        front.update_multiple(mut_state.population_stack().current());
-    }
-}
-
-#[derive(Serialize)]
-#[serde(bound = "")]
-pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
-impl<P: Problem + 'static> And<P> {
-    pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
-        Box::new(Self(conditions))
-    }
-}
-impl<P: Problem + 'static> Condition<P> for And<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
-        for condition in self.0.iter() {
-            condition.initialize(problem, state);
-        }
-    }
-
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        self.0
-            .iter()
-            .all(|condition| condition.evaluate(problem, state))
-    }
-}
-impl<P: Problem + 'static> std::ops::BitAnd for Box<dyn Condition<P>> {
-    type Output = Box<dyn Condition<P>>;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        And::new(vec![self, rhs])
-    }
-}
-
-#[derive(Serialize)]
-#[serde(bound = "")]
-pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
-impl<P: Problem + 'static> Or<P> {
-    pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
-        Box::new(Self(conditions))
-    }
-}
-impl<P: Problem + 'static> Condition<P> for Or<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
-        for condition in self.0.iter() {
-            condition.initialize(problem, state);
-        }
-    }
-
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        self.0
-            .iter()
-            .any(|condition| condition.evaluate(problem, state))
-    }
-}
-impl<P: Problem + 'static> std::ops::BitOr for Box<dyn Condition<P>> {
-    type Output = Box<dyn Condition<P>>;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Or::new(vec![self, rhs])
     }
 }

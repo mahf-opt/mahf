@@ -1,10 +1,7 @@
 //! Random Walk
 
 use crate::{
-    framework::{
-        components::{self, Component},
-        Configuration, ConfigurationBuilder,
-    },
+    framework::{components::Component, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -18,7 +15,7 @@ pub fn random_walk<P>(max_iterations: u32, mutation: Box<dyn Component<P>>) -> C
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(generation::RandomSpread::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -27,7 +24,7 @@ where
                     .do_(archive::ElitistArchive::new(1))
                     .do_(selection::All::new())
                     .do_(mutation)
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::Generational::new(1))
             },
         )
@@ -47,7 +44,7 @@ pub fn random_permutation_walk<P>(
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -56,7 +53,7 @@ where
                     .do_(archive::ElitistArchive::new(1))
                     .do_(selection::All::new())
                     .do_(mutation)
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(replacement::Generational::new(1))
             },
         )

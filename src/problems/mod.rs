@@ -51,10 +51,6 @@ pub trait LimitedVectorProblem: VectorProblem {
     fn range(&self, dimension: usize) -> Range<Self::T>;
 }
 
-pub trait HasKnownOptimum: Problem<Objective=SingleObjective> {
-    fn known_optimum(&self) -> Self::Objective;
-}
-
 pub trait DebugProblem: Problem {
     fn debug_fmt(&self, individual: &Individual) -> String;
 }
@@ -65,4 +61,12 @@ pub trait BatchEvaluationProblem: Problem {
             self.evaluate(individual);
         }
     }
+}
+
+pub trait HasKnownTarget {
+    fn target_hit(&self, fitness: Fitness) -> bool;
+}
+
+pub trait HasKnownOptimum {
+    fn known_optimum(&self) -> f64;
 }
