@@ -1,5 +1,4 @@
 use mahf::{
-    framework::components,
     heuristics::iwo,
     operators::termination,
     problems::coco_bound::{suits, CocoInstance},
@@ -18,10 +17,7 @@ fn main() -> anyhow::Result<()> {
             final_deviation: 0.001,
             modulation_index: 3,
         },
-        components::And::new(vec![
-            termination::FixedIterations::new(500),
-            termination::TargetHit::new(),
-        ]),
+        termination::FixedIterations::new(500) & termination::TargetHit::new(),
         tracking::Logger::builder()
             .log_common_sets()
             .log_set(
