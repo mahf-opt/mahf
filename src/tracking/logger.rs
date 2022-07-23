@@ -1,7 +1,10 @@
 use std::ops::{Deref, Sub};
 
 use crate::{
-    framework::{common_state, components::Component, CustomState, State},
+    framework::{
+        components::Component,
+        state::{common, CustomState, State},
+    },
     problems::Problem,
     tracking::{log::Step, set::LogSet, trigger, Log},
 };
@@ -50,16 +53,16 @@ impl<P: Problem + 'static> Logger<P> {
     /// Add the most common sets.
     ///
     /// Currently encompases:
-    /// - [common_state::Evaluations]
-    /// - [common_state::Progress]
-    /// - [common_state::BestFitness]
+    /// - [common::Evaluations]
+    /// - [common::Progress]
+    /// - [common::BestFitness]
     pub fn log_common_sets(self) -> Self {
         self.log_set(
             LogSet::new()
                 .with_trigger(trigger::Iteration::new(10))
-                .with_auto_logger::<common_state::Evaluations>()
-                .with_auto_logger::<common_state::Progress>()
-                .with_auto_logger::<common_state::BestFitness>(),
+                .with_auto_logger::<common::Evaluations>()
+                .with_auto_logger::<common::Progress>()
+                .with_auto_logger::<common::BestFitness>(),
         )
     }
 

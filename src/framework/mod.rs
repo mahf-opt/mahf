@@ -2,37 +2,38 @@
 #![doc = include_str!("../../docs/heuristic.md")]
 
 pub mod components;
-pub use components::Configuration;
+pub mod conditions;
+pub mod state;
 
-mod builder;
-pub use builder::ConfigurationBuilder;
+mod configuration;
+pub use configuration::{Configuration, ConfigurationBuilder};
 
 mod fitness;
 pub use fitness::{Fitness, IllegalFitness};
 
-mod state;
-pub use state::common as common_state;
-pub use state::{CustomState, MultiStateTuple, MutState, State};
-
 mod individual;
 pub use individual::Individual;
 
-use crate::tracking::Log;
-use crate::{problems::Problem, random::Random};
+mod random;
+pub use random::{Random, RandomConfig};
 
-pub fn run<P: Problem + 'static>(
+use crate::problems::Problem;
+use crate::tracking::Log;
+
+pub fn run<P: Problem>(
     problem: &P,
     config: &Configuration<P>,
     rng: Option<Random>,
-) -> State {
-    let mut state = State::new_root();
+) -> state::State {
+    let heuristic = config.heuristic();
+    let mut state = state::State::new_root();
 
     state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
-    state.insert(common_state::Population::new());
+    state.insert(state::common::Population::new());
 
-    config.initialize(problem, &mut state);
-    config.execute(problem, &mut state);
+    heuristic.initialize(problem, &mut state);
+    heuristic.execute(problem, &mut state);
 
     state
 }

@@ -2,8 +2,8 @@
 
 use crate::{
     framework::{
-        components::{self, Component, Condition},
-        Configuration, ConfigurationBuilder,
+        components::{Component, Condition},
+        Configuration,
     },
     operators::*,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
@@ -41,11 +41,11 @@ where
     assert!(params.min_number_of_seeds <= params.max_number_of_seeds);
     assert!(params.final_deviation <= params.initial_deviation);
 
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))
-        .do_(components::SimpleEvaluator::new())
+        .do_(evaluation::SerialEvaluator::new())
         .while_(termination, |builder| {
             builder
                 .do_(selection::DeterministicFitnessProportional::new(
@@ -57,7 +57,7 @@ where
                     params.final_deviation,
                     params.modulation_index,
                 ))
-                .do_(components::SimpleEvaluator::new())
+                .do_(evaluation::SerialEvaluator::new())
                 .do_(replacement::MuPlusLambda::new(params.max_population_size))
                 .do_(logger)
         })

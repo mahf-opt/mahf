@@ -1,9 +1,8 @@
 use crate::{
-    framework::{self, components::Configuration},
+    framework::{self, Configuration, Random},
     problems::{coco_bound::CocoInstance, HasKnownTarget},
-    random::Random,
-    threads::SyncThreadPool,
     tracking::{files, Log},
+    utils::threads::SyncThreadPool,
 };
 use anyhow::Context;
 use coco_rs::{Suite, SuiteName};
@@ -40,7 +39,7 @@ pub fn evaluate_suite(
         BufWriter::new(
             File::create(config_log_file).context("failed to create configuration file")?,
         ),
-        &configuration,
+        configuration.heuristic(),
         ron::ser::PrettyConfig::default().struct_names(true),
     )
     .context("failed to serialize configuration")?;

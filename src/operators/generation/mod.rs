@@ -3,7 +3,8 @@
 use crate::{
     framework::{
         components::{AnyComponent, Component},
-        Individual, State,
+        state::State,
+        Individual,
     },
     problems::{LimitedVectorProblem, Problem, VectorProblem},
 };
@@ -158,9 +159,8 @@ pub mod swarm {
     use rand::distributions::Uniform;
     use rand::Rng;
 
-    use crate::random::Random;
     use crate::{
-        framework::{components::*, Individual, State},
+        framework::{components::*, state::State, Individual, Random},
         operators::custom_state::PsoState,
         problems::Problem,
     };

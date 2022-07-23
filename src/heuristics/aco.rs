@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder, CustomState},
+    framework::{state::CustomState, Configuration},
     operators::*,
     problems::tsp::SymmetricTsp,
 };
@@ -21,7 +21,7 @@ pub fn ant_system(
     decay_coefficient: f64,
     max_iterations: u32,
 ) -> Configuration<SymmetricTsp> {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::Empty::new())
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -33,7 +33,7 @@ pub fn ant_system(
                         beta,
                         default_pheromones,
                     ))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(ant_ops::AsPheromoneUpdate::new(
                         evaporation,
                         decay_coefficient,
@@ -61,7 +61,7 @@ pub fn min_max_ant_system(
         min_pheromones < max_pheromones,
         "min_pheromones must be less than max_pheromones"
     );
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::Empty::new())
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -73,7 +73,7 @@ pub fn min_max_ant_system(
                         beta,
                         default_pheromones,
                     ))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(ant_ops::MinMaxPheromoneUpdate::new(
                         evaporation,
                         max_pheromones,
@@ -128,9 +128,8 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, Fitness, Individual, State},
+        framework::{components::*, state::State, Fitness, Individual, Random},
         problems::tsp::{Route, SymmetricTsp},
-        random::Random,
     };
 
     use super::PheromoneMatrix;

@@ -1,7 +1,7 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    framework::{components, Configuration, ConfigurationBuilder},
+    framework::Configuration,
     operators::*,
     problems::{LimitedVectorProblem, Problem},
 };
@@ -17,16 +17,16 @@ pub fn pso<P>(
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
-    ConfigurationBuilder::new()
+    Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
         .do_(pso_ops::PsoStateInitialization::new(v_max))
-        .do_(components::SimpleEvaluator::new())
+        .do_(evaluation::SerialEvaluator::new())
         .while_(
             termination::FixedIterations::new(max_iterations),
             |builder| {
                 builder
                     .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
-                    .do_(components::SimpleEvaluator::new())
+                    .do_(evaluation::SerialEvaluator::new())
                     .do_(pso_ops::PsoStateUpdate::new())
             },
         )
@@ -37,7 +37,7 @@ where
 #[allow(clippy::new_ret_no_self)]
 mod pso_ops {
     use crate::{
-        framework::{components::*, Individual, State},
+        framework::{components::*, state::State, Individual},
         operators::custom_state::PsoState,
         problems::{LimitedVectorProblem, Problem},
     };

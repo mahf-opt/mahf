@@ -2,7 +2,10 @@
 //!
 
 use crate::{
-    framework::{common_state::Population, components::*, State},
+    framework::{
+        components::*,
+        state::{common::Population, State},
+    },
     operators::custom_state::DiversityState,
     problems::{Problem, VectorProblem},
 };

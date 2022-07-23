@@ -2,10 +2,9 @@ use std::time::Instant;
 
 use mahf::{
     float_eq::float_eq,
-    framework::{self},
+    framework::{self, Random},
     heuristics::pso,
     problems::bmf::BenchmarkFunction,
-    random::Random,
 };
 
 use crate::{

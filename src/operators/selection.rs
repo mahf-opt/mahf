@@ -8,7 +8,7 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Fitness, Individual, State},
+    framework::{components::*, state::State, Fitness, Individual},
     problems::Problem,
 };
 
@@ -208,8 +208,8 @@ impl Selection for FullyRandom {
 }
 #[cfg(test)]
 mod fully_random {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 
@@ -296,8 +296,8 @@ impl Selection for DeterministicFitnessProportional {
 
 #[cfg(test)]
 mod deterministic_fitness_proportional {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 
@@ -354,8 +354,8 @@ impl Selection for RouletteWheel {
 }
 #[cfg(test)]
 mod roulette_wheel {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 
@@ -417,8 +417,8 @@ impl Selection for StochasticUniversalSampling {
 }
 #[cfg(test)]
 mod stochastic_universal_sampling {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 
@@ -478,8 +478,8 @@ impl Selection for Tournament {
 }
 #[cfg(test)]
 mod tournament {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 
@@ -529,8 +529,8 @@ impl Selection for LinearRank {
 }
 #[cfg(test)]
 mod linear_rank {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 
@@ -589,8 +589,8 @@ impl Selection for ExponentialRank {
 }
 #[cfg(test)]
 mod exponential_rank {
+    use crate::framework::Random;
     use crate::operators::testing::new_test_population;
-    use crate::random::Random;
 
     use super::*;
 

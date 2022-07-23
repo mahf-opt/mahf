@@ -1,19 +1,30 @@
-use crate::framework::components::{Block, Branch, Component, Condition, Loop, Scope};
-use crate::framework::Configuration;
-use crate::problems::Problem;
+use crate::{
+    framework::components::{Block, Branch, Component, Condition, Loop, Scope},
+    problems::Problem,
+};
 
-pub struct ConfigurationBuilder<P> {
-    components: Vec<Box<dyn Component<P>>>,
-}
+pub struct Configuration<P: Problem>(Box<dyn Component<P>>);
 
-impl<P: Problem + 'static> Default for ConfigurationBuilder<P> {
-    fn default() -> Self {
-        Self::new()
+impl<P: Problem> Configuration<P> {
+    pub fn new(heuristic: Box<dyn Component<P>>) -> Self {
+        Configuration(heuristic)
+    }
+
+    pub fn builder() -> ConfigurationBuilder<P> {
+        ConfigurationBuilder::new()
+    }
+
+    pub fn heuristic(&self) -> &dyn Component<P> {
+        self.0.as_ref()
     }
 }
 
-impl<P: Problem + 'static> ConfigurationBuilder<P> {
-    pub fn new() -> Self {
+pub struct ConfigurationBuilder<P: Problem> {
+    components: Vec<Box<dyn Component<P>>>,
+}
+
+impl<P: Problem> ConfigurationBuilder<P> {
+    fn new() -> Self {
         Self {
             components: Vec::new(),
         }
@@ -66,6 +77,6 @@ impl<P: Problem + 'static> ConfigurationBuilder<P> {
     }
 
     pub fn build(self) -> Configuration<P> {
-        Block::new(self.components)
+        Configuration::new(Block::new(self.components))
     }
 }

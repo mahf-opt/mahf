@@ -3,8 +3,8 @@ use crate::{
     util::{print_result, ArgsIter, Setup},
 };
 use mahf::{
-    float_eq::float_eq, framework, heuristics::iwo, operators::termination,
-    problems::bmf::BenchmarkFunction, random::Random, tracking,
+    float_eq::float_eq, framework, framework::Random, heuristics::iwo, operators::termination,
+    problems::bmf::BenchmarkFunction, tracking,
 };
 use std::time::Instant;
 
