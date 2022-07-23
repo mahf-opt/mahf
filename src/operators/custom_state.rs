@@ -1,6 +1,6 @@
 //! Custom states required for specific metaheuristics and evaluation procedures
 
-use crate::framework::{state::CustomState, SingleObjective, Individual};
+use crate::framework::{state::CustomState, Individual, SingleObjective};
 
 // Custom States for Specific Metaheuristics //
 

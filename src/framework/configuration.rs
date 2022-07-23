@@ -1,5 +1,8 @@
 use crate::{
-    framework::components::{Block, Branch, Component, Condition, Loop, Scope},
+    framework::{
+        components::{Block, Branch, Component, Loop, Scope},
+        conditions::Condition,
+    },
     problems::Problem,
 };
 

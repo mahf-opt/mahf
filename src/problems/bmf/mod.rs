@@ -5,12 +5,11 @@ pub mod implementations;
 pub mod tests;
 
 use crate::{
-    framework::Fitness,
+    framework::SingleObjective,
     problems::{HasKnownOptimum, HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem},
 };
 use anyhow::anyhow;
 use std::convert::TryFrom;
-use crate::framework::SingleObjective;
 
 /// Wraps the benchmark functions as [`Problem`]s.
 ///
@@ -57,8 +56,8 @@ impl LimitedVectorProblem for BenchmarkFunction {
 }
 
 impl HasKnownTarget for BenchmarkFunction {
-    fn target_hit(&self, fitness: Fitness) -> bool {
-        float_eq::float_eq!(self.known_optimum, fitness.into(), ulps <= 10)
+    fn target_hit(&self, target: SingleObjective) -> bool {
+        float_eq::float_eq!(self.known_optimum, target.value(), ulps <= 10)
     }
 }
 

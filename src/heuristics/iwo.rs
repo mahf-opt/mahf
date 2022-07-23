@@ -1,12 +1,9 @@
 //! Invasive Weed Optimization
 
 use crate::{
-    framework::{
-        components::{Component, Condition},
-        Configuration,
-    },
+    framework::{components::Component, conditions::Condition, Configuration},
     operators::*,
-    problems::{LimitedVectorProblem, Problem, VectorProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -35,7 +32,10 @@ pub fn iwo<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>>
+        + VectorProblem<T = f64>
+        + LimitedVectorProblem
+        + 'static,
 {
     assert!(params.initial_population_size <= params.max_population_size);
     assert!(params.min_number_of_seeds <= params.max_number_of_seeds);

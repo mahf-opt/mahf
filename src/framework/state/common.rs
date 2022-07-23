@@ -1,5 +1,5 @@
 use super::{CustomState, State};
-use crate::framework::{Individual, MultiObjective};
+use crate::framework::{Individual, MultiObjective, SingleObjective};
 use derive_deref::{Deref, DerefMut};
 use serde::Serialize;
 
@@ -30,6 +30,17 @@ impl BestIndividual {
 impl CustomState for BestIndividual {}
 
 #[derive(Deref, DerefMut, Clone, Serialize)]
+pub struct BestObjectiveValue(pub SingleObjective);
+impl BestObjectiveValue {
+    pub fn replace_if_better(&mut self, objective: SingleObjective) {
+        if objective < self.0 {
+            self.0 = objective;
+        }
+    }
+}
+impl CustomState for BestObjectiveValue {}
+
+#[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct Evaluations(pub u32);
 impl CustomState for Evaluations {}
 
@@ -54,7 +65,8 @@ impl ParetoFront {
         }
 
         let objective = individual.objective::<MultiObjective>();
-        let _comparisons: Vec<_> = self.front()
+        let _comparisons: Vec<_> = self
+            .front()
             .iter()
             .map(|other| objective.partial_cmp(other.objective::<MultiObjective>()))
             .collect();

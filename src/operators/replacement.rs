@@ -6,7 +6,7 @@ use crate::{
         state::{common::Population, State},
         Individual,
     },
-    problems::Problem,
+    problems::{Problem, SingleObjectiveProblem},
 };
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// # Implementing [Component]
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Replacer].
-pub trait Replacement {
+pub trait Replacement<P: Problem> {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual>,
@@ -33,7 +33,7 @@ pub struct Replacer<T>(pub T);
 impl<T, P> Component<P> for Replacer<T>
 where
     P: Problem,
-    T: AnyComponent + Replacement + Serialize,
+    T: AnyComponent + Replacement<P> + Serialize,
 {
     fn execute(&self, _problem: &P, state: &mut State) {
         let mut offspring = state.get_mut::<Population>().pop();
@@ -52,7 +52,7 @@ impl Noop {
         Box::new(Replacer(Self))
     }
 }
-impl Replacement for Noop {
+impl<P: Problem> Replacement<P> for Noop {
     fn replace_population(
         &self,
         _parents: &mut Vec<Individual>,
@@ -69,13 +69,13 @@ pub struct MuPlusLambda {
     pub max_population_size: u32,
 }
 impl MuPlusLambda {
-    pub fn new<P: Problem>(max_population_size: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(max_population_size: u32) -> Box<dyn Component<P>> {
         Box::new(Replacer(Self {
             max_population_size,
         }))
     }
 }
-impl Replacement for MuPlusLambda {
+impl<P: SingleObjectiveProblem> Replacement<P> for MuPlusLambda {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual>,
@@ -123,7 +123,7 @@ impl Generational {
         }))
     }
 }
-impl Replacement for Generational {
+impl<P: Problem> Replacement<P> for Generational {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual>,
@@ -162,7 +162,7 @@ pub struct RandomReplacement {
     /// Limits the population growth.
     pub max_population_size: u32,
 }
-impl Replacement for RandomReplacement {
+impl<P: Problem> Replacement<P> for RandomReplacement {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual>,

@@ -34,7 +34,7 @@ pub fn ant_system(
                         default_pheromones,
                     ))
                     .do_(evaluation::SerialEvaluator::new())
-                    .do_(components::UpdateBestIndividual::new())
+                    .do_(evaluation::UpdateBestIndividual::new())
                     .do_(ant_ops::AsPheromoneUpdate::new(
                         evaporation,
                         decay_coefficient,
@@ -75,7 +75,7 @@ pub fn min_max_ant_system(
                         default_pheromones,
                     ))
                     .do_(evaluation::SerialEvaluator::new())
-                    .do_(components::UpdateBestIndividual::new())
+                    .do_(evaluation::UpdateBestIndividual::new())
                     .do_(ant_ops::MinMaxPheromoneUpdate::new(
                         evaporation,
                         max_pheromones,
@@ -130,7 +130,7 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, state::State, Individual, SingleObjective, Individual, Random},
+        framework::{components::*, state::State, Individual, Random, SingleObjective},
         problems::tsp::{Route, SymmetricTsp},
     };
 

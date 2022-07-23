@@ -66,7 +66,11 @@ pub fn evaluate_suite(
                     let log = state.get::<Log>();
                     files::write_log_file(log_file, log)?;
 
-                    let target_hit = problem.target_hit(state.best_fitness());
+                    let target_hit = if let Some(fitness) = state.best_fitness() {
+                        problem.target_hit(*fitness)
+                    } else {
+                        false
+                    };
                     Ok(target_hit)
                 })();
 

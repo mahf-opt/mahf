@@ -2,12 +2,11 @@
 
 use crate::{
     framework::{
-        components::Condition,
+        conditions::Condition,
         state::{
-            common::{BestFitness, Evaluations, Iterations, Progress},
+            common::{Evaluations, Iterations, Progress},
             State,
         },
-        Fitness,
     },
     operators::custom_state::FitnessImprovementState,
     problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
@@ -44,7 +43,7 @@ pub struct TargetHit;
 impl TargetHit {
     pub fn new<P>() -> Box<dyn Condition<P>>
     where
-        P: Problem + HasKnownTarget,
+        P: SingleObjectiveProblem + HasKnownTarget,
     {
         Box::new(Self)
     }
@@ -54,7 +53,11 @@ where
     P: SingleObjectiveProblem + HasKnownTarget,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        !problem.target_hit(state.best_fitness())
+        if let Some(fitness) = state.best_fitness() {
+            !problem.target_hit(*fitness)
+        } else {
+            false
+        }
     }
 }
 
@@ -209,7 +212,7 @@ pub struct DistanceToOpt {
 impl DistanceToOpt {
     pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
     where
-        P: Problem,
+        P: SingleObjectiveProblem,
     {
         Box::new(Self { distance })
     }
@@ -287,7 +290,7 @@ mod steps_without_improvement {
         let comp = StepsWithoutImprovement { steps: 20 };
         state.insert(FitnessImprovementState {
             current_steps: 0,
-            current_fitness: 0.5.try_into().unwrap(),
+            current_objective: 0.5.try_into().unwrap(),
         });
         state.insert(BestFitness(Fitness::default()));
         state.insert(Iterations(0));

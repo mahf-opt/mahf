@@ -64,9 +64,9 @@ pub trait BatchEvaluationProblem: Problem {
 }
 
 pub trait HasKnownTarget {
-    fn target_hit(&self, fitness: Fitness) -> bool;
+    fn target_hit(&self, target: SingleObjective) -> bool;
 }
 
 pub trait HasKnownOptimum {
-    fn known_optimum(&self) -> f64;
+    fn known_optimum(&self) -> SingleObjective;
 }

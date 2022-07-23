@@ -8,7 +8,7 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, state::State, SingleObjective, Individual},
+    framework::{components::*, state::State, Individual, SingleObjective},
     problems::Problem,
 };
 
@@ -90,8 +90,9 @@ fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
 fn get_ranking(population: &[Individual]) -> Vec<usize> {
     // First descending argsort with fitness
     let mut positions: Vec<_> = (1..=population.len()).collect();
-    positions
-        .sort_unstable_by_key(|&i| SingleObjective::try_from(-population[i - 1].fitness().value()).unwrap());
+    positions.sort_unstable_by_key(|&i| {
+        SingleObjective::try_from(-population[i - 1].fitness().value()).unwrap()
+    });
 
     // Second argsort with positions obtains ranking
     let mut ranking: Vec<_> = (1..=population.len()).collect();

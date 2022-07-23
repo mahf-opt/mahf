@@ -1,8 +1,11 @@
 //! Framework components.
 
 use crate::{
-    framework::{state::{common, State}, conditions::Condition},
-    problems::{MultiObjectiveProblem, SingleObjectiveProblem, Problem},
+    framework::{
+        conditions::Condition,
+        state::{common, State},
+    },
+    problems::Problem,
 };
 use serde::Serialize;
 use std::any::Any;

@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    framework::{random, SingleObjective, Individual},
+    framework::{random, Individual, SingleObjective},
     tracking::Log,
 };
 

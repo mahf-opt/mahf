@@ -1,8 +1,7 @@
-use crate::{framework::Fitness, problems};
+use crate::{framework::SingleObjective, problems};
 use std::sync::Mutex;
 
 pub use coco_rs::{Problem, Suite};
-use crate::framework::SingleObjective;
 
 pub mod suits;
 
@@ -69,7 +68,7 @@ impl problems::LimitedVectorProblem for CocoInstance {
 }
 
 impl problems::HasKnownTarget for CocoInstance {
-    fn target_hit(&self, _fitness: Fitness) -> bool {
+    fn target_hit(&self, _target: SingleObjective) -> bool {
         self.problem.lock().unwrap().final_target_hit()
     }
 }

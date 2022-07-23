@@ -20,7 +20,7 @@ where
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
         .do_(evaluation::SerialEvaluator::new())
-        .do_(components::UpdateBestIndividual::new())
+        .do_(evaluation::UpdateBestIndividual::new())
         .do_(pso_ops::PsoStateInitialization::new(v_max))
         .while_(
             termination::FixedIterations::new(max_iterations),
@@ -28,7 +28,7 @@ where
                 builder
                     .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
                     .do_(evaluation::SerialEvaluator::new())
-                    .do_(components::UpdateBestIndividual::new())
+                    .do_(evaluation::UpdateBestIndividual::new())
                     .do_(pso_ops::PsoStateUpdate::new())
             },
         )

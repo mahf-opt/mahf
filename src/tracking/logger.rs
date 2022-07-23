@@ -62,7 +62,7 @@ impl<P: Problem + 'static> Logger<P> {
                 .with_trigger(trigger::Iteration::new(10))
                 .with_auto_logger::<common::Evaluations>()
                 .with_auto_logger::<common::Progress>()
-                .with_auto_logger::<common::BestFitness>(),
+                .with_auto_logger::<common::BestObjectiveValue>(),
         )
     }
 
