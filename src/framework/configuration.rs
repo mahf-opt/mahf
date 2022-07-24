@@ -22,6 +22,12 @@ impl<P: Problem> Configuration<P> {
     }
 }
 
+impl<P: Problem> From<Configuration<P>> for Box<dyn Component<P>> {
+    fn from(config: Configuration<P>) -> Self {
+        config.0
+    }
+}
+
 pub struct ConfigurationBuilder<P: Problem> {
     components: Vec<Box<dyn Component<P>>>,
 }

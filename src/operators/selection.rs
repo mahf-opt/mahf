@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     framework::{components::*, state::State, Individual, SingleObjective},
-    problems::Problem,
+    problems::{Problem, SingleObjectiveProblem},
 };
 
 /// Specialized component trait to select a subset of the current population and push it on the stack.
@@ -17,7 +17,7 @@ use crate::{
 /// # Implementing [Component]
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Selector].
-pub trait Selection {
+pub trait Selection<P: Problem> {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -31,7 +31,7 @@ pub struct Selector<T>(pub T);
 impl<T, P> Component<P> for Selector<T>
 where
     P: Problem,
-    T: AnyComponent + Selection + Serialize,
+    T: AnyComponent + Selection<P> + Serialize,
 {
     fn execute(&self, _problem: &P, state: &mut State) {
         let population = state.population_stack_mut().pop();
@@ -109,7 +109,7 @@ impl All {
         Box::new(Selector(Self))
     }
 }
-impl Selection for All {
+impl<P: Problem> Selection<P> for All {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -127,7 +127,7 @@ impl None {
         Box::new(Selector(Self))
     }
 }
-impl Selection for None {
+impl<P: Problem> Selection<P> for None {
     fn select_offspring<'p>(
         &self,
         _population: &'p [Individual],
@@ -148,7 +148,7 @@ impl DuplicateSingle {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl Selection for DuplicateSingle {
+impl<P: Problem> Selection<P> for DuplicateSingle {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -193,7 +193,7 @@ impl FullyRandom {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl Selection for FullyRandom {
+impl<P: Problem> Selection<P> for FullyRandom {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -253,7 +253,10 @@ pub struct DeterministicFitnessProportional {
     pub max_offspring: u32,
 }
 impl DeterministicFitnessProportional {
-    pub fn new<P: Problem>(min_offspring: u32, max_offspring: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(
+        min_offspring: u32,
+        max_offspring: u32,
+    ) -> Box<dyn Component<P>> {
         Box::new(Selector(Self {
             min_offspring,
             max_offspring,
@@ -261,7 +264,7 @@ impl DeterministicFitnessProportional {
     }
 }
 
-impl Selection for DeterministicFitnessProportional {
+impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportional {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -333,11 +336,11 @@ pub struct RouletteWheel {
     pub offspring: u32,
 }
 impl RouletteWheel {
-    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl Selection for RouletteWheel {
+impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -381,11 +384,11 @@ pub struct StochasticUniversalSampling {
     pub offspring: u32,
 }
 impl StochasticUniversalSampling {
-    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl Selection for StochasticUniversalSampling {
+impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -445,11 +448,11 @@ pub struct Tournament {
     pub size: u32,
 }
 impl Tournament {
-    pub fn new<P: Problem>(offspring: u32, size: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(offspring: u32, size: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring, size }))
     }
 }
-impl Selection for Tournament {
+impl<P: SingleObjectiveProblem> Selection<P> for Tournament {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -507,11 +510,11 @@ pub struct LinearRank {
     pub offspring: u32,
 }
 impl LinearRank {
-    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
-impl Selection for LinearRank {
+impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],
@@ -559,11 +562,11 @@ pub struct ExponentialRank {
     pub base: f64,
 }
 impl ExponentialRank {
-    pub fn new<P: Problem>(offspring: u32, base: f64) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(offspring: u32, base: f64) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring, base }))
     }
 }
-impl Selection for ExponentialRank {
+impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual],

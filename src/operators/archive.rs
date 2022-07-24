@@ -3,7 +3,7 @@
 use crate::{
     framework::{components::*, state::State},
     operators::custom_state::ElitistArchiveState,
-    problems::Problem,
+    problems::SingleObjectiveProblem,
 };
 use serde::{Deserialize, Serialize};
 
@@ -13,13 +13,13 @@ pub struct ElitistArchive {
     pub n_elitists: usize,
 }
 impl ElitistArchive {
-    pub fn new<P: Problem>(n_elitists: usize) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(n_elitists: usize) -> Box<dyn Component<P>> {
         Box::new(Self { n_elitists })
     }
 }
 impl<P> Component<P> for ElitistArchive
 where
-    P: Problem,
+    P: SingleObjectiveProblem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.insert::<ElitistArchiveState>(ElitistArchiveState::new(self.n_elitists));
@@ -36,13 +36,13 @@ where
 #[derive(Serialize, Deserialize)]
 pub struct AddElitists;
 impl AddElitists {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 impl<P> Component<P> for AddElitists
 where
-    P: Problem,
+    P: SingleObjectiveProblem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<ElitistArchiveState>();
