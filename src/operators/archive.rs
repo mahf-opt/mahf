@@ -22,12 +22,14 @@ where
     P: SingleObjectiveProblem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert::<ElitistArchiveState>(ElitistArchiveState::new(self.n_elitists));
+        state.insert::<ElitistArchiveState<P>>(ElitistArchiveState::new(self.n_elitists));
     }
 
     fn execute(&self, _problem: &P, state: &mut State) {
         let population = state.population_stack_mut().pop();
-        state.get_mut::<ElitistArchiveState>().update(&population);
+        state
+            .get_mut::<ElitistArchiveState<P>>()
+            .update(&population);
         state.population_stack_mut().push(population);
     }
 }
@@ -45,12 +47,12 @@ where
     P: SingleObjectiveProblem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<ElitistArchiveState>();
+        state.require::<ElitistArchiveState<P>>();
     }
 
     fn execute(&self, _problem: &P, state: &mut State) {
         let mut population = state.population_stack_mut().pop();
-        let elitism_state = state.get::<ElitistArchiveState>();
+        let elitism_state = state.get::<ElitistArchiveState<P>>();
 
         for elitist in elitism_state.elitists() {
             if !population.contains(elitist) {

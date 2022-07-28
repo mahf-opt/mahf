@@ -131,7 +131,7 @@ mod ant_ops {
 
     use crate::{
         framework::{components::*, state::State, Individual, Random, SingleObjective},
-        problems::tsp::{Route, SymmetricTsp},
+        problems::tsp::SymmetricTsp,
     };
 
     use super::PheromoneMatrix;
@@ -214,7 +214,7 @@ mod ant_ops {
 
             let population = routes
                 .into_iter()
-                .map(Individual::new_unevaluated::<Route, SingleObjective>)
+                .map(Individual::<SymmetricTsp>::new_unevaluated)
                 .collect();
             *state.population_stack_mut().current_mut() = population;
         }
@@ -241,15 +241,15 @@ mod ant_ops {
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
             let mut mut_state = state.get_states_mut();
             let pm = mut_state.get_mut::<PheromoneMatrix>();
-            let population = mut_state.population_stack().current();
+            let population = mut_state.population_stack::<SymmetricTsp>().current();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
 
             // Update pheromones for probabilistic routes
             for individual in population.iter().skip(1) {
-                let fitness = individual.fitness().value();
-                let route = individual.solution::<Route>();
+                let fitness = individual.objective().value();
+                let route = individual.solution();
                 let delta = self.decay_coefficient / fitness;
                 for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
                     pm[a][b] += delta;
@@ -284,7 +284,7 @@ mod ant_ops {
         }
 
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
-            let population = state.population_stack_mut().pop();
+            let population = state.population_stack_mut::<SymmetricTsp>().pop();
             let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
@@ -294,11 +294,11 @@ mod ant_ops {
             let individual = population
                 .iter()
                 .skip(1)
-                .min_by_key(|i| i.fitness())
+                .min_by_key(|i| i.objective())
                 .unwrap();
 
-            let fitness = individual.fitness().value();
-            let route = individual.solution::<Route>();
+            let fitness = individual.objective().value();
+            let route = individual.solution();
             let delta = 1.0 / fitness;
             for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
                 pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);

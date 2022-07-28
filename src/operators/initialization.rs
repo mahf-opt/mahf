@@ -15,7 +15,7 @@ use crate::{
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Initializer].
 pub trait Initialization<P: Problem>: AnyComponent {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual>;
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>>;
 }
 
 #[derive(Serialize)]
@@ -44,7 +44,7 @@ impl Empty {
     }
 }
 impl<P: Problem> Initialization<P> for Empty {
-    fn initialize_population(&self, _problem: &P, _state: &mut State) -> Vec<Individual> {
+    fn initialize_population(&self, _problem: &P, _state: &mut State) -> Vec<Individual<P>> {
         Vec::new()
     }
 }
@@ -94,11 +94,11 @@ where
     D: SampleUniform + Clone + PartialOrd + 'static,
     P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
 {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
         self.random_spread(problem, state.random_mut(), population_size)
             .into_iter()
-            .map(Individual::new_unevaluated::<P::Encoding, P::Objective>)
+            .map(Individual::new_unevaluated)
             .collect()
     }
 }
@@ -141,11 +141,11 @@ impl<P> Initialization<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual> {
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
         self.random_permutation(problem, state.random_mut(), population_size)
             .into_iter()
-            .map(Individual::new_unevaluated::<P::Encoding, P::Objective>)
+            .map(Individual::new_unevaluated)
             .collect()
     }
 }

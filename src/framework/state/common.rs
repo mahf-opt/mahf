@@ -1,21 +1,18 @@
-use super::{CustomState, State};
-use crate::framework::{Individual, MultiObjective, SingleObjective};
+use super::CustomState;
+use crate::problems::Problem;
+use crate::{
+    framework::Individual,
+    problems::{MultiObjectiveProblem, SingleObjectiveProblem},
+};
 use derive_deref::{Deref, DerefMut};
 use serde::Serialize;
 
-pub fn default(state: &mut State) {
-    state.insert(Population::new());
-    state.insert(Evaluations(0));
-    state.insert(Iterations(0));
-    state.insert(Progress(0.0));
-}
-
 #[derive(Deref, DerefMut)]
-pub struct BestIndividual(pub Option<Individual>);
-impl BestIndividual {
-    pub fn replace_if_better(&mut self, candidate: &Individual) -> bool {
+pub struct BestIndividual<P: SingleObjectiveProblem>(pub Option<Individual<P>>);
+impl<P: SingleObjectiveProblem> BestIndividual<P> {
+    pub fn replace_if_better(&mut self, candidate: &Individual<P>) -> bool {
         if let Some(individual) = &mut self.0 {
-            if candidate.fitness() < individual.fitness() {
+            if candidate.objective() < individual.objective() {
                 *individual = candidate.clone();
                 true
             } else {
@@ -27,18 +24,13 @@ impl BestIndividual {
         }
     }
 }
-impl CustomState for BestIndividual {}
+impl<P: SingleObjectiveProblem> CustomState for BestIndividual<P> {}
 
-#[derive(Deref, DerefMut, Clone, Serialize)]
-pub struct BestObjectiveValue(pub SingleObjective);
-impl BestObjectiveValue {
-    pub fn replace_if_better(&mut self, objective: SingleObjective) {
-        if objective < self.0 {
-            self.0 = objective;
-        }
+impl<P: SingleObjectiveProblem> Default for BestIndividual<P> {
+    fn default() -> Self {
+        Self(None::<Individual<P>>)
     }
 }
-impl CustomState for BestObjectiveValue {}
 
 #[derive(Deref, DerefMut, Clone, Serialize)]
 pub struct Evaluations(pub u32);
@@ -53,66 +45,72 @@ pub struct Progress(pub f64);
 impl CustomState for Progress {}
 
 #[derive(Deref, DerefMut)]
-pub struct ParetoFront(Vec<Individual>);
-impl ParetoFront {
+pub struct ParetoFront<P: MultiObjectiveProblem>(Vec<Individual<P>>);
+impl<P: MultiObjectiveProblem> ParetoFront<P> {
     pub fn new() -> Self {
         Self(Vec::new())
     }
 
-    pub fn update(&mut self, individual: &Individual) {
+    pub fn update(&mut self, individual: &Individual<P>) {
         if !individual.is_evaluated() {
             return;
         }
 
-        let objective = individual.objective::<MultiObjective>();
+        let objective = individual.objective();
         let _comparisons: Vec<_> = self
             .front()
             .iter()
-            .map(|other| objective.partial_cmp(other.objective::<MultiObjective>()))
+            .map(|other| objective.partial_cmp(other.objective()))
             .collect();
 
         todo!("Finish implementation.");
     }
 
-    pub fn update_multiple(&mut self, population: &[Individual]) {
+    pub fn update_multiple(&mut self, population: &[Individual<P>]) {
         for individual in population {
             self.update(individual);
         }
     }
 
-    pub fn front(&self) -> &[Individual] {
+    pub fn front(&self) -> &[Individual<P>] {
         &self.0
     }
 }
-impl CustomState for ParetoFront {}
+impl<P: MultiObjectiveProblem> CustomState for ParetoFront<P> {}
+
+impl<P: MultiObjectiveProblem> Default for ParetoFront<P> {
+    fn default() -> Self {
+        Self(Vec::new())
+    }
+}
 
 #[derive(Deref, DerefMut)]
 pub struct Loop(pub bool);
 impl CustomState for Loop {}
 
 #[derive(Default)]
-pub struct Population {
-    stack: Vec<Vec<Individual>>,
+pub struct Population<P: Problem> {
+    stack: Vec<Vec<Individual<P>>>,
 }
-impl CustomState for Population {}
-impl Population {
+impl<P: Problem> CustomState for Population<P> {}
+impl<P: Problem> Population<P> {
     pub fn new() -> Self {
-        Self::default()
+        Self { stack: Vec::new() }
     }
 
-    pub fn current(&self) -> &[Individual] {
+    pub fn current(&self) -> &[Individual<P>] {
         self.stack.last().unwrap()
     }
 
-    pub fn current_mut(&mut self) -> &mut Vec<Individual> {
+    pub fn current_mut(&mut self) -> &mut Vec<Individual<P>> {
         self.stack.last_mut().unwrap()
     }
 
-    pub fn push(&mut self, population: Vec<Individual>) {
+    pub fn push(&mut self, population: Vec<Individual<P>>) {
         self.stack.push(population);
     }
 
-    pub fn pop(&mut self) -> Vec<Individual> {
+    pub fn pop(&mut self) -> Vec<Individual<P>> {
         self.stack.pop().unwrap()
     }
 

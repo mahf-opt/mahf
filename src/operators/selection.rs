@@ -20,9 +20,9 @@ use crate::{
 pub trait Selection<P: Problem> {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual>;
+    ) -> Vec<&'p Individual<P>>;
 }
 
 #[derive(serde::Serialize)]
@@ -47,16 +47,16 @@ where
 }
 
 /// Helper function to obtain minimum and maximum objective ranges for normalization.
-fn get_objective_range(population: &[Individual]) -> (f64, f64) {
+fn get_objective_range<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> (f64, f64) {
     let best = population
         .iter()
-        .map(Individual::objective::<SingleObjective>)
+        .map(Individual::objective)
         .min()
         .unwrap()
         .value();
     let worst = population
         .iter()
-        .map(Individual::objective::<SingleObjective>)
+        .map(Individual::objective)
         .max()
         .unwrap()
         .value();
@@ -65,7 +65,7 @@ fn get_objective_range(population: &[Individual]) -> (f64, f64) {
 
 /// Helper function to calculate normalized fitness weights from the population,
 /// where individuals with lower fitness get more weight.
-fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
+fn get_minimizing_weights<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> Vec<f64> {
     let (worst, best) = get_objective_range(population);
     assert!(
         worst.is_finite(),
@@ -74,7 +74,7 @@ fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
     // Normalize fitness values
     let normalized: Vec<f64> = population
         .iter()
-        .map(|i| (i.fitness().value() - best) / (worst - best))
+        .map(|i| (i.objective().value() - best) / (worst - best))
         .collect();
     // Calculate population fitness as sum of individuals' fitness
     let total: f64 = normalized.iter().sum();
@@ -87,11 +87,11 @@ fn get_minimizing_weights(population: &[Individual]) -> Vec<f64> {
 }
 
 /// Helper function to obtain a ranking from the population.
-fn get_ranking(population: &[Individual]) -> Vec<usize> {
+fn get_ranking<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> Vec<usize> {
     // First descending argsort with fitness
     let mut positions: Vec<_> = (1..=population.len()).collect();
     positions.sort_unstable_by_key(|&i| {
-        SingleObjective::try_from(-population[i - 1].fitness().value()).unwrap()
+        SingleObjective::try_from(-population[i - 1].objective().value()).unwrap()
     });
 
     // Second argsort with positions obtains ranking
@@ -112,9 +112,9 @@ impl All {
 impl<P: Problem> Selection<P> for All {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         _state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         population.iter().collect()
     }
 }
@@ -130,9 +130,9 @@ impl None {
 impl<P: Problem> Selection<P> for None {
     fn select_offspring<'p>(
         &self,
-        _population: &'p [Individual],
+        _population: &'p [Individual<P>],
         _state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         Vec::new()
     }
 }
@@ -151,9 +151,9 @@ impl DuplicateSingle {
 impl<P: Problem> Selection<P> for DuplicateSingle {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         _state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         assert_eq!(population.len(), 1);
         let single_solution = population.first().unwrap();
         (0..self.offspring)
@@ -165,7 +165,7 @@ impl<P: Problem> Selection<P> for DuplicateSingle {
 
 #[cfg(test)]
 mod duplicate_single {
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -196,9 +196,9 @@ impl FullyRandom {
 impl<P: Problem> Selection<P> for FullyRandom {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         let rng = state.random_mut();
         let mut selection = Vec::new();
         for _ in 0..self.offspring {
@@ -210,7 +210,7 @@ impl<P: Problem> Selection<P> for FullyRandom {
 #[cfg(test)]
 mod fully_random {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -267,9 +267,9 @@ impl DeterministicFitnessProportional {
 impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportional {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         _state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         let (worst, best) = get_objective_range(population);
 
         assert!(
@@ -280,7 +280,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportiona
         let mut selection = Vec::new();
 
         for ind in population.iter() {
-            let bonus: f64 = (ind.fitness().value() - worst) / (best - worst);
+            let bonus: f64 = (ind.objective().value() - worst) / (best - worst);
             let bonus_offspring = (self.max_offspring - self.min_offspring) as f64;
             let num_offspring = self.min_offspring
                 + if bonus.is_nan() {
@@ -301,7 +301,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportiona
 #[cfg(test)]
 mod deterministic_fitness_proportional {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -315,7 +315,10 @@ mod deterministic_fitness_proportional {
             max_offspring: 3,
         };
         let selection = comp.select_offspring(&population, &mut state);
-        let selection: Vec<f64> = selection.into_iter().map(|i| i.fitness().into()).collect();
+        let selection: Vec<f64> = selection
+            .into_iter()
+            .map(|i| i.objective().value())
+            .collect();
 
         assert!(selection.len() > (comp.min_offspring as usize * population.len()));
         assert!(selection.len() < (comp.max_offspring as usize * population.len()));
@@ -343,9 +346,9 @@ impl RouletteWheel {
 impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         let rng = state.random_mut();
         let weights_min = get_minimizing_weights(population);
         let wheel = WeightedIndex::new(weights_min).unwrap();
@@ -359,7 +362,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
 #[cfg(test)]
 mod roulette_wheel {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -391,9 +394,9 @@ impl StochasticUniversalSampling {
 impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         let rng = state.random_mut();
         let weights_min = get_minimizing_weights(population);
 
@@ -422,7 +425,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
 #[cfg(test)]
 mod stochastic_universal_sampling {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -455,22 +458,22 @@ impl Tournament {
 impl<P: SingleObjectiveProblem> Selection<P> for Tournament {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         assert!(population.len() >= self.size as usize);
         let rng = state.random_mut();
         let mut selection = Vec::new();
         // For each individual
         for _ in 0..self.offspring {
             // choose size competitors in tournament
-            let mut tournament: Vec<&Individual> = population
+            let mut tournament: Vec<&Individual<P>> = population
                 .choose_multiple(rng, self.size as usize)
                 .collect();
             // and evaluate them against each other, placing the winner first
             tournament.sort_unstable_by(|x, y| {
-                (x.fitness().value())
-                    .partial_cmp(&(y.fitness().value()))
+                (x.objective().value())
+                    .partial_cmp(&(y.objective().value()))
                     .unwrap()
             });
             // Add winner (first) to selection
@@ -483,7 +486,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for Tournament {
 #[cfg(test)]
 mod tournament {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -517,9 +520,9 @@ impl LinearRank {
 impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         let rng = state.random_mut();
         let weights = get_ranking(population);
         let wheel = WeightedIndex::new(&weights).unwrap();
@@ -534,7 +537,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
 #[cfg(test)]
 mod linear_rank {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 
@@ -569,9 +572,9 @@ impl ExponentialRank {
 impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
     fn select_offspring<'p>(
         &self,
-        population: &'p [Individual],
+        population: &'p [Individual<P>],
         state: &mut State,
-    ) -> Vec<&'p Individual> {
+    ) -> Vec<&'p Individual<P>> {
         let rng = state.random_mut();
         let ranking = get_ranking(population);
         // Weight ranking by exponential equation, worst has smallest weight
@@ -594,7 +597,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
 #[cfg(test)]
 mod exponential_rank {
     use crate::framework::Random;
-    use crate::operators::testing::new_test_population;
+    use crate::testing::*;
 
     use super::*;
 

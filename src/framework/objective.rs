@@ -3,7 +3,7 @@
 use std::any::Any;
 use std::fmt;
 
-pub trait Objective: fmt::Debug + Clone + Eq + Any {}
+pub trait Objective: fmt::Debug + Clone + Eq + Any + PartialOrd {}
 
 /// Error type for illegal objective values.
 ///
@@ -15,9 +15,9 @@ pub enum IllegalObjective {
 }
 
 impl fmt::Display for IllegalObjective {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(
-            fmt,
+            f,
             "illegal objective: {}",
             match self {
                 IllegalObjective::NaN => "NaN",
@@ -27,7 +27,7 @@ impl fmt::Display for IllegalObjective {
     }
 }
 
-#[derive(Debug, Clone, Copy, serde::Serialize)]
+#[derive(Clone, Copy, serde::Serialize)]
 pub struct SingleObjective(f64);
 
 impl PartialEq for SingleObjective {
@@ -91,7 +91,13 @@ impl TryFrom<f64> for SingleObjective {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+impl fmt::Debug for SingleObjective {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+
+#[derive(Clone, serde::Serialize)]
 pub struct MultiObjective(Vec<f64>);
 
 impl PartialEq for MultiObjective {
@@ -124,6 +130,12 @@ impl PartialOrd for MultiObjective {
             // None dominates
             _ => None,
         }
+    }
+}
+
+impl fmt::Debug for MultiObjective {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.0)
     }
 }
 

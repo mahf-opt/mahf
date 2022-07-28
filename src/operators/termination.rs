@@ -53,7 +53,7 @@ where
     P: SingleObjectiveProblem + HasKnownTarget,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        if let Some(fitness) = state.best_fitness() {
+        if let Some(fitness) = state.best_objective_value::<P>() {
             !problem.target_hit(*fitness)
         } else {
             false
@@ -96,11 +96,11 @@ where
 #[cfg(test)]
 mod fixed_iterations {
     use super::*;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::testing::TestProblem;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Iterations(0));
         let comp = FixedIterations {
@@ -115,7 +115,7 @@ mod fixed_iterations {
 
     #[test]
     fn updates_progress() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Iterations(0));
         let comp = FixedIterations {
@@ -165,11 +165,11 @@ where
 #[cfg(test)]
 mod fixed_evaluations {
     use super::*;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::testing::TestProblem;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Evaluations(0));
         let comp = FixedEvaluations {
@@ -184,7 +184,7 @@ mod fixed_evaluations {
 
     #[test]
     fn updates_progress() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Evaluations(0));
         let comp = FixedEvaluations {
@@ -222,23 +222,30 @@ where
     P: Problem,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        state.best_fitness().unwrap().value() >= problem.known_optimum().value() + self.distance
+        state.best_objective_value::<P>().unwrap().value()
+            >= problem.known_optimum().value() + self.distance
     }
 }
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::{framework::Fitness, problems::bmf::BenchmarkFunction};
+    use crate::framework::{state::common, Individual};
+    use crate::testing::TestProblem;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
-        state.insert(BestFitness(Fitness::default()));
+        state.insert(common::BestIndividual::<TestProblem>::default());
         let comp = DistanceToOpt { distance: 0.1 };
-        state.set_value::<BestFitness>(Fitness::try_from(2.0).unwrap());
+
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(
+            Individual::new_single_objective_test_unit(2.),
+        ));
         assert!(comp.evaluate(&problem, &mut state));
-        state.set_value::<BestFitness>(Fitness::try_from(0.05).unwrap());
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(
+            Individual::new_single_objective_test_unit(0.05),
+        ));
         assert!(!comp.evaluate(&problem, &mut state));
     }
 }
@@ -271,7 +278,7 @@ where
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        let best_fitness = *state.best_fitness().unwrap();
+        let best_fitness = *state.best_objective_value::<P>().unwrap();
         let termination_state = state.get_mut::<FitnessImprovementState>();
         termination_state.update(&best_fitness);
 
@@ -281,23 +288,28 @@ where
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::{framework::Fitness, problems::bmf::BenchmarkFunction};
+    use crate::framework::{state::common, Individual};
+    use crate::testing::TestProblem;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         let comp = StepsWithoutImprovement { steps: 20 };
         state.insert(FitnessImprovementState {
             current_steps: 0,
             current_objective: 0.5.try_into().unwrap(),
         });
-        state.insert(BestFitness(Fitness::default()));
+        state.insert(common::BestIndividual::<TestProblem>::default());
         state.insert(Iterations(0));
-        state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(
+            Individual::new_single_objective_test_unit(0.5),
+        ));
         state.set_value::<Iterations>(10);
         assert!(comp.evaluate(&problem, &mut state));
-        state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(
+            Individual::new_single_objective_test_unit(0.5),
+        ));
         let test_state = state.get_mut::<FitnessImprovementState>();
         test_state.current_steps = 20;
         assert!(!comp.evaluate(&problem, &mut state));

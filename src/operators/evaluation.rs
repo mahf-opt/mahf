@@ -19,7 +19,7 @@ impl SerialEvaluator {
 
 impl<P: Problem> Component<P> for SerialEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<common::Population>();
+        state.require::<common::Population<P>>();
         state.insert(common::Evaluations(0));
     }
 
@@ -53,7 +53,7 @@ impl UpdateBestIndividual {
 
 impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert(common::BestIndividual(None));
+        state.insert(common::BestIndividual::<P>(None));
     }
 
     fn execute(&self, _problem: &P, state: &mut State) {
@@ -63,13 +63,12 @@ impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
             .population_stack()
             .current()
             .iter()
-            .min_by_key(|i| i.fitness());
+            .min_by_key(|i| i.objective());
 
         if let Some(best_individual) = best_individual {
             mut_state
-                .get_mut::<common::BestIndividual>()
+                .get_mut::<common::BestIndividual<P>>()
                 .replace_if_better(best_individual);
-            *mut_state.get_value_mut::<common::BestObjectiveValue>() = *best_individual.fitness();
         }
     }
 }
@@ -85,13 +84,13 @@ impl UpdateParetoFront {
 
 impl<P: MultiObjectiveProblem> Component<P> for UpdateParetoFront {
     fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert(common::ParetoFront::new());
+        state.insert(common::ParetoFront::<P>::new());
     }
 
     fn execute(&self, _problem: &P, state: &mut State) {
         let mut mut_state = state.get_states_mut();
 
-        let front = mut_state.get_mut::<common::ParetoFront>();
+        let front = mut_state.get_mut::<common::ParetoFront<P>>();
         front.update_multiple(mut_state.population_stack().current());
     }
 }

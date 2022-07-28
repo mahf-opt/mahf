@@ -1,11 +1,7 @@
 //! Replacement methods
 
 use crate::{
-    framework::{
-        components::*,
-        state::{common::Population, State},
-        Individual,
-    },
+    framework::{components::*, state::State, Individual},
     problems::{Problem, SingleObjectiveProblem},
 };
 use rand::seq::SliceRandom;
@@ -21,8 +17,8 @@ use serde::{Deserialize, Serialize};
 pub trait Replacement<P: Problem> {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         state: &mut State,
     );
 }
@@ -36,8 +32,8 @@ where
     T: AnyComponent + Replacement<P> + Serialize,
 {
     fn execute(&self, _problem: &P, state: &mut State) {
-        let mut offspring = state.get_mut::<Population>().pop();
-        let mut parents = state.get_mut::<Population>().pop();
+        let mut offspring = state.population_stack_mut().pop();
+        let mut parents = state.population_stack_mut().pop();
         self.0
             .replace_population(&mut parents, &mut offspring, state);
         state.population_stack_mut().push(parents);
@@ -55,8 +51,8 @@ impl Noop {
 impl<P: Problem> Replacement<P> for Noop {
     fn replace_population(
         &self,
-        _parents: &mut Vec<Individual>,
-        _offspring: &mut Vec<Individual>,
+        _parents: &mut Vec<Individual<P>>,
+        _offspring: &mut Vec<Individual<P>>,
         _state: &mut State,
     ) {
     }
@@ -78,12 +74,12 @@ impl MuPlusLambda {
 impl<P: SingleObjectiveProblem> Replacement<P> for MuPlusLambda {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         _state: &mut State,
     ) {
         parents.append(offspring);
-        parents.sort_unstable_by_key(|i| *i.fitness());
+        parents.sort_unstable_by_key(|i| *i.objective());
         parents.truncate(self.max_population_size as usize);
     }
 }
@@ -91,7 +87,7 @@ impl<P: SingleObjectiveProblem> Replacement<P> for MuPlusLambda {
 #[cfg(test)]
 mod mupluslambda {
     use crate::framework::state::State;
-    use crate::operators::testing::{collect_population_fitness, new_test_population};
+    use crate::testing::*;
 
     use super::*;
 
@@ -126,8 +122,8 @@ impl Generational {
 impl<P: Problem> Replacement<P> for Generational {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         _state: &mut State,
     ) {
         parents.clear();
@@ -139,7 +135,7 @@ impl<P: Problem> Replacement<P> for Generational {
 #[cfg(test)]
 mod generational {
     use super::*;
-    use crate::operators::testing::*;
+    use crate::testing::*;
 
     #[test]
     fn keeps_all_children() {
@@ -165,8 +161,8 @@ pub struct RandomReplacement {
 impl<P: Problem> Replacement<P> for RandomReplacement {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         state: &mut State,
     ) {
         parents.append(offspring);
@@ -179,7 +175,7 @@ impl<P: Problem> Replacement<P> for RandomReplacement {
 mod random_replacement {
     use super::*;
     use crate::framework::Random;
-    use crate::operators::testing::*;
+    use crate::testing::*;
 
     #[test]
     fn keeps_right_amount_of_children() {

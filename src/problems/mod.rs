@@ -24,9 +24,11 @@ pub trait Problem: 'static {
 
     fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective;
 
-    fn evaluate(&self, individual: &mut Individual) {
-        let solution = individual.solution::<Self::Encoding>();
-        let objective = self.evaluate_solution(solution);
+    fn evaluate(&self, individual: &mut Individual<Self>)
+    where
+        Self: Sized,
+    {
+        let objective = self.evaluate_solution(individual.solution());
         individual.evaluate(objective);
     }
 
@@ -51,12 +53,11 @@ pub trait LimitedVectorProblem: VectorProblem {
     fn range(&self, dimension: usize) -> Range<Self::T>;
 }
 
-pub trait DebugProblem: Problem {
-    fn debug_fmt(&self, individual: &Individual) -> String;
-}
-
 pub trait BatchEvaluationProblem: Problem {
-    fn evaluate_batch(&self, population: &mut [Individual]) {
+    fn evaluate_batch(&self, population: &mut [Individual<Self>])
+    where
+        Self: Sized,
+    {
         for individual in population.iter_mut() {
             self.evaluate(individual);
         }

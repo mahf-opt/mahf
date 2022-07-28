@@ -61,8 +61,7 @@ impl<P: Problem + 'static> Logger<P> {
             LogSet::new()
                 .with_trigger(trigger::Iteration::new(10))
                 .with_auto_logger::<common::Evaluations>()
-                .with_auto_logger::<common::Progress>()
-                .with_auto_logger::<common::BestObjectiveValue>(),
+                .with_auto_logger::<common::Progress>(),
         )
     }
 

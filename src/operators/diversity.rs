@@ -43,7 +43,7 @@ where
 
     fn execute(&self, problem: &P, state: &mut State) {
         let (population_stack, diversity_state) =
-            state.get_multiple_mut::<(Population, DiversityState)>();
+            state.get_multiple_mut::<(Population<P>, DiversityState)>();
 
         let population = population_stack.current();
 
@@ -54,7 +54,7 @@ where
 
         let n = population.len() as f64;
         let d = problem.dimension();
-        let iter_solutions = || population.iter().map(|i| i.solution::<Vec<f64>>());
+        let iter_solutions = || population.iter().map(|i| i.solution());
 
         let selected_measure = self.measure;
         match selected_measure {

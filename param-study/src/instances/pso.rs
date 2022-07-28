@@ -51,12 +51,18 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     print_result(
         float_eq!(
             problem.known_optimum(),
-            state.best_fitness().into(),
+            state
+                .best_objective_value::<BenchmarkFunction>()
+                .unwrap()
+                .value(),
             abs <= allowed_error
         ),
         runtime.as_secs_f64(),
         state.iterations(),
-        state.best_fitness().into(),
+        state
+            .best_objective_value::<BenchmarkFunction>()
+            .unwrap()
+            .value(),
         setup.seed,
     );
 }

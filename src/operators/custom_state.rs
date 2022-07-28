@@ -1,31 +1,34 @@
 //! Custom states required for specific metaheuristics and evaluation procedures
 
-use crate::framework::{state::CustomState, Individual, SingleObjective};
+use crate::{
+    framework::{state::CustomState, Individual, SingleObjective},
+    problems::{Problem, SingleObjectiveProblem},
+};
 
 // Custom States for Specific Metaheuristics //
 
 /// State required for PSO.
 ///
 /// For preserving velocities of particles, own best values and global best particle.
-pub struct PsoState {
+pub struct PsoState<P: Problem> {
     pub velocities: Vec<Vec<f64>>,
-    pub bests: Vec<Individual>,
-    pub global_best: Individual,
+    pub bests: Vec<Individual<P>>,
+    pub global_best: Individual<P>,
 }
-impl CustomState for PsoState {}
+impl<P: Problem> CustomState for PsoState<P> {}
 
 // Custom States for Operators //
 
 /// State required for Elitism.
 ///
 /// For preserving n elitist individuals.
-pub struct ElitistArchiveState {
-    elitists: Vec<Individual>,
+pub struct ElitistArchiveState<P: SingleObjectiveProblem> {
+    elitists: Vec<Individual<P>>,
     n_elitists: usize,
 }
-impl CustomState for ElitistArchiveState {}
+impl<P: SingleObjectiveProblem> CustomState for ElitistArchiveState<P> {}
 
-impl ElitistArchiveState {
+impl<P: SingleObjectiveProblem> ElitistArchiveState<P> {
     pub fn new(n_elitists: usize) -> Self {
         Self {
             elitists: Vec::new(),
@@ -33,18 +36,18 @@ impl ElitistArchiveState {
         }
     }
 
-    pub fn update(&mut self, population: &[Individual]) {
+    pub fn update(&mut self, population: &[Individual<P>]) {
         let mut pop = population.iter().collect::<Vec<_>>();
-        pop.sort_unstable_by_key(|i| i.fitness());
+        pop.sort_unstable_by_key(|i| i.objective());
         pop.truncate(self.n_elitists);
         self.elitists = pop.into_iter().cloned().collect();
     }
 
-    pub fn elitists(&self) -> &[Individual] {
+    pub fn elitists(&self) -> &[Individual<P>] {
         &self.elitists
     }
 
-    pub fn elitists_mut(&mut self) -> &mut [Individual] {
+    pub fn elitists_mut(&mut self) -> &mut [Individual<P>] {
         &mut self.elitists
     }
 }

@@ -408,7 +408,7 @@ mod tests {
         let best_solution = tsp.best_solution.unwrap();
 
         assert_eq!(tsp.dimension, 52);
-        assert_float_eq!(best_solution.fitness.into(), 7542.0, ulps <= 2);
+        assert_float_eq!(best_solution.objective.value(), 7542.0, ulps <= 2);
         assert_eq!(best_solution.solution.unwrap(), opt_tour);
     }
 
@@ -420,8 +420,9 @@ mod tests {
         // There seems to be a difference between the best solutions supplied in BEST_SOLUTION
         // and the evaluated routes from the opt.tour files. Is this due to rounding errors?
         assert_float_eq!(
-            tsp.evaluate(best.solution.as_ref().unwrap()),
-            best.fitness.into(),
+            tsp.evaluate_solution(best.solution.as_ref().unwrap())
+                .value(),
+            best.objective.value(),
             abs <= 50.0
         );
     }

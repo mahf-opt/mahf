@@ -30,7 +30,7 @@ pub fn run<P: Problem>(
 
     state.insert(Log::new());
     state.insert(rng.unwrap_or_default());
-    state.insert(state::common::Population::new());
+    state.insert(state::common::Population::<P>::new());
 
     heuristic.initialize(problem, &mut state);
     heuristic.execute(problem, &mut state);
