@@ -1,7 +1,6 @@
 //! Collection of common test problems.
 
 use crate::framework::{Individual, MultiObjective, Objective, SingleObjective};
-use std::fmt::Debug;
 use std::{any::Any, ops::Range};
 
 pub mod bmf;
@@ -10,13 +9,6 @@ pub mod tsp;
 
 #[cfg(never)]
 pub mod coco;
-
-/// Represents the (global) optimum of the search space.
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-pub struct Optimum<S, O: Objective> {
-    pub objective: O,
-    pub solution: Option<S>,
-}
 
 pub trait Problem: 'static {
     type Encoding: Any + Clone + PartialEq;

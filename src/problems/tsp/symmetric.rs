@@ -4,7 +4,7 @@ use crate::{
     framework::SingleObjective,
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
-        Optimum, Problem, VectorProblem,
+        Problem, VectorProblem,
     },
 };
 use anyhow::{anyhow, Error, Result};
@@ -102,10 +102,8 @@ mod parser {
 
     // Parser for .opt.tour files
     pub(super) mod opt {
-        use crate::{
-            framework::SingleObjective,
-            problems::tsp::{symmetric::Optimum, Route},
-        };
+        use crate::problems::tsp::symmetric::TspOptimum;
+        use crate::{framework::SingleObjective, problems::tsp::Route};
         use pest_consume::{match_nodes, Error, Parser};
 
         type Result<T> = std::result::Result<T, Error<Rule>>;
@@ -117,13 +115,13 @@ mod parser {
 
         #[pest_consume::parser]
         impl TspOptParser {
-            pub fn file(input: Node) -> Result<Optimum<Route, SingleObjective>> {
+            pub fn file(input: Node) -> Result<TspOptimum> {
                 Ok(match_nodes!(input.into_children();
                     [opt(opt), _] => opt,
                 ))
             }
 
-            fn opt(input: Node) -> Result<Optimum<Route, SingleObjective>> {
+            fn opt(input: Node) -> Result<TspOptimum> {
                 Ok(match_nodes!(input.clone().into_children();
                     // Only fitness value
                     [
@@ -131,7 +129,7 @@ mod parser {
                         dimension(_dimension),
                         best_solution(objective),
                     ] => {
-                        Optimum {
+                        TspOptimum {
                             objective,
                             solution: None,
                         }
@@ -146,7 +144,7 @@ mod parser {
                         if dimension != nodes.len() {
                             return Err(input.error("dimension not equal to number of nodes"))
                         }
-                        Optimum {
+                        TspOptimum {
                             objective,
                             solution: Some(nodes),
                         }
@@ -288,6 +286,13 @@ impl Instances {
     }
 }
 
+/// Represents the (global) optimum of the search space.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TspOptimum {
+    pub objective: SingleObjective,
+    pub solution: Option<Route>,
+}
+
 /// Represents an instance of the symmetric travelling salesman problem.
 #[derive(serde::Serialize)]
 pub struct SymmetricTsp {
@@ -296,7 +301,7 @@ pub struct SymmetricTsp {
     /// Dimension of the instance
     pub dimension: Dimension,
     /// Best possible solution
-    pub best_solution: Option<Optimum<Route, SingleObjective>>,
+    pub best_solution: Option<TspOptimum>,
     /// The cities coordinates
     #[serde(skip)]
     pub positions: Vec<Coordinates>,

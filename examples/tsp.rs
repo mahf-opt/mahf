@@ -13,7 +13,6 @@ fn main() -> anyhow::Result<()> {
         state
             .best_objective_value::<problems::tsp::SymmetricTsp>()
             .unwrap()
-            .value()
     );
 
     Ok(())
