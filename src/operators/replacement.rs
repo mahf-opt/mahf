@@ -100,7 +100,7 @@ mod mupluslambda {
         let mut population = new_test_population(&[1.0, 3.0, 5.0]);
         let mut offspring = new_test_population(&[2.0, 6.0]);
         comp.replace_population(&mut population, &mut offspring, &mut state);
-        let population = collect_population_fitness(&population);
+        let population = collect_population_objective_values(&population);
         assert_eq!(population.len(), comp.max_population_size as usize);
         assert_eq!(population, vec![1.0, 2.0, 3.0]);
     }
@@ -146,7 +146,7 @@ mod generational {
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
         let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
         comp.replace_population(&mut population, &mut offspring, &mut state);
-        let population = collect_population_fitness(&population);
+        let population = collect_population_objective_values(&population);
         assert_eq!(population.len(), comp.max_population_size as usize);
         assert_eq!(population, vec![2.0, 4.0, 8.0, 9.0, 10.0]);
     }
@@ -187,7 +187,7 @@ mod random_replacement {
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
         let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
         comp.replace_population(&mut population, &mut offspring, &mut state);
-        let population = collect_population_fitness(&population);
+        let population = collect_population_objective_values(&population);
         assert_eq!(population.len(), comp.max_population_size as usize);
     }
 }

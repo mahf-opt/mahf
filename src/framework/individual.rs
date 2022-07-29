@@ -1,4 +1,4 @@
-use crate::problems::{Problem, SingleObjectiveProblem};
+use crate::problems::Problem;
 use std::fmt::{Debug, Formatter};
 
 /// An encoded solution with its associated fitness value.
@@ -72,16 +72,6 @@ where
     }
 }
 
-impl<P> Individual<P>
-where
-    P: SingleObjectiveProblem,
-    P::Encoding: Default,
-{
-    pub fn new_single_objective_test_unit(objective: f64) -> Self {
-        Self::new_test_unit(objective.try_into().unwrap())
-    }
-}
-
 impl<P: Problem> Clone for Individual<P> {
     fn clone(&self) -> Self {
         Self {
@@ -102,7 +92,7 @@ impl<E: Debug, P: Problem<Encoding = E>> Debug for Individual<P> {
         let objective = if let Some(objective) = self.optional_objective() {
             format!("{:?}", objective)
         } else {
-            format!("{:?}", self.optional_objective())
+            format!("{:?}", None::<E>)
         };
 
         write!(

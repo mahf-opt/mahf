@@ -165,7 +165,7 @@ where
 #[cfg(test)]
 mod fixed_evaluations {
     use super::*;
-    use crate::testing::TestProblem;
+    use crate::testing::*;
 
     #[test]
     fn terminates() {
@@ -229,8 +229,8 @@ where
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::framework::{state::common, Individual};
-    use crate::testing::TestProblem;
+    use crate::framework::state::common;
+    use crate::testing::*;
 
     #[test]
     fn terminates() {
@@ -239,13 +239,9 @@ mod distance_to_opt {
         state.insert(common::BestIndividual::<TestProblem>::default());
         let comp = DistanceToOpt { distance: 0.1 };
 
-        state.set_value::<common::BestIndividual<TestProblem>>(Some(
-            Individual::new_single_objective_test_unit(2.),
-        ));
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.2)));
         assert!(comp.evaluate(&problem, &mut state));
-        state.set_value::<common::BestIndividual<TestProblem>>(Some(
-            Individual::new_single_objective_test_unit(0.05),
-        ));
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.05)));
         assert!(!comp.evaluate(&problem, &mut state));
     }
 }
@@ -288,8 +284,8 @@ where
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::framework::{state::common, Individual};
-    use crate::testing::TestProblem;
+    use crate::framework::state::common;
+    use crate::testing::*;
 
     #[test]
     fn terminates() {
@@ -302,14 +298,10 @@ mod steps_without_improvement {
         });
         state.insert(common::BestIndividual::<TestProblem>::default());
         state.insert(Iterations(0));
-        state.set_value::<common::BestIndividual<TestProblem>>(Some(
-            Individual::new_single_objective_test_unit(0.5),
-        ));
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.5)));
         state.set_value::<Iterations>(10);
         assert!(comp.evaluate(&problem, &mut state));
-        state.set_value::<common::BestIndividual<TestProblem>>(Some(
-            Individual::new_single_objective_test_unit(0.5),
-        ));
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.5)));
         let test_state = state.get_mut::<FitnessImprovementState>();
         test_state.current_steps = 20;
         assert!(!comp.evaluate(&problem, &mut state));

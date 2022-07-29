@@ -4,6 +4,7 @@ use crate::{
 };
 use std::borrow::Borrow;
 
+/// Helper problem for test purposes.
 pub struct TestProblem;
 
 impl Problem for TestProblem {
@@ -25,22 +26,25 @@ impl HasKnownOptimum for TestProblem {
     }
 }
 
-pub fn new_test_population(fitness_values: &[f64]) -> Vec<Individual<TestProblem>> {
-    fitness_values
+pub fn new_test_individual(objective: f64) -> Individual<TestProblem> {
+    Individual::new_test_unit(objective.try_into().unwrap())
+}
+
+pub fn new_test_population(objective_values: &[f64]) -> Vec<Individual<TestProblem>> {
+    objective_values
         .iter()
         .cloned()
-        .map(|o| SingleObjective::try_from(o).unwrap())
-        .map(Individual::new_test_unit)
+        .map(new_test_individual)
         .collect()
 }
 
-pub fn collect_population_fitness<P: SingleObjectiveProblem, I: Borrow<Individual<P>>>(
+pub fn collect_population_objective_values<P: SingleObjectiveProblem, I: Borrow<Individual<P>>>(
     population: &[I],
 ) -> Vec<f64> {
     population
         .iter()
         .map(I::borrow)
         .map(Individual::objective)
-        .map(|o| o.value())
+        .map(SingleObjective::value)
         .collect()
 }
