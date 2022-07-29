@@ -109,14 +109,15 @@ impl State {
     /// Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{state::{State, common::Population}, Random}, testing::TestProblem};
+    /// use mahf::{framework::{state::{State, common::Population}, Random}, problems::bmf::BenchmarkFunction};
+    /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
-    /// state.insert(Population::<TestProblem>::new());
+    /// state.insert(Population::<BenchmarkFunction>::new());
     ///
     /// let mut mut_state = state.get_states_mut();
     /// let rng = mut_state.random_mut();
-    /// let population = mut_state.population_stack_mut::<TestProblem>();
+    /// let population = mut_state.population_stack_mut::<BenchmarkFunction>();
     ///
     /// // Do something with rng and population, or borrow additional types.
     /// ```
@@ -161,12 +162,13 @@ impl State {
     ///  Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{state::{State, common::Population}, Random}, testing::TestProblem};
+    /// use mahf::{framework::{state::{State, common::Population}, Random}, problems::bmf::BenchmarkFunction};
+    /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
-    /// state.insert(Population::<TestProblem>::new());
+    /// state.insert(Population::<BenchmarkFunction>::new());
     ///
-    /// let (rng, population) = state.get_multiple_mut::<(Random, Population<TestProblem>)>();
+    /// let (rng, population) = state.get_multiple_mut::<(Random, Population<BenchmarkFunction>)>();
     ///
     /// // Do something with rng and the population.
     /// ```
