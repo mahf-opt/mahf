@@ -27,6 +27,17 @@ impl fmt::Display for IllegalObjective {
     }
 }
 
+/// Represents a single real-valued objective.
+///
+/// Can be used to represent a single objective in single-objective optimization,
+/// or a combined objective in multi-objective optimization.
+///
+/// This objective type is used for [SingleObjectiveProblem]'s. It defaults to [f64::INFINITY].
+///
+/// # Restrictions
+///
+/// This is a wrapper around [f64], which can't take NaN values, and therefore can implement
+/// [Eq] and [Ord]. For details, see [IllegalObjective].
 #[derive(Clone, Copy, serde::Serialize)]
 pub struct SingleObjective(f64);
 
@@ -57,11 +68,12 @@ impl Default for SingleObjective {
 impl Objective for SingleObjective {}
 
 impl SingleObjective {
-    #[allow(dead_code)]
-    fn is_finite(&self) -> bool {
+    /// Checks if the objective is positive infinity or not.
+    pub fn is_finite(&self) -> bool {
         self.0.is_finite()
     }
 
+    /// Returns the objective value as float.
     pub fn value(&self) -> f64 {
         self.0
     }
@@ -97,6 +109,19 @@ impl fmt::Debug for SingleObjective {
     }
 }
 
+/// Represents multiple real-valued objectives.
+///
+/// Can be used to represent an objective vector in multi-objective optimization.
+///
+/// This objective type is used for [MultiObjectiveProblem]'s.
+///
+/// # Restrictions
+///
+/// This is a wrapper around a [Vec] of [f64], which can't take NaN values, and therefore can implement
+/// [Eq]. For details, see [IllegalObjective].
+///
+/// The [PartialOrd] implementation uses pareto-domination to decide on the order.
+/// Note that pareto-domination may not always yield an ordering, so [Ord] is not implemented.
 #[derive(Clone, serde::Serialize)]
 pub struct MultiObjective(Vec<f64>);
 
@@ -107,7 +132,7 @@ impl PartialEq for MultiObjective {
 }
 impl Eq for MultiObjective {}
 
-/// Implements Pareto-Domination
+/// Implements Pareto-Domination.
 impl PartialOrd for MultiObjective {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         // Use Eq checking for equality
@@ -142,11 +167,12 @@ impl fmt::Debug for MultiObjective {
 impl Objective for MultiObjective {}
 
 impl MultiObjective {
-    #[allow(dead_code)]
-    fn is_finite(&self) -> bool {
+    /// Checks if the objective vector contains positive infinity or not.
+    pub fn is_finite(&self) -> bool {
         self.0.iter().all(|o| o.is_finite())
     }
 
+    /// Returns the objective value as a vector of floats.
     pub fn value(&self) -> &[f64] {
         &self.0
     }
@@ -155,5 +181,26 @@ impl MultiObjective {
 impl From<MultiObjective> for Vec<f64> {
     fn from(objective: MultiObjective) -> Self {
         objective.0
+    }
+}
+
+impl TryFrom<Vec<f64>> for MultiObjective {
+    type Error = IllegalObjective;
+
+    /// Tries to convert a vector of floats into a `MultiObjective` value.
+    ///
+    /// See [IllegalObjective] for a list of illegal values.
+    /// All other values will return `Ok`.
+    fn try_from(value: Vec<f64>) -> Result<Self, IllegalObjective> {
+        match value {
+            _ if value.iter().any(|o| o.is_nan()) => Err(IllegalObjective::NaN),
+            _ if value
+                .iter()
+                .any(|o| o.is_infinite() && o.is_sign_negative()) =>
+            {
+                Err(IllegalObjective::NegativeInfinity)
+            }
+            _ => Ok(MultiObjective(value)),
+        }
     }
 }

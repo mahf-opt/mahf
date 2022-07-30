@@ -213,7 +213,7 @@ macro_rules! impl_convenience_functions {
             self.best_individual::<P>().map(|i| i.objective())
         }
 
-        /// Returns [BestIndividual](common::ParetoFront) state.
+        /// Returns [ParetoFront](common::ParetoFront) state.
         pub fn pareto_front<P: MultiObjectiveProblem>(self: $t) -> &$l common::ParetoFront<P> {
             self.get::<common::ParetoFront<P>>()
         }

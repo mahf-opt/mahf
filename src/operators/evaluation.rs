@@ -42,6 +42,7 @@ impl<P: Problem> Component<P> for SerialEvaluator {
     }
 }
 
+/// Inserts and updates the [common::BestIndividual] state.
 #[derive(Serialize)]
 pub struct UpdateBestIndividual;
 
@@ -73,6 +74,7 @@ impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
     }
 }
 
+/// Inserts and updates the [common::ParetoFront] state.
 #[derive(Serialize)]
 pub struct UpdateParetoFront;
 
