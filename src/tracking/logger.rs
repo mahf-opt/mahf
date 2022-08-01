@@ -3,10 +3,10 @@ use std::ops::{Deref, Sub};
 use crate::{
     framework::{
         components::Component,
-        state::{common, CustomState, State},
+        state::{CustomState, State},
     },
-    problems::Problem,
-    tracking::{log::Step, set::LogSet, trigger, Log},
+    problems::{Problem, SingleObjectiveProblem},
+    tracking::{self, log::Step, set::LogSet, trigger, Log},
 };
 use serde::Serialize;
 
@@ -23,7 +23,7 @@ pub struct Logger<P: Problem> {
     sets: Vec<LogSet<P>>,
 }
 
-impl<P: Problem + 'static> Logger<P> {
+impl<P: Problem> Logger<P> {
     /// Creates a new logger.
     ///
     /// Can be finalized using [Logger::build].
@@ -50,19 +50,11 @@ impl<P: Problem + 'static> Logger<P> {
         self
     }
 
-    /// Add the most common sets.
+    /// Add the common log set.
     ///
-    /// Currently encompases:
-    /// - [common::Evaluations]
-    /// - [common::Progress]
-    /// - [common::BestFitness]
+    /// See [LogSet::common] for details.
     pub fn log_common_sets(self) -> Self {
-        self.log_set(
-            LogSet::new()
-                .with_trigger(trigger::Iteration::new(10))
-                .with_auto_logger::<common::Evaluations>()
-                .with_auto_logger::<common::Progress>(),
-        )
+        self.log_set(LogSet::common())
     }
 
     /// Turns the logger into a [Component].
@@ -76,7 +68,14 @@ impl<P: Problem + 'static> Logger<P> {
     }
 }
 
-impl<P: Problem + 'static> Component<P> for Logger<P> {
+impl<P: SingleObjectiveProblem> Logger<P> {
+    /// Add the [common log set][LogSet::common], along with the objective value of the [common::BestIndividual].
+    pub fn log_common_single_objective_sets(self) -> Self {
+        self.log_set(LogSet::common().with_logger(tracking::functions::best_objective_value::<P>))
+    }
+}
+
+impl<P: Problem> Component<P> for Logger<P> {
     fn initialize(&self, problem: &P, state: &mut State) {
         for set in &self.sets {
             for criteria in &set.criteria {
