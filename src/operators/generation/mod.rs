@@ -40,7 +40,7 @@ where
     T: AnyComponent + Generation<P> + Serialize,
 {
     fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.population_stack_mut().pop();
+        let population = state.population_stack_mut::<P>().pop();
         let mut population = population
             .into_iter()
             .map(Individual::into_solution)
@@ -48,7 +48,7 @@ where
         self.0.generate_population(&mut population, problem, state);
         let population = population
             .into_iter()
-            .map(Individual::new_unevaluated)
+            .map(Individual::<P>::new_unevaluated)
             .collect();
         state.population_stack_mut().push(population);
     }
@@ -82,7 +82,7 @@ where
     D: Clone + PartialEq + 'static,
 {
     fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.population_stack_mut().pop();
+        let population = state.population_stack_mut::<P>().pop();
         let population = population
             .into_iter()
             .map(Individual::into_solution)
@@ -92,7 +92,7 @@ where
             .recombine_solutions(population, &mut offspring, problem, state);
         let offspring = offspring
             .into_iter()
-            .map(Individual::new_unevaluated)
+            .map(Individual::<P>::new_unevaluated)
             .collect();
         state.population_stack_mut().push(offspring);
     }
@@ -162,7 +162,7 @@ pub mod swarm {
     use crate::{
         framework::{components::*, state::State, Individual, Random},
         operators::custom_state::PsoState,
-        problems::Problem,
+        problems::SingleObjectiveProblem,
     };
 
     /// Applies the PSO specific generation operator.
@@ -178,24 +178,24 @@ pub mod swarm {
     impl PsoGeneration {
         pub fn new<P>(a: f64, b: f64, c: f64, v_max: f64) -> Box<dyn Component<P>>
         where
-            P: Problem<Encoding = Vec<f64>>,
+            P: SingleObjectiveProblem<Encoding = Vec<f64>>,
         {
             Box::new(Self { a, b, c, v_max })
         }
     }
     impl<P> Component<P> for PsoGeneration
     where
-        P: Problem<Encoding = Vec<f64>>,
+        P: SingleObjectiveProblem<Encoding = Vec<f64>>,
     {
         fn initialize(&self, _problem: &P, state: &mut State) {
-            state.require::<PsoState>();
+            state.require::<PsoState<P>>();
         }
 
         fn execute(&self, _problem: &P, state: &mut State) {
             let &Self { a, b, c, v_max } = self;
 
             let mut offspring = Vec::new();
-            let mut parents = state.population_stack_mut().pop();
+            let mut parents = state.population_stack_mut::<P>().pop();
 
             let rng = state.random_mut();
             let rng_iter = |rng: &mut Random| {
@@ -207,13 +207,13 @@ pub mod swarm {
             let rs = rng_iter(rng);
             let rt = rng_iter(rng);
 
-            let pso_state = state.get_mut::<PsoState>();
+            let pso_state = state.get_mut::<PsoState<P>>();
 
             for (i, x) in parents.drain(..).enumerate() {
-                let mut x = x.into_solution::<Vec<f64>>();
+                let mut x = x.into_solution();
                 let v = &mut pso_state.velocities[i];
-                let xl = pso_state.bests[i].solution::<Vec<f64>>();
-                let xg = pso_state.global_best.solution::<Vec<f64>>();
+                let xl = pso_state.bests[i].solution();
+                let xg = pso_state.global_best.solution();
 
                 for i in 0..v.len() {
                     v[i] = a * v[i] + b * rs[i] * (xg[i] - x[i]) + c * rt[i] * (xl[i] - x[i]);
@@ -224,7 +224,7 @@ pub mod swarm {
                     x[i] = (x[i] + v[i]).clamp(-1.0, 1.0);
                 }
 
-                offspring.push(Individual::new_unevaluated(x));
+                offspring.push(Individual::<P>::new_unevaluated(x));
             }
 
             state.population_stack_mut().push(offspring);

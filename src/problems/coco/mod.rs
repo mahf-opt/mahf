@@ -96,12 +96,13 @@ impl CocoInstance {
 }
 impl crate::problems::Problem for CocoInstance {
     type Encoding = Vec<f64>;
+    type Objective = crate::framework::SingleObjective;
 
-    fn evaluate(&self, solution: &Self::Encoding) -> f64 {
+    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
         debug_assert_eq!(self.dimension, solution.len());
         let b1 = &mut solution.clone();
         let b2 = &mut solution.clone();
-        self.problem.evaluate(b1, b2)
+        self.problem.evaluate(b1, b2).try_into().unwrap()
     }
 
     fn name(&self) -> &str {
@@ -122,8 +123,8 @@ impl crate::problems::LimitedVectorProblem for CocoInstance {
 }
 
 impl crate::problems::HasKnownOptimum for CocoInstance {
-    fn known_optimum(&self) -> f64 {
-        self.best_value()
+    fn known_optimum(&self) -> Self::Objective {
+        self.best_value().try_into().unwrap()
     }
 }
 

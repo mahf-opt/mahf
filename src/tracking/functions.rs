@@ -1,6 +1,6 @@
 use crate::{
     framework::state::{common, CustomState, State},
-    problems::Problem,
+    problems::SingleObjectiveProblem,
     tracking::log::Entry,
 };
 use serde::Serialize;
@@ -15,7 +15,7 @@ pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
 
     let instance = state.get::<T>();
     let value = Box::new(instance.clone());
-    let name = std::any::type_name::<T>();
+    let name = type_name::<T>();
     Entry { name, value }
 }
 
@@ -24,23 +24,33 @@ pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
 /// Requires the [Problem::Encoding] to implement [Clone] and [Serialize].
 pub fn best_individual<P>(state: &State) -> Entry
 where
-    P: Problem,
+    P: SingleObjectiveProblem,
     P::Encoding: Clone + Serialize + Sized + 'static,
 {
     debug_assert!(
-        state.has::<common::BestIndividual>(),
+        state.has::<common::BestIndividual<P>>(),
         "missing state: {}",
-        type_name::<common::BestIndividual>()
+        type_name::<common::BestIndividual<P>>()
     );
 
-    let instance = state.get::<common::BestIndividual>();
+    let instance = state.get::<common::BestIndividual<P>>();
     let value = Box::new(if let Some(instance) = instance.deref() {
-        let individual = instance.solution::<P::Encoding>().clone();
+        let individual = instance.solution().clone();
         Some(individual)
     } else {
         None
     });
 
-    let name = std::any::type_name::<common::BestIndividual>();
+    let name = type_name::<common::BestIndividual<P>>();
     Entry { name, value }
+}
+
+pub fn best_objective_value<P>(state: &State) -> Entry
+where
+    P: SingleObjectiveProblem,
+{
+    Entry {
+        name: "BestObjectiveValue",
+        value: Box::new(state.best_objective_value::<P>().cloned()),
+    }
 }

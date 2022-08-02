@@ -10,7 +10,9 @@ fn main() -> anyhow::Result<()> {
 
     println!(
         "Found Solution: {:?}",
-        state.best_individual().unwrap().fitness().into()
+        state
+            .best_objective_value::<problems::tsp::SymmetricTsp>()
+            .unwrap()
     );
 
     Ok(())

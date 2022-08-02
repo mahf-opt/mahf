@@ -5,7 +5,7 @@ pub mod implementations;
 pub mod tests;
 
 use crate::{
-    framework::Fitness,
+    framework::SingleObjective,
     problems::{HasKnownOptimum, HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem},
 };
 use anyhow::anyhow;
@@ -30,9 +30,10 @@ pub struct BenchmarkFunction {
 
 impl Problem for BenchmarkFunction {
     type Encoding = Vec<f64>;
+    type Objective = SingleObjective;
 
-    fn evaluate(&self, solution: &Self::Encoding) -> f64 {
-        (self.implementation)(solution)
+    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
+        (self.implementation)(solution).try_into().unwrap()
     }
 
     fn name(&self) -> &str {
@@ -55,14 +56,14 @@ impl LimitedVectorProblem for BenchmarkFunction {
 }
 
 impl HasKnownTarget for BenchmarkFunction {
-    fn target_hit(&self, fitness: Fitness) -> bool {
-        float_eq::float_eq!(self.known_optimum, fitness.into(), ulps <= 10)
+    fn target_hit(&self, target: SingleObjective) -> bool {
+        float_eq::float_eq!(self.known_optimum, target.value(), ulps <= 10)
     }
 }
 
 impl HasKnownOptimum for BenchmarkFunction {
-    fn known_optimum(&self) -> f64 {
-        self.known_optimum
+    fn known_optimum(&self) -> SingleObjective {
+        self.known_optimum.try_into().unwrap()
     }
 }
 

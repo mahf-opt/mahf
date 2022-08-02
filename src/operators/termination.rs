@@ -2,15 +2,14 @@
 
 use crate::{
     framework::{
-        components::Condition,
+        conditions::Condition,
         state::{
-            common::{BestFitness, Evaluations, Iterations, Progress},
+            common::{Evaluations, Iterations, Progress},
             State,
         },
-        Fitness,
     },
     operators::custom_state::FitnessImprovementState,
-    problems::{HasKnownOptimum, HasKnownTarget, Problem},
+    problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
 };
 use serde::{Deserialize, Serialize};
 
@@ -44,17 +43,21 @@ pub struct TargetHit;
 impl TargetHit {
     pub fn new<P>() -> Box<dyn Condition<P>>
     where
-        P: Problem + HasKnownTarget,
+        P: SingleObjectiveProblem + HasKnownTarget,
     {
         Box::new(Self)
     }
 }
 impl<P> Condition<P> for TargetHit
 where
-    P: Problem + HasKnownTarget,
+    P: SingleObjectiveProblem + HasKnownTarget,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        !problem.target_hit(state.best_fitness())
+        if let Some(fitness) = state.best_objective_value::<P>() {
+            !problem.target_hit(*fitness)
+        } else {
+            false
+        }
     }
 }
 
@@ -93,11 +96,11 @@ where
 #[cfg(test)]
 mod fixed_iterations {
     use super::*;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::testing::TestProblem;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Iterations(0));
         let comp = FixedIterations {
@@ -112,7 +115,7 @@ mod fixed_iterations {
 
     #[test]
     fn updates_progress() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Iterations(0));
         let comp = FixedIterations {
@@ -162,11 +165,11 @@ where
 #[cfg(test)]
 mod fixed_evaluations {
     use super::*;
-    use crate::problems::bmf::BenchmarkFunction;
+    use crate::testing::*;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Evaluations(0));
         let comp = FixedEvaluations {
@@ -181,7 +184,7 @@ mod fixed_evaluations {
 
     #[test]
     fn updates_progress() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         state.insert(Evaluations(0));
         let comp = FixedEvaluations {
@@ -209,33 +212,36 @@ pub struct DistanceToOpt {
 impl DistanceToOpt {
     pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
     where
-        P: Problem,
+        P: SingleObjectiveProblem,
     {
         Box::new(Self { distance })
     }
 }
-impl<P: HasKnownOptimum> Condition<P> for DistanceToOpt
+impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
 where
     P: Problem,
 {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        state.get_value::<BestFitness>().into() >= problem.known_optimum() + self.distance
+        state.best_objective_value::<P>().unwrap().value()
+            >= problem.known_optimum().value() + self.distance
     }
 }
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::{framework::Fitness, problems::bmf::BenchmarkFunction};
+    use crate::framework::state::common;
+    use crate::testing::*;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
-        state.insert(BestFitness(Fitness::default()));
+        state.insert(common::BestIndividual::<TestProblem>::default());
         let comp = DistanceToOpt { distance: 0.1 };
-        state.set_value::<BestFitness>(Fitness::try_from(2.0).unwrap());
+
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.2)));
         assert!(comp.evaluate(&problem, &mut state));
-        state.set_value::<BestFitness>(Fitness::try_from(0.05).unwrap());
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.05)));
         assert!(!comp.evaluate(&problem, &mut state));
     }
 }
@@ -251,55 +257,51 @@ pub struct StepsWithoutImprovement {
 impl StepsWithoutImprovement {
     pub fn new<P: Problem>(steps: usize) -> Box<dyn Condition<P>>
     where
-        P: Problem,
+        P: SingleObjectiveProblem,
     {
         Box::new(Self { steps })
     }
 }
 impl<P> Condition<P> for StepsWithoutImprovement
 where
-    P: Problem,
+    P: SingleObjectiveProblem,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.insert(FitnessImprovementState {
             current_steps: 0,
-            current_fitness: Fitness::default(),
+            current_objective: Default::default(),
         })
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        let best_fitness = state.best_fitness();
-
+        let best_fitness = *state.best_objective_value::<P>().unwrap();
         let termination_state = state.get_mut::<FitnessImprovementState>();
-        if best_fitness >= termination_state.current_fitness {
-            termination_state.current_steps += 1;
-        } else {
-            termination_state.current_fitness = best_fitness;
-            termination_state.current_steps = 0;
-        }
+        termination_state.update(&best_fitness);
+
         termination_state.current_steps < self.steps
     }
 }
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::{framework::Fitness, problems::bmf::BenchmarkFunction};
+    use crate::framework::state::common;
+    use crate::testing::*;
 
     #[test]
     fn terminates() {
-        let problem = BenchmarkFunction::sphere(3);
+        let problem = TestProblem;
         let mut state = State::new_root();
         let comp = StepsWithoutImprovement { steps: 20 };
         state.insert(FitnessImprovementState {
             current_steps: 0,
-            current_fitness: 0.5.try_into().unwrap(),
+            current_objective: 0.5.try_into().unwrap(),
         });
-        state.insert(BestFitness(Fitness::default()));
+        state.insert(common::BestIndividual::<TestProblem>::default());
         state.insert(Iterations(0));
-        state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.5)));
         state.set_value::<Iterations>(10);
         assert!(comp.evaluate(&problem, &mut state));
-        state.set_value::<BestFitness>(Fitness::try_from(0.5).unwrap());
+        state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.5)));
         let test_state = state.get_mut::<FitnessImprovementState>();
         test_state.current_steps = 20;
         assert!(!comp.evaluate(&problem, &mut state));

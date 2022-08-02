@@ -1,7 +1,8 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    framework::{random, Fitness, Individual},
+    framework::{random, Individual, SingleObjective},
+    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
     tracking::Log,
 };
 
@@ -108,14 +109,15 @@ impl State {
     /// Basic usage:
     ///
     /// ```
-    /// use mahf::framework::{state::{State, common::Population}, Random};
+    /// use mahf::{framework::{state::{State, common::Population}, Random}, problems::bmf::BenchmarkFunction};
+    /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
-    /// state.insert(Population::new());
+    /// state.insert(Population::<BenchmarkFunction>::new());
     ///
     /// let mut mut_state = state.get_states_mut();
     /// let rng = mut_state.random_mut();
-    /// let population = mut_state.population_stack_mut();
+    /// let population = mut_state.population_stack_mut::<BenchmarkFunction>();
     ///
     /// // Do something with rng and population, or borrow additional types.
     /// ```
@@ -160,14 +162,15 @@ impl State {
     ///  Basic usage:
     ///
     /// ```
-    /// use mahf::framework::{state::{State, common::Population}, Random};
+    /// use mahf::{framework::{state::{State, common::Population}, Random}, problems::bmf::BenchmarkFunction};
+    /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
-    /// state.insert(Population::new());
+    /// state.insert(Population::<BenchmarkFunction>::new());
     ///
-    /// let (rng, population) = state.get_multiple_mut::<(Random, Population)>();
+    /// let (rng, population) = state.get_multiple_mut::<(Random, Population<BenchmarkFunction>)>();
     ///
-    /// // Do something with rng and population.
+    /// // Do something with rng and the population.
     /// ```
     #[track_caller]
     pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
@@ -200,24 +203,29 @@ macro_rules! impl_convenience_functions {
             self.get_value::<common::Evaluations>()
         }
 
-        /// Returns [BestFitness](common::BestFitness) state.
-        pub fn best_fitness(self: $t) -> Fitness {
-            self.get_value::<common::BestFitness>()
+        /// Returns [BestIndividual](common::BestIndividual) state.
+        pub fn best_individual<P: SingleObjectiveProblem>(self: $t) -> Option<&Individual<P>> {
+            self.get::<common::BestIndividual<P>>().as_ref()
         }
 
-        /// Returns [BestIndividual](common::BestIndividual) state.
-        pub fn best_individual(self: $t) -> Option<&Individual> {
-            self.get::<common::BestIndividual>().as_ref()
+        /// Returns the objective value of the [BestIndividual](common::BestIndividual).
+        pub fn best_objective_value<P: SingleObjectiveProblem>(self: $t) -> Option<&SingleObjective> {
+            self.best_individual::<P>().map(|i| i.objective())
+        }
+
+        /// Returns [ParetoFront](common::ParetoFront) state.
+        pub fn pareto_front<P: MultiObjectiveProblem>(self: $t) -> &$l common::ParetoFront<P> {
+            self.get::<common::ParetoFront<P>>()
         }
 
         /// Returns [Population](common::Population) state.
-        pub fn population_stack(self: $t) -> &$l common::Population {
-            self.get::<common::Population>()
+        pub fn population_stack<P: Problem>(self: $t) -> &$l common::Population<P> {
+            self.get::<common::Population<P>>()
         }
 
         /// Returns mutable [Population](common::Population) state.
-        pub fn population_stack_mut(&mut self) -> &$l mut common::Population {
-            self.get_mut::<common::Population>()
+        pub fn population_stack_mut<P: Problem>(&mut self) -> &$l mut common::Population<P> {
+            self.get_mut::<common::Population<P>>()
         }
 
         /// Returns mutable [Random](random::Random) state.

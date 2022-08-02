@@ -1,12 +1,8 @@
 //! Replacement methods
 
 use crate::{
-    framework::{
-        components::*,
-        state::{common::Population, State},
-        Individual,
-    },
-    problems::Problem,
+    framework::{components::*, state::State, Individual},
+    problems::{Problem, SingleObjectiveProblem},
 };
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -18,11 +14,11 @@ use serde::{Deserialize, Serialize};
 /// # Implementing [Component]
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Replacer].
-pub trait Replacement {
+pub trait Replacement<P: Problem> {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         state: &mut State,
     );
 }
@@ -33,11 +29,11 @@ pub struct Replacer<T>(pub T);
 impl<T, P> Component<P> for Replacer<T>
 where
     P: Problem,
-    T: AnyComponent + Replacement + Serialize,
+    T: AnyComponent + Replacement<P> + Serialize,
 {
     fn execute(&self, _problem: &P, state: &mut State) {
-        let mut offspring = state.get_mut::<Population>().pop();
-        let mut parents = state.get_mut::<Population>().pop();
+        let mut offspring = state.population_stack_mut().pop();
+        let mut parents = state.population_stack_mut().pop();
         self.0
             .replace_population(&mut parents, &mut offspring, state);
         state.population_stack_mut().push(parents);
@@ -52,11 +48,11 @@ impl Noop {
         Box::new(Replacer(Self))
     }
 }
-impl Replacement for Noop {
+impl<P: Problem> Replacement<P> for Noop {
     fn replace_population(
         &self,
-        _parents: &mut Vec<Individual>,
-        _offspring: &mut Vec<Individual>,
+        _parents: &mut Vec<Individual<P>>,
+        _offspring: &mut Vec<Individual<P>>,
         _state: &mut State,
     ) {
     }
@@ -69,21 +65,21 @@ pub struct MuPlusLambda {
     pub max_population_size: u32,
 }
 impl MuPlusLambda {
-    pub fn new<P: Problem>(max_population_size: u32) -> Box<dyn Component<P>> {
+    pub fn new<P: SingleObjectiveProblem>(max_population_size: u32) -> Box<dyn Component<P>> {
         Box::new(Replacer(Self {
             max_population_size,
         }))
     }
 }
-impl Replacement for MuPlusLambda {
+impl<P: SingleObjectiveProblem> Replacement<P> for MuPlusLambda {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         _state: &mut State,
     ) {
         parents.append(offspring);
-        parents.sort_unstable_by_key(Individual::fitness);
+        parents.sort_unstable_by_key(|i| *i.objective());
         parents.truncate(self.max_population_size as usize);
     }
 }
@@ -91,7 +87,7 @@ impl Replacement for MuPlusLambda {
 #[cfg(test)]
 mod mupluslambda {
     use crate::framework::state::State;
-    use crate::operators::testing::{collect_population_fitness, new_test_population};
+    use crate::testing::*;
 
     use super::*;
 
@@ -104,7 +100,7 @@ mod mupluslambda {
         let mut population = new_test_population(&[1.0, 3.0, 5.0]);
         let mut offspring = new_test_population(&[2.0, 6.0]);
         comp.replace_population(&mut population, &mut offspring, &mut state);
-        let population = collect_population_fitness(&population);
+        let population = collect_population_objective_values(&population);
         assert_eq!(population.len(), comp.max_population_size as usize);
         assert_eq!(population, vec![1.0, 2.0, 3.0]);
     }
@@ -123,11 +119,11 @@ impl Generational {
         }))
     }
 }
-impl Replacement for Generational {
+impl<P: Problem> Replacement<P> for Generational {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         _state: &mut State,
     ) {
         parents.clear();
@@ -139,7 +135,7 @@ impl Replacement for Generational {
 #[cfg(test)]
 mod generational {
     use super::*;
-    use crate::operators::testing::*;
+    use crate::testing::*;
 
     #[test]
     fn keeps_all_children() {
@@ -150,7 +146,7 @@ mod generational {
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
         let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
         comp.replace_population(&mut population, &mut offspring, &mut state);
-        let population = collect_population_fitness(&population);
+        let population = collect_population_objective_values(&population);
         assert_eq!(population.len(), comp.max_population_size as usize);
         assert_eq!(population, vec![2.0, 4.0, 8.0, 9.0, 10.0]);
     }
@@ -162,11 +158,11 @@ pub struct RandomReplacement {
     /// Limits the population growth.
     pub max_population_size: u32,
 }
-impl Replacement for RandomReplacement {
+impl<P: Problem> Replacement<P> for RandomReplacement {
     fn replace_population(
         &self,
-        parents: &mut Vec<Individual>,
-        offspring: &mut Vec<Individual>,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
         state: &mut State,
     ) {
         parents.append(offspring);
@@ -179,7 +175,7 @@ impl Replacement for RandomReplacement {
 mod random_replacement {
     use super::*;
     use crate::framework::Random;
-    use crate::operators::testing::*;
+    use crate::testing::*;
 
     #[test]
     fn keeps_right_amount_of_children() {
@@ -191,7 +187,7 @@ mod random_replacement {
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
         let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
         comp.replace_population(&mut population, &mut offspring, &mut state);
-        let population = collect_population_fitness(&population);
+        let population = collect_population_objective_values(&population);
         assert_eq!(population.len(), comp.max_population_size as usize);
     }
 }

@@ -34,6 +34,7 @@ pub fn ant_system(
                         default_pheromones,
                     ))
                     .do_(evaluation::SerialEvaluator::new())
+                    .do_(evaluation::UpdateBestIndividual::new())
                     .do_(ant_ops::AsPheromoneUpdate::new(
                         evaporation,
                         decay_coefficient,
@@ -74,6 +75,7 @@ pub fn min_max_ant_system(
                         default_pheromones,
                     ))
                     .do_(evaluation::SerialEvaluator::new())
+                    .do_(evaluation::UpdateBestIndividual::new())
                     .do_(ant_ops::MinMaxPheromoneUpdate::new(
                         evaporation,
                         max_pheromones,
@@ -128,8 +130,8 @@ mod ant_ops {
     use rand::distributions::{Distribution, WeightedIndex};
 
     use crate::{
-        framework::{components::*, state::State, Fitness, Individual, Random},
-        problems::tsp::{Route, SymmetricTsp},
+        framework::{components::*, state::State, Individual, Random, SingleObjective},
+        problems::tsp::SymmetricTsp,
     };
 
     use super::PheromoneMatrix;
@@ -178,7 +180,7 @@ mod ant_ops {
                     let pheromones = remaining.iter().map(|&r| pm[last][r]);
                     let next_index = pheromones
                         .enumerate()
-                        .max_by_key(|(_, f)| Fitness::try_from(*f).unwrap())
+                        .max_by_key(|(_, f)| SingleObjective::try_from(*f).unwrap())
                         .unwrap()
                         .0;
                     let next = remaining.remove(next_index);
@@ -212,7 +214,7 @@ mod ant_ops {
 
             let population = routes
                 .into_iter()
-                .map(Individual::new_unevaluated)
+                .map(Individual::<SymmetricTsp>::new_unevaluated)
                 .collect();
             *state.population_stack_mut().current_mut() = population;
         }
@@ -239,15 +241,15 @@ mod ant_ops {
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
             let mut mut_state = state.get_states_mut();
             let pm = mut_state.get_mut::<PheromoneMatrix>();
-            let population = mut_state.population_stack().current();
+            let population = mut_state.population_stack::<SymmetricTsp>().current();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
 
             // Update pheromones for probabilistic routes
             for individual in population.iter().skip(1) {
-                let fitness = individual.fitness().into();
-                let route = individual.solution::<Route>();
+                let fitness = individual.objective().value();
+                let route = individual.solution();
                 let delta = self.decay_coefficient / fitness;
                 for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
                     pm[a][b] += delta;
@@ -282,7 +284,7 @@ mod ant_ops {
         }
 
         fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
-            let population = state.population_stack_mut().pop();
+            let population = state.population_stack_mut::<SymmetricTsp>().pop();
             let pm = state.get_mut::<PheromoneMatrix>();
 
             // Evaporation
@@ -292,11 +294,11 @@ mod ant_ops {
             let individual = population
                 .iter()
                 .skip(1)
-                .min_by_key(|i| i.fitness())
+                .min_by_key(|i| i.objective())
                 .unwrap();
 
-            let fitness = individual.fitness().into();
-            let route = individual.solution::<Route>();
+            let fitness = individual.objective().value();
+            let route = individual.solution();
             let delta = 1.0 / fitness;
             for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
                 pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);

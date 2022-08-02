@@ -1,5 +1,8 @@
 use crate::{
-    framework::components::{Block, Branch, Component, Condition, Loop, Scope},
+    framework::{
+        components::{Block, Branch, Component, Loop, Scope},
+        conditions::Condition,
+    },
     problems::Problem,
 };
 
@@ -16,6 +19,12 @@ impl<P: Problem> Configuration<P> {
 
     pub fn heuristic(&self) -> &dyn Component<P> {
         self.0.as_ref()
+    }
+}
+
+impl<P: Problem> From<Configuration<P>> for Box<dyn Component<P>> {
+    fn from(config: Configuration<P>) -> Self {
+        config.0
     }
 }
 

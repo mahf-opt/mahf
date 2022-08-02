@@ -1,10 +1,10 @@
 use crate::{
-    framework::state::{CustomState, State},
+    framework::state::{common, CustomState, State},
     problems::Problem,
     tracking::{
         functions::{self, LogFn},
         log::Step,
-        trigger::Trigger,
+        trigger::{self, Trigger},
     },
 };
 use serde::Serialize;
@@ -23,6 +23,16 @@ impl<P: Problem + 'static> LogSet<P> {
             criteria: Vec::new(),
             loggers: Vec::new(),
         }
+    }
+
+    /// Returns a common log set.
+    ///
+    /// Every 10 [Iteration][common::Iteration]'s, [common::Evaluations] and [common::Progress] are logged.
+    pub fn common() -> Self {
+        Self::new()
+            .with_trigger(trigger::Iteration::new(10))
+            .with_auto_logger::<common::Evaluations>()
+            .with_auto_logger::<common::Progress>()
     }
 
     /// Adds a [Trigger].

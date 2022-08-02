@@ -1,7 +1,8 @@
-use crate::{framework::Fitness, problems};
+use crate::{framework::SingleObjective, problems};
 use std::sync::Mutex;
 
 pub use coco_rs::{Problem, Suite};
+
 pub mod suits;
 
 #[derive(serde::Serialize)]
@@ -32,14 +33,15 @@ impl From<Problem> for CocoInstance {
 
 impl problems::Problem for CocoInstance {
     type Encoding = Vec<f64>;
+    type Objective = SingleObjective;
 
-    fn evaluate(&self, solution: &Self::Encoding) -> f64 {
+    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
         let output = &mut [0.0];
         self.problem
             .lock()
             .unwrap()
             .evaluate_function(solution, output);
-        output[0]
+        output[0].try_into().unwrap()
     }
 
     fn name(&self) -> &str {
@@ -66,7 +68,7 @@ impl problems::LimitedVectorProblem for CocoInstance {
 }
 
 impl problems::HasKnownTarget for CocoInstance {
-    fn target_hit(&self, _fitness: Fitness) -> bool {
+    fn target_hit(&self, _target: SingleObjective) -> bool {
         self.problem.lock().unwrap().final_target_hit()
     }
 }

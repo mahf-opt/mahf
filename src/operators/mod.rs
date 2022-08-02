@@ -19,9 +19,6 @@ pub mod replacement;
 pub mod selection;
 pub mod termination;
 
-#[cfg(test)]
-pub mod testing;
-
 /// Doesn't do anything.
 ///
 /// Note that this component is different from [initialization::Empty] as it doesn't modify

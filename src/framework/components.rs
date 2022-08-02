@@ -1,9 +1,10 @@
 //! Framework components.
 
-pub use crate::framework::conditions::Condition;
-
 use crate::{
-    framework::state::{common, State},
+    framework::{
+        conditions::Condition,
+        state::{common, State},
+    },
     problems::Problem,
 };
 use serde::Serialize;

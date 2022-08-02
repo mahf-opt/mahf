@@ -1,6 +1,6 @@
 //! This module allows easy access to instances of the traveling salesman problem taken from tsplib.
 
-use crate::framework::Fitness;
+use crate::framework::SingleObjective;
 
 /// Symmetric TSP
 pub mod symmetric;
@@ -10,7 +10,7 @@ pub use symmetric::{Instances, SymmetricTsp};
 pub mod asymmetric {}
 
 type Coordinates = Vec<f64>;
-type DistanceMeasure = fn(&[f64], &[f64]) -> Fitness;
+type DistanceMeasure = fn(&[f64], &[f64]) -> SingleObjective;
 type Dimension = usize;
 
 pub type Edge = (usize, usize);
@@ -19,9 +19,9 @@ pub type Route = Vec<Node>;
 
 /// Popular distance functions used in TSP.
 mod distances {
-    use crate::framework::Fitness;
+    use crate::framework::SingleObjective;
 
-    pub fn euclidean_distance(a: &[f64], b: &[f64]) -> Fitness {
+    pub fn euclidean_distance(a: &[f64], b: &[f64]) -> SingleObjective {
         assert_eq!(a.len(), b.len());
         a.iter()
             .zip(b.iter())
@@ -32,7 +32,7 @@ mod distances {
             .unwrap()
     }
 
-    pub fn manhattan_distance(a: &[f64], b: &[f64]) -> Fitness {
+    pub fn manhattan_distance(a: &[f64], b: &[f64]) -> SingleObjective {
         assert_eq!(a.len(), b.len());
         a.iter()
             .zip(b.iter())
@@ -42,12 +42,12 @@ mod distances {
             .unwrap()
     }
 
-    pub fn maximum_distance(a: &[f64], b: &[f64]) -> Fitness {
+    pub fn maximum_distance(a: &[f64], b: &[f64]) -> SingleObjective {
         assert_eq!(a.len(), b.len());
         a.iter()
             .zip(b.iter())
             .map(|(x, y)| (x - y).abs())
-            .map(|d| Fitness::try_from(d).unwrap())
+            .map(|d| SingleObjective::try_from(d).unwrap())
             .max()
             .unwrap()
     }

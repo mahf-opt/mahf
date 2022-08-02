@@ -12,6 +12,9 @@ pub mod problems;
 pub mod tracking;
 pub mod utils;
 
+#[cfg(test)]
+pub mod testing;
+
 // re-exports
 pub use derive_deref;
 pub use float_eq;

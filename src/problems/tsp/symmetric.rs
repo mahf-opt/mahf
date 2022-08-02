@@ -1,10 +1,10 @@
 //! This module contains instances of the symmetric traveling salesman problem.
 
 use crate::{
-    framework::Fitness,
+    framework::SingleObjective,
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
-        Optimum, Problem, VectorProblem,
+        Problem, VectorProblem,
     },
 };
 use anyhow::{anyhow, Error, Result};
@@ -102,10 +102,8 @@ mod parser {
 
     // Parser for .opt.tour files
     pub(super) mod opt {
-        use crate::{
-            framework::Fitness,
-            problems::tsp::{symmetric::Optimum, Route},
-        };
+        use crate::problems::tsp::symmetric::TspOptimum;
+        use crate::{framework::SingleObjective, problems::tsp::Route};
         use pest_consume::{match_nodes, Error, Parser};
 
         type Result<T> = std::result::Result<T, Error<Rule>>;
@@ -117,22 +115,22 @@ mod parser {
 
         #[pest_consume::parser]
         impl TspOptParser {
-            pub fn file(input: Node) -> Result<Optimum<Route>> {
+            pub fn file(input: Node) -> Result<TspOptimum> {
                 Ok(match_nodes!(input.into_children();
                     [opt(opt), _] => opt,
                 ))
             }
 
-            fn opt(input: Node) -> Result<Optimum<Route>> {
+            fn opt(input: Node) -> Result<TspOptimum> {
                 Ok(match_nodes!(input.clone().into_children();
                     // Only fitness value
                     [
                         name(_name),
                         dimension(_dimension),
-                        best_solution(fitness),
+                        best_solution(objective),
                     ] => {
-                        Optimum {
-                            fitness,
+                        TspOptimum {
+                            objective,
                             solution: None,
                         }
                     },
@@ -140,14 +138,14 @@ mod parser {
                     [
                         name(_name),
                         dimension(dimension),
-                        best_solution(fitness),
+                        best_solution(objective),
                         tour_section_nodes(nodes),
                     ] => {
                         if dimension != nodes.len() {
                             return Err(input.error("dimension not equal to number of nodes"))
                         }
-                        Optimum {
-                            fitness,
+                        TspOptimum {
+                            objective,
                             solution: Some(nodes),
                         }
                     },
@@ -162,12 +160,12 @@ mod parser {
                 input.as_str().parse().map_err(|e| input.error(e))
             }
 
-            fn best_solution(input: Node) -> Result<Fitness> {
+            fn best_solution(input: Node) -> Result<SingleObjective> {
                 input
                     .as_str()
                     .parse()
                     .map_err(|e| input.error(e))
-                    .map(|f: f64| Fitness::try_from(f).unwrap())
+                    .map(|f: f64| SingleObjective::try_from(f).unwrap())
             }
 
             fn index(input: Node) -> Result<usize> {
@@ -215,7 +213,7 @@ impl std::fmt::Display for Instances {
 }
 
 impl TryFrom<&str> for Instances {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
@@ -288,6 +286,13 @@ impl Instances {
     }
 }
 
+/// Represents the (global) optimum of the search space.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct TspOptimum {
+    pub objective: SingleObjective,
+    pub solution: Option<Route>,
+}
+
 /// Represents an instance of the symmetric travelling salesman problem.
 #[derive(serde::Serialize)]
 pub struct SymmetricTsp {
@@ -296,7 +301,7 @@ pub struct SymmetricTsp {
     /// Dimension of the instance
     pub dimension: Dimension,
     /// Best possible solution
-    pub best_solution: Option<Optimum<Route>>,
+    pub best_solution: Option<TspOptimum>,
     /// The cities coordinates
     #[serde(skip)]
     pub positions: Vec<Coordinates>,
@@ -307,14 +312,17 @@ pub struct SymmetricTsp {
 
 impl Problem for SymmetricTsp {
     type Encoding = Route;
+    type Objective = SingleObjective;
 
-    fn evaluate(&self, solution: &Self::Encoding) -> f64 {
+    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
         solution
             .iter()
             .copied()
             .zip(solution.iter().copied().skip(1))
             .map(|edge| self.distance(edge))
-            .sum()
+            .sum::<f64>()
+            .try_into()
+            .unwrap()
     }
 
     fn name(&self) -> &str {
@@ -332,7 +340,7 @@ impl VectorProblem for SymmetricTsp {
 
 impl SymmetricTsp {
     pub fn best_fitness(&self) -> Option<f64> {
-        self.best_solution.as_ref().map(|o| o.fitness.into())
+        self.best_solution.as_ref().map(|o| o.objective.value())
     }
 
     /// Returns the weight/distance of the given edge.
@@ -351,7 +359,7 @@ impl SymmetricTsp {
             let next_index = remaining
                 .iter()
                 .enumerate()
-                .min_by_key(|(_, &r)| Fitness::try_from(self.distance((last, r))).unwrap())
+                .min_by_key(|(_, &r)| SingleObjective::try_from(self.distance((last, r))).unwrap())
                 .unwrap()
                 .0;
             let next = remaining.remove(next_index);
@@ -405,7 +413,7 @@ mod tests {
         let best_solution = tsp.best_solution.unwrap();
 
         assert_eq!(tsp.dimension, 52);
-        assert_float_eq!(best_solution.fitness.into(), 7542.0, ulps <= 2);
+        assert_float_eq!(best_solution.objective.value(), 7542.0, ulps <= 2);
         assert_eq!(best_solution.solution.unwrap(), opt_tour);
     }
 
@@ -417,8 +425,9 @@ mod tests {
         // There seems to be a difference between the best solutions supplied in BEST_SOLUTION
         // and the evaluated routes from the opt.tour files. Is this due to rounding errors?
         assert_float_eq!(
-            tsp.evaluate(best.solution.as_ref().unwrap()),
-            best.fitness.into(),
+            tsp.evaluate_solution(best.solution.as_ref().unwrap())
+                .value(),
+            best.objective.value(),
             abs <= 50.0
         );
     }
