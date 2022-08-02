@@ -16,10 +16,7 @@ pub trait Problem: 'static {
 
     fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective;
 
-    fn evaluate(&self, individual: &mut Individual<Self>)
-    where
-        Self: Sized,
-    {
+    fn evaluate(&self, individual: &mut Individual<Self>) {
         let objective = self.evaluate_solution(individual.solution());
         individual.evaluate(objective);
     }
@@ -46,10 +43,7 @@ pub trait LimitedVectorProblem: VectorProblem {
 }
 
 pub trait BatchEvaluationProblem: Problem {
-    fn evaluate_batch(&self, population: &mut [Individual<Self>])
-    where
-        Self: Sized,
-    {
+    fn evaluate_batch(&self, population: &mut [Individual<Self>]) {
         for individual in population.iter_mut() {
             self.evaluate(individual);
         }

@@ -7,7 +7,7 @@ pub struct Individual<P: Problem + ?Sized> {
     objective: Option<P::Objective>,
 }
 
-impl<P: Problem> Individual<P> {
+impl<P: Problem + ?Sized> Individual<P> {
     /// Constructs a new `Individual` from a given solution and objective value.
     pub fn new(solution: P::Encoding, objective: P::Objective) -> Self {
         Self {
