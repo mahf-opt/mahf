@@ -20,6 +20,10 @@ impl<P: Problem> Configuration<P> {
     pub fn heuristic(&self) -> &dyn Component<P> {
         self.0.as_ref()
     }
+
+    pub fn into_inner(self) -> Box<dyn Component<P>> {
+        self.0
+    }
 }
 
 impl<P: Problem> From<Configuration<P>> for Box<dyn Component<P>> {
@@ -42,6 +46,14 @@ impl<P: Problem> ConfigurationBuilder<P> {
     pub fn do_(mut self, component: Box<dyn Component<P>>) -> Self {
         self.components.push(component);
         self
+    }
+
+    pub fn do_if_some_(self, component: Option<Box<dyn Component<P>>>) -> Self {
+        if let Some(component) = component {
+            self.do_(component)
+        } else {
+            self
+        }
     }
 
     pub fn while_(
@@ -87,5 +99,9 @@ impl<P: Problem> ConfigurationBuilder<P> {
 
     pub fn build(self) -> Configuration<P> {
         Configuration::new(Block::new(self.components))
+    }
+
+    pub fn build_component(self) -> Box<dyn Component<P>> {
+        Block::new(self.components)
     }
 }
