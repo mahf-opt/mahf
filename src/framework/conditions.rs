@@ -1,9 +1,16 @@
+/// The Condition trait and combinators.
 use crate::{
     framework::{components::AnyComponent, state::State},
     problems::Problem,
 };
 use serde::Serialize;
 
+/// A condition for loops or branches.
+///
+/// Similar to [Component](crate::framework::Component),
+/// but `evaluate` replaces `execute` and returns a `bool`.
+///
+/// These can be combined using binary AND and OR (`|` and `&`).
 pub trait Condition<P>: AnyComponent {
     #[allow(unused_variables)]
     fn initialize(&self, problem: &P, state: &mut State) {}
@@ -11,6 +18,7 @@ pub trait Condition<P>: AnyComponent {
 }
 erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
 
+/// Multiple conditions must be true.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
@@ -40,6 +48,7 @@ impl<P: Problem + 'static> std::ops::BitAnd for Box<dyn Condition<P>> {
     }
 }
 
+/// Any condition must be true.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
