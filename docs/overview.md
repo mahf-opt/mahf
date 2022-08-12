@@ -1,34 +1,39 @@
 # MAHF
 A framework for modular construction and evaluation of meta-heuristics.
 
-Take a look at the [framework] module for a description of how MAHF's module system works.
+This document provides an overview of what MAHF provides and where those features can be found.
+The individual module's documentation then describes how it can be used in practice.
 
 ## Primary Features
 
-- Simple modular costruction of metaheuristics
+- Simple modular construction of metaheuristics
 - Collection of common operators
-- Collection of common benchmark problems
+- Templates for common heuristics
+- A basic set of benchmark problems
 - Utilities for parameter optimization
 - Utilities for efficient evaluation and tracking
 
 ## Crate Structure
 
-### framework
+### The `framework` module
 
-The [framework] module contains the utilities for constructing and running modular heuristics. Most importantly [framework::Configuration] which describes a heuristic and [framework::run] which will apply the provided config to a given problem. Also see the [framework] module for a description of how MAHF's module system works.
+The [framework] module is the heart of MAHF and provides everything for constructing and running modular heuristics.
+Most importantly [framework::Configuration] which describes a heuristic and [framework::run] which will run the given heuristic on a benchmark problem.
 
-### operators
+### The `heuristics` module
 
-The [operators] module collects implementations of operators. There is a module for each of the [framework::components] providing a solid foundation of reusable operators.
+The [heuristics] module contains many common heuristics implemented in a modular fashion.
+It serves both as a collection of directly usable heuristics and as a template library for constructing your own.
+If you are in doubt, how you should model your heuristic with MAHF, taking a look at the source code of the heuristics in this module is a great starting point.
 
-### heuristics
+### The `operators` module
 
-The [heuristics] module contains many of the common heuristics implemented in a modular fashion.
+The [operators] module collects implementations of operators which can then be combined to form a heuristic.
 
-### problems
+### The `problems` module
 
-The [problems] module contains many of the common benchmark problems used when evaluation a heuristics performance.
+The [problems] module contains many common benchmark problems used to evaluate a heuristics performance.
 
-### tracking
+### The `tracking` module
 
-The [tracking] module provides logging facilities. When running a heuristic, the [tracking::Log] will keep track of all interesting metrics. These can then be saved in a custom csv and ron based format.
+The [tracking] module provides facilities for tracking state during the evaluation, as well as utilities to store these logs on disk.
