@@ -7,7 +7,7 @@ use serde::Serialize;
 
 /// A condition for loops or branches.
 ///
-/// Similar to [Component](crate::framework::Component),
+/// Similar to [Component](crate::framework::components::Component),
 /// but `evaluate` replaces `execute` and returns a `bool`.
 ///
 /// These can be combined using binary AND and OR (`|` and `&`).
