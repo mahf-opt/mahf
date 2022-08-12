@@ -19,6 +19,14 @@ pub use random::{Random, RandomConfig};
 use crate::problems::Problem;
 use crate::tracking::Log;
 
+/// Runs the heuristic on the given problem.
+///
+/// Returns the final state of the heuristic.
+/// If the heuristic has a logger, that log can be obtained from
+/// this state as well.
+///
+/// If no random generator is provided, it will default
+/// to a randomly seeded RNG.
 pub fn run<P: Problem>(
     problem: &P,
     config: &Configuration<P>,
