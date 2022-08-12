@@ -1,3 +1,5 @@
+//! State and state management.
+
 use std::ops::{Deref, DerefMut};
 
 use crate::{
@@ -15,9 +17,10 @@ pub(crate) use map::StateMap;
 
 pub mod common;
 
-/// Makes custom state trackable.
+/// A marker trait for custom state.
 pub trait CustomState: AsAny {}
 
+/// Container for storing and managing state.
 #[derive(Default)]
 pub struct State {
     parent: Option<Box<State>>,
@@ -25,6 +28,9 @@ pub struct State {
 }
 
 impl State {
+    /// Creates a new state container.
+    ///
+    /// Only needed for tests.
     pub fn new_root() -> Self {
         State {
             parent: None,
@@ -32,6 +38,7 @@ impl State {
         }
     }
 
+    /// Runs a closure within a new scope.
     pub fn with_substate(&mut self, fun: impl FnOnce(&mut State)) {
         let mut substate: State = Self {
             parent: Some(Box::new(std::mem::take(self))),
@@ -41,22 +48,30 @@ impl State {
         *self = *substate.parent.unwrap()
     }
 
+    /// Returns the parent state.
     pub fn parent(&self) -> Option<&Self> {
         self.parent.as_deref()
     }
 
+    /// Returns the mutable parent state.
     pub fn parent_mut(&mut self) -> Option<&mut Self> {
         self.parent.as_deref_mut()
     }
 
+    /// Inserts new state, overriding existing state.
     pub fn insert<T: CustomState>(&mut self, state: T) {
         self.map.insert(state);
     }
 
+    /// Checks whether the state exists.
     pub fn has<T: CustomState>(&self) -> bool {
         self.map.has::<T>() || self.parent().map(|p| p.has::<T>()).unwrap_or_default()
     }
 
+    /// Panics if the state does not exist.
+    ///
+    /// This is the recommended way to ensure the state
+    /// is available in [Component::initialize](crate::framework::Component::initialize).
     #[track_caller]
     pub fn require<T: CustomState>(&self) {
         assert!(
@@ -66,6 +81,10 @@ impl State {
         );
     }
 
+    /// Returns the state.
+    ///
+    /// # Panics
+    /// If the state does not exist.
     #[track_caller]
     pub fn get<T: CustomState>(&self) -> &T {
         if self.map.has::<T>() {
@@ -75,10 +94,17 @@ impl State {
         }
     }
 
+    /// Returns the state or inserts its default.
     pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
         self.map.get_or_insert_default()
     }
 
+    /// Returns the states inner value.
+    ///
+    /// Requires the state to implement [Deref].
+    ///
+    /// # Panics
+    /// If the state does not exist.
     #[track_caller]
     pub fn get_value<T>(&self) -> T::Target
     where
@@ -92,6 +118,10 @@ impl State {
         }
     }
 
+    /// Returns the state mutably.
+    ///
+    /// # Panics
+    /// If the state does not exist.
     #[track_caller]
     pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
         if self.map.has::<T>() {
@@ -125,6 +155,12 @@ impl State {
         MutState::new(self)
     }
 
+    /// Updates the states inner value.
+    ///
+    /// Requires the state to implement [DerefMut].
+    ///
+    /// # Panics
+    /// If the state does not exist.
     pub fn set_value<T>(&mut self, value: T::Target)
     where
         T: CustomState + DerefMut,
@@ -137,6 +173,12 @@ impl State {
         }
     }
 
+    /// Returns the states inner value mutably.
+    ///
+    /// Requires the state to implement [Deref].
+    ///
+    /// # Panics
+    /// If the state does not exist.
     #[track_caller]
     pub fn get_value_mut<T>(&mut self) -> &mut T::Target
     where
