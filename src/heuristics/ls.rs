@@ -29,7 +29,8 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(1))
-        .do_(evaluation::SerialEvaluator::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(evaluation::UpdateBestIndividual::new())
         .do_(local_search(
             Parameters {
@@ -67,8 +68,8 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomPermutation::new_init(1))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(local_search(
             Parameters {
                 n_neighbors,
@@ -80,6 +81,7 @@ where
         .build()
 }
 
+/// Basic building blocks of a Local Search.
 pub struct Parameters<P> {
     pub n_neighbors: u32,
     pub neighbors: Box<dyn Component<P>>,
@@ -101,8 +103,8 @@ pub fn local_search<P: SingleObjectiveProblem>(
             builder
                 .do_(selection::DuplicateSingle::new(n_neighbors))
                 .do_(neighbors)
-                .do_(evaluation::SerialEvaluator::new())
-                .do_(evaluation::UpdateBestIndividual::new())
+                .evaluate_serial()
+                .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(logger)
         })

@@ -257,6 +257,7 @@ impl DeterministicFitnessProportional {
         min_offspring: u32,
         max_offspring: u32,
     ) -> Box<dyn Component<P>> {
+        assert!(min_offspring <= max_offspring);
         Box::new(Selector(Self {
             min_offspring,
             max_offspring,

@@ -1,39 +1,87 @@
 //! Particle Swarm Optimization
 
 use crate::{
-    framework::Configuration,
+    framework::{components::Component, conditions::Condition, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
 
-pub fn pso<P>(
-    num_particles: u32,
-    a: f64,
-    b: f64,
-    c: f64,
-    v_max: f64,
-    max_iterations: u32,
+/// Parameters for [real_pso].
+pub struct RealParameters {
+    pub num_particles: u32,
+    pub a: f64,
+    pub b: f64,
+    pub c: f64,
+    pub v_max: f64,
+}
+
+/// An example single-objective Particle Swarm Optimization operating on a real search space.
+/// Uses the [pso] component internally.
+pub fn real_pso<P>(
+    params: RealParameters,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
+    let RealParameters {
+        num_particles,
+        a,
+        b,
+        c,
+        v_max,
+    } = params;
+
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
-        .do_(pso_ops::PsoStateInitialization::new(v_max))
-        .while_(
-            termination::FixedIterations::new(max_iterations),
-            |builder| {
-                builder
-                    .do_(generation::swarm::PsoGeneration::new(a, b, c, v_max))
-                    .do_(evaluation::SerialEvaluator::new())
-                    .do_(evaluation::UpdateBestIndividual::new())
-                    .do_(pso_ops::PsoStateUpdate::new())
+        .evaluate_serial()
+        .update_best_individual()
+        .do_(pso(
+            Parameters {
+                particle_init: pso_ops::PsoStateInitialization::new(v_max),
+                particle_update: generation::swarm::PsoGeneration::new(a, b, c, v_max),
+                state_update: pso_ops::PsoStateUpdate::new(),
             },
-        )
-        .do_(pso_ops::AddPsoStateGlobalBest::new())
+            termination,
+            logger,
+        ))
         .build()
+}
+
+/// Basic building blocks of Particle Swarm Optimization.
+pub struct Parameters<P> {
+    particle_init: Box<dyn Component<P>>,
+    particle_update: Box<dyn Component<P>>,
+    state_update: Box<dyn Component<P>>,
+}
+
+/// A generic single-objective Particle Swarm Optimization template.
+pub fn pso<P>(
+    params: Parameters<P>,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+{
+    let Parameters {
+        particle_init,
+        particle_update,
+        state_update,
+    } = params;
+
+    Configuration::builder()
+        .do_(particle_init)
+        .while_(termination, |builder| {
+            builder
+                .do_(particle_update)
+                .evaluate_serial()
+                .update_best_individual()
+                .do_(state_update)
+                .do_(logger)
+        })
+        .build_component()
 }
 
 #[allow(clippy::new_ret_no_self)]
@@ -139,31 +187,6 @@ mod pso_ops {
             }
 
             state.population_stack_mut().push(population);
-        }
-    }
-
-    /// Adds the global best from [PsoState] to the population.
-    #[derive(Debug, serde::Serialize)]
-    pub struct AddPsoStateGlobalBest;
-    impl AddPsoStateGlobalBest {
-        pub fn new<P: Problem>() -> Box<dyn Component<P>>
-        where
-            P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-        {
-            Box::new(Self)
-        }
-    }
-    impl<P> Component<P> for AddPsoStateGlobalBest
-    where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
-    {
-        fn initialize(&self, _problem: &P, state: &mut State) {
-            state.require::<PsoState<P>>();
-        }
-
-        fn execute(&self, _problem: &P, state: &mut State) {
-            let global_best = state.get::<PsoState<P>>().global_best.clone();
-            state.population_stack_mut().current_mut().push(global_best);
         }
     }
 }

@@ -31,8 +31,8 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(1))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(iterated_local_search(
             Parameters {
                 perturbation: generation::RandomSpread::new_gen(),
@@ -63,8 +63,7 @@ pub fn permutation_iterated_local_search<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>>
-        + VectorProblem<T = usize>
+    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
     let PermutationParameters {
         local_search_params,
@@ -73,8 +72,8 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomPermutation::new_init(1))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(iterated_local_search(
             Parameters {
                 perturbation: generation::RandomPermutation::new_gen(),
@@ -91,9 +90,10 @@ where
         .build()
 }
 
+/// Basic building blocks of an Iterated Local Search.
 pub struct Parameters<P> {
-    perturbation: Box<dyn Component<P>>,
-    local_search: Box<dyn Component<P>>,
+    pub perturbation: Box<dyn Component<P>>,
+    pub local_search: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Iterated Local Search template.
@@ -111,10 +111,10 @@ pub fn iterated_local_search<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .do_(perturbation)
+                .evaluate_serial()
                 .do_(selection::All::new())
                 .scope_(|builder| builder.do_(local_search))
-                .do_(evaluation::UpdateBestIndividual::new())
-                .do_(Noop::new())
+                .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(logger)
         })

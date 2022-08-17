@@ -38,8 +38,8 @@ where
         .do_(initialization::RandomBitstring::new_uniform_init(
             population_size,
         ))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(ga(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
@@ -82,8 +82,8 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(ga(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
@@ -130,8 +130,8 @@ pub fn ga<P: SingleObjectiveProblem>(
                 .do_(selection)
                 .do_(crossover)
                 .do_(mutation)
-                .do_(evaluation::SerialEvaluator::new())
-                .do_(evaluation::UpdateBestIndividual::new())
+                .evaluate_serial()
+                .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)
                 .do_(logger)

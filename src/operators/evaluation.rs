@@ -34,7 +34,9 @@ impl<P: Problem> Component<P> for SerialEvaluator {
         }
 
         for individual in population.current_mut().iter_mut() {
-            problem.evaluate(individual);
+            if !individual.is_evaluated() {
+                problem.evaluate(individual);
+            }
         }
 
         // Update evaluations

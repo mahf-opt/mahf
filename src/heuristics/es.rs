@@ -6,10 +6,11 @@ use crate::{
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
+/// Parameters for [real_mu_plus_lambda].
 pub struct RealParameters {
-    population_size: u32,
-    lambda: u32,
-    deviation: f64,
+    pub population_size: u32,
+    pub lambda: u32,
+    pub deviation: f64,
 }
 
 /// An example single-objective (μ+λ)-Evolution-Strategy operating on a real search space.
@@ -33,8 +34,8 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .do_(evaluation::SerialEvaluator::new())
-        .do_(evaluation::UpdateBestIndividual::new())
+        .evaluate_serial()
+        .update_best_individual()
         .do_(es(
             Parameters {
                 selection: selection::FullyRandom::new(lambda),
@@ -74,8 +75,8 @@ pub fn es<P: SingleObjectiveProblem>(
             builder
                 .do_(selection)
                 .do_(mutation)
-                .do_(evaluation::SerialEvaluator::new())
-                .do_(evaluation::UpdateBestIndividual::new())
+                .evaluate_serial()
+                .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)
                 .do_(logger)

@@ -6,8 +6,8 @@ use crate::{
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
-#[derive(Clone, Copy, Debug)]
-pub struct Parameters {
+#[derive(Clone, Debug)]
+pub struct RealParameters {
     pub initial_population_size: u32,
     pub max_population_size: u32,
     pub min_number_of_seeds: u32,
@@ -17,7 +17,8 @@ pub struct Parameters {
     pub modulation_index: u32,
 }
 
-/// Invasive Weed Optimization
+/// An example single-objective Invasive Weed Optimization operating on a real search space.
+/// Uses the [iwo] component internally.
 ///
 /// # Requirements
 /// - initial_population_size <= max_population_size
@@ -26,40 +27,80 @@ pub struct Parameters {
 ///
 /// # References
 /// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
-pub fn iwo<P>(
-    params: Parameters,
+pub fn real_iwo<P>(
+    params: RealParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>>
-        + VectorProblem<T = f64>
-        + LimitedVectorProblem
-        + 'static,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    assert!(params.initial_population_size <= params.max_population_size);
-    assert!(params.min_number_of_seeds <= params.max_number_of_seeds);
-    assert!(params.final_deviation <= params.initial_deviation);
+    let RealParameters {
+        initial_population_size,
+        max_population_size,
+        min_number_of_seeds,
+        max_number_of_seeds,
+        initial_deviation,
+        final_deviation,
+        modulation_index,
+    } = params;
+
+    assert!(initial_population_size <= max_population_size);
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))
+        .do_(iwo(
+            Parameters {
+                max_population_size,
+                min_number_of_seeds,
+                max_number_of_seeds,
+                mutation: generation::mutation::IWOAdaptiveDeviationDelta::new(
+                    initial_deviation,
+                    final_deviation,
+                    modulation_index,
+                ),
+            },
+            termination,
+            logger,
+        ))
+        .build()
+}
+
+/// Basic building blocks of Invasive Weed Optimization.
+pub struct Parameters<P> {
+    pub max_population_size: u32,
+    pub min_number_of_seeds: u32,
+    pub max_number_of_seeds: u32,
+    pub mutation: Box<dyn Component<P>>,
+}
+
+/// A generic single-objective Invasive Weed Optimization template.
+pub fn iwo<P: SingleObjectiveProblem>(
+    params: Parameters<P>,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Box<dyn Component<P>> {
+    let Parameters {
+        max_population_size,
+        min_number_of_seeds,
+        max_number_of_seeds,
+        mutation,
+    } = params;
+
+    Configuration::builder()
         .do_(evaluation::SerialEvaluator::new())
         .while_(termination, |builder| {
             builder
                 .do_(selection::DeterministicFitnessProportional::new(
-                    params.min_number_of_seeds,
-                    params.max_number_of_seeds,
+                    min_number_of_seeds,
+                    max_number_of_seeds,
                 ))
-                .do_(generation::mutation::IWOAdaptiveDeviationDelta::new(
-                    params.initial_deviation,
-                    params.final_deviation,
-                    params.modulation_index,
-                ))
+                .do_(mutation)
                 .do_(evaluation::SerialEvaluator::new())
-                .do_(replacement::MuPlusLambda::new(params.max_population_size))
+                .do_(replacement::MuPlusLambda::new(max_population_size))
                 .do_(logger)
         })
-        .build()
+        .build_component()
 }
