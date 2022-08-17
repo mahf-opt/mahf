@@ -1,14 +1,11 @@
-use mahf::{
-    heuristics::iwo,
-    operators::termination,
-    problems::coco_bound::{suits, CocoInstance},
-    tracking::{self, trigger, LogSet},
-};
+use mahf::prelude::*;
+use problems::coco_bound::{suits, CocoInstance};
+use tracking::{functions, trigger};
 
 fn main() -> anyhow::Result<()> {
     let output = "data/coco/iwo";
-    let config = iwo::iwo(
-        iwo::Parameters {
+    let config = iwo::real_iwo(
+        iwo::RealParameters {
             initial_population_size: 5,
             max_population_size: 20,
             min_number_of_seeds: 0,
@@ -21,9 +18,9 @@ fn main() -> anyhow::Result<()> {
         tracking::Logger::builder()
             .log_common_sets()
             .log_set(
-                LogSet::new()
+                tracking::LogSet::new()
                     .with_trigger(trigger::Iteration::new(50))
-                    .with_logger(tracking::functions::best_individual::<CocoInstance>),
+                    .with_logger(functions::best_individual::<CocoInstance>),
             )
             .build(),
     );

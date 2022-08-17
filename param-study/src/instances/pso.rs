@@ -4,7 +4,9 @@ use mahf::{
     float_eq::float_eq,
     framework::{self, Random},
     heuristics::pso,
+    operators::termination,
     problems::bmf::BenchmarkFunction,
+    tracking,
 };
 
 use crate::{
@@ -25,13 +27,16 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
 
     let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
-    let config = pso::pso(
-        params.population_size,
-        params.a,
-        params.b,
-        params.c,
-        params.v_max,
-        setup.cutoff_length,
+    let config = pso::real_pso(
+        pso::RealParameters {
+            num_particles: params.population_size,
+            a: params.a,
+            b: params.b,
+            c: params.c,
+            v_max: params.v_max,
+        },
+        termination::FixedIterations::new(setup.cutoff_length),
+        tracking::Logger::default(),
     );
 
     let rng = Random::seeded(setup.seed);

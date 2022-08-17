@@ -31,8 +31,8 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
 
     let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
-    let config = iwo::iwo(
-        iwo::Parameters {
+    let config = iwo::real_iwo(
+        iwo::RealParameters {
             initial_population_size: params.initial_population_size,
             max_population_size: params.max_population_size,
             min_number_of_seeds: params.min_number_of_seeds,
