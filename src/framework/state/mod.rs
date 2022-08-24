@@ -1,4 +1,4 @@
-//! State and state management.
+#![doc = include_str!("../../../docs/state.md")]
 
 use std::ops::{Deref, DerefMut};
 
