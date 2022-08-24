@@ -20,3 +20,4 @@ pub use derive_deref;
 pub use float_eq;
 pub use rand;
 pub use rand_distr;
+pub use serde;
