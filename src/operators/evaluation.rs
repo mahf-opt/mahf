@@ -1,3 +1,5 @@
+//! Evaluation methods
+
 use serde::Serialize;
 
 use crate::{

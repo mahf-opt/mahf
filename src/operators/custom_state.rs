@@ -1,4 +1,6 @@
-//! Custom states required for specific metaheuristics and evaluation procedures
+//! Custom state types
+//!
+//! A collection of custom state types required by specific metaheuristics and evaluation procedures.
 
 use crate::{
     framework::{state::CustomState, Individual, SingleObjective},
