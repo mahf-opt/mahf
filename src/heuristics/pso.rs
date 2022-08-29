@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Parameters for [real_pso].
-pub struct RealParameters {
+pub struct RealProblemParameters {
     pub num_particles: u32,
     pub a: f64,
     pub b: f64,
@@ -18,14 +18,14 @@ pub struct RealParameters {
 /// An example single-objective Particle Swarm Optimization operating on a real search space.
 /// Uses the [pso] component internally.
 pub fn real_pso<P>(
-    params: RealParameters,
+    params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
 {
-    let RealParameters {
+    let RealProblemParameters {
         num_particles,
         a,
         b,

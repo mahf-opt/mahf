@@ -9,22 +9,22 @@ use crate::{
 };
 
 /// Parameters for [real_iterated_local_search].
-pub struct RealParameters<P> {
-    pub local_search_params: ls::RealParameters,
+pub struct RealProblemParameters<P> {
+    pub local_search_params: ls::RealProblemParameters,
     pub local_search_termination: Box<dyn Condition<P>>,
 }
 
 /// An example single-objective Iterated Local Search operating on a real search space.
 /// Uses the [iterated_local_search] component internally.
 pub fn real_iterated_local_search<P>(
-    params: RealParameters<P>,
+    params: RealProblemParameters<P>,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    let RealParameters {
+    let RealProblemParameters {
         local_search_params,
         local_search_termination,
     } = params;
@@ -50,22 +50,22 @@ where
 }
 
 /// Parameters for [iterated_local_permutation_search].
-pub struct PermutationParameters<P> {
-    pub local_search_params: ls::PermutationParameters,
+pub struct PermutationProblemParameters<P> {
+    pub local_search_params: ls::PermutationProblemParameters,
     pub local_search_termination: Box<dyn Condition<P>>,
 }
 
 /// An example single-objective Iterated Local Search operating on a permutation search space.
 /// Uses the [iterated_local_search] component internally.
 pub fn permutation_iterated_local_search<P>(
-    params: PermutationParameters<P>,
+    params: PermutationProblemParameters<P>,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    let PermutationParameters {
+    let PermutationProblemParameters {
         local_search_params,
         local_search_termination,
     } = params;

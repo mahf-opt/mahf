@@ -5,7 +5,7 @@ use tracking::{functions, trigger};
 fn main() -> anyhow::Result<()> {
     let output = "data/coco/iwo";
     let config = iwo::real_iwo(
-        iwo::RealParameters {
+        iwo::RealProblemParameters {
             initial_population_size: 5,
             max_population_size: 20,
             min_number_of_seeds: 0,

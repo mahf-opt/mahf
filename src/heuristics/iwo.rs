@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct RealParameters {
+pub struct RealProblemParameters {
     pub initial_population_size: u32,
     pub max_population_size: u32,
     pub min_number_of_seeds: u32,
@@ -28,14 +28,14 @@ pub struct RealParameters {
 /// # References
 /// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
 pub fn real_iwo<P>(
-    params: RealParameters,
+    params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    let RealParameters {
+    let RealProblemParameters {
         initial_population_size,
         max_population_size,
         min_number_of_seeds,

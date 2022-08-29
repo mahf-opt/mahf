@@ -28,7 +28,7 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let problem = BenchmarkFunction::try_from(setup.instance.as_str()).unwrap();
 
     let config = pso::real_pso(
-        pso::RealParameters {
+        pso::RealProblemParameters {
             num_particles: params.population_size,
             a: params.a,
             b: params.b,

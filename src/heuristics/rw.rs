@@ -7,21 +7,21 @@ use crate::{
 };
 
 /// Parameters for [real_random_walk].
-pub struct RealParameters {
+pub struct RealProblemParameters {
     pub deviation: f64,
 }
 
 /// An example single-objective Random Walk operating on a real search space.
 /// Uses the [random_walk] component internally.
 pub fn real_random_walk<P>(
-    params: RealParameters,
+    params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
 {
-    let RealParameters { deviation } = params;
+    let RealProblemParameters { deviation } = params;
 
     Configuration::builder()
         .do_(generation::RandomSpread::new_init(1))
@@ -36,7 +36,7 @@ where
 }
 
 /// Parameters for [permutation_random_walk].
-pub struct PermutationParameters {
+pub struct PermutationProblemParameters {
     pub pm: f64,
     pub n_swap: usize,
 }
@@ -44,14 +44,14 @@ pub struct PermutationParameters {
 /// An example single-objective Random Walk operating on a permutation search space.
 /// Uses the [random_walk] component internally.
 pub fn permutation_random_walk<P>(
-    params: PermutationParameters,
+    params: PermutationProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    let PermutationParameters { pm, n_swap } = params;
+    let PermutationProblemParameters { pm, n_swap } = params;
 
     Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))

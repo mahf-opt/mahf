@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Parameters for [real_local_search].
-pub struct RealParameters {
+pub struct RealProblemParameters {
     pub n_neighbors: u32,
     pub deviation: f64,
 }
@@ -15,14 +15,14 @@ pub struct RealParameters {
 /// An example single-objective Local Search operating on a real search space.
 /// Uses the [local_search] component internally.
 pub fn real_local_search<P>(
-    params: RealParameters,
+    params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    let RealParameters {
+    let RealProblemParameters {
         n_neighbors,
         deviation,
     } = params;
@@ -44,7 +44,7 @@ where
 }
 
 /// Parameters for [permutation_local_search].
-pub struct PermutationParameters {
+pub struct PermutationProblemParameters {
     pub n_neighbors: u32,
     pub pm: f64,
     pub n_swap: usize,
@@ -53,14 +53,14 @@ pub struct PermutationParameters {
 /// An example single-objective Local Search operating on a permutation search space.
 /// Uses the [local_search] component internally.
 pub fn permutation_local_search<P>(
-    params: PermutationParameters,
+    params: PermutationProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    let PermutationParameters {
+    let PermutationProblemParameters {
         n_neighbors,
         pm,
         n_swap,

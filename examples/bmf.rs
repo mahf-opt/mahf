@@ -5,7 +5,7 @@ type P = problems::bmf::BenchmarkFunction;
 fn main() -> anyhow::Result<()> {
     let problem = P::sphere(30);
     let config = pso::real_pso(
-        pso::RealParameters {
+        pso::RealProblemParameters {
             num_particles: 100,
             a: 1.0,
             b: 1.0,

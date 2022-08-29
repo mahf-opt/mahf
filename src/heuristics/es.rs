@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Parameters for [real_mu_plus_lambda].
-pub struct RealParameters {
+pub struct RealProblemParameters {
     pub population_size: u32,
     pub lambda: u32,
     pub deviation: f64,
@@ -19,14 +19,14 @@ pub struct RealParameters {
 /// # References
 /// [doi.org/10.1023/A:1015059928466](https://doi.org/10.1023/A:1015059928466)
 pub fn real_mu_plus_lambda<P>(
-    params: RealParameters,
+    params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    let RealParameters {
+    let RealProblemParameters {
         population_size,
         lambda,
         deviation,

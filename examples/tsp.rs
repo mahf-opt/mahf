@@ -6,8 +6,8 @@ fn main() -> anyhow::Result<()> {
     let problem = problems::tsp::Instances::BERLIN52.load();
 
     let config = ils::permutation_iterated_local_search(
-        ils::PermutationParameters {
-            local_search_params: ls::PermutationParameters {
+        ils::PermutationProblemParameters {
+            local_search_params: ls::PermutationProblemParameters {
                 n_neighbors: 100,
                 pm: 0.9,
                 n_swap: 10,

@@ -8,7 +8,7 @@ use crate::{
 
 /// Parameters for [binary_ga].
 #[derive(Clone, Copy, Debug)]
-pub struct BinaryParameters {
+pub struct BinaryProblemParameters {
     pub population_size: u32,
     pub tournament_size: u32,
     pub rm: f64,
@@ -18,7 +18,7 @@ pub struct BinaryParameters {
 /// An example single-objective Genetic Algorithm operating on a binary search space.
 /// Uses the [ga] component internally.
 pub fn binary_ga<P>(
-    params: BinaryParameters,
+    params: BinaryProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
@@ -27,7 +27,7 @@ where
         + VectorProblem<T = bool>
         + LimitedVectorProblem,
 {
-    let BinaryParameters {
+    let BinaryProblemParameters {
         population_size,
         tournament_size,
         rm,
@@ -56,7 +56,7 @@ where
 
 /// Parameters for [real_ga].
 #[derive(Clone, Copy, Debug)]
-pub struct RealParameters {
+pub struct RealProblemParameters {
     pub population_size: u32,
     pub tournament_size: u32,
     pub deviation: f64,
@@ -66,14 +66,14 @@ pub struct RealParameters {
 /// An example single-objective Genetic Algorithm operating on a real search space.
 /// Uses the [ga] component internally.
 pub fn real_ga<P>(
-    params: RealParameters,
+    params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
-    let RealParameters {
+    let RealProblemParameters {
         population_size,
         tournament_size,
         deviation,
