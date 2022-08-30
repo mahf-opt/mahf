@@ -55,7 +55,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self
     }
 
-    pub fn do_if_some_(self, component: Option<Box<dyn Component<P>>>) -> Self {
+    pub fn do_optional_(self, component: Option<Box<dyn Component<P>>>) -> Self {
         if let Some(component) = component {
             self.do_(component)
         } else {
@@ -118,6 +118,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     /// Asserts the condition on [State][state::State].
     ///
     /// Uses the [Debug][operators::misc::Debug] component internally.
+    #[track_caller]
     pub fn assert(self, assert: impl Fn(&state::State) -> bool + Send + Sync + 'static) -> Self {
         self.debug(move |_problem, state| assert!(assert(state)))
     }
@@ -127,8 +128,8 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(operators::misc::Debug::new(behaviour))
     }
 
-    pub fn evaluate_serial(self) -> Self {
-        self.do_(operators::evaluation::SerialEvaluator::new())
+    pub fn evaluate_sequential(self) -> Self {
+        self.do_(operators::evaluation::SequentialEvaluator::new())
     }
 }
 

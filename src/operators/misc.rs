@@ -69,6 +69,8 @@ impl<P: Problem> Serialize for Debug<P> {
     }
 }
 
+/// Prints a summary of the current [State] for single-objective problems.
+/// The summary includes statistics like number of iterations, evaluations and best solution found yet.
 #[derive(Serialize)]
 pub struct PrintSingleObjectiveSummary;
 impl PrintSingleObjectiveSummary {

@@ -85,7 +85,7 @@ where
             builder
                 .do_(selection::All::new())
                 .do_(neighbor)
-                .evaluate_serial()
+                .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement::Generational::new(1))
                 .do_(logger)

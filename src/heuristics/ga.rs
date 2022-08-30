@@ -38,7 +38,7 @@ where
         .do_(initialization::RandomBitstring::new_uniform_init(
             population_size,
         ))
-        .evaluate_serial()
+        .evaluate_sequential()
         .update_best_individual()
         .do_(ga(
             Parameters {
@@ -82,7 +82,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .evaluate_serial()
+        .evaluate_sequential()
         .update_best_individual()
         .do_(ga(
             Parameters {
@@ -130,9 +130,9 @@ pub fn ga<P: SingleObjectiveProblem>(
                 .do_(selection)
                 .do_(crossover)
                 .do_(mutation)
-                .evaluate_serial()
+                .evaluate_sequential()
                 .update_best_individual()
-                .do_if_some_(archive)
+                .do_optional_(archive)
                 .do_(replacement)
                 .do_(logger)
         })

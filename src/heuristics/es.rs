@@ -34,7 +34,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .evaluate_serial()
+        .evaluate_sequential()
         .update_best_individual()
         .do_(es(
             Parameters {
@@ -75,9 +75,9 @@ pub fn es<P: SingleObjectiveProblem>(
             builder
                 .do_(selection)
                 .do_(mutation)
-                .evaluate_serial()
+                .evaluate_sequential()
                 .update_best_individual()
-                .do_if_some_(archive)
+                .do_optional_(archive)
                 .do_(replacement)
                 .do_(logger)
         })

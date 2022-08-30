@@ -35,7 +35,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
-        .evaluate_serial()
+        .evaluate_sequential()
         .update_best_individual()
         .do_(pso(
             Parameters {
@@ -76,7 +76,7 @@ where
         .while_(termination, |builder| {
             builder
                 .do_(particle_update)
-                .evaluate_serial()
+                .evaluate_sequential()
                 .update_best_individual()
                 .do_(state_update)
                 .do_(logger)

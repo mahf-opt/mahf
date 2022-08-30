@@ -9,15 +9,15 @@ use crate::{
 };
 
 #[derive(Serialize)]
-pub struct SerialEvaluator;
+pub struct SequentialEvaluator;
 
-impl SerialEvaluator {
+impl SequentialEvaluator {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: Problem> Component<P> for SerialEvaluator {
+impl<P: Problem> Component<P> for SequentialEvaluator {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<common::Population<P>>();
         state.insert(common::Evaluations(0));
