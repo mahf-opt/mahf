@@ -7,11 +7,12 @@ The individual module's documentation then describes how it can be used in pract
 ## Primary Features
 
 - Simple modular construction of metaheuristics
+- State management and state tracking
 - Collection of common operators
 - Templates for common heuristics
-- A basic set of benchmark problems
+- A basic set of common benchmark problems
 - Utilities for parameter optimization
-- Utilities for efficient evaluation and tracking
+- Utilities for efficient evaluation and comparison
 
 ## Crate Structure
 

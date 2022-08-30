@@ -2,11 +2,34 @@
 
 A framework for modular construction and evaluation of meta-heuristics.
 
+# Purpose and Features
+
+MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. In addition to construction it also provides utilities for tracking, evaluation and comparison of those heuristics.
+
+- Simple modular construction of metaheuristics
+- State management and state tracking
+- Collection of common operators
+- Templates for common heuristics
+- A basic set of common benchmark problems
+
+# Planned Features
+
+- Extensive collection of components and heuristic templates
+- Standardized benchmarking and comparison of heuristics
+- First class support for constructive heuristics
+- Utilities for parameter optimization
+- Utilities for efficient evaluation and comparison
+- Variety of examples and clear guidlines
+- Documentation for users with no Rust experience
+
 # Requirements
 
 - [The Rust Programming Language](https://rust-lang.org)
+- Either `gcc` or `clang`
 
 # Documentation
+
+MAHF has extensive documentation which should make it easy to get started.
 
 Just run
 ```sh
@@ -16,17 +39,15 @@ to build and open the documentation.
 
 # Examples
 
-The [`mahf_demo`](./examples/mahf_demo.rs) example illustrates how this
-framework can be used to evaluate IWO and (μ+λ)-ES as well as the influence of their
-components on the optimization process.
+Examples on how to use MAHF for evaluation can be found in the [examples](/examples) directory.
 
-# Papers
+Examples of heuristics can be found under [heuristics](/src/heuristics/) and components under [operators](/src/operators/).
 
-## Papers this has been used for
+# Additional Resources
+
+- [Evaluation](/evaluation/)
+- [Parameter Optimization](/param-study/)
+
+# Papers and Projects using MAHF
 
 None yet.
-
-## Papers this is based upon
-
-- de Armas, J., Lalla-Ruiz, E., Tilahun, S.L. et al. Similarity in metaheuristics: a gentle step towards a comparison methodology. Nat Comput (2021). [doi.org/10.1007/s11047-020-09837-9](https://doi.org/10.1007/s11047-020-09837-9)
-- Sunith Bandaru and Kalyanmoy Deb. 2016. Metaheuristic Techniques. In Decision Sciences. CRC Press, 693–750. [doi.org/10.1201/9781315183176-12](https://doi.org/10.1201/9781315183176-12)
