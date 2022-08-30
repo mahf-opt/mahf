@@ -4,7 +4,7 @@
 
 Every heuristic in MAHF is composed of nested [Component](components::Component)s.
 A complete set is then called [Configuration].
-There exist both structural ([Block](components::Block), [Loop](components::Loop)) and operator components ([Initializer](mahf::operators::initialization::Initializer), [Generator](mahf::operators::generation::Generator)).
+There exist both structural ([Block](components::Block), [Loop](components::Loop)) and operator components ([Initializer](crate::operators::initialization::Initializer), [Generator](crate::operators::generation::Generator)).
 
 Structural components are used to describe concepts such as sequential evaluation or loops.
 They can be found in the [components] module, and there is a [ConfigurationBuilder] which simplifies their usage.

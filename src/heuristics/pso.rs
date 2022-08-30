@@ -37,7 +37,7 @@ where
 }
 
 #[allow(clippy::new_ret_no_self)]
-mod pso_ops {
+pub mod pso_ops {
     use crate::problems::SingleObjectiveProblem;
     use crate::{
         framework::{components::*, state::State, Individual},

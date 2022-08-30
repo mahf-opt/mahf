@@ -32,7 +32,7 @@ impl fmt::Display for IllegalObjective {
 /// Can be used to represent a single objective in single-objective optimization,
 /// or a combined objective in multi-objective optimization.
 ///
-/// This objective type is used for [SingleObjectiveProblem]'s. It defaults to [f64::INFINITY].
+/// This objective type is used for [SingleObjectiveProblem](crate::problems::SingleObjectiveProblem)'s. It defaults to [f64::INFINITY].
 ///
 /// # Restrictions
 ///
@@ -113,7 +113,7 @@ impl fmt::Debug for SingleObjective {
 ///
 /// Can be used to represent an objective vector in multi-objective optimization.
 ///
-/// This objective type is used for [MultiObjectiveProblem]'s.
+/// This objective type is used for [MultiObjectiveProblem](crate::problems::MultiObjectiveProblem)'s.
 ///
 /// # Restrictions
 ///

@@ -23,8 +23,9 @@ impl CustomState for Temperature {}
 
 Now you can use it in your component:
 
-```rust
+```ignore
 // TODO: Insert example of Simulated Annealing
+# struct Ignore;
 ```
 
 ## Custom State

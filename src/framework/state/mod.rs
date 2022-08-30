@@ -71,7 +71,7 @@ impl State {
     /// Panics if the state does not exist.
     ///
     /// This is the recommended way to ensure the state
-    /// is available in [Component::initialize](crate::framework::Component::initialize).
+    /// is available in [Component::initialize](crate::framework::components::Component::initialize).
     #[track_caller]
     pub fn require<T: CustomState>(&self) {
         assert!(

@@ -69,7 +69,8 @@ impl<P: Problem> Logger<P> {
 }
 
 impl<P: SingleObjectiveProblem> Logger<P> {
-    /// Add the [common log set][LogSet::common], along with the objective value of the [common::BestIndividual].
+    /// Add the [common log set][LogSet::common], along with the objective value
+    /// of the [BestIndividual](crate::framework::state::common::BestIndividual).
     pub fn log_common_single_objective_sets(self) -> Self {
         self.log_set(LogSet::common().with_logger(tracking::functions::best_objective_value::<P>))
     }

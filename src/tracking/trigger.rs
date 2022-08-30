@@ -5,7 +5,7 @@ use std::{
     ops::{Deref, Sub},
 };
 
-/// Like [Condition](crate::framework::components::Condition) but non-serializable.
+/// Like [Condition](crate::framework::conditions::Condition) but non-serializable.
 pub trait Trigger<P>: Any + Send + Sync {
     #[allow(unused_variables)]
     fn initialize(&self, problem: &P, state: &mut State) {}
