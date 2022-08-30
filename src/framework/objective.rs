@@ -3,6 +3,9 @@
 use std::any::Any;
 use std::fmt;
 
+/// Marker trait for objectives.
+///
+/// See [SingleObjective] and [MultiObjective].
 pub trait Objective: fmt::Debug + Clone + Eq + Any + PartialOrd {}
 
 /// Error type for illegal objective values.
