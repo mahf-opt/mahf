@@ -2,8 +2,10 @@ use crate::{
     framework::{
         components::{Block, Branch, Component, Loop, Scope},
         conditions::Condition,
+        state,
     },
-    problems::Problem,
+    operators,
+    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
 };
 
 pub struct Configuration<P: Problem>(Box<dyn Component<P>>);
@@ -20,6 +22,14 @@ impl<P: Problem> Configuration<P> {
     pub fn heuristic(&self) -> &dyn Component<P> {
         self.0.as_ref()
     }
+
+    pub fn into_inner(self) -> Box<dyn Component<P>> {
+        self.0
+    }
+
+    pub fn into_builder(self) -> ConfigurationBuilder<P> {
+        ConfigurationBuilder::new().do_(self.0)
+    }
 }
 
 impl<P: Problem> From<Configuration<P>> for Box<dyn Component<P>> {
@@ -32,6 +42,7 @@ pub struct ConfigurationBuilder<P: Problem> {
     components: Vec<Box<dyn Component<P>>>,
 }
 
+// Basic functionality
 impl<P: Problem> ConfigurationBuilder<P> {
     fn new() -> Self {
         Self {
@@ -42,6 +53,14 @@ impl<P: Problem> ConfigurationBuilder<P> {
     pub fn do_(mut self, component: Box<dyn Component<P>>) -> Self {
         self.components.push(component);
         self
+    }
+
+    pub fn do_optional_(self, component: Option<Box<dyn Component<P>>>) -> Self {
+        if let Some(component) = component {
+            self.do_(component)
+        } else {
+            self
+        }
     }
 
     pub fn while_(
@@ -87,5 +106,50 @@ impl<P: Problem> ConfigurationBuilder<P> {
 
     pub fn build(self) -> Configuration<P> {
         Configuration::new(Block::new(self.components))
+    }
+
+    pub fn build_component(self) -> Box<dyn Component<P>> {
+        Block::new(self.components)
+    }
+}
+
+// Convenience methods
+impl<P: Problem> ConfigurationBuilder<P> {
+    /// Asserts the condition on [State][state::State].
+    ///
+    /// Uses the [Debug][operators::misc::Debug] component internally.
+    #[track_caller]
+    pub fn assert(self, assert: impl Fn(&state::State) -> bool + Send + Sync + 'static) -> Self {
+        self.debug(move |_problem, state| assert!(assert(state)))
+    }
+
+    /// Constructs a [Debug][operators::misc::Debug] component with the given behaviour.
+    pub fn debug(self, behaviour: impl Fn(&P, &mut state::State) + Send + Sync + 'static) -> Self {
+        self.do_(operators::misc::Debug::new(behaviour))
+    }
+
+    pub fn evaluate_sequential(self) -> Self {
+        self.do_(operators::evaluation::SequentialEvaluator::new())
+    }
+}
+
+impl<P: SingleObjectiveProblem> ConfigurationBuilder<P> {
+    pub fn update_best_individual(self) -> Self {
+        self.do_(operators::evaluation::UpdateBestIndividual::new())
+    }
+}
+
+impl<P: SingleObjectiveProblem> ConfigurationBuilder<P>
+where
+    P::Encoding: std::fmt::Debug,
+{
+    pub fn single_objective_summary(self) -> Self {
+        self.do_(operators::misc::PrintSingleObjectiveSummary::new())
+    }
+}
+
+impl<P: MultiObjectiveProblem> ConfigurationBuilder<P> {
+    pub fn update_pareto_front(self) -> Self {
+        self.do_(operators::evaluation::UpdateParetoFront::new())
     }
 }

@@ -1,32 +1,140 @@
 //! Genetic Algorithm
 
 use crate::{
-    framework::Configuration,
+    framework::{components::Component, conditions::Condition, Configuration},
     operators::*,
-    problems::{LimitedVectorProblem, Problem, VectorProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
-/// Genetic Algorithm
+/// Parameters for [binary_ga].
+#[derive(Clone, Copy, Debug)]
+pub struct BinaryProblemParameters {
+    pub population_size: u32,
+    pub tournament_size: u32,
+    pub rm: f64,
+    pub pc: f64,
+}
+
+/// An example single-objective Genetic Algorithm operating on a binary search space.
+/// Uses the [ga] component internally.
+pub fn binary_ga<P>(
+    params: BinaryProblemParameters,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Configuration<P>
+where
+    P: SingleObjectiveProblem<Encoding = Vec<bool>>
+        + VectorProblem<T = bool>
+        + LimitedVectorProblem,
+{
+    let BinaryProblemParameters {
+        population_size,
+        tournament_size,
+        rm,
+        pc,
+    } = params;
+
+    Configuration::builder()
+        .do_(initialization::RandomBitstring::new_uniform_init(
+            population_size,
+        ))
+        .evaluate_sequential()
+        .update_best_individual()
+        .do_(ga(
+            Parameters {
+                selection: selection::Tournament::new(population_size, tournament_size),
+                crossover: generation::recombination::UniformCrossover::new(pc),
+                mutation: generation::mutation::BitflipMutation::new(rm),
+                archive: None,
+                replacement: replacement::Generational::new(population_size),
+            },
+            termination,
+            logger,
+        ))
+        .build()
+}
+
+/// Parameters for [real_ga].
+#[derive(Clone, Copy, Debug)]
+pub struct RealProblemParameters {
+    pub population_size: u32,
+    pub tournament_size: u32,
+    pub deviation: f64,
+    pub pc: f64,
+}
+
+/// An example single-objective Genetic Algorithm operating on a real search space.
+/// Uses the [ga] component internally.
+pub fn real_ga<P>(
+    params: RealProblemParameters,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Configuration<P>
+where
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+{
+    let RealProblemParameters {
+        population_size,
+        tournament_size,
+        deviation,
+        pc,
+    } = params;
+
+    Configuration::builder()
+        .do_(initialization::RandomSpread::new_init(population_size))
+        .evaluate_sequential()
+        .update_best_individual()
+        .do_(ga(
+            Parameters {
+                selection: selection::Tournament::new(population_size, tournament_size),
+                crossover: generation::recombination::UniformCrossover::new(pc),
+                mutation: generation::mutation::FixedDeviationDelta::new(deviation),
+                archive: None,
+                replacement: replacement::Generational::new(population_size),
+            },
+            termination,
+            logger,
+        ))
+        .build()
+}
+
+/// Basic building blocks of a Genetic Algorithm.
+pub struct Parameters<P> {
+    pub selection: Box<dyn Component<P>>,
+    pub crossover: Box<dyn Component<P>>,
+    pub mutation: Box<dyn Component<P>>,
+    pub archive: Option<Box<dyn Component<P>>>,
+    pub replacement: Box<dyn Component<P>>,
+}
+
+/// A generic single-objective Genetic Algorithm template.
 ///
 /// # References
 /// [link.springer.com/10.1007/978-3-319-07153-4_28-1](http://link.springer.com/10.1007/978-3-319-07153-4_28-1)
-pub fn ga<P>(population_size: u32, deviation: f64, pc: f64, max_iterations: u32) -> Configuration<P>
-where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem + 'static,
-{
+pub fn ga<P: SingleObjectiveProblem>(
+    params: Parameters<P>,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Box<dyn Component<P>> {
+    let Parameters {
+        selection,
+        crossover,
+        mutation,
+        archive,
+        replacement,
+    } = params;
+
     Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(population_size))
-        .do_(evaluation::SerialEvaluator::new())
-        .while_(
-            termination::FixedIterations::new(max_iterations),
-            |builder| {
-                builder
-                    .do_(selection::FullyRandom::new(population_size))
-                    .do_(generation::recombination::UniformCrossover::new(pc))
-                    .do_(generation::mutation::FixedDeviationDelta::new(deviation))
-                    .do_(evaluation::SerialEvaluator::new())
-                    .do_(replacement::Generational::new(population_size))
-            },
-        )
-        .build()
+        .while_(termination, |builder| {
+            builder
+                .do_(selection)
+                .do_(crossover)
+                .do_(mutation)
+                .evaluate_sequential()
+                .update_best_individual()
+                .do_optional_(archive)
+                .do_(replacement)
+                .do_(logger)
+        })
+        .build_component()
 }

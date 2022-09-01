@@ -1,7 +1,6 @@
 //! Initialization methods
 
-use rand::seq::SliceRandom;
-use rand::{distributions::uniform::SampleUniform, Rng};
+use rand::{distributions::uniform::SampleUniform, seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -144,6 +143,69 @@ where
     fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
         self.random_permutation(problem, state.random_mut(), population_size)
+            .into_iter()
+            .map(Individual::new_unevaluated)
+            .collect()
+    }
+}
+
+/// Generates new random binary string for binary problems.
+#[derive(Serialize, Deserialize)]
+pub struct RandomBitstring {
+    /// Size of the initial population.
+    pub initial_population_size: Option<u32>,
+    // Probability of generating a 1 / true.
+    pub p: f64,
+}
+impl RandomBitstring {
+    /// Initializes the component with p being the probability for a 1.
+    pub fn new_init<P>(initial_population_size: u32, p: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    {
+        Box::new(Initializer(Self {
+            initial_population_size: Some(initial_population_size),
+            p,
+        }))
+    }
+
+    /// Initializes the component with uniform probability for 0 and 1.
+    pub fn new_uniform_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    {
+        Box::new(Initializer(Self {
+            initial_population_size: Some(initial_population_size),
+            p: 0.5,
+        }))
+    }
+
+    pub(crate) fn random_bitstring<P>(
+        &self,
+        problem: &P,
+        rng: &mut Random,
+        population_size: u32,
+    ) -> Vec<P::Encoding>
+    where
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    {
+        let mut population = Vec::new();
+        for _ in 0..population_size {
+            let solution = (0..problem.dimension())
+                .map(|_| rng.gen_bool(self.p))
+                .collect::<Vec<bool>>();
+            population.push(solution);
+        }
+        population
+    }
+}
+impl<P> Initialization<P> for RandomBitstring
+where
+    P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+{
+    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
+        let population_size = self.initial_population_size.unwrap();
+        self.random_bitstring(problem, state.random_mut(), population_size)
             .into_iter()
             .map(Individual::new_unevaluated)
             .collect()

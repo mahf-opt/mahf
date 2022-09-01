@@ -78,6 +78,7 @@ impl IWOAdaptiveDeviationDelta {
     where
         P: Problem<Encoding = Vec<f64>>,
     {
+        assert!(final_deviation <= initial_deviation);
         Box::new(Generator(Self {
             initial_deviation,
             final_deviation,
