@@ -1,5 +1,6 @@
 //! Termination methods
 
+use crate::operators::state::custom_state::FitnessImprovementState;
 use crate::{
     framework::{
         conditions::Condition,
@@ -8,7 +9,6 @@ use crate::{
             State,
         },
     },
-    operators::custom_state::FitnessImprovementState,
     problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
 };
 use serde::{Deserialize, Serialize};

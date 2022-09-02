@@ -136,13 +136,12 @@ pub fn aco<P: SingleObjectiveProblem>(
 }
 
 mod ant_ops {
-    use rand::distributions::{Distribution, WeightedIndex};
-
+    use crate::operators::state::custom_state::PheromoneMatrix;
     use crate::{
         framework::{components::*, state::State, Individual, Random, SingleObjective},
-        operators::custom_state::PheromoneMatrix,
         problems::tsp::SymmetricTsp,
     };
+    use rand::distributions::{Distribution, WeightedIndex};
 
     #[derive(serde::Serialize)]
     pub struct AcoGeneration {

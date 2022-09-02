@@ -1,8 +1,8 @@
 //! Archiving methods
 
+use crate::operators::state::custom_state::ElitistArchiveState;
 use crate::{
     framework::{components::*, state::State},
-    operators::custom_state::ElitistArchiveState,
     problems::SingleObjectiveProblem,
 };
 use serde::{Deserialize, Serialize};

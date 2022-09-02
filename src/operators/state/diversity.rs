@@ -1,12 +1,11 @@
 //! Postprocess variants
-//!
 
+use crate::operators::state::custom_state::DiversityState;
 use crate::{
     framework::{
         components::*,
         state::{common::Population, State},
     },
-    operators::custom_state::DiversityState,
     problems::{Problem, VectorProblem},
 };
 

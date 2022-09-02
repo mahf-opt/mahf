@@ -7,9 +7,9 @@ fn main() -> anyhow::Result<()> {
     let config = pso::real_pso(
         pso::RealProblemParameters {
             num_particles: 100,
-            a: 1.0,
-            b: 1.0,
-            c: 1.0,
+            weight: 1.0,
+            c_one: 1.0,
+            c_two: 1.0,
             v_max: 1.0,
         },
         termination::FixedIterations::new(500),

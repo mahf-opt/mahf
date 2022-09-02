@@ -16,9 +16,9 @@ use crate::{
 
 declare_parameters! {
     population_size: u32,
-    a: f64,
-    b: f64,
-    c: f64,
+    weight: f64,
+    c_one: f64,
+    c_two: f64,
     v_max: f64,
 }
 
@@ -30,9 +30,9 @@ pub fn run(setup: &Setup, args: &mut ArgsIter) {
     let config = pso::real_pso(
         pso::RealProblemParameters {
             num_particles: params.population_size,
-            a: params.a,
-            b: params.b,
-            c: params.c,
+            weight: params.weight,
+            c_one: params.c_one,
+            c_two: params.c_two,
             v_max: params.v_max,
         },
         termination::FixedIterations::new(setup.cutoff_length),
