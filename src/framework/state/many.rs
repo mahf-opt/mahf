@@ -21,7 +21,7 @@ pub struct MutState<'a> {
     borrowed: HashSet<TypeId>,
 }
 impl<'a> MutState<'a> {
-    pub fn new(state: &'a mut State) -> Self {
+    pub(super) fn new(state: &'a mut State) -> Self {
         Self {
             state,
             borrowed: HashSet::new(),

@@ -1,5 +1,4 @@
 //! Postprocess variants
-//!
 
 use crate::{
     framework::{

@@ -27,7 +27,7 @@ impl<P: Problem + 'static> LogSet<P> {
 
     /// Returns a common log set.
     ///
-    /// Every 10 [Iteration][common::Iteration]'s, [common::Evaluations] and [common::Progress] are logged.
+    /// Every 10 [Iteration][common::Iterations], [common::Evaluations] and [common::Progress] are logged.
     pub fn common() -> Self {
         Self::new()
             .with_trigger(trigger::Iteration::new(10))
