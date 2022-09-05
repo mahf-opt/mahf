@@ -14,11 +14,11 @@ use crate::{
 /// Requires [PsoStateUpdate][crate::heuristics::pso::pso_ops::PsoStateUpdate].
 #[derive(serde::Serialize)]
 pub struct PsoGeneration {
-    /// Inertia weight
+    /// Inertia weight for influence of old velocity
     pub weight: f64,
-    /// First constant factor for influence of previous best
+    /// First constant factor for influence of previous best (also called Acceleration coefficient 1)
     pub c_one: f64,
-    /// Second constant factor for influence of global best
+    /// Second constant factor for influence of global best (also called Acceleration coefficient 2)
     pub c_two: f64,
     /// Maximum velocity
     pub v_max: f64,
@@ -62,6 +62,8 @@ where
                 .collect::<Vec<_>>()
         };
 
+        // it might be debatable if one should use a vector of different random numbers or of the same
+        // both versions exist in the literature
         let r_one = rng_iter(rng);
         let r_two = rng_iter(rng);
 
