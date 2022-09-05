@@ -21,7 +21,7 @@ pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
 
 /// A function which logs the best individual.
 ///
-/// Requires the [Problem::Encoding] to implement [Clone] and [Serialize].
+/// Requires the [Problem::Encoding](crate::problems::Problem::Encoding) to implement [Clone] and [Serialize].
 pub fn best_individual<P>(state: &State) -> Entry
 where
     P: SingleObjectiveProblem,

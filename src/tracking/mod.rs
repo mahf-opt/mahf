@@ -17,7 +17,7 @@
 //!
 //! When calling [run](crate::framework::run), a [Log] will be
 //! added to the state, which the [Logger] will use to store the entries.
-//! The [Log] can be retrieved afterwards using [State::log](crate::framework::State::log).
+//! The [Log] can be retrieved afterwards using [State::log](crate::framework::state::State::log).
 
 /// Utils to write [Log]s to the disc.
 pub mod files;

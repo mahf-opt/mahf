@@ -1,4 +1,6 @@
-//! Implementations of [crate::framework::components].
+//! Collection of common operators.
+//!
+//! Operators are implementors of the [Component] trait.
 
 #![allow(clippy::new_ret_no_self)]
 

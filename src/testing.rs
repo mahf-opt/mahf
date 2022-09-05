@@ -1,3 +1,5 @@
+//! Testing utilities.
+
 use crate::{
     framework::{Individual, SingleObjective},
     problems::{HasKnownOptimum, Problem, SingleObjectiveProblem},

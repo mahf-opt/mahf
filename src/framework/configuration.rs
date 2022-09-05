@@ -8,17 +8,23 @@ use crate::{
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
 };
 
+/// A heuristic, constructed from a set of components.
 pub struct Configuration<P: Problem>(Box<dyn Component<P>>);
 
 impl<P: Problem> Configuration<P> {
+    /// Wraps a heuristic into a `Configuration`.
+    ///
+    /// Use `Configuration::builder` for a more convenient construction.
     pub fn new(heuristic: Box<dyn Component<P>>) -> Self {
         Configuration(heuristic)
     }
 
+    /// Creates a `ConfigurationBuilder`.
     pub fn builder() -> ConfigurationBuilder<P> {
         ConfigurationBuilder::new()
     }
 
+    /// Returns the root component.
     pub fn heuristic(&self) -> &dyn Component<P> {
         self.0.as_ref()
     }
@@ -38,6 +44,7 @@ impl<P: Problem> From<Configuration<P>> for Box<dyn Component<P>> {
     }
 }
 
+/// A simple DSL for building a heuristic.
 pub struct ConfigurationBuilder<P: Problem> {
     components: Vec<Box<dyn Component<P>>>,
 }
@@ -50,6 +57,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         }
     }
 
+    /// Adds a sequential component.
     pub fn do_(mut self, component: Box<dyn Component<P>>) -> Self {
         self.components.push(component);
         self
@@ -63,6 +71,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         }
     }
 
+    /// Runs the body while the condition is true.
     pub fn while_(
         self,
         condition: Box<dyn Condition<P>>,
@@ -72,6 +81,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(Loop::new(condition, components))
     }
 
+    /// Runs the body if the condition is true.
     pub fn if_(
         self,
         condition: Box<dyn Condition<P>>,
@@ -81,6 +91,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(Branch::new(condition, components))
     }
 
+    /// Same as `if_` but with an `else`.
     pub fn if_else_(
         self,
         condition: Box<dyn Condition<P>>,
@@ -96,6 +107,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         ))
     }
 
+    /// Creates a [Scope].
     pub fn scope_(
         self,
         body: impl FnOnce(ConfigurationBuilder<P>) -> ConfigurationBuilder<P>,
@@ -104,6 +116,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(Scope::new(components))
     }
 
+    /// Finalizes the configuration.
     pub fn build(self) -> Configuration<P> {
         Configuration::new(Block::new(self.components))
     }

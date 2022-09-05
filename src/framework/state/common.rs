@@ -1,3 +1,5 @@
+//! Common state used in most heuristics.
+
 use super::CustomState;
 use crate::problems::Problem;
 use crate::{

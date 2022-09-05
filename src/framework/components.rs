@@ -1,4 +1,4 @@
-//! Framework components.
+//! The Component trait and structural components.
 
 use crate::{
     framework::{
@@ -12,23 +12,19 @@ use std::any::Any;
 use trait_set::trait_set;
 
 trait_set! {
+    /// Collection of traits required by every component.
     pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync;
 }
 
-/// Defines the traits required by any component.
+/// Describes a component for use in the MAHF framework.
 ///
-/// This will be implemented automatically for all structs satisfying the requirements.
+/// `initialize` can be used to check what state is available
+/// or add custom state required by the component.
 ///
-/// # Any
-/// All components must allow downcasting and thus require [Any].
+/// `execute` should contain the actual logic of the component.
 ///
-/// # Serialize
-/// [DynSerialize] allows serializing dynamic components for the purpose of logging.
-///
-/// # Send
-/// Most of the time, execution should be multi threaded and having
-/// components implement [Send] makes this much easier.
-///
+/// Components are immutable, their properties describe them and can not
+/// change during a run. All mutable state has to be stored in the [State].
 pub trait Component<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
     fn initialize(&self, problem: &P, state: &mut State) {}
@@ -36,6 +32,14 @@ pub trait Component<P: Problem>: AnyComponent {
 }
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 
+/// Encapsulates state of child components.
+///
+/// When child components add new state,
+/// that state will be lost after the execution
+/// of this components.
+///
+/// All children will be re-initialized on every call
+/// of the `execute` function.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Scope<P: Problem> {
@@ -56,10 +60,15 @@ impl<P: Problem> Component<P> for Scope<P> {
 }
 
 impl<P: Problem> Scope<P> {
+    /// Creates a new [Scope].
+    ///
+    /// If you want to override some state,
+    /// you can use [Scope::new_with].
     pub fn new(body: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
         Self::new_with(|_| {}, body)
     }
 
+    /// Creates a new [Scope] while overriding some state.
     pub fn new_with(
         init: fn(&mut State),
         body: Vec<Box<dyn Component<P>>>,
@@ -69,6 +78,9 @@ impl<P: Problem> Scope<P> {
     }
 }
 
+/// A sequential block of components.
+///
+/// Will execute child components sequentially.
 #[derive(Serialize)]
 #[serde(bound = "")]
 #[serde(transparent)]
@@ -94,6 +106,10 @@ impl<P: Problem> Block<P> {
     }
 }
 
+/// Executes its child as long as the condition is true.
+///
+/// Use a [Block] as body if you want to loop over
+/// multiple components sequentially.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Loop<P: Problem> {
@@ -130,6 +146,7 @@ impl<P: Problem> Loop<P> {
     }
 }
 
+/// An if-else branching component.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Branch<P: Problem> {
