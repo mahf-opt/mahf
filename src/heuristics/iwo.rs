@@ -51,6 +51,8 @@ where
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))
+        .evaluate_sequential()
+        .update_best_individual()
         .do_(iwo(
             Parameters {
                 max_population_size,
@@ -90,7 +92,6 @@ pub fn iwo<P: SingleObjectiveProblem>(
     } = params;
 
     Configuration::builder()
-        .do_(evaluation::SequentialEvaluator::new())
         .while_(termination, |builder| {
             builder
                 .do_(selection::DeterministicFitnessProportional::new(
@@ -98,7 +99,8 @@ pub fn iwo<P: SingleObjectiveProblem>(
                     max_number_of_seeds,
                 ))
                 .do_(mutation)
-                .do_(evaluation::SequentialEvaluator::new())
+                .evaluate_sequential()
+                .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
                 .do_(logger)
         })
