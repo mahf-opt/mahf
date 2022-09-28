@@ -136,7 +136,7 @@ pub fn aco<P: SingleObjectiveProblem>(
 }
 
 mod ant_ops {
-    use crate::operators::state::PheromoneMatrix;
+    use crate::state::PheromoneMatrix;
     use crate::{
         framework::{components::*, state::State, Individual, Random, SingleObjective},
         problems::tsp::SymmetricTsp,

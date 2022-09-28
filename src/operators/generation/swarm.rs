@@ -1,6 +1,6 @@
 //! Swarm Operators
 
-use crate::operators::state::PsoState;
+use crate::state::PsoState;
 use rand::distributions::Uniform;
 use rand::Rng;
 
