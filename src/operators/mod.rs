@@ -4,7 +4,6 @@
 
 #![allow(clippy::new_ret_no_self)]
 
-pub mod archive;
 pub mod evaluation;
 pub mod generation;
 pub mod initialization;
