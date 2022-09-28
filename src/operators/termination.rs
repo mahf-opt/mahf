@@ -1,13 +1,13 @@
 //! Termination methods
 
-use crate::operators::state::custom_state::FitnessImprovementState;
 use crate::{
     framework::{
         conditions::Condition,
         state::{
             common::{Evaluations, Iterations, Progress},
-            State,
+            CustomState, State,
         },
+        SingleObjective,
     },
     problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
 };
@@ -245,6 +245,27 @@ mod distance_to_opt {
         assert!(!comp.evaluate(&problem, &mut state));
     }
 }
+
+/// State required for Termination by Steps without Improvement.
+///
+/// For preserving current number of steps without improvement and corresponding fitness value.
+struct FitnessImprovementState {
+    pub current_steps: usize,
+    pub current_objective: SingleObjective,
+}
+impl FitnessImprovementState {
+    pub fn update(&mut self, objective: &SingleObjective) -> bool {
+        if objective >= &self.current_objective {
+            self.current_steps += 1;
+            false
+        } else {
+            self.current_objective = *objective;
+            self.current_steps = 0;
+            true
+        }
+    }
+}
+impl CustomState for FitnessImprovementState {}
 
 /// Terminates after a specified number of steps (iterations) did not yield any improvement.
 ///

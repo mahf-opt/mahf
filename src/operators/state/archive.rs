@@ -1,65 +1,104 @@
 //! Archiving methods
 
-use crate::operators::state::custom_state::ElitistArchiveState;
 use crate::{
-    framework::{components::*, state::State},
+    framework::{
+        components::*,
+        state::{CustomState, State},
+        Individual,
+    },
     problems::SingleObjectiveProblem,
 };
 use serde::{Deserialize, Serialize};
 
-/// Updates the [ElitistArchiveState] with the current population.
-#[derive(Serialize, Deserialize)]
-pub struct ElitistArchive {
-    pub n_elitists: usize,
+/// State required for Elitism.
+///
+/// For preserving n elitist individuals.
+pub struct ElitistArchive<P: SingleObjectiveProblem> {
+    elitists: Vec<Individual<P>>,
 }
-impl ElitistArchive {
-    pub fn new<P: SingleObjectiveProblem>(n_elitists: usize) -> Box<dyn Component<P>> {
-        Box::new(Self { n_elitists })
-    }
-}
-impl<P> Component<P> for ElitistArchive
-where
-    P: SingleObjectiveProblem,
-{
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert::<ElitistArchiveState<P>>(ElitistArchiveState::new(self.n_elitists));
+
+impl<P: SingleObjectiveProblem> CustomState for ElitistArchive<P> {}
+
+impl<P: SingleObjectiveProblem> ElitistArchive<P> {
+    fn new() -> Self {
+        Self {
+            elitists: Vec::new(),
+        }
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
-        let population = state.population_stack_mut().pop();
-        state
-            .get_mut::<ElitistArchiveState<P>>()
-            .update(&population);
-        state.population_stack_mut().push(population);
+    fn state_update(&mut self, population: &[Individual<P>], n_elitists: usize) {
+        let mut pop = population.iter().collect::<Vec<_>>();
+        pop.sort_unstable_by_key(|i| i.objective());
+        pop.truncate(n_elitists);
+        self.elitists = pop.into_iter().cloned().collect();
     }
 }
 
-/// Adds elitists from [ElitistArchiveState] to the population.
-#[derive(Serialize, Deserialize)]
-pub struct AddElitists;
-impl AddElitists {
-    pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
-        Box::new(Self)
+impl<P: SingleObjectiveProblem> ElitistArchive<P> {
+    pub fn elitists(&self) -> &[Individual<P>] {
+        &self.elitists
+    }
+
+    pub fn elitists_mut(&mut self) -> &mut [Individual<P>] {
+        &mut self.elitists
     }
 }
-impl<P> Component<P> for AddElitists
-where
-    P: SingleObjectiveProblem,
-{
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<ElitistArchiveState<P>>();
-    }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
-        let mut population = state.population_stack_mut().pop();
-        let elitism_state = state.get::<ElitistArchiveState<P>>();
+impl<P: SingleObjectiveProblem> ElitistArchive<P> {
+    /// Updates the [ElitistArchiveState] with the current population.
+    pub fn update(n_elitists: usize) -> Box<dyn Component<P>> {
+        #[derive(Serialize, Deserialize)]
+        pub struct ElitistArchiveUpdate {
+            pub n_elitists: usize,
+        }
 
-        for elitist in elitism_state.elitists() {
-            if !population.contains(elitist) {
-                population.push(elitist.clone());
+        impl<P> Component<P> for ElitistArchiveUpdate
+        where
+            P: SingleObjectiveProblem,
+        {
+            fn initialize(&self, _problem: &P, state: &mut State) {
+                state.insert::<ElitistArchive<P>>(ElitistArchive::new());
+            }
+
+            fn execute(&self, _problem: &P, state: &mut State) {
+                let population = state.population_stack_mut().pop();
+                state
+                    .get_mut::<ElitistArchive<P>>()
+                    .state_update(&population, self.n_elitists);
+                state.population_stack_mut().push(population);
             }
         }
 
-        state.population_stack_mut().push(population);
+        Box::new(ElitistArchiveUpdate { n_elitists })
+    }
+
+    /// Adds elitists from [ElitistArchiveState] to the population.
+    pub fn add_elitists() -> Box<dyn Component<P>> {
+        #[derive(Serialize, Deserialize)]
+        pub struct AddElitists;
+
+        impl<P> Component<P> for AddElitists
+        where
+            P: SingleObjectiveProblem,
+        {
+            fn initialize(&self, _problem: &P, state: &mut State) {
+                state.require::<ElitistArchive<P>>();
+            }
+
+            fn execute(&self, _problem: &P, state: &mut State) {
+                let mut population = state.population_stack_mut().pop();
+                let elitism_state = state.get::<ElitistArchive<P>>();
+
+                for elitist in elitism_state.elitists() {
+                    if !population.contains(elitist) {
+                        population.push(elitist.clone());
+                    }
+                }
+
+                state.population_stack_mut().push(population);
+            }
+        }
+
+        Box::new(AddElitists)
     }
 }
