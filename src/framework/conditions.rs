@@ -1,8 +1,5 @@
 /// The Condition trait and combinators.
-use crate::{
-    framework::{components::AnyComponent, state::State},
-    problems::Problem,
-};
+use crate::{framework::components::AnyComponent, problems::Problem, state::State};
 use serde::Serialize;
 
 /// A condition for loops or branches.

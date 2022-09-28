@@ -3,11 +3,9 @@
 use serde::Serialize;
 
 use crate::{
-    framework::{
-        components::Component,
-        state::{common, State},
-    },
+    framework::components::Component,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    state::{common, State},
 };
 
 #[derive(Serialize)]

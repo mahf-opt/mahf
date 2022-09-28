@@ -1,6 +1,10 @@
 //! Custom States and corresponding Operators
 
+mod container;
+pub use container::{CustomState, MultiStateTuple, MutState, State};
+
 pub mod archive;
+pub mod common;
 pub mod diversity;
 
 mod pso;

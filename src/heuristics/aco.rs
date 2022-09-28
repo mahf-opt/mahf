@@ -138,8 +138,9 @@ pub fn aco<P: SingleObjectiveProblem>(
 mod ant_ops {
     use crate::state::PheromoneMatrix;
     use crate::{
-        framework::{components::*, state::State, Individual, Random, SingleObjective},
+        framework::{components::*, Individual, Random, SingleObjective},
         problems::tsp::SymmetricTsp,
+        state::State,
     };
     use rand::distributions::{Distribution, WeightedIndex};
 

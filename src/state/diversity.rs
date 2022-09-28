@@ -1,11 +1,9 @@
 //! Postprocess variants
 
 use crate::{
-    framework::{
-        components::*,
-        state::{common::Population, CustomState, State},
-    },
+    framework::components::*,
     problems::{Problem, VectorProblem},
+    state::{common::Population, CustomState, State},
 };
 
 /// Postprocess procedure for tracking population diversity

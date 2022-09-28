@@ -1,15 +1,12 @@
 //! Termination methods
 
 use crate::{
-    framework::{
-        conditions::Condition,
-        state::{
-            common::{Evaluations, Iterations, Progress},
-            CustomState, State,
-        },
-        SingleObjective,
-    },
+    framework::{conditions::Condition, SingleObjective},
     problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
+    state::{
+        common::{Evaluations, Iterations, Progress},
+        CustomState, State,
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -229,7 +226,7 @@ where
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::framework::state::common;
+    use crate::state::common;
     use crate::testing::*;
 
     #[test]
@@ -305,7 +302,7 @@ where
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::framework::state::common;
+    use crate::state::common;
     use crate::testing::*;
 
     #[test]

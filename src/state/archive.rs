@@ -1,12 +1,9 @@
 //! Archiving methods
 
 use crate::{
-    framework::{
-        components::*,
-        state::{CustomState, State},
-        Individual,
-    },
+    framework::{components::*, Individual},
     problems::SingleObjectiveProblem,
+    state::{CustomState, State},
 };
 use serde::{Deserialize, Serialize};
 

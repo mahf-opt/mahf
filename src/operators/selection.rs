@@ -8,8 +8,9 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, state::State, Individual, SingleObjective},
+    framework::{components::*, Individual, SingleObjective},
     problems::{Problem, SingleObjectiveProblem},
+    state::State,
 };
 
 /// Specialized component trait to select a subset of the current population and push it on the stack.

@@ -4,7 +4,7 @@ use rand::{RngCore, SeedableRng};
 use serde::Serialize;
 use std::any::type_name;
 
-use crate::framework::state::CustomState;
+use crate::state::CustomState;
 
 /// A random number generator.
 ///

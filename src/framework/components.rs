@@ -1,11 +1,9 @@
 //! The Component trait and structural components.
 
 use crate::{
-    framework::{
-        conditions::Condition,
-        state::{common, State},
-    },
+    framework::conditions::Condition,
     problems::Problem,
+    state::{common, State},
 };
 use serde::Serialize;
 use std::any::Any;

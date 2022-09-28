@@ -2,10 +2,10 @@ use crate::{
     framework::{
         components::{Block, Branch, Component, Loop, Scope},
         conditions::Condition,
-        state,
     },
     operators,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    state,
 };
 
 /// A heuristic, constructed from a set of components.

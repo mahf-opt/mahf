@@ -3,10 +3,10 @@
 use crate::{
     framework::{
         components::{AnyComponent, Component},
-        state::State,
         Individual,
     },
     problems::{LimitedVectorProblem, Problem, VectorProblem},
+    state::State,
 };
 use rand::distributions::uniform::SampleUniform;
 use serde::Serialize;

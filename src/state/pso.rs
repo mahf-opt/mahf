@@ -1,10 +1,7 @@
 use crate::{
-    framework::{
-        components::*,
-        state::{CustomState, State},
-        Individual,
-    },
+    framework::{components::*, Individual},
     problems::{LimitedVectorProblem, Problem, SingleObjectiveProblem},
+    state::{CustomState, State},
 };
 use rand::Rng;
 

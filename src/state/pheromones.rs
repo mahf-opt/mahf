@@ -1,4 +1,4 @@
-use crate::framework::state::CustomState;
+use crate::state::CustomState;
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]
