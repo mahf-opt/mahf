@@ -79,7 +79,7 @@ impl TryFrom<&str> for BenchmarkFunction {
         let name = parts.next().ok_or_else(err)?;
         let dimension = parts.next().ok_or_else(err)?.parse::<usize>()?;
 
-        match name {
+        match name.to_lowercase().as_str() {
             "sphere" => Ok(BenchmarkFunction::sphere(dimension)),
             "rastrigin" => Ok(BenchmarkFunction::rastrigin(dimension)),
             "ackley" => Ok(BenchmarkFunction::ackley(dimension)),
