@@ -93,7 +93,7 @@ mod parser {
                 ))
             }
 
-            #[allow(non_snake_case, unused_variables)]
+            #[allow(non_snake_case, unused_variables, dead_code)]
             fn EOI(input: Node) -> Result<()> {
                 Ok(())
             }
@@ -183,7 +183,7 @@ mod parser {
                 ))
             }
 
-            #[allow(non_snake_case, unused_variables)]
+            #[allow(non_snake_case, unused_variables, dead_code)]
             fn EOI(input: Node) -> Result<()> {
                 Ok(())
             }
@@ -216,7 +216,7 @@ impl TryFrom<&str> for Instances {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
+        match value.to_uppercase().as_str() {
             "A280" => Ok(Instances::A280),
             "BERLIN52" => Ok(Instances::BERLIN52),
             "BIER127" => Ok(Instances::BIER127),
@@ -239,7 +239,7 @@ impl TryFrom<&str> for Instances {
             "FL3795" => Ok(Instances::FL3795),
             "NRW1379" => Ok(Instances::NRW1379),
             "USA13509" => Ok(Instances::USA13509),
-            _ => Err(anyhow!("Unkonwn instance {}", value)),
+            _ => Err(anyhow!("Unknown instance {}", value)),
         }
     }
 }
