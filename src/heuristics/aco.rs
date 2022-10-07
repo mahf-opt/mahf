@@ -144,7 +144,7 @@ mod ant_ops {
     };
     use rand::distributions::{Distribution, WeightedIndex};
 
-    #[derive(serde::Serialize)]
+    #[derive(serde::Serialize, Clone)]
     pub struct AcoGeneration {
         pub number_of_ants: usize,
         pub alpha: f64,
@@ -228,7 +228,7 @@ mod ant_ops {
         }
     }
 
-    #[derive(serde::Serialize)]
+    #[derive(serde::Serialize, Clone)]
     pub struct AsPheromoneUpdate {
         pub evaporation: f64,
         pub decay_coefficient: f64,
@@ -267,7 +267,7 @@ mod ant_ops {
         }
     }
 
-    #[derive(serde::Serialize)]
+    #[derive(serde::Serialize, Clone)]
     pub struct MinMaxPheromoneUpdate {
         pub evaporation: f64,
         pub max_pheromones: f64,

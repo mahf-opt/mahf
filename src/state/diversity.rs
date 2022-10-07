@@ -33,7 +33,7 @@ impl DiversityState {
     where
         P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>,
     {
-        #[derive(Debug, serde::Serialize)]
+        #[derive(Debug, serde::Serialize, Clone)]
         pub struct FloatVectorDiversity {
             pub measure: DiversityMeasure,
         }

@@ -1,5 +1,6 @@
 /// The Condition trait and combinators.
 use crate::{framework::components::AnyComponent, problems::Problem, state::State};
+use derivative::Derivative;
 use serde::Serialize;
 
 /// A condition for loops or branches.
@@ -14,10 +15,12 @@ pub trait Condition<P>: AnyComponent {
     fn evaluate(&self, problem: &P, state: &mut State) -> bool;
 }
 erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
+dyn_clone::clone_trait_object!(<P: Problem> Condition<P>);
 
 /// Multiple conditions must be true.
-#[derive(Serialize)]
+#[derive(Serialize, Derivative)]
 #[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
 pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
 impl<P: Problem + 'static> And<P> {
     pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {
@@ -46,8 +49,9 @@ impl<P: Problem + 'static> std::ops::BitAnd for Box<dyn Condition<P>> {
 }
 
 /// Any condition must be true.
-#[derive(Serialize)]
+#[derive(Serialize, Derivative)]
 #[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
 pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
 impl<P: Problem + 'static> Or<P> {
     pub fn new(conditions: Vec<Box<dyn Condition<P>>>) -> Box<dyn Condition<P>> {

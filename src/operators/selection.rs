@@ -26,13 +26,13 @@ pub trait Selection<P: Problem> {
     ) -> Vec<&'p Individual<P>>;
 }
 
-#[derive(serde::Serialize)]
-pub struct Selector<T>(pub T);
+#[derive(serde::Serialize, Clone)]
+pub struct Selector<T: Clone>(pub T);
 
 impl<T, P> Component<P> for Selector<T>
 where
     P: Problem,
-    T: AnyComponent + Selection<P> + Serialize,
+    T: AnyComponent + Selection<P> + Serialize + Clone,
 {
     fn execute(&self, _problem: &P, state: &mut State) {
         let population = state.population_stack_mut().pop();
@@ -103,7 +103,7 @@ fn get_ranking<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> Vec<u
 }
 
 /// Selects all individuals once.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct All;
 impl All {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
@@ -121,7 +121,7 @@ impl<P: Problem> Selection<P> for All {
 }
 
 /// Selects no individual.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct None;
 impl None {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
@@ -139,7 +139,7 @@ impl<P: Problem> Selection<P> for None {
 }
 
 /// Select the single solution `offspring` times.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DuplicateSingle {
     /// Offspring per iteration.
     pub offspring: u32,
@@ -184,7 +184,7 @@ mod duplicate_single {
 /// Selects `offspring` random solutions.
 ///
 /// Solutions can be selected multiple times in a single iteration.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct FullyRandom {
     /// Offspring per iteration.
     pub offspring: u32,
@@ -246,7 +246,7 @@ mod fully_random {
 ///
 /// # References
 /// See [crate::heuristics::iwo]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DeterministicFitnessProportional {
     /// Minimum offspring per individual per iteration
     pub min_offspring: u32,
@@ -335,7 +335,7 @@ mod deterministic_fitness_proportional {
 /// Selects `offspring` solutions using roulette-wheel method.
 ///
 /// Solutions can be selected multiple times in a single iteration.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct RouletteWheel {
     /// Offspring per iteration.
     pub offspring: u32,
@@ -383,7 +383,7 @@ mod roulette_wheel {
 ///
 /// Solutions can be selected multiple times in a single iteration. Population is not sorted by fitness,
 /// but individuals are weighted "in place".
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct StochasticUniversalSampling {
     /// Offspring per iteration.
     pub offspring: u32,
@@ -445,7 +445,7 @@ mod stochastic_universal_sampling {
 /// Selects `offspring` using deterministic Tournament selection.
 ///
 /// Solutions can be selected multiple times in a single iteration.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Tournament {
     /// Offspring per iteration.
     pub offspring: u32,
@@ -509,7 +509,7 @@ mod tournament {
 /// Selects `offspring` solutions using linear ranking.
 ///
 /// Solutions can be selected multiple times in a single iteration.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct LinearRank {
     /// Offspring per iteration.
     pub offspring: u32,
@@ -559,7 +559,7 @@ mod linear_rank {
 /// Solutions can be selected multiple times in a single iteration.
 ///
 /// See [https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf](https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf) for details.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ExponentialRank {
     /// Offspring per iteration.
     pub offspring: u32,

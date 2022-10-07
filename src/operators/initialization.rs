@@ -18,13 +18,13 @@ pub trait Initialization<P: Problem>: AnyComponent {
     fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>>;
 }
 
-#[derive(Serialize)]
-pub struct Initializer<T>(pub T);
+#[derive(Serialize, Clone)]
+pub struct Initializer<T: Clone>(pub T);
 
 impl<T, P> Component<P> for Initializer<T>
 where
     P: Problem,
-    T: AnyComponent + Initialization<P> + Serialize,
+    T: AnyComponent + Initialization<P> + Serialize + Clone,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         let population = self.0.initialize_population(problem, state);
@@ -33,7 +33,7 @@ where
 }
 
 /// Initializes an empty population.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Empty;
 impl Empty {
     pub fn new<P>() -> Box<dyn Component<P>>
@@ -50,7 +50,7 @@ impl<P: Problem> Initialization<P> for Empty {
 }
 
 /// Generates new random solutions in the search space.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct RandomSpread {
     /// Size of the initial population.
     pub initial_population_size: Option<u32>,
@@ -104,7 +104,7 @@ where
 }
 
 /// Generates new random permutations for combinatorial problems.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct RandomPermutation {
     /// Size of the initial population.
     pub initial_population_size: Option<u32>,
@@ -151,11 +151,11 @@ where
 }
 
 /// Generates new random binary string for binary problems.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct RandomBitstring {
     /// Size of the initial population.
     pub initial_population_size: Option<u32>,
-    // Probability of generating a 1 / true.
+    // Probability of generating a 1 or true.
     pub p: f64,
 }
 impl RandomBitstring {

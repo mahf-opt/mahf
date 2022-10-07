@@ -23,8 +23,8 @@ where
     /// State initialization for PSO.
     ///
     /// Initializes velocities, best found solutions of particles and global best in [PsoState].
-    pub fn intializer(v_max: f64) -> Box<dyn Component<P>> {
-        #[derive(Debug, serde::Serialize)]
+    pub fn initializer(v_max: f64) -> Box<dyn Component<P>> {
+        #[derive(Debug, serde::Serialize, Clone)]
         pub struct PsoStateInitialization {
             v_max: f64,
         }
@@ -81,7 +81,7 @@ where
     ///
     /// Updates best found solutions of particles and global best in [PsoState].
     pub fn updater() -> Box<dyn Component<P>> {
-        #[derive(Debug, serde::Serialize)]
+        #[derive(Debug, serde::Serialize, Clone)]
         pub struct PsoStateUpdate;
 
         impl<P> Component<P> for PsoStateUpdate

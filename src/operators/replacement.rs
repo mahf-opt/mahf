@@ -24,13 +24,13 @@ pub trait Replacement<P: Problem> {
     );
 }
 
-#[derive(serde::Serialize)]
-pub struct Replacer<T>(pub T);
+#[derive(serde::Serialize, Clone)]
+pub struct Replacer<T: Clone>(pub T);
 
 impl<T, P> Component<P> for Replacer<T>
 where
     P: Problem,
-    T: AnyComponent + Replacement<P> + Serialize,
+    T: AnyComponent + Replacement<P> + Serialize + Clone,
 {
     fn execute(&self, _problem: &P, state: &mut State) {
         let mut offspring = state.population_stack_mut().pop();
@@ -42,7 +42,7 @@ where
 }
 
 /// Discards all individuals in the child population, keeping the parents unchanged.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Noop;
 impl Noop {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
@@ -60,7 +60,7 @@ impl<P: Problem> Replacement<P> for Noop {
 }
 
 /// Always keeps the fittest individuals.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MuPlusLambda {
     /// Limits the population growth.
     pub max_population_size: u32,
@@ -108,7 +108,7 @@ mod mupluslambda {
 }
 
 /// Always keeps the children.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Generational {
     /// Limits the population growth.
     pub max_population_size: u32,
