@@ -17,7 +17,7 @@ use map::AsAny;
 pub(crate) use map::StateMap;
 
 /// A marker trait for custom state.
-pub trait CustomState: AsAny {}
+pub trait CustomState: AsAny + Send {}
 
 /// Container for storing and managing state.
 #[derive(Default)]

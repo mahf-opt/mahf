@@ -34,7 +34,7 @@ impl<P> Trigger<P> for Iteration {
 
 #[derive(Deref)]
 struct Previous<S>(S);
-impl<S: 'static> CustomState for Previous<S> {}
+impl<S: 'static + Send> CustomState for Previous<S> {}
 
 /// Triggers when `S` changes base on a predicate.
 #[derive(serde::Serialize)]

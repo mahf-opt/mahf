@@ -20,7 +20,7 @@ pub mod coco;
 /// Defines the problems encoding and objective.
 pub trait Problem: 'static {
     /// The datatype representing the problem.
-    type Encoding: Any + Clone + PartialEq;
+    type Encoding: Any + Clone + PartialEq + Send;
 
     /// The objective.
     ///

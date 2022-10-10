@@ -11,7 +11,7 @@ use crate::state::CustomState;
 /// This can only be backed by seedable rngs to allow reconstruction.
 pub struct Random {
     config: RandomConfig,
-    inner: Box<dyn RngCore>,
+    inner: Box<dyn RngCore + Send>,
 }
 impl CustomState for Random {}
 
@@ -28,7 +28,7 @@ impl Random {
     /// Create a new random generator with the given seed.
     pub fn new<RNG>(seed: u64) -> Self
     where
-        RNG: RngCore + SeedableRng + 'static,
+        RNG: RngCore + SeedableRng + Send + 'static,
     {
         Random {
             config: RandomConfig {
