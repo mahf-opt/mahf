@@ -3,7 +3,7 @@ use std::{
     collections::BTreeMap,
 };
 
-use crate::framework::state::CustomState;
+use crate::state::CustomState;
 
 /// Utility trait to upcast [CustomState](CustomState) to [Any].
 pub trait AsAny: Any {

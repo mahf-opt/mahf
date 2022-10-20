@@ -2,7 +2,6 @@
 
 pub mod components;
 pub mod conditions;
-pub mod state;
 
 mod configuration;
 pub use configuration::{Configuration, ConfigurationBuilder};
@@ -17,6 +16,7 @@ mod random;
 pub use random::{Random, RandomConfig};
 
 use crate::problems::Problem;
+use crate::state;
 use crate::tracking::Log;
 
 /// Runs the heuristic on the given problem.

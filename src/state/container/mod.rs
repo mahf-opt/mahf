@@ -3,8 +3,9 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    framework::{random, Individual, SingleObjective},
+    framework::{Individual, Random, SingleObjective},
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    state::common,
     tracking::Log,
 };
 
@@ -14,8 +15,6 @@ pub use many::{MultiStateTuple, MutState};
 mod map;
 use map::AsAny;
 pub(crate) use map::StateMap;
-
-pub mod common;
 
 /// A marker trait for custom state.
 pub trait CustomState: AsAny {}
@@ -271,8 +270,8 @@ macro_rules! impl_convenience_functions {
         }
 
         /// Returns mutable [Random](random::Random) state.
-        pub fn random_mut(&mut self) -> &$l mut random::Random {
-            self.get_mut::<random::Random>()
+        pub fn random_mut(&mut self) -> &$l mut Random {
+            self.get_mut::<Random>()
         }
 
         /// Returns the [Log].

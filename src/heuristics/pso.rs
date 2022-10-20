@@ -4,6 +4,7 @@ use crate::{
     framework::{components::Component, conditions::Condition, Configuration},
     operators::*,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
+    state,
 };
 
 /// Parameters for [real_pso].
@@ -39,9 +40,9 @@ where
         .update_best_individual()
         .do_(pso(
             Parameters {
-                particle_init: state::state_operators::PsoStateInitialization::new(v_max),
+                particle_init: state::PsoState::intializer(v_max),
                 particle_update: generation::swarm::PsoGeneration::new(weight, c_one, c_two, v_max),
-                state_update: state::state_operators::PsoStateUpdate::new(),
+                state_update: state::PsoState::updater(),
             },
             termination,
             logger,

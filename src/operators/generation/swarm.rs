@@ -1,12 +1,13 @@
 //! Swarm Operators
 
-use crate::operators::state::custom_state::PsoState;
+use crate::state::PsoState;
 use rand::distributions::Uniform;
 use rand::Rng;
 
 use crate::{
-    framework::{components::*, state::State, Individual, Random},
+    framework::{components::*, Individual, Random},
     problems::SingleObjectiveProblem,
+    state::State,
 };
 
 /// Applies the PSO specific generation operator.

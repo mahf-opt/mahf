@@ -1,8 +1,9 @@
 //! Replacement methods
 
 use crate::{
-    framework::{components::*, state::State, Individual},
+    framework::{components::*, Individual},
     problems::{Problem, SingleObjectiveProblem},
+    state::State,
 };
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -86,7 +87,7 @@ impl<P: SingleObjectiveProblem> Replacement<P> for MuPlusLambda {
 
 #[cfg(test)]
 mod mupluslambda {
-    use crate::framework::state::State;
+    use crate::state::State;
     use crate::testing::*;
 
     use super::*;
