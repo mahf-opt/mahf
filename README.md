@@ -45,7 +45,6 @@ Examples of heuristics can be found under [heuristics](/src/heuristics/) and com
 
 # Additional Resources
 
-- [Evaluation](/evaluation/)
 - [Parameter Optimization](/param-study/)
 
 # Papers and Projects using MAHF
