@@ -4,9 +4,6 @@ edition = "2021"
 name = "mahf"
 version = "0.1.0"
 
-[workspace]
-members = ["param-study"]
-
 [dependencies]
 anyhow = "1.0.51"
 ciborium = "0.2.0"
