@@ -1,7 +1,0 @@
-[package]
-edition = "2021"
-name = "param-study"
-version = "0.1.0"
-
-[dependencies]
-mahf = {path = ".."}
