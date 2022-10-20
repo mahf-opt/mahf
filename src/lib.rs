@@ -10,6 +10,7 @@ pub mod heuristics;
 pub mod operators;
 pub mod prelude;
 pub mod problems;
+pub mod state;
 pub mod tracking;
 pub mod utils;
 

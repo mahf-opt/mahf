@@ -1,11 +1,9 @@
 use std::ops::{Deref, Sub};
 
 use crate::{
-    framework::{
-        components::Component,
-        state::{CustomState, State},
-    },
+    framework::components::Component,
     problems::{Problem, SingleObjectiveProblem},
+    state::{CustomState, State},
     tracking::{self, log::Step, set::LogSet, trigger, Log},
 };
 use serde::Serialize;

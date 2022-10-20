@@ -1,8 +1,9 @@
 use serde::{Serialize, Serializer};
 
 use crate::{
-    framework::{components::Component, state::State},
+    framework::components::Component,
     problems::{Problem, SingleObjectiveProblem},
+    state::State,
 };
 
 /// Doesn't do anything.

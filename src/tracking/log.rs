@@ -1,4 +1,4 @@
-use crate::framework::state::{common, CustomState, State};
+use crate::state::{common, CustomState, State};
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
 use std::any::type_name;

@@ -1,6 +1,6 @@
 use crate::{
-    framework::state::{common, CustomState, State},
     problems::SingleObjectiveProblem,
+    state::{common, CustomState, State},
     tracking::log::Entry,
 };
 use serde::Serialize;

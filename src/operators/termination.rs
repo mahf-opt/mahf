@@ -1,15 +1,12 @@
 //! Termination methods
 
 use crate::{
-    framework::{
-        conditions::Condition,
-        state::{
-            common::{Evaluations, Iterations, Progress},
-            State,
-        },
-    },
-    operators::custom_state::FitnessImprovementState,
+    framework::{conditions::Condition, SingleObjective},
     problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
+    state::{
+        common::{Evaluations, Iterations, Progress},
+        CustomState, State,
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -229,7 +226,7 @@ where
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
-    use crate::framework::state::common;
+    use crate::state::common;
     use crate::testing::*;
 
     #[test]
@@ -245,6 +242,27 @@ mod distance_to_opt {
         assert!(!comp.evaluate(&problem, &mut state));
     }
 }
+
+/// State required for Termination by Steps without Improvement.
+///
+/// For preserving current number of steps without improvement and corresponding fitness value.
+struct FitnessImprovementState {
+    pub current_steps: usize,
+    pub current_objective: SingleObjective,
+}
+impl FitnessImprovementState {
+    pub fn update(&mut self, objective: &SingleObjective) -> bool {
+        if objective >= &self.current_objective {
+            self.current_steps += 1;
+            false
+        } else {
+            self.current_objective = *objective;
+            self.current_steps = 0;
+            true
+        }
+    }
+}
+impl CustomState for FitnessImprovementState {}
 
 /// Terminates after a specified number of steps (iterations) did not yield any improvement.
 ///
@@ -284,7 +302,7 @@ where
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
-    use crate::framework::state::common;
+    use crate::state::common;
     use crate::testing::*;
 
     #[test]

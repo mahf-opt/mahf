@@ -5,11 +5,9 @@ use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{
-        components::*,
-        state::{common::Progress, State},
-    },
+    framework::components::*,
     problems::{LimitedVectorProblem, Problem},
+    state::{common::Progress, State},
 };
 
 use super::{Generation, Generator};

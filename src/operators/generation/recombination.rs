@@ -5,10 +5,7 @@ use std::cmp::max;
 use rand::{seq::IteratorRandom, Rng};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    framework::{components::*, state::State},
-    problems::Problem,
-};
+use crate::{framework::components::*, problems::Problem, state::State};
 
 use super::{Recombination, Recombinator};
 
