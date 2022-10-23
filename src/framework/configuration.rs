@@ -2,10 +2,11 @@ use crate::{
     framework::{
         components::{Block, Branch, Component, Loop, Scope},
         conditions::Condition,
+        Random,
     },
     operators,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state,
+    state, tracking,
 };
 
 /// A heuristic, constructed from a set of components.
@@ -35,6 +36,28 @@ impl<P: Problem> Configuration<P> {
 
     pub fn into_builder(self) -> ConfigurationBuilder<P> {
         ConfigurationBuilder::new().do_(self.0)
+    }
+
+    /// Runs the heuristic on the given problem.
+    ///
+    /// Returns the final state of the heuristic.
+    /// If the heuristic has a logger, that log can be obtained from
+    /// this state as well.
+    ///
+    /// If no random generator is provided, it will default
+    /// to a randomly seeded RNG.
+    pub fn run(&self, problem: &P, rng: Option<Random>) -> state::State {
+        let heuristic = self.heuristic();
+        let mut state = state::State::new_root();
+
+        state.insert(tracking::Log::new());
+        state.insert(rng.unwrap_or_default());
+        state.insert(state::common::Population::<P>::new());
+
+        heuristic.initialize(problem, &mut state);
+        heuristic.execute(problem, &mut state);
+
+        state
     }
 }
 

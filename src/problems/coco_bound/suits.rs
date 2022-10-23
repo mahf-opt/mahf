@@ -1,5 +1,5 @@
 use crate::{
-    framework::{self, Configuration, Random},
+    framework::{Configuration, Random},
     problems::{coco_bound::CocoInstance, HasKnownTarget},
     tracking::{files, Log},
     utils::threads::SyncThreadPool,
@@ -62,7 +62,7 @@ pub fn evaluate_suite(
                     let experiment_desc = problem.format_name();
                     let log_file = data_dir.join(format!("{}.log", experiment_desc));
 
-                    let state = framework::run(&problem, &configuration, Some(Random::default()));
+                    let state = configuration.run(&problem, Some(Random::default()));
                     let log = state.get::<Log>();
                     files::write_log_file(log_file, log)?;
 

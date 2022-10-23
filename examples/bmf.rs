@@ -3,7 +3,7 @@ use mahf::prelude::*;
 type P = problems::bmf::BenchmarkFunction;
 
 fn main() -> anyhow::Result<()> {
-    let problem = P::sphere(30);
+    let problem = P::sphere(10);
     let config = pso::real_pso(
         pso::RealProblemParameters {
             num_particles: 100,
@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
         tracking::Logger::default(),
     );
 
-    let state = framework::run(&problem, &config, None);
+    let state = config.run(&problem, None);
 
     println!(
         "Found Fitness: {:?}",
