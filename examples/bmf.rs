@@ -1,3 +1,4 @@
+use mahf::framework::Random;
 use mahf::prelude::*;
 
 type P = problems::bmf::BenchmarkFunction;
@@ -16,7 +17,7 @@ fn main() -> anyhow::Result<()> {
         tracking::Logger::default(),
     );
 
-    let state = config.run(&problem, None);
+    let state = config.optimize_with(&problem, |state| state.insert(Random::seeded(0)));
 
     println!(
         "Found Fitness: {:?}",

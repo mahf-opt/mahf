@@ -46,13 +46,32 @@ impl<P: Problem> Configuration<P> {
     ///
     /// If no random generator is provided, it will default
     /// to a randomly seeded RNG.
-    pub fn run(&self, problem: &P, rng: Option<Random>) -> state::State {
+    pub fn optimize(&self, problem: &P) -> state::State {
         let heuristic = self.heuristic();
         let mut state = state::State::new_root();
 
         state.insert(tracking::Log::new());
-        state.insert(rng.unwrap_or_default());
+        state.insert(Random::default());
         state.insert(state::common::Population::<P>::new());
+
+        heuristic.initialize(problem, &mut state);
+        heuristic.execute(problem, &mut state);
+
+        state
+    }
+
+    pub fn optimize_with(
+        &self,
+        problem: &P,
+        init_state: impl FnOnce(&mut state::State),
+    ) -> state::State {
+        let heuristic = self.heuristic();
+        let mut state = state::State::new_root();
+
+        state.insert(tracking::Log::new());
+        state.insert(state::common::Population::<P>::new());
+
+        init_state(&mut state);
 
         heuristic.initialize(problem, &mut state);
         heuristic.execute(problem, &mut state);

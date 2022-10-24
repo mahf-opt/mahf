@@ -22,7 +22,7 @@ fn main() -> anyhow::Result<()> {
     .single_objective_summary()
     .build();
 
-    config.run(&problem, None);
+    config.optimize(&problem);
 
     Ok(())
 }
