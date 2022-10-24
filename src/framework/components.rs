@@ -5,13 +5,15 @@ use crate::{
     problems::Problem,
     state::{common, State},
 };
+use derivative::Derivative;
+use dyn_clone::DynClone;
 use serde::Serialize;
 use std::any::Any;
 use trait_set::trait_set;
 
 trait_set! {
     /// Collection of traits required by every component.
-    pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync;
+    pub trait AnyComponent = erased_serde::Serialize + Any + Send + Sync + DynClone;
 }
 
 /// Describes a component for use in the MAHF framework.
@@ -29,6 +31,7 @@ pub trait Component<P: Problem>: AnyComponent {
     fn execute(&self, problem: &P, state: &mut State);
 }
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
+dyn_clone::clone_trait_object!(<P: Problem> Component<P>);
 
 /// Encapsulates state of child components.
 ///
@@ -38,8 +41,9 @@ erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 ///
 /// All children will be re-initialized on every call
 /// of the `execute` function.
-#[derive(Serialize)]
+#[derive(Serialize, Derivative)]
 #[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
 pub struct Scope<P: Problem> {
     body: Box<dyn Component<P>>,
 
@@ -79,9 +83,10 @@ impl<P: Problem> Scope<P> {
 /// A sequential block of components.
 ///
 /// Will execute child components sequentially.
-#[derive(Serialize)]
+#[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[serde(transparent)]
+#[derivative(Clone(bound = ""))]
 pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
 impl<P: Problem> Component<P> for Block<P> {
@@ -108,8 +113,9 @@ impl<P: Problem> Block<P> {
 ///
 /// Use a [Block] as body if you want to loop over
 /// multiple components sequentially.
-#[derive(Serialize)]
+#[derive(Serialize, Derivative)]
 #[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
 pub struct Loop<P: Problem> {
     #[serde(rename = "while")]
     condition: Box<dyn Condition<P>>,
@@ -145,8 +151,9 @@ impl<P: Problem> Loop<P> {
 }
 
 /// An if-else branching component.
-#[derive(Serialize)]
+#[derive(Serialize, Derivative)]
 #[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
 pub struct Branch<P: Problem> {
     condition: Box<dyn Condition<P>>,
     if_body: Box<dyn Component<P>>,

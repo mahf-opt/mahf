@@ -32,13 +32,13 @@ pub trait Generation<P: Problem> {
     );
 }
 
-#[derive(serde::Serialize)]
-pub struct Generator<T>(pub T);
+#[derive(serde::Serialize, Clone)]
+pub struct Generator<T: Clone>(pub T);
 
 impl<T, P> Component<P> for Generator<T>
 where
     P: Problem,
-    T: AnyComponent + Generation<P> + Serialize,
+    T: AnyComponent + Generation<P> + Serialize + Clone,
 {
     fn execute(&self, problem: &P, state: &mut State) {
         let population = state.population_stack_mut::<P>().pop();
@@ -73,13 +73,13 @@ pub trait Recombination<P: Problem> {
     );
 }
 
-#[derive(serde::Serialize)]
-pub struct Recombinator<T>(pub T);
+#[derive(serde::Serialize, Clone)]
+pub struct Recombinator<T: Clone>(pub T);
 
 impl<T, P, D> Component<P> for Recombinator<T>
 where
     P: Problem<Encoding = Vec<D>>,
-    T: AnyComponent + Recombination<P> + Serialize,
+    T: AnyComponent + Recombination<P> + Serialize + Clone,
     D: Clone + PartialEq + 'static,
 {
     fn execute(&self, problem: &P, state: &mut State) {

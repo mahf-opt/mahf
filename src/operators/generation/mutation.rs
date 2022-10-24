@@ -17,7 +17,7 @@ use super::{Generation, Generator};
 /// Uses a `N(0, deviation)` normal distribution.
 /// Currently the same as Gaussian but without mutation rate.
 //TODO: maybe change this to generating new value (as in uniform mutation) but with Gaussian distr.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.
     pub deviation: f64,
@@ -56,7 +56,7 @@ where
 /// ```math
 /// final_deviation + (1 - progress)^modulation * (initial_deviation - final_deviation)
 /// ```
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct IWOAdaptiveDeviationDelta {
     /// Initial standard deviation for the mutation
     pub initial_deviation: f64,
@@ -133,7 +133,7 @@ mod adaptive_deviation_delta {
 /// Uses a uniform distribution.
 ///
 /// If rm = 1, all positions of solution are mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UniformMutation {
     /// Probability of mutating one position.
     pub rm: f64,
@@ -199,7 +199,7 @@ mod uniform_mutation {
 /// Uses a Gaussian distribution.
 ///
 /// If rm = 1, all positions of solution are mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct GaussianMutation {
     /// Probability of mutating one position.
     pub rm: f64,
@@ -270,7 +270,7 @@ mod gaussian_mutation {
 /// Only for binary encodings!
 ///
 /// If rm = 1, all positions of solution are mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct BitflipMutation {
     /// Probability of mutating one position.
     pub rm: f64,
@@ -310,7 +310,7 @@ where
 /// For more than two elements: swap is performed circular.
 ///
 /// If pm = 1, all positions of solution are mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SwapMutation {
     /// Probability of mutation.
     pub pm: f64,
@@ -388,7 +388,7 @@ mod swap_mutation {
 /// Shuffles the solution.
 ///
 /// If pm = 1, the solution is mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ScrambleMutation {
     /// Probability of mutating the solution.
     pub pm: f64,
@@ -451,7 +451,7 @@ mod scramble_mutation {
 /// Removes one random element of the solution and inserts it on a random position.
 ///
 /// If pm = 1, the solution is mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct InsertionMutation {
     /// Probability of mutating the solution.
     pub pm: f64,
@@ -515,7 +515,7 @@ mod insertion_mutation {
 /// Takes a random slice of the solution and inverts it.
 ///
 /// If pm = 1, the solution is mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct InversionMutation {
     /// Probability of mutating the solution.
     pub pm: f64,
@@ -582,7 +582,7 @@ mod inversion_mutation {
 /// Takes a random slice of the solution and inserts it at a new position.
 ///
 /// If pm = 1, the solution is mutated.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TranslocationMutation {
     /// Probability of mutating the solution.
     pub pm: f64,

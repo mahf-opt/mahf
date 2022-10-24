@@ -13,7 +13,7 @@ use crate::{
 /// Applies the PSO specific generation operator.
 ///
 /// Requires [PsoStateUpdate][crate::heuristics::pso::pso_ops::PsoStateUpdate].
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub struct PsoGeneration {
     /// Inertia weight for influence of old velocity
     pub weight: f64,

@@ -10,32 +10,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 
-/// Only a placeholder. Replace this with something else.
-///
-/// See [operators::termination][crate::operators::termination] for possible criteria.
-#[derive(Serialize, Deserialize)]
-pub struct Undefined;
-impl Undefined {
-    pub fn new<P>() -> Box<dyn Condition<P>>
-    where
-        P: Problem,
-    {
-        Box::new(Self)
-    }
-}
-impl<P> Condition<P> for Undefined
-where
-    P: Problem,
-{
-    fn evaluate(&self, _problem: &P, _state: &mut State) -> bool {
-        unimplemented!(concat!(
-            "Heuristic with no termination criteria was run. ",
-            "Please specify a termination criteria."
-        ));
-    }
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TargetHit;
 impl TargetHit {
     pub fn new<P>() -> Box<dyn Condition<P>>
@@ -61,7 +36,7 @@ where
 /// Terminates after a fixed number of iterations.
 ///
 /// Supports measuring time to completion.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct FixedIterations {
     /// Maximum number of iterations.
     pub max_iterations: u32,
@@ -131,7 +106,7 @@ mod fixed_iterations {
 /// Terminates after a fixed number of evaluations.
 ///
 /// Supports measuring time to completion.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct FixedEvaluations {
     /// Maximum number of evaluations.
     pub max_evaluations: u32,
@@ -201,7 +176,7 @@ mod fixed_evaluations {
 /// Is restricted to problems where the optimum is known, i.e., implement [HasKnownOptimum].
 ///
 /// Progress is unknown, as optimizer should not have information on optimum.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DistanceToOpt {
     /// Distance to known optimum.
     pub distance: f64,
@@ -267,7 +242,7 @@ impl CustomState for FitnessImprovementState {}
 /// Terminates after a specified number of steps (iterations) did not yield any improvement.
 ///
 /// Progress is unknown, as steps depend on current performance of optimizer.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct StepsWithoutImprovement {
     /// Number of steps without improvement.
     pub steps: usize,

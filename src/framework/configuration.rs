@@ -9,6 +9,7 @@ use crate::{
 };
 
 /// A heuristic, constructed from a set of components.
+#[derive(Clone)]
 pub struct Configuration<P: Problem>(Box<dyn Component<P>>);
 
 impl<P: Problem> Configuration<P> {
@@ -132,12 +133,18 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// Uses the [Debug][operators::misc::Debug] component internally.
     #[track_caller]
-    pub fn assert(self, assert: impl Fn(&state::State) -> bool + Send + Sync + 'static) -> Self {
+    pub fn assert(
+        self,
+        assert: impl Fn(&state::State) -> bool + Send + Sync + Clone + 'static,
+    ) -> Self {
         self.debug(move |_problem, state| assert!(assert(state)))
     }
 
     /// Constructs a [Debug][operators::misc::Debug] component with the given behaviour.
-    pub fn debug(self, behaviour: impl Fn(&P, &mut state::State) + Send + Sync + 'static) -> Self {
+    pub fn debug(
+        self,
+        behaviour: impl Fn(&P, &mut state::State) + Send + Sync + Clone + 'static,
+    ) -> Self {
         self.do_(operators::misc::Debug::new(behaviour))
     }
 

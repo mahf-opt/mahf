@@ -44,7 +44,7 @@ impl<P: SingleObjectiveProblem> ElitistArchive<P> {
 impl<P: SingleObjectiveProblem> ElitistArchive<P> {
     /// Updates the [ElitistArchiveState] with the current population.
     pub fn update(n_elitists: usize) -> Box<dyn Component<P>> {
-        #[derive(Serialize, Deserialize)]
+        #[derive(Serialize, Deserialize, Clone)]
         pub struct ElitistArchiveUpdate {
             pub n_elitists: usize,
         }
@@ -71,7 +71,7 @@ impl<P: SingleObjectiveProblem> ElitistArchive<P> {
 
     /// Adds elitists from [ElitistArchiveState] to the population.
     pub fn add_elitists() -> Box<dyn Component<P>> {
-        #[derive(Serialize, Deserialize)]
+        #[derive(Serialize, Deserialize, Clone)]
         pub struct AddElitists;
 
         impl<P> Component<P> for AddElitists

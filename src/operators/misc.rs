@@ -1,3 +1,4 @@
+use dyn_clone::DynClone;
 use serde::{Serialize, Serializer};
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
 ///
 /// Note that this component is different from [initialization::Empty] as it doesn't modify
 /// the state at all, while [Empty][initialization::Empty] pushes an empty population on the stack.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Noop;
 impl Noop {
     pub fn new<P>() -> Box<dyn Component<P>>
@@ -27,7 +28,7 @@ impl<P: Problem> Component<P> for Noop {
 }
 
 /// Clears the current population, deleting all individuals.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct ClearPopulation;
 impl ClearPopulation {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
@@ -40,7 +41,14 @@ impl<P: Problem> Component<P> for ClearPopulation {
     }
 }
 
-pub type DynCustomFunc<P> = dyn Fn(&P, &mut State) + Send + Sync + 'static;
+/// Helper trait to allow cloning of debug functions.
+pub trait DynCustomFunc<P: Problem>: Fn(&P, &mut State) + Send + Sync + DynClone + 'static {}
+dyn_clone::clone_trait_object!(<P: Problem> DynCustomFunc<P>);
+
+impl<P: Problem, F> DynCustomFunc<P> for F where
+    F: Fn(&P, &mut State) + Send + Sync + Clone + 'static
+{
+}
 
 /// Allows for minor custom behaviour for debug purposes, e.g., asserts.
 ///
@@ -49,9 +57,13 @@ pub type DynCustomFunc<P> = dyn Fn(&P, &mut State) + Send + Sync + 'static;
 /// Note that this is for debug **ONLY**.
 /// The recommended way of implementing larger custom functionality is to implement
 /// [Component] for your struct.
-pub struct Debug<P: Problem>(Box<DynCustomFunc<P>>);
+#[derive(derivative::Derivative)]
+#[derivative(Clone(bound = ""))]
+pub struct Debug<P: Problem>(Box<dyn DynCustomFunc<P>>);
 impl<P: Problem> Debug<P> {
-    pub fn new(custom: impl Fn(&P, &mut State) + Send + Sync + 'static) -> Box<dyn Component<P>> {
+    pub fn new(
+        custom: impl Fn(&P, &mut State) + Send + Sync + Clone + 'static,
+    ) -> Box<dyn Component<P>> {
         Box::new(Self(Box::new(custom)))
     }
 }
@@ -72,7 +84,7 @@ impl<P: Problem> Serialize for Debug<P> {
 
 /// Prints a summary of the current [State] for single-objective problems.
 /// The summary includes statistics like number of iterations, evaluations and best solution found yet.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct PrintSingleObjectiveSummary;
 impl PrintSingleObjectiveSummary {
     pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>>

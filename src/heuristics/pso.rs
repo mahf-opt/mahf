@@ -40,7 +40,7 @@ where
         .update_best_individual()
         .do_(pso(
             Parameters {
-                particle_init: state::PsoState::intializer(v_max),
+                particle_init: state::PsoState::initializer(v_max),
                 particle_update: generation::swarm::PsoGeneration::new(weight, c_one, c_two, v_max),
                 state_update: state::PsoState::updater(),
             },

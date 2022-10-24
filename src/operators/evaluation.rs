@@ -8,7 +8,7 @@ use crate::{
     state::{common, State},
 };
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct SequentialEvaluator;
 
 impl SequentialEvaluator {
@@ -45,7 +45,7 @@ impl<P: Problem> Component<P> for SequentialEvaluator {
 }
 
 /// Inserts and updates the [common::BestIndividual] state.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct UpdateBestIndividual;
 
 impl UpdateBestIndividual {
@@ -77,7 +77,7 @@ impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
 }
 
 /// Inserts and updates the [common::ParetoFront] state.
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct UpdateParetoFront;
 
 impl UpdateParetoFront {

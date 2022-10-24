@@ -12,7 +12,7 @@ use super::{Recombination, Recombinator};
 /// Applies a n-point crossover to two parent solutions depending on crossover probability.
 ///
 /// If pc = 1, the solutions are recombined.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct NPointCrossover {
     /// Probability of recombining the solutions.
     pub pc: f64,
@@ -106,7 +106,7 @@ mod npoint_crossover {
 /// Applies a uniform crossover to two parent solutions depending on crossover probability.
 ///
 /// If pc = 1, the solutions are recombined.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UniformCrossover {
     /// Probability of recombining the solutions.
     pub pc: f64,
@@ -193,7 +193,7 @@ mod uniform_crossover {
 /// Usually exclusive to combinatorial problems.
 ///
 /// If pc = 1, the solutions are recombined.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct CycleCrossover {
     /// Probability of recombining the solutions.
     pub pc: f64,

@@ -1,12 +1,13 @@
 use std::ops::{Deref, Sub};
 
+use serde::Serialize;
+
 use crate::{
     framework::components::Component,
     problems::{Problem, SingleObjectiveProblem},
     state::{CustomState, State},
     tracking::{self, log::Step, set::LogSet, trigger, Log},
 };
-use serde::Serialize;
 
 /// A collection of [LogSet]s.
 ///
@@ -14,11 +15,21 @@ use serde::Serialize;
 ///
 /// Implements [Component] and should be added to the end
 /// of an algorithms main loop.
+///
+/// # Cloning
+///
+/// Note that [Clone]ing does **NOT** preserve existing [LogSet]'s.
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct Logger<P: Problem> {
     #[serde(skip)]
     sets: Vec<LogSet<P>>,
+}
+
+impl<P: Problem> Clone for Logger<P> {
+    fn clone(&self) -> Self {
+        Self::builder()
+    }
 }
 
 impl<P: Problem> Logger<P> {
