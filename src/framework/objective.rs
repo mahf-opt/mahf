@@ -2,11 +2,16 @@
 
 use std::any::Any;
 use std::fmt;
+use trait_set::trait_set;
+
+trait_set! {
+    pub trait AnyObjective = fmt::Debug + Clone + Eq + Any + PartialOrd + Send + Sync
+}
 
 /// Marker trait for objectives.
 ///
 /// See [SingleObjective] and [MultiObjective].
-pub trait Objective: fmt::Debug + Clone + Eq + Any + PartialOrd {}
+pub trait Objective: AnyObjective {}
 
 /// Error type for illegal objective values.
 ///

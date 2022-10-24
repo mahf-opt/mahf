@@ -84,5 +84,5 @@ impl Step {
 #[derive(Serialize)]
 pub struct Entry {
     pub name: &'static str,
-    pub value: Box<dyn DynSerialize>,
+    pub value: Box<dyn DynSerialize + Send>,
 }
