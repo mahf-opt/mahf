@@ -1,5 +1,5 @@
 use crate::{
-    framework::{Configuration},
+    framework::Configuration,
     problems::{coco_bound::CocoInstance, HasKnownTarget},
     tracking::{files, Log},
     utils::threads::SyncThreadPool,
