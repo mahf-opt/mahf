@@ -38,14 +38,14 @@ impl<P: Problem> Configuration<P> {
         ConfigurationBuilder::new().do_(self.0)
     }
 
-    /// Runs the heuristic on the given problem.
+    /// Runs the heuristic on the given problem, returning the final state of the heuristic.
     ///
-    /// Returns the final state of the heuristic.
-    /// If the heuristic has a logger, that log can be obtained from
-    /// this state as well.
+    /// The state is pre-initialized with a [Population][state::common::Population]
+    /// and a [Log][tracking::Log].
+    /// The random generator defaults to a randomly seeded RNG ([Random::default]).
     ///
-    /// If no random generator is provided, it will default
-    /// to a randomly seeded RNG.
+    /// For initializing the state with custom state,
+    /// see [optimize_with][Configuration::optimize_with].
     pub fn optimize(&self, problem: &P) -> state::State {
         let heuristic = self.heuristic();
         let mut state = state::State::new_root();
@@ -60,6 +60,13 @@ impl<P: Problem> Configuration<P> {
         state
     }
 
+    /// Runs the heuristic on the given problem, initializing the state with a custom function,
+    /// and returning the final state of the heuristic.
+    ///
+    /// The state is pre-initialized with a [Population][state::common::Population]
+    /// and a [Log][tracking::Log].
+    /// If no random generator is inserted in `init_state`, it will default
+    /// to a randomly seeded RNG ([Random::default]).
     pub fn optimize_with(
         &self,
         problem: &P,
@@ -72,6 +79,10 @@ impl<P: Problem> Configuration<P> {
         state.insert(state::common::Population::<P>::new());
 
         init_state(&mut state);
+
+        if !state.has::<Random>() {
+            state.insert(Random::default());
+        }
 
         heuristic.initialize(problem, &mut state);
         heuristic.execute(problem, &mut state);
