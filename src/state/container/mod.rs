@@ -138,7 +138,7 @@ impl State {
     /// Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{state::{State, common::Population}, Random}, problems::bmf::BenchmarkFunction};
+    /// use mahf::{state::{State, common::Population}, framework::Random, problems::bmf::BenchmarkFunction};
     /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
@@ -203,7 +203,7 @@ impl State {
     ///  Basic usage:
     ///
     /// ```
-    /// use mahf::{framework::{state::{State, common::Population}, Random}, problems::bmf::BenchmarkFunction};
+    /// use mahf::{state::{State, common::Population}, framework::Random, problems::bmf::BenchmarkFunction};
     /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new_root();
     /// state.insert(Random::testing());
