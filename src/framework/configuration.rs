@@ -2,10 +2,11 @@ use crate::{
     framework::{
         components::{Block, Branch, Component, Loop, Scope},
         conditions::Condition,
+        Random,
     },
     operators,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state,
+    state, tracking,
 };
 
 /// A heuristic, constructed from a set of components.
@@ -36,6 +37,58 @@ impl<P: Problem> Configuration<P> {
 
     pub fn into_builder(self) -> ConfigurationBuilder<P> {
         ConfigurationBuilder::new().do_(self.0)
+    }
+
+    /// Runs the heuristic on the given problem, returning the final state of the heuristic.
+    ///
+    /// The state is pre-initialized with a [Population][state::common::Population]
+    /// and a [Log][tracking::Log].
+    /// The random generator defaults to a randomly seeded RNG ([Random::default]).
+    ///
+    /// For initializing the state with custom state,
+    /// see [optimize_with][Configuration::optimize_with].
+    pub fn optimize(&self, problem: &P) -> state::State {
+        let heuristic = self.heuristic();
+        let mut state = state::State::new_root();
+
+        state.insert(tracking::Log::new());
+        state.insert(Random::default());
+        state.insert(state::common::Population::<P>::new());
+
+        heuristic.initialize(problem, &mut state);
+        heuristic.execute(problem, &mut state);
+
+        state
+    }
+
+    /// Runs the heuristic on the given problem, initializing the state with a custom function,
+    /// and returning the final state of the heuristic.
+    ///
+    /// The state is pre-initialized with a [Population][state::common::Population]
+    /// and a [Log][tracking::Log].
+    /// If no random generator is inserted in `init_state`, it will default
+    /// to a randomly seeded RNG ([Random::default]).
+    pub fn optimize_with(
+        &self,
+        problem: &P,
+        init_state: impl FnOnce(&mut state::State),
+    ) -> state::State {
+        let heuristic = self.heuristic();
+        let mut state = state::State::new_root();
+
+        state.insert(tracking::Log::new());
+        state.insert(state::common::Population::<P>::new());
+
+        init_state(&mut state);
+
+        if !state.has::<Random>() {
+            state.insert(Random::default());
+        }
+
+        heuristic.initialize(problem, &mut state);
+        heuristic.execute(problem, &mut state);
+
+        state
     }
 }
 
