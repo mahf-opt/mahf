@@ -415,13 +415,14 @@ where
             let index = rng.gen_range(0..problem.dimension());
             let mut i = index;
 
-            // Note this is a do-while loop
-            while {
+            loop {
                 mutation[i] = base[i];
                 i = (i + 1) % problem.dimension();
 
-                rng.gen::<f64>() <= self.pc && i != index
-            } {}
+                if rng.gen::<f64>() > self.pc || i == index {
+                    break;
+                }
+            }
         }
 
         stack.push(mutations);
