@@ -4,6 +4,7 @@ use rand::{prelude::SliceRandom, seq::IteratorRandom, Rng};
 use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
+use crate::problems::VectorProblem;
 use crate::{
     framework::components::*,
     problems::{LimitedVectorProblem, Problem},
@@ -650,5 +651,95 @@ mod translocation_mutation {
             vec![population[0].len(), population[1].len()],
             solution_length
         );
+    }
+}
+
+/// Performs the special Differential Evolution mutation, similar to an arithmetic crossover.
+///
+/// Requires a DE selection directly beforehand, e.g., [DEBest].
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DEMutation {
+    y: usize,
+    f: f64,
+}
+impl DEMutation {
+    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem>(
+        y: usize,
+        f: f64,
+    ) -> Box<dyn Component<P>> {
+        assert!((0.0..=2.0).contains(&f));
+        assert!([1, 2].contains(&y));
+        Box::new(Generator(Self { y, f }))
+    }
+}
+
+impl<P> Generation<P> for DEMutation
+where
+    P: Problem<Encoding = Vec<f64>> + VectorProblem,
+{
+    fn generate_population(
+        &self,
+        population: &mut Vec<P::Encoding>,
+        problem: &P,
+        _state: &mut State,
+    ) {
+        assert_eq!(population.len() % (self.y * 2 + 1), 0);
+
+        let chunks = population.chunks_exact_mut(self.y * 2 + 1);
+
+        // Iterate over chunks of size ``self.y * 2 + 1`, with the first element as base
+        for chunk in chunks {
+            // Compiler can't guarantee that pattern always matches
+            if let [base, remainder @ ..] = chunk {
+                let pairs = remainder.chunks_exact(2).map(|chunk| {
+                    // Compiler can't guarantee that pattern always matches
+                    if let [s1, s2] = chunk {
+                        (s1, s2)
+                    } else {
+                        unreachable!();
+                    }
+                });
+
+                for (s1, s2) in pairs {
+                    for i in 0..problem.dimension() {
+                        base[i] += self.f * (s1[i] - s2[i]);
+                    }
+                }
+            } else {
+                unreachable!();
+            }
+        }
+
+        // Keep only the mutated base elements
+        let mut index = 0;
+        population.retain(|_| {
+            index += 1;
+            index % (self.y * 2 + 1) == 0
+        })
+    }
+}
+
+#[cfg(test)]
+mod de_mutation {
+    use crate::framework::Random;
+    use crate::problems::bmf::BenchmarkFunction;
+
+    use super::*;
+
+    #[test]
+    fn all_mutated() {
+        let problem = BenchmarkFunction::sphere(3);
+        let y = 1;
+        let comp = DEMutation { y, f: 1. };
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let mut population = vec![
+            vec![0.1, 0.2, 0.4, 0.5, 0.9],
+            vec![0.2, 0.3, 0.6, 0.7, 0.8],
+            vec![0.1, 0.3, 0.5, 0.7, 0.9],
+        ];
+        let parents_length = population.len();
+        comp.generate_population(&mut population, &problem, &mut state);
+        assert_eq!(population.len() * (2 * y + 1), parents_length);
     }
 }
