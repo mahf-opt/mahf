@@ -623,7 +623,7 @@ mod exponential_rank {
 /// in a representation necessary to perform this special mutation.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DERand {
-    // Number of difference vectors
+    // Number of difference vectors ∈ {1, 2}.
     y: usize,
 }
 impl DERand {
@@ -672,7 +672,7 @@ fn best<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> &Individual<
 /// in a representation necessary to perform this special mutation.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DEBest {
-    // Number of difference vectors
+    // Number of difference vectors ∈ {1, 2}.
     y: usize,
 }
 impl DEBest {
@@ -723,7 +723,7 @@ mod de_best {
 /// in a representation necessary to perform this special mutation.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DECurrentToBest {
-    // Number of difference vectors
+    // Number of difference vectors ∈ {1, 2}.
     y: usize,
 }
 impl DECurrentToBest {

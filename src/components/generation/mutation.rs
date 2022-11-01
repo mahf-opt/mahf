@@ -659,7 +659,9 @@ mod translocation_mutation {
 /// Requires a DE selection directly beforehand, e.g., [DEBest].
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DEMutation {
+    // Number of difference vectors ∈ {1, 2}.
     y: usize,
+    // Difference vector scaling ∈ (0, 2].
     f: f64,
 }
 impl DEMutation {
@@ -687,16 +689,15 @@ where
 
         let chunks = population.chunks_exact_mut(self.y * 2 + 1);
 
-        // Iterate over chunks of size ``self.y * 2 + 1`, with the first element as base
+        // Iterate over chunks of size `y * 2 + 1`, with the first element as base
         for chunk in chunks {
             // Compiler can't guarantee that pattern always matches
             if let [base, remainder @ ..] = chunk {
                 let pairs = remainder.chunks_exact(2).map(|chunk| {
                     // Compiler can't guarantee that pattern always matches
-                    if let [s1, s2] = chunk {
-                        (s1, s2)
-                    } else {
-                        unreachable!();
+                    match chunk {
+                        [s1, s2] => (s1, s2),
+                        _ => unreachable!(),
                     }
                 });
 
