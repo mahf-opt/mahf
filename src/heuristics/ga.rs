@@ -1,8 +1,8 @@
 //! Genetic Algorithm
 
 use crate::{
+    components::*,
     framework::{components::Component, conditions::Condition, Configuration},
-    operators::*,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 

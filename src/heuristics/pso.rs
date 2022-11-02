@@ -1,8 +1,8 @@
 //! Particle Swarm Optimization
 
 use crate::{
+    components::*,
     framework::{components::Component, conditions::Condition, Configuration},
-    operators::*,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
     state,
 };

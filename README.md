@@ -41,7 +41,7 @@ to build and open the documentation.
 
 Examples on how to use MAHF for evaluation can be found in the [examples](/examples) directory.
 
-Examples of heuristics can be found under [heuristics](/src/heuristics/) and components under [operators](/src/operators/).
+Examples of heuristics can be found under [heuristics](/src/heuristics/) and components under [operators](/src/components).
 
 # Additional Resources
 

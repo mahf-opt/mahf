@@ -1,9 +1,9 @@
 //! Iterated Local Search
 
 use crate::{
+    components::*,
     framework::{components::Component, conditions::Condition, Configuration},
     heuristics::ls,
-    operators::*,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
     tracking,
 };
