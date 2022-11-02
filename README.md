@@ -19,7 +19,7 @@ MAHF aims to make construction and modification of metaheuristics as simple and 
 - First class support for constructive heuristics
 - Utilities for parameter optimization
 - Utilities for efficient evaluation and comparison
-- Variety of examples and clear guidlines
+- Variety of examples and clear guidelines
 - Documentation for users with no Rust experience
 
 # Requirements
@@ -39,9 +39,9 @@ to build and open the documentation.
 
 # Examples
 
-Examples on how to use MAHF for evaluation can be found in the [examples](/examples) directory.
+Examples on how to use MAHF for evaluation can be found in the [examples](examples) directory.
 
-Examples of heuristics can be found under [heuristics](/src/heuristics/) and components under [operators](/src/components).
+Examples of heuristics can be found under [heuristics](src/heuristics) and components under [components](src/components).
 
 # Additional Resources
 
