@@ -742,7 +742,15 @@ impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
 
         for individual in population {
             let mut selection = vec![individual, best(population)];
-            selection.extend(population.choose_multiple(state.random_mut(), self.y * 2 - 1));
+
+            // Sample only individuals randomly that are not `individual`
+            let remaining_population: Vec<_> =
+                population.iter().filter(|&i| i != individual).collect();
+
+            let random_individuals =
+                remaining_population.choose_multiple(state.random_mut(), self.y * 2 - 1);
+
+            selection.extend(random_individuals);
             offspring.extend(selection);
         }
 

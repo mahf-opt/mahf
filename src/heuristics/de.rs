@@ -43,7 +43,7 @@ where
                 selection: selection::DEBest::new(y),
                 mutation: generation::mutation::DEMutation::new(y, f),
                 crossover: generation::recombination::DEBinomialCrossover::new(pc),
-                replacement: replacement::GreedyIndex::new(),
+                replacement: replacement::IndividualPlus::new(),
             },
             termination,
             logger,

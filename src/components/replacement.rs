@@ -195,13 +195,13 @@ mod random_replacement {
 
 /// Keeps the better individual from parent and offspring at the same index.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct GreedyIndex;
-impl GreedyIndex {
+pub struct IndividualPlus;
+impl IndividualPlus {
     pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Replacer(Self))
     }
 }
-impl<P: SingleObjectiveProblem> Replacement<P> for GreedyIndex {
+impl<P: SingleObjectiveProblem> Replacement<P> for IndividualPlus {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual<P>>,
@@ -227,7 +227,7 @@ mod greedy_index {
     fn keeps_right_amount_of_children() {
         let mut state = State::new_root();
         state.insert(Random::testing());
-        let comp = GreedyIndex;
+        let comp = IndividualPlus;
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
         let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
         let offspring_len = offspring.len();
