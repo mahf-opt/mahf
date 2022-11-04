@@ -1,0 +1,166 @@
+//! Chemical Reaction Optimization
+
+use crate::{
+    components::*,
+    conditions::*,
+    framework::{components::Component, conditions::Condition, Configuration},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    state,
+};
+
+/// Parameters for [cro].
+pub struct RealProblemParameters {
+    pub population_size: u32,
+    pub mole_coll: f64,
+    pub kinetic_energy_loss_rate: f64,
+    pub alpha: u32,
+    pub beta: f64,
+    pub initial_kinetic_energy: f64,
+    pub buffer: f64,
+    pub on_wall_deviation: f64,
+    pub intermolecular_rm: f64,
+}
+
+/// An example single-objective Chemical Reaction Optimization operating on a real search space.
+/// Uses the [cro] component internally.
+pub fn real_cro<P>(
+    params: RealProblemParameters,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Configuration<P>
+where
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+{
+    let RealProblemParameters {
+        population_size,
+        mole_coll,
+        kinetic_energy_loss_rate,
+        alpha,
+        beta,
+        initial_kinetic_energy,
+        buffer,
+        on_wall_deviation,
+        intermolecular_rm,
+    } = params;
+
+    Configuration::builder()
+        .do_(initialization::RandomSpread::new_init(population_size))
+        .evaluate_sequential()
+        .update_best_individual()
+        .do_(cro(
+            Parameters {
+                mole_coll,
+                kinetic_energy_loss_rate,
+                initial_kinetic_energy,
+                buffer,
+                single_mole_selection: selection::RandomWithoutRepetition::new(1),
+                decomposition_criterion: branching::DecompositionCriterion::new(alpha),
+                decomposition: generation::RandomSpread::new_gen(),
+                on_wall_ineffective_collision: generation::mutation::FixedDeviationDelta::new(
+                    on_wall_deviation,
+                ),
+                double_mole_selection: selection::RandomWithoutRepetition::new(2),
+                synthesis_criterion: branching::SynthesisCriterion::new(beta),
+                synthesis: generation::RandomSpread::new_gen(),
+                intermolecular_ineffective_collision: generation::mutation::UniformMutation::new(
+                    intermolecular_rm,
+                ),
+            },
+            termination,
+            logger,
+        ))
+        .build()
+}
+
+/// Basic building blocks of an Chemical Reaction Optimization.
+pub struct Parameters<P> {
+    pub mole_coll: f64,
+    pub kinetic_energy_loss_rate: f64,
+    pub initial_kinetic_energy: f64,
+    pub buffer: f64,
+    pub single_mole_selection: Box<dyn Component<P>>,
+    pub decomposition_criterion: Box<dyn Condition<P>>,
+    pub decomposition: Box<dyn Component<P>>,
+    pub on_wall_ineffective_collision: Box<dyn Component<P>>,
+    pub double_mole_selection: Box<dyn Component<P>>,
+    pub synthesis_criterion: Box<dyn Condition<P>>,
+    pub synthesis: Box<dyn Component<P>>,
+    pub intermolecular_ineffective_collision: Box<dyn Component<P>>,
+}
+
+/// A generic single-objective Chemical Reaction Optimization template.
+///
+/// # References
+/// [doi.org/10.1007/s12293-012-0075-1](https://doi.org/10.1007/s12293-012-0075-1)
+pub fn cro<P: SingleObjectiveProblem>(
+    params: Parameters<P>,
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Box<dyn Component<P>> {
+    let Parameters {
+        mole_coll,
+        kinetic_energy_loss_rate,
+        initial_kinetic_energy,
+        buffer,
+        single_mole_selection,
+        decomposition_criterion,
+        decomposition,
+        on_wall_ineffective_collision,
+        double_mole_selection,
+        synthesis_criterion,
+        synthesis,
+        intermolecular_ineffective_collision,
+    } = params;
+
+    Configuration::builder()
+        .do_(state::CroState::initializer(initial_kinetic_energy, buffer))
+        .while_(termination, |builder| {
+            builder
+                .if_else_(branching::RandomChance::new(mole_coll),
+                 |builder| {
+                            builder
+                                .do_(single_mole_selection)
+                                .if_else_(decomposition_criterion,
+                             |builder| {
+                                        builder
+                                            .do_(decomposition)
+                                            .evaluate_sequential()
+                                            .update_best_individual()
+                                            .do_(state::CroState::decomposition_update())
+                            },
+                            |builder| {
+                                        builder
+                                            .do_(on_wall_ineffective_collision)
+                                            .evaluate_sequential()
+                                            .update_best_individual()
+                                            .do_(state::CroState::on_wall_ineffective_collision_update(
+                                                kinetic_energy_loss_rate,
+                                            ))
+                            },
+                        )
+                    },
+                    |builder| {
+                        builder
+                            .do_(double_mole_selection)
+                            .if_else_(synthesis_criterion,
+                              |builder| {
+                                        builder
+                                            .do_(synthesis)
+                                            .evaluate_sequential()
+                                            .update_best_individual()
+                                            .do_(state::CroState::synthesis_update())
+                            },
+                            |builder| {
+                                        builder
+                                            .do_(intermolecular_ineffective_collision)
+                                            .evaluate_sequential()
+                                            .update_best_individual()
+                                            .do_(state::CroState::intermolecular_ineffective_collision_update())
+                            },
+                        )
+                    },
+                )
+                .do_(logger)
+        })
+        .build_component()
+}
