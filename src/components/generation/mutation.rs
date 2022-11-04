@@ -4,10 +4,9 @@ use rand::{prelude::SliceRandom, seq::IteratorRandom, Rng};
 use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
-use crate::problems::VectorProblem;
 use crate::{
     framework::components::*,
-    problems::{LimitedVectorProblem, Problem},
+    problems::{LimitedVectorProblem, Problem, VectorProblem},
     state::{common::Progress, State},
 };
 
@@ -656,7 +655,7 @@ mod translocation_mutation {
 
 /// Performs the special Differential Evolution mutation, similar to an arithmetic crossover.
 ///
-/// Requires a DE selection directly beforehand, e.g., [DEBest].
+/// Requires a DE selection directly beforehand, e.g., [DEBest][crate::components::selection::DEBest].
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DEMutation {
     // Number of difference vectors ∈ {1, 2}.
