@@ -11,6 +11,7 @@ mod pso;
 pub use pso::PsoState;
 
 mod pheromones;
-mod cro;
-
 pub use pheromones::PheromoneMatrix;
+
+mod cro;
+pub use cro::{CroState, Molecule};
