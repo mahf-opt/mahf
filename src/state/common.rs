@@ -122,6 +122,11 @@ impl<P: Problem> Population<P> {
         self.stack.pop().unwrap()
     }
 
+    pub fn peek(&self, index: usize) -> &[Individual<P>] {
+        let n = self.stack.len();
+        &self.stack[n - 1 - index]
+    }
+
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }
