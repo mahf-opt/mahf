@@ -101,7 +101,7 @@ where
 
 // Random Operators without state
 
-pub use crate::operators::initialization::RandomPermutation;
+pub use crate::components::initialization::RandomPermutation;
 impl RandomPermutation {
     pub fn new_gen<P>() -> Box<dyn Component<P>>
     where
@@ -127,7 +127,7 @@ where
     }
 }
 
-pub use crate::operators::initialization::RandomSpread;
+pub use crate::components::initialization::RandomSpread;
 impl RandomSpread {
     /// Create this component as an generator, modifying the current population.
     pub fn new_gen<P, D>() -> Box<dyn Component<P>>

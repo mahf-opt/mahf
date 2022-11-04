@@ -178,7 +178,7 @@ impl<P: Problem> Component<P> for Branch<P> {
     }
 }
 
-impl<P: Problem + 'static> Branch<P> {
+impl<P: Problem> Branch<P> {
     pub fn new(
         condition: Box<dyn Condition<P>>,
         body: Vec<Box<dyn Component<P>>>,

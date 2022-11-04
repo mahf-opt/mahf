@@ -1,10 +1,10 @@
 use crate::{
+    components,
     framework::{
         components::{Block, Branch, Component, Loop, Scope},
         conditions::Condition,
         Random,
     },
-    operators,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
     state, tracking,
 };
@@ -184,7 +184,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
 impl<P: Problem> ConfigurationBuilder<P> {
     /// Asserts the condition on [State][state::State].
     ///
-    /// Uses the [Debug][operators::misc::Debug] component internally.
+    /// Uses the [Debug][components::misc::Debug] component internally.
     #[track_caller]
     pub fn assert(
         self,
@@ -193,22 +193,22 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.debug(move |_problem, state| assert!(assert(state)))
     }
 
-    /// Constructs a [Debug][operators::misc::Debug] component with the given behaviour.
+    /// Constructs a [Debug][components::misc::Debug] component with the given behaviour.
     pub fn debug(
         self,
         behaviour: impl Fn(&P, &mut state::State) + Send + Sync + Clone + 'static,
     ) -> Self {
-        self.do_(operators::misc::Debug::new(behaviour))
+        self.do_(components::misc::Debug::new(behaviour))
     }
 
     pub fn evaluate_sequential(self) -> Self {
-        self.do_(operators::evaluation::SequentialEvaluator::new())
+        self.do_(components::evaluation::SequentialEvaluator::new())
     }
 }
 
 impl<P: SingleObjectiveProblem> ConfigurationBuilder<P> {
     pub fn update_best_individual(self) -> Self {
-        self.do_(operators::evaluation::UpdateBestIndividual::new())
+        self.do_(components::evaluation::UpdateBestIndividual::new())
     }
 }
 
@@ -217,12 +217,12 @@ where
     P::Encoding: std::fmt::Debug,
 {
     pub fn single_objective_summary(self) -> Self {
-        self.do_(operators::misc::PrintSingleObjectiveSummary::new())
+        self.do_(components::misc::PrintSingleObjectiveSummary::new())
     }
 }
 
 impl<P: MultiObjectiveProblem> ConfigurationBuilder<P> {
     pub fn update_pareto_front(self) -> Self {
-        self.do_(operators::evaluation::UpdateParetoFront::new())
+        self.do_(components::evaluation::UpdateParetoFront::new())
     }
 }

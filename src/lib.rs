@@ -5,9 +5,10 @@
 )]
 #![doc = include_str!("../docs/overview.md")]
 
+pub mod components;
+pub mod conditions;
 pub mod framework;
 pub mod heuristics;
-pub mod operators;
 pub mod prelude;
 pub mod problems;
 pub mod state;

@@ -1,4 +1,4 @@
-//! Termination methods
+//! Termination criteria
 
 use crate::{
     framework::{conditions::Condition, SingleObjective},

@@ -11,7 +11,7 @@ use serde::Serialize;
 
 /// Saves the [Individual] with best objective value.
 ///
-/// To insert and update this state, use the [UpdateBestIndividual][crate::operators::evaluation::UpdateBestIndividual] component.
+/// To insert and update this state, use the [UpdateBestIndividual][crate::components::evaluation::UpdateBestIndividual] component.
 #[derive(Deref, DerefMut)]
 pub struct BestIndividual<P: SingleObjectiveProblem>(pub Option<Individual<P>>);
 impl<P: SingleObjectiveProblem> BestIndividual<P> {
@@ -51,7 +51,7 @@ impl CustomState for Progress {}
 
 /// Saves non-pareto-dominated [Individual]'s.
 ///
-/// To insert and update this state, use the [UpdateParetoFront][crate::operators::evaluation::UpdateParetoFront] component.
+/// To insert and update this state, use the [UpdateParetoFront][crate::components::evaluation::UpdateParetoFront] component.
 #[derive(Deref, DerefMut)]
 pub struct ParetoFront<P: MultiObjectiveProblem>(Vec<Individual<P>>);
 impl<P: MultiObjectiveProblem> ParetoFront<P> {
