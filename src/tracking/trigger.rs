@@ -4,6 +4,8 @@ use std::{
     any::Any,
     ops::{Deref, Sub},
 };
+use crate::problems::{HasKnownTarget, SingleObjectiveProblem};
+use crate::state::common::Evaluations;
 
 /// Like [Condition](crate::framework::conditions::Condition) but non-serializable.
 pub trait Trigger<P>: Any + Send + Sync {
@@ -29,6 +31,76 @@ impl<P> Trigger<P> for Iteration {
 
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
         state.iterations() % self.0 == 0
+    }
+}
+
+/// Triggers on final iteration.
+///
+/// Works only if termination uses FixedIterations.
+#[derive(serde::Serialize)]
+pub struct FinalIter(u32);
+
+impl FinalIter {
+    pub fn new<P>(final_iteration: u32) -> Box<dyn Trigger<P>> {
+        Box::new(FinalIter(final_iteration))
+    }
+}
+
+impl<P> Trigger<P> for FinalIter {
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<Iterations>();
+    }
+
+    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+        state.iterations() == self.0 - 1
+    }
+}
+
+/// Triggers on final evaluation.
+///
+/// Works only if termination uses FixedEvaluations.
+#[derive(serde::Serialize)]
+pub struct FinalEval(u32);
+
+impl FinalEval {
+    pub fn new<P>(final_evaluation: u32) -> Box<dyn Trigger<P>> {
+        Box::new(FinalEval(final_evaluation))
+    }
+}
+
+impl<P> Trigger<P> for FinalEval {
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.require::<Evaluations>();
+    }
+
+    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+        state.evaluations() >= self.0
+    }
+}
+
+/// Triggers on target hit.
+///
+/// Works only if optimum has known target.
+#[derive(serde::Serialize)]
+pub struct TargetHit;
+
+impl TargetHit {
+    pub fn new<P: HasKnownTarget + SingleObjectiveProblem>() -> Box<dyn Trigger<P>> {
+        Box::new(TargetHit)
+    }
+}
+
+impl<P: HasKnownTarget + SingleObjectiveProblem> Trigger<P> for TargetHit {
+    fn initialize(&self, _problem: &P, _state: &mut State) {
+
+    }
+
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        if let Some(fitness) = state.best_objective_value::<P>() {
+            problem.target_hit(*fitness)
+        } else {
+            false
+        }
     }
 }
 
@@ -64,7 +136,7 @@ where
     S: CustomState + Clone + Deref,
     S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
 {
-    /// Create a new [Change] [Trigger] based on a threshhold.
+    /// Create a new [Change] [Trigger] based on a threshold.
     ///
     /// Requires `S` to dereference to something that implements [Sub] and [Ord].
     pub fn new<P>(threshhold: S::Target) -> Box<dyn Trigger<P>> {

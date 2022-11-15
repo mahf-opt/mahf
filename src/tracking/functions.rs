@@ -45,6 +45,7 @@ where
     Entry { name, value }
 }
 
+/// A function which logs the best objective value found so far.
 pub fn best_objective_value<P>(state: &State) -> Entry
 where
     P: SingleObjectiveProblem,

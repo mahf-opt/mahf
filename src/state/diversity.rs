@@ -22,6 +22,7 @@ pub enum DiversityMeasure {
 }
 
 /// State for logging/tracking population diversity
+# [derive(Copy, Clone, Debug, serde::Serialize)]
 pub struct DiversityState {
     pub diversity: f64,
     pub max_div: f64,

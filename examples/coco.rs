@@ -1,4 +1,5 @@
 use mahf::prelude::*;
+use mahf::state::common;
 use problems::coco_bound::{suits, CocoInstance};
 use tracking::{functions, trigger};
 
@@ -16,11 +17,15 @@ fn main() -> anyhow::Result<()> {
         },
         termination::FixedIterations::new(500) & termination::TargetHit::new(),
         tracking::Logger::builder()
-            .log_common_sets()
             .log_set(
                 tracking::LogSet::new()
                     .with_trigger(trigger::Iteration::new(50))
-                    .with_logger(functions::best_individual::<CocoInstance>),
+                    .with_trigger(trigger::FinalIter::new(500))
+                    .with_trigger(trigger::TargetHit::new())
+                    .with_auto_logger::<common::Evaluations>()
+                    .with_auto_logger::<common::Progress>()
+                    .with_logger(functions::best_individual::<CocoInstance>)
+                    .with_logger(functions::best_objective_value::<CocoInstance>),
             )
             .build(),
     );

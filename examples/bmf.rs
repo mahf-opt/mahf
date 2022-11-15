@@ -5,15 +5,16 @@ type P = problems::bmf::BenchmarkFunction;
 
 fn main() -> anyhow::Result<()> {
     let problem = P::sphere(10);
+    let v_max = 1.0 * problem.dimension() as f64;
     let config = pso::real_pso(
         pso::RealProblemParameters {
-            num_particles: 100,
-            weight: 1.0,
-            c_one: 1.0,
-            c_two: 1.0,
-            v_max: 1.0,
+            num_particles: 30,
+            weight: 0.8,
+            c_one: 1.7,
+            c_two: 1.7,
+            v_max,
         },
-        termination::FixedIterations::new(500),
+        termination::FixedIterations::new(1000),
         tracking::Logger::default(),
     );
 
