@@ -24,6 +24,7 @@ serde = {version = "1.0.131", features = ["derive"]}
 trait-set = "0.3.0"
 dyn-clone = "1.0.9"
 derivative = "2.2.0"
+itertools = "0.10.5"
 
 [dev-dependencies]
 proptest = "1.0.0"

@@ -1,7 +1,8 @@
-/// The Condition trait and combinators.
-use crate::{framework::components::AnyComponent, problems::Problem, state::State};
 use derivative::Derivative;
 use serde::Serialize;
+
+/// The Condition trait and combinators.
+use crate::{framework::components::AnyComponent, problems::Problem, state::State};
 
 /// A condition for loops or branches.
 ///
@@ -76,5 +77,32 @@ impl<P: Problem> std::ops::BitOr for Box<dyn Condition<P>> {
 
     fn bitor(self, rhs: Self) -> Self::Output {
         Or::new(vec![self, rhs])
+    }
+}
+
+/// Inverses the condition.
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
+pub struct Not<P: Problem>(Box<dyn Condition<P>>);
+impl<P: Problem> Not<P> {
+    pub fn new(condition: Box<dyn Condition<P>>) -> Box<dyn Condition<P>> {
+        Box::new(Self(condition))
+    }
+}
+impl<P: Problem> Condition<P> for Not<P> {
+    fn initialize(&self, problem: &P, state: &mut State) {
+        self.0.initialize(problem, state);
+    }
+
+    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+        !self.0.evaluate(problem, state)
+    }
+}
+impl<P: Problem> std::ops::Not for Box<dyn Condition<P>> {
+    type Output = Box<dyn Condition<P>>;
+
+    fn not(self) -> Self::Output {
+        Not::new(self)
     }
 }

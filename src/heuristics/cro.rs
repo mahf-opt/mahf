@@ -3,14 +3,14 @@
 use crate::{
     components::*,
     conditions::*,
-    framework::{components::Component, conditions::Condition, Configuration},
+    framework::{self, components::Component, conditions::Condition, Configuration},
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
     state,
 };
 
 /// Parameters for [cro].
 pub struct RealProblemParameters {
-    pub population_size: u32,
+    pub initial_population_size: u32,
     pub mole_coll: f64,
     pub kinetic_energy_loss_rate: f64,
     pub alpha: u32,
@@ -18,7 +18,7 @@ pub struct RealProblemParameters {
     pub initial_kinetic_energy: f64,
     pub buffer: f64,
     pub on_wall_deviation: f64,
-    pub intermolecular_rm: f64,
+    pub decomposition_deviation: f64,
 }
 
 /// An example single-objective Chemical Reaction Optimization operating on a real search space.
@@ -32,7 +32,7 @@ where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
 {
     let RealProblemParameters {
-        population_size,
+        initial_population_size,
         mole_coll,
         kinetic_energy_loss_rate,
         alpha,
@@ -40,11 +40,13 @@ where
         initial_kinetic_energy,
         buffer,
         on_wall_deviation,
-        intermolecular_rm,
+        decomposition_deviation,
     } = params;
 
     Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(population_size))
+        .do_(initialization::RandomSpread::new_init(
+            initial_population_size,
+        ))
         .evaluate_sequential()
         .update_best_individual()
         .do_(cro(
@@ -55,15 +57,21 @@ where
                 buffer,
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
                 decomposition_criterion: branching::DecompositionCriterion::new(alpha),
-                decomposition: generation::RandomSpread::new_gen(),
+                decomposition: framework::components::Block::new(vec![
+                    generation::DuplicatePopulation::new(),
+                    generation::mutation::UniformPartialMutation::new(
+                        0.5,
+                        generation::mutation::FixedDeviationDelta::new(decomposition_deviation),
+                    ),
+                ]),
                 on_wall_ineffective_collision: generation::mutation::FixedDeviationDelta::new(
                     on_wall_deviation,
                 ),
                 double_mole_selection: selection::RandomWithoutRepetition::new(2),
                 synthesis_criterion: branching::SynthesisCriterion::new(beta),
-                synthesis: generation::RandomSpread::new_gen(),
+                synthesis: generation::recombination::UniformCrossover::new_single(1.),
                 intermolecular_ineffective_collision: generation::mutation::UniformMutation::new(
-                    intermolecular_rm,
+                    1.,
                 ),
             },
             termination,
@@ -116,10 +124,11 @@ pub fn cro<P: SingleObjectiveProblem>(
         .do_(state::CroState::initializer(initial_kinetic_energy, buffer))
         .while_(termination, |builder| {
             builder
-                .if_else_(branching::RandomChance::new(mole_coll),
+                .if_else_(branching::RandomChance::new(mole_coll) | branching::LessThanNIndividuals::new(2),
                  |builder| {
                             builder
                                 .do_(single_mole_selection)
+                                .do_(selection::All::new())
                                 .if_else_(decomposition_criterion,
                              |builder| {
                                         builder
@@ -142,6 +151,7 @@ pub fn cro<P: SingleObjectiveProblem>(
                     |builder| {
                         builder
                             .do_(double_mole_selection)
+                            .do_(selection::All::new())
                             .if_else_(synthesis_criterion,
                               |builder| {
                                         builder

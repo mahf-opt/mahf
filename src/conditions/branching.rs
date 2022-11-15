@@ -28,6 +28,28 @@ where
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct LessThanNIndividuals {
+    /// Number of individuals.
+    pub n: usize,
+}
+impl LessThanNIndividuals {
+    pub fn new<P>(n: usize) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self { n })
+    }
+}
+impl<P> Condition<P> for LessThanNIndividuals
+where
+    P: Problem,
+{
+    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+        state.population_stack::<P>().current().len() < self.n
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DecompositionCriterion {
     // Balances between diversification (Decomposition) and intensification (OnWallIneffectiveCollision).
     // A lower value makes Decomposition more likely.

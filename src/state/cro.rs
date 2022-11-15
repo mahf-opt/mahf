@@ -229,7 +229,7 @@ where
         let r2_index = cro_state.molecule_index(stack.current(), &r2);
 
         if r1_index == r2_index {
-            panic!("Molecule can't collide with itself");
+            panic!("Molecule can't collide with itself.");
         }
 
         cro_state.molecule_mut(r1_index).num_hit += 1;
@@ -289,7 +289,7 @@ where
         let r2_index = cro_state.molecule_index(stack.current(), &r2);
 
         if r1_index == r2_index {
-            panic!("Molecule can't collide with itself");
+            panic!("Molecule can't collide with itself.");
         }
 
         let total_r1_energy = r1.objective().value() + cro_state.molecule(r1_index).kinetic_energy;
@@ -331,6 +331,11 @@ where
     ///
     /// Updates the energy buffer and molecule data in [CroState].
     ///
+    /// It assumes the following [Population][crate::state::common::Population] structure:
+    /// - One mutated individual i'
+    /// - One selected individual i
+    /// - Population
+    ///
     /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
     pub fn on_wall_ineffective_collision_update(
         kinetic_energy_loss_rate: f64,
@@ -344,6 +349,11 @@ where
     ///
     /// Updates the energy buffer and molecule data in [CroState].
     ///
+    /// It assumes the following [Population][crate::state::common::Population] structure:
+    /// - Two mutated individuals i' and i''
+    /// - One selected individual i
+    /// - Population
+    ///
     /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
     pub fn decomposition_update() -> Box<dyn Component<P>> {
         Box::new(DecompositionUpdate)
@@ -353,6 +363,11 @@ where
     ///
     /// Updates the energy buffer and molecule data in [CroState].
     ///
+    /// It assumes the following [Population][crate::state::common::Population] structure:
+    /// - Two mutated individuals i' and j'
+    /// - Two selected individuals i and j
+    /// - Population
+    ///
     /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
     pub fn intermolecular_ineffective_collision_update() -> Box<dyn Component<P>> {
         Box::new(IntermolecularIneffectiveCollisionUpdate)
@@ -361,6 +376,11 @@ where
     /// Updates state after a Synthesis.
     ///
     /// Updates the energy buffer and molecule data in [CroState].
+    ///
+    /// It assumes the following [Population][crate::state::common::Population] structure:
+    /// - One combined individual k
+    /// - Two selected individuals i and j
+    /// - Population
     ///
     /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
     pub fn synthesis_update() -> Box<dyn Component<P>> {
