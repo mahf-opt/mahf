@@ -125,50 +125,50 @@ pub fn cro<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .if_else_(branching::RandomChance::new(mole_coll) | branching::LessThanNIndividuals::new(2),
-                 |builder| {
-                            builder
-                                .do_(single_mole_selection)
-                                .do_(selection::All::new())
-                                .if_else_(decomposition_criterion,
-                             |builder| {
-                                        builder
-                                            .do_(decomposition)
-                                            .evaluate_sequential()
-                                            .update_best_individual()
-                                            .do_(state::CroState::decomposition_update())
-                            },
-                            |builder| {
-                                        builder
-                                            .do_(on_wall_ineffective_collision)
-                                            .evaluate_sequential()
-                                            .update_best_individual()
-                                            .do_(state::CroState::on_wall_ineffective_collision_update(
-                                                kinetic_energy_loss_rate,
-                                            ))
-                            },
-                        )
-                    },
-                    |builder| {
-                        builder
-                            .do_(double_mole_selection)
-                            .do_(selection::All::new())
-                            .if_else_(synthesis_criterion,
-                              |builder| {
-                                        builder
-                                            .do_(synthesis)
-                                            .evaluate_sequential()
-                                            .update_best_individual()
-                                            .do_(state::CroState::synthesis_update())
-                            },
-                            |builder| {
-                                        builder
-                                            .do_(intermolecular_ineffective_collision)
-                                            .evaluate_sequential()
-                                            .update_best_individual()
-                                            .do_(state::CroState::intermolecular_ineffective_collision_update())
-                            },
-                        )
-                    },
+                          |builder| {
+                              builder
+                                  .do_(single_mole_selection)
+                                  .do_(selection::All::new())
+                                  .if_else_(decomposition_criterion,
+                                            |builder| {
+                                                builder
+                                                    .do_(decomposition)
+                                                    .evaluate_sequential()
+                                                    .update_best_individual()
+                                                    .do_(state::CroState::decomposition_update())
+                                            },
+                                            |builder| {
+                                                builder
+                                                    .do_(on_wall_ineffective_collision)
+                                                    .evaluate_sequential()
+                                                    .update_best_individual()
+                                                    .do_(state::CroState::on_wall_ineffective_collision_update(
+                                                        kinetic_energy_loss_rate,
+                                                    ))
+                                            },
+                                  )
+                          },
+                          |builder| {
+                              builder
+                                  .do_(double_mole_selection)
+                                  .do_(selection::All::new())
+                                  .if_else_(synthesis_criterion,
+                                            |builder| {
+                                                builder
+                                                    .do_(synthesis)
+                                                    .evaluate_sequential()
+                                                    .update_best_individual()
+                                                    .do_(state::CroState::synthesis_update())
+                                            },
+                                            |builder| {
+                                                builder
+                                                    .do_(intermolecular_ineffective_collision)
+                                                    .evaluate_sequential()
+                                                    .update_best_individual()
+                                                    .do_(state::CroState::intermolecular_ineffective_collision_update())
+                                            },
+                                  )
+                          },
                 )
                 .do_(logger)
         })
