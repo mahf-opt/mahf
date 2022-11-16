@@ -811,15 +811,13 @@ where
         for (indices, solution, partial) in
             izip!(&population_indices, &mut population, partial_population)
         {
-            for (i, (x, mutated_x)) in
-                izip!(solution.solution_mut(), partial.into_solution()).enumerate()
-            {
-                if indices.contains(&i) {
-                    *x = mutated_x;
-                }
+            let solution = solution.solution_mut();
+            for (i, mutated_x) in izip!(indices, partial.into_solution()) {
+                solution[*i] = mutated_x;
             }
         }
 
+        // Push partially mutated population back
         state.population_stack_mut::<P>().push(population);
     }
 }

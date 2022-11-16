@@ -75,8 +75,8 @@ where
         let selected = stack.peek(0).first().unwrap();
         let population = stack.peek(1);
 
-        let selected_index = cro_state.molecule_index(population, selected);
-        let molecule = cro_state.molecule(selected_index);
+        let selected_index = population.iter().position(|i| i == selected).unwrap();
+        let molecule = &cro_state.molecules[selected_index];
 
         molecule.num_hit - molecule.min_hit > self.alpha
     }
@@ -108,10 +108,10 @@ where
         let [s1, s2] = TryInto::<&[_; 2]>::try_into(stack.peek(0)).unwrap();
         let population = stack.peek(1);
 
-        let s1_index = cro_state.molecule_index(population, s1);
-        let s1_molecule = cro_state.molecule(s1_index);
-        let s2_index = cro_state.molecule_index(population, s2);
-        let s2_molecule = cro_state.molecule(s2_index);
+        let s1_index = population.iter().position(|i| i == s1).unwrap();
+        let s1_molecule = &cro_state.molecules[s1_index];
+        let s2_index = population.iter().position(|i| i == s2).unwrap();
+        let s2_molecule = &cro_state.molecules[s2_index];
 
         s1_molecule.kinetic_energy <= self.beta && s2_molecule.kinetic_energy <= self.beta
     }

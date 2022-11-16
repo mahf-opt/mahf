@@ -5,6 +5,7 @@ use crate::{
 };
 use rand::Rng;
 
+#[derive(Clone)]
 pub struct Molecule<P: Problem> {
     pub kinetic_energy: f64,
     pub num_hit: u32,
@@ -43,24 +44,6 @@ pub struct CroState<P: Problem> {
     pub molecules: Vec<Molecule<P>>,
 }
 impl<P: Problem> CustomState for CroState<P> {}
-
-impl<P: Problem> CroState<P> {
-    pub fn molecule(&self, index: usize) -> &Molecule<P> {
-        &self.molecules[index]
-    }
-
-    pub fn molecule_mut(&mut self, index: usize) -> &mut Molecule<P> {
-        &mut self.molecules[index]
-    }
-
-    pub fn molecule_index(
-        &self,
-        population: &[Individual<P>],
-        individual: &Individual<P>,
-    ) -> usize {
-        population.iter().position(|i| i == individual).unwrap()
-    }
-}
 
 #[derive(Debug, serde::Serialize, Clone)]
 pub struct CroStateInitialization {
@@ -117,12 +100,12 @@ where
         let product = stack.pop().into_iter().next().unwrap();
         let reactant = stack.pop().into_iter().next().unwrap();
 
-        let reactant_index = cro_state.molecule_index(stack.current(), &reactant);
+        let reactant_index = stack.current().iter().position(|i| i == &reactant).unwrap();
 
-        cro_state.molecule_mut(reactant_index).num_hit += 1;
+        cro_state.molecules[reactant_index].num_hit += 1;
 
         let total_reactant_energy =
-            reactant.objective().value() + cro_state.molecule(reactant_index).kinetic_energy;
+            reactant.objective().value() + cro_state.molecules[reactant_index].kinetic_energy;
         let product_energy = product.objective().value();
 
         // Reaction is possible
@@ -133,10 +116,10 @@ where
             cro_state.buffer += (total_reactant_energy - product_energy) * (1. - alpha);
 
             // Update best with new
-            cro_state.molecule_mut(reactant_index).update_best(&product);
+            cro_state.molecules[reactant_index].update_best(&product);
 
             // Replace individual
-            cro_state.molecule_mut(reactant_index).kinetic_energy =
+            cro_state.molecules[reactant_index].kinetic_energy =
                 (total_reactant_energy - product_energy) * alpha;
             stack.current_mut()[reactant_index] = product;
         }
@@ -164,10 +147,10 @@ where
         let [p1, p2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
         let reactant = stack.pop().into_iter().next().unwrap();
 
-        let reactant_index = cro_state.molecule_index(stack.current(), &reactant);
+        let reactant_index = stack.current().iter().position(|i| i == &reactant).unwrap();
 
         let total_reactant_energy =
-            reactant.objective().value() + cro_state.molecule(reactant_index).kinetic_energy;
+            reactant.objective().value() + cro_state.molecules[reactant_index].kinetic_energy;
         let products_energy = p1.objective().value() + p2.objective().value();
 
         let decomposition_energy = if total_reactant_energy >= products_energy {
@@ -182,7 +165,7 @@ where
 
             // Not enough energy for reaction even with buffer, so abort
             if decomposition_energy < 0. {
-                cro_state.molecule_mut(reactant_index).num_hit += 1;
+                cro_state.molecules[reactant_index].num_hit += 1;
                 return;
             }
 
@@ -193,7 +176,7 @@ where
         // Initialize molecule data and insert new individuals
         let d3 = rng.gen_range(0.0..=1.0);
 
-        *cro_state.molecule_mut(reactant_index) = Molecule::new(decomposition_energy * d3, &p1);
+        cro_state.molecules[reactant_index] = Molecule::new(decomposition_energy * d3, &p1);
         cro_state
             .molecules
             .push(Molecule::new(decomposition_energy * (1. - d3), &p2));
@@ -225,18 +208,18 @@ where
         let [p1, p2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
         let [r1, r2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
 
-        let r1_index = cro_state.molecule_index(stack.current(), &r1);
-        let r2_index = cro_state.molecule_index(stack.current(), &r2);
+        let r1_index = stack.current().iter().position(|i| i == &r1).unwrap();
+        let r2_index = stack.current().iter().position(|i| i == &r2).unwrap();
 
         if r1_index == r2_index {
             panic!("Molecule can't collide with itself.");
         }
 
-        cro_state.molecule_mut(r1_index).num_hit += 1;
-        cro_state.molecule_mut(r2_index).num_hit += 1;
+        cro_state.molecules[r1_index].num_hit += 1;
+        cro_state.molecules[r2_index].num_hit += 1;
 
-        let total_r1_energy = r1.objective().value() + cro_state.molecule(r1_index).kinetic_energy;
-        let total_r2_energy = r2.objective().value() + cro_state.molecule(r2_index).kinetic_energy;
+        let total_r1_energy = r1.objective().value() + cro_state.molecules[r1_index].kinetic_energy;
+        let total_r2_energy = r2.objective().value() + cro_state.molecules[r2_index].kinetic_energy;
         let total_reactants_energy = total_r1_energy + total_r2_energy;
 
         let p1_energy = p1.objective().value();
@@ -250,12 +233,12 @@ where
             let d4 = rng.gen_range(0.0..=1.0);
 
             // Update kinetic energies
-            cro_state.molecule_mut(r1_index).kinetic_energy = collision_energy * d4;
-            cro_state.molecule_mut(r2_index).kinetic_energy = collision_energy * (1. - d4);
+            cro_state.molecules[r1_index].kinetic_energy = collision_energy * d4;
+            cro_state.molecules[r2_index].kinetic_energy = collision_energy * (1. - d4);
 
             // Update best with new
-            cro_state.molecule_mut(r1_index).update_best(&p1);
-            cro_state.molecule_mut(r2_index).update_best(&p2);
+            cro_state.molecules[r1_index].update_best(&p1);
+            cro_state.molecules[r2_index].update_best(&p2);
 
             // Replace individual
             let population = stack.current_mut();
@@ -285,15 +268,15 @@ where
         let product = stack.pop().into_iter().next().unwrap();
         let [r1, r2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
 
-        let r1_index = cro_state.molecule_index(stack.current(), &r1);
-        let r2_index = cro_state.molecule_index(stack.current(), &r2);
+        let r1_index = stack.current().iter().position(|i| i == &r1).unwrap();
+        let r2_index = stack.current().iter().position(|i| i == &r2).unwrap();
 
         if r1_index == r2_index {
             panic!("Molecule can't collide with itself.");
         }
 
-        let total_r1_energy = r1.objective().value() + cro_state.molecule(r1_index).kinetic_energy;
-        let total_r2_energy = r2.objective().value() + cro_state.molecule(r2_index).kinetic_energy;
+        let total_r1_energy = r1.objective().value() + cro_state.molecules[r1_index].kinetic_energy;
+        let total_r2_energy = r2.objective().value() + cro_state.molecules[r2_index].kinetic_energy;
         let total_reactants_energy = total_r1_energy + total_r2_energy;
 
         let product_energy = product.objective().value();
@@ -301,7 +284,7 @@ where
         // Reaction is possible
         if total_reactants_energy >= product_energy {
             // Replace one molecule and remove other
-            *cro_state.molecule_mut(r1_index) =
+            cro_state.molecules[r1_index] =
                 Molecule::new(total_reactants_energy - product_energy, &product);
             cro_state.molecules.remove(r2_index);
 
