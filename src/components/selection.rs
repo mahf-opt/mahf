@@ -616,3 +616,162 @@ mod exponential_rank {
         assert_eq!(selection.len(), comp.offspring as usize);
     }
 }
+
+/// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.
+///
+/// This component is meant to be used together with [DEMutation], as it initializes the population
+/// in a representation necessary to perform this special mutation.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DERand {
+    // Number of difference vectors ∈ {1, 2}.
+    y: usize,
+}
+impl DERand {
+    pub fn new<P: Problem>(y: usize) -> Box<dyn Component<P>> {
+        assert!([1, 2].contains(&y));
+        Box::new(Selector(Self { y }))
+    }
+}
+impl<P: Problem> Selection<P> for DERand {
+    fn select_offspring<'p>(
+        &self,
+        population: &'p [Individual<P>],
+        state: &mut State,
+    ) -> Vec<&'p Individual<P>> {
+        (0..population.len())
+            .flat_map(|_| population.choose_multiple(state.random_mut(), self.y * 2 + 1))
+            .collect()
+    }
+}
+#[cfg(test)]
+mod de_rand {
+    use crate::framework::Random;
+    use crate::testing::*;
+
+    use super::*;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let y = 1;
+        let comp = DERand { y };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), population.len() * (2 * y + 1));
+    }
+}
+
+fn best<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> &Individual<P> {
+    population.iter().min_by_key(|i| i.objective()).unwrap()
+}
+
+/// Selects individuals in the form [best, `y * 2` random] for every individual in the population, keeping the order.
+///
+/// This component is meant to be used together with [DEMutation], as it initializes the population
+/// in a representation necessary to perform this special mutation.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DEBest {
+    // Number of difference vectors ∈ {1, 2}.
+    y: usize,
+}
+impl DEBest {
+    pub fn new<P: SingleObjectiveProblem>(y: usize) -> Box<dyn Component<P>> {
+        assert!([1, 2].contains(&y));
+        Box::new(Selector(Self { y }))
+    }
+}
+impl<P: SingleObjectiveProblem> Selection<P> for DEBest {
+    fn select_offspring<'p>(
+        &self,
+        population: &'p [Individual<P>],
+        state: &mut State,
+    ) -> Vec<&'p Individual<P>> {
+        let mut offspring = Vec::new();
+
+        for _ in 0..population.len() {
+            let mut selection = vec![best(population)];
+            selection.extend(population.choose_multiple(state.random_mut(), self.y * 2));
+            offspring.extend(selection);
+        }
+
+        offspring
+    }
+}
+#[cfg(test)]
+mod de_best {
+    use crate::framework::Random;
+    use crate::testing::*;
+
+    use super::*;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let y = 1;
+        let comp = DEBest { y };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), population.len() * (2 * y + 1));
+    }
+}
+
+/// Selects individuals in the form [current, best, `y * 2 - 1` random] for every individual in the population, keeping the order.
+///
+/// This component is meant to be used together with [DEMutation], as it initializes the population
+/// in a representation necessary to perform this special mutation.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DECurrentToBest {
+    // Number of difference vectors ∈ {1, 2}.
+    y: usize,
+}
+impl DECurrentToBest {
+    pub fn new<P: SingleObjectiveProblem>(y: usize) -> Box<dyn Component<P>> {
+        assert!([1, 2].contains(&y));
+        Box::new(Selector(Self { y }))
+    }
+}
+impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
+    fn select_offspring<'p>(
+        &self,
+        population: &'p [Individual<P>],
+        state: &mut State,
+    ) -> Vec<&'p Individual<P>> {
+        let mut offspring = Vec::new();
+
+        for individual in population {
+            let mut selection = vec![individual, best(population)];
+
+            // Sample only individuals randomly that are not `individual`
+            let remaining_population: Vec<_> =
+                population.iter().filter(|&i| i != individual).collect();
+
+            let random_individuals =
+                remaining_population.choose_multiple(state.random_mut(), self.y * 2 - 1);
+
+            selection.extend(random_individuals);
+            offspring.extend(selection);
+        }
+
+        offspring
+    }
+}
+#[cfg(test)]
+mod de_current_to_best {
+    use crate::framework::Random;
+    use crate::testing::*;
+
+    use super::*;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let y = 1;
+        let comp = DECurrentToBest { y };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), population.len() * (2 * y + 1));
+    }
+}

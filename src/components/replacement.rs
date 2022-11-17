@@ -192,3 +192,47 @@ mod random_replacement {
         assert_eq!(population.len(), comp.max_population_size as usize);
     }
 }
+
+/// Keeps the better individual from parent and offspring at the same index.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct IndividualPlus;
+impl IndividualPlus {
+    pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
+        Box::new(Replacer(Self))
+    }
+}
+impl<P: SingleObjectiveProblem> Replacement<P> for IndividualPlus {
+    fn replace_population(
+        &self,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
+        _state: &mut State,
+    ) {
+        assert_eq!(parents.len(), offspring.len());
+
+        for (parent, offspring) in parents.iter_mut().zip(offspring.drain(..)) {
+            if parent.objective() > offspring.objective() {
+                *parent = offspring;
+            }
+        }
+    }
+}
+#[cfg(test)]
+mod greedy_index {
+    use super::*;
+    use crate::framework::Random;
+    use crate::testing::*;
+
+    #[test]
+    fn keeps_right_amount_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let comp = IndividualPlus;
+        let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
+        let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
+        let offspring_len = offspring.len();
+
+        comp.replace_population(&mut population, &mut offspring, &mut state);
+        assert_eq!(population.len(), offspring_len);
+    }
+}

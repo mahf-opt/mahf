@@ -1,6 +1,7 @@
 //! Collection of common heuristics
 
 pub mod aco;
+pub mod de;
 pub mod es;
 pub mod ga;
 pub mod ils;
