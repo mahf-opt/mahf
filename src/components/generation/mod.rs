@@ -8,8 +8,9 @@ use crate::{
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     state::State,
 };
+use itertools::Itertools;
 use rand::distributions::uniform::SampleUniform;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub mod mutation;
 pub mod recombination;
@@ -153,5 +154,22 @@ where
     ) {
         let population_size = population.len() as u32;
         *population = self.random_spread(problem, state.random_mut(), population_size);
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DuplicatePopulation;
+impl DuplicatePopulation {
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Self)
+    }
+}
+impl<P: Problem> Component<P> for DuplicatePopulation {
+    fn execute(&self, _problem: &P, state: &mut State) {
+        let population = state.population_stack_mut::<P>().pop();
+        let duplicates = population.clone();
+
+        let population = population.into_iter().interleave(duplicates).collect();
+        state.population_stack_mut().push(population);
     }
 }

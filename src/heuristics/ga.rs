@@ -43,7 +43,7 @@ where
         .do_(ga(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
-                crossover: generation::recombination::UniformCrossover::new(pc),
+                crossover: generation::recombination::UniformCrossover::new_both(pc),
                 mutation: generation::mutation::BitflipMutation::new(rm),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
@@ -87,7 +87,7 @@ where
         .do_(ga(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
-                crossover: generation::recombination::UniformCrossover::new(pc),
+                crossover: generation::recombination::UniformCrossover::new_both(pc),
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),

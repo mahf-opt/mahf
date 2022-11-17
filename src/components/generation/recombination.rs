@@ -17,15 +17,38 @@ use super::{Recombination, Recombinator};
 pub struct NPointCrossover {
     /// Probability of recombining the solutions.
     pub pc: f64,
+    /// Number of points (N)
     pub points: usize,
+    /// If false, the second child is discarded.
+    pub keep_both: bool,
 }
 impl NPointCrossover {
-    pub fn new<P, D>(pc: f64, points: usize) -> Box<dyn Component<P>>
+    pub fn new<P, D>(pc: f64, points: usize, keep_both: bool) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
         D: Clone + PartialEq + 'static,
     {
-        Box::new(Recombinator(Self { pc, points }))
+        Box::new(Recombinator(Self {
+            pc,
+            points,
+            keep_both,
+        }))
+    }
+
+    pub fn new_single<P, D>(pc: f64, points: usize) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<D>>,
+        D: Clone + PartialEq + 'static,
+    {
+        Self::new(pc, points, false)
+    }
+
+    pub fn new_both<P, D>(pc: f64, points: usize) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<D>>,
+        D: Clone + PartialEq + 'static,
+    {
+        Self::new(pc, points, true)
     }
 }
 impl<P, D> Recombination<P> for NPointCrossover
@@ -70,7 +93,10 @@ where
                     }
                 }
                 offspring.push(child1);
-                offspring.push(child2);
+
+                if self.keep_both {
+                    offspring.push(child2);
+                }
             } else {
                 let child1 = pairs[0].to_owned();
                 offspring.push(child1);
@@ -89,7 +115,11 @@ mod npoint_crossover {
     #[test]
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = NPointCrossover { pc: 1.0, points: 3 };
+        let comp = NPointCrossover {
+            pc: 1.0,
+            points: 3,
+            keep_both: true,
+        };
         let mut state = State::new_root();
         state.insert(Random::testing());
         let population = vec![
@@ -111,14 +141,32 @@ mod npoint_crossover {
 pub struct UniformCrossover {
     /// Probability of recombining the solutions.
     pub pc: f64,
+    /// If false, the second child is discarded.
+    pub keep_both: bool,
 }
 impl UniformCrossover {
-    pub fn new<P, D>(pc: f64) -> Box<dyn Component<P>>
+    pub fn new<P, D>(pc: f64, keep_both: bool) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
         D: Clone + PartialEq + 'static,
     {
-        Box::new(Recombinator(Self { pc }))
+        Box::new(Recombinator(Self { pc, keep_both }))
+    }
+
+    pub fn new_single<P, D>(pc: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<D>>,
+        D: Clone + PartialEq + 'static,
+    {
+        Self::new(pc, false)
+    }
+
+    pub fn new_both<P, D>(pc: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<D>>,
+        D: Clone + PartialEq + 'static,
+    {
+        Self::new(pc, true)
     }
 }
 impl<P, D> Recombination<P> for UniformCrossover
@@ -174,7 +222,10 @@ mod uniform_crossover {
     #[test]
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = UniformCrossover { pc: 1.0 };
+        let comp = UniformCrossover {
+            pc: 1.0,
+            keep_both: true,
+        };
         let mut state = State::new_root();
         state.insert(Random::testing());
         let population = vec![

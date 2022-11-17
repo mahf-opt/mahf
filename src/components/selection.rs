@@ -226,6 +226,49 @@ mod fully_random {
     }
 }
 
+/// Selects `offspring` random solutions without repetition.
+///
+/// Requires a sufficient amount of solutions to choose from.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct RandomWithoutRepetition {
+    /// Offspring per iteration.
+    pub offspring: u32,
+}
+impl RandomWithoutRepetition {
+    pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
+        Box::new(Selector(Self { offspring }))
+    }
+}
+impl<P: Problem> Selection<P> for RandomWithoutRepetition {
+    fn select_offspring<'p>(
+        &self,
+        population: &'p [Individual<P>],
+        state: &mut State,
+    ) -> Vec<&'p Individual<P>> {
+        let rng = state.random_mut();
+        population
+            .choose_multiple(rng, self.offspring as usize)
+            .collect()
+    }
+}
+#[cfg(test)]
+mod random_without_repetition {
+    use crate::framework::Random;
+    use crate::testing::*;
+
+    use super::*;
+
+    #[test]
+    fn selects_right_number_of_children() {
+        let mut state = State::new_root();
+        state.insert(Random::testing());
+        let population = new_test_population(&[1.0, 2.0, 3.0]);
+        let comp = RandomWithoutRepetition { offspring: 2 };
+        let selection = comp.select_offspring(&population, &mut state);
+        assert_eq!(selection.len(), comp.offspring as usize);
+    }
+}
+
 /// Deterministically selects individuals proporional to their fitness.
 ///
 /// Originally proposed for, and use as selection in the Invasive Weed Optimization.
