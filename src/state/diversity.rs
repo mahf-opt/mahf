@@ -6,7 +6,7 @@ use crate::{
     state::{common::Population, CustomState, State},
 };
 
-/// Postprocess procedure for tracking population diversity
+/// Procedure for tracking population diversity
 ///
 /// Currently only for VectorProblem
 ///
