@@ -114,8 +114,8 @@ pub fn diversity_ea<P>(
         .do_(custom_ea(
             Parameters {
                 selection: selection::FullyRandom::new(lambda),
-                mutation: generation::mutation::FixedDeviationDelta::new(deviation),
                 crossover,
+                mutation: generation::mutation::FixedDeviationDelta::new(deviation),
                 replacement: replacement::MuPlusLambda::new(population_size),
                 diversity: DiversityState::for_float_vector(div_measure),
             },
@@ -128,8 +128,8 @@ pub fn diversity_ea<P>(
 // Basic building blocks of an Evolution Strategy.
 pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
-    pub mutation: Box<dyn Component<P>>,
     pub crossover: Box<dyn Component<P>>,
+    pub mutation: Box<dyn Component<P>>,
     pub replacement: Box<dyn Component<P>>,
     pub diversity: Box<dyn Component<P>>,
 }
@@ -142,8 +142,8 @@ pub fn custom_ea<P: SingleObjectiveProblem>(
 ) -> Box<dyn Component<P>> {
     let Parameters {
         selection,
-        mutation,
         crossover,
+        mutation,
         replacement,
         diversity,
     } = params;
@@ -152,8 +152,8 @@ pub fn custom_ea<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .do_(selection)
-                .do_(mutation)
                 .do_(crossover)
+                .do_(mutation)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement)

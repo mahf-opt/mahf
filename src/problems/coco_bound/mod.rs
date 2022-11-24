@@ -75,6 +75,6 @@ impl problems::HasKnownTarget for CocoInstance {
 
 //impl problems::HasKnownOptimum for CocoInstance {
 //    fn known_optimum(&self) -> SingleObjective {
-//        self.problem.lock().unwrap().final_taget_fvalue1()
+//        self.problem.lock().unwrap().final_target_fvalue1()
 //    }
 //}
