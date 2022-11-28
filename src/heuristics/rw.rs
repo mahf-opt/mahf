@@ -37,7 +37,6 @@ where
 
 /// Parameters for [permutation_random_walk].
 pub struct PermutationProblemParameters {
-    pub pm: f64,
     pub n_swap: usize,
 }
 
@@ -51,13 +50,13 @@ pub fn permutation_random_walk<P>(
 where
     P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    let PermutationProblemParameters { pm, n_swap } = params;
+    let PermutationProblemParameters { n_swap } = params;
 
     Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))
         .do_(random_walk(
             Parameters {
-                neighbor: generation::mutation::SwapMutation::new(pm, n_swap),
+                neighbor: generation::mutation::SwapMutation::new(n_swap),
             },
             termination,
             logger,

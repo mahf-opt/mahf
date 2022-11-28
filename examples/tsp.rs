@@ -9,7 +9,6 @@ fn main() -> anyhow::Result<()> {
         ils::PermutationProblemParameters {
             local_search_params: ls::PermutationProblemParameters {
                 n_neighbors: 100,
-                pm: 0.9,
                 n_swap: 10,
             },
             local_search_termination: termination::FixedIterations::new(100),

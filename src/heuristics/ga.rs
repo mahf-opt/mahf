@@ -1,5 +1,6 @@
 //! Genetic Algorithm
 
+use crate::prelude::branching;
 use crate::{
     components::*,
     framework::{components::Component, conditions::Condition, Configuration},
@@ -13,6 +14,7 @@ pub struct BinaryProblemParameters {
     pub tournament_size: u32,
     pub rm: f64,
     pub pc: f64,
+    pub pm: f64,
 }
 
 /// An example single-objective Genetic Algorithm operating on a binary search space.
@@ -32,6 +34,7 @@ where
         tournament_size,
         rm,
         pc,
+        pm,
     } = params;
 
     Configuration::builder()
@@ -44,6 +47,7 @@ where
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
                 crossover: generation::recombination::UniformCrossover::new_both(pc),
+                pm,
                 mutation: generation::mutation::BitflipMutation::new(rm),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
@@ -59,6 +63,7 @@ where
 pub struct RealProblemParameters {
     pub population_size: u32,
     pub tournament_size: u32,
+    pub pm: f64,
     pub deviation: f64,
     pub pc: f64,
 }
@@ -76,6 +81,7 @@ where
     let RealProblemParameters {
         population_size,
         tournament_size,
+        pm,
         deviation,
         pc,
     } = params;
@@ -88,6 +94,7 @@ where
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
                 crossover: generation::recombination::UniformCrossover::new_both(pc),
+                pm,
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
@@ -102,6 +109,7 @@ where
 pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub crossover: Box<dyn Component<P>>,
+    pub pm: f64,
     pub mutation: Box<dyn Component<P>>,
     pub archive: Option<Box<dyn Component<P>>>,
     pub replacement: Box<dyn Component<P>>,
@@ -119,6 +127,7 @@ pub fn ga<P: SingleObjectiveProblem>(
     let Parameters {
         selection,
         crossover,
+        pm,
         mutation,
         archive,
         replacement,
@@ -129,7 +138,9 @@ pub fn ga<P: SingleObjectiveProblem>(
             builder
                 .do_(selection)
                 .do_(crossover)
-                .do_(mutation)
+                .if_(branching::RandomChance::new(pm), |builder| {
+                    builder.do_(mutation)
+                })
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_optional_(archive)

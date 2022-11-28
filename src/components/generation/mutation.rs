@@ -309,21 +309,17 @@ where
 /// Applies a swap mutation to n_swap elements depending on mutation probability.
 ///
 /// For more than two elements: swap is performed circular.
-///
-/// If pm = 1, all positions of solution are mutated.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SwapMutation {
-    /// Probability of mutation.
-    pub pm: f64,
     /// Number of swaps.
     pub n_swap: usize,
 }
 impl SwapMutation {
-    pub fn new<P, D: 'static>(pm: f64, n_swap: usize) -> Box<dyn Component<P>>
+    pub fn new<P, D: 'static>(n_swap: usize) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
     {
-        Box::new(Generator(Self { pm, n_swap }))
+        Box::new(Generator(Self { n_swap }))
     }
 }
 impl<P, D: 'static> Generation<P> for SwapMutation
@@ -340,19 +336,17 @@ where
         let rng = state.random_mut();
 
         for solution in population.iter_mut() {
-            if rng.gen_bool(self.pm) {
-                let dim = solution.len();
-                assert!(self.n_swap < dim);
-                let mut pos: Vec<usize> = (0..dim).collect();
-                pos.shuffle(rng);
-                pos.resize(self.n_swap, 0);
-                pos.sort_unstable();
-                solution.swap(pos[pos.len() - 1], pos[0]);
-                if self.n_swap > 2 {
-                    for _ in 0..self.n_swap - 2 {
-                        solution.swap(pos[pos.len() - 1], pos[pos.len() - 2]);
-                        pos.remove(pos.len() - 1);
-                    }
+            let dim = solution.len();
+            assert!(self.n_swap < dim);
+            let mut pos: Vec<usize> = (0..dim).collect();
+            pos.shuffle(rng);
+            pos.resize(self.n_swap, 0);
+            pos.sort_unstable();
+            solution.swap(pos[pos.len() - 1], pos[0]);
+            if self.n_swap > 2 {
+                for _ in 0..self.n_swap - 2 {
+                    solution.swap(pos[pos.len() - 1], pos[pos.len() - 2]);
+                    pos.remove(pos.len() - 1);
                 }
             }
         }
@@ -369,7 +363,7 @@ mod swap_mutation {
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = SwapMutation { pm: 1.0, n_swap: 2 };
+        let comp = SwapMutation { n_swap: 2 };
         let mut state = State::new_root();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
@@ -390,16 +384,13 @@ mod swap_mutation {
 ///
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct ScrambleMutation {
-    /// Probability of mutating the solution.
-    pub pm: f64,
-}
+pub struct ScrambleMutation;
 impl ScrambleMutation {
-    pub fn new<P, D: 'static>(pm: f64) -> Box<dyn Component<P>>
+    pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
     {
-        Box::new(Generator(Self { pm }))
+        Box::new(Generator(Self))
     }
 }
 impl<P, D: 'static> Generation<P> for ScrambleMutation
@@ -415,9 +406,7 @@ where
         let rng = state.random_mut();
 
         for solution in population.iter_mut() {
-            if rng.gen_bool(self.pm) {
-                solution.shuffle(rng);
-            }
+            solution.shuffle(rng);
         }
     }
 }
@@ -432,7 +421,7 @@ mod scramble_mutation {
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = ScrambleMutation { pm: 1.0 };
+        let comp = ScrambleMutation;
         let mut state = State::new_root();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
@@ -453,16 +442,13 @@ mod scramble_mutation {
 ///
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct InsertionMutation {
-    /// Probability of mutating the solution.
-    pub pm: f64,
-}
+pub struct InsertionMutation;
 impl InsertionMutation {
-    pub fn new<P, D: 'static>(pm: f64) -> Box<dyn Component<P>>
+    pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
     {
-        Box::new(Generator(Self { pm }))
+        Box::new(Generator(Self))
     }
 }
 impl<P, D: 'static> Generation<P> for InsertionMutation
@@ -478,10 +464,8 @@ where
         let rng = state.random_mut();
 
         for solution in population.iter_mut() {
-            if rng.gen_bool(self.pm) {
-                let element = solution.remove(rng.gen_range(0..solution.len()));
-                solution.insert(rng.gen_range(0..solution.len()), element);
-            }
+            let element = solution.remove(rng.gen_range(0..solution.len()));
+            solution.insert(rng.gen_range(0..solution.len()), element);
         }
     }
 }
@@ -496,7 +480,7 @@ mod insertion_mutation {
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = InsertionMutation { pm: 1.0 };
+        let comp = InsertionMutation;
         let mut state = State::new_root();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
@@ -517,16 +501,13 @@ mod insertion_mutation {
 ///
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct InversionMutation {
-    /// Probability of mutating the solution.
-    pub pm: f64,
-}
+pub struct InversionMutation;
 impl InversionMutation {
-    pub fn new<P, D: 'static>(pm: f64) -> Box<dyn Component<P>>
+    pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
     {
-        Box::new(Generator(Self { pm }))
+        Box::new(Generator(Self))
     }
 }
 impl<P, D: 'static> Generation<P> for InversionMutation
@@ -541,14 +522,12 @@ where
     ) {
         let rng = state.random_mut();
         for solution in population.iter_mut() {
-            if rng.gen_bool(self.pm) {
-                let dim = solution.len();
-                let mut pos: Vec<usize> = (0..dim).collect();
-                pos.shuffle(rng);
-                pos.resize(2, 0);
-                pos.sort_unstable();
-                solution[pos[0]..pos[1] + 1].reverse();
-            }
+            let dim = solution.len();
+            let mut pos: Vec<usize> = (0..dim).collect();
+            pos.shuffle(rng);
+            pos.resize(2, 0);
+            pos.sort_unstable();
+            solution[pos[0]..pos[1] + 1].reverse();
         }
     }
 }
@@ -563,7 +542,7 @@ mod inversion_mutation {
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = InversionMutation { pm: 1.0 };
+        let comp = InversionMutation;
         let mut state = State::new_root();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
@@ -584,17 +563,14 @@ mod inversion_mutation {
 ///
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct TranslocationMutation {
-    /// Probability of mutating the solution.
-    pub pm: f64,
-}
+pub struct TranslocationMutation;
 impl TranslocationMutation {
-    pub fn new<P, D: 'static>(pm: f64) -> Box<dyn Component<P>>
+    pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<D>>,
         D: Clone,
     {
-        Box::new(Generator(Self { pm }))
+        Box::new(Generator(Self))
     }
 }
 impl<P, D: 'static> Generation<P> for TranslocationMutation
@@ -610,21 +586,19 @@ where
     ) {
         let rng = state.random_mut();
         for solution in population.iter_mut() {
-            if rng.gen_bool(self.pm) {
-                let dim = solution.len();
-                let mut pos: Vec<usize> = (0..dim).choose_multiple(rng, 2);
-                pos.sort_unstable();
-                // TODO: this is extremely ugly, try to improve later!
-                let mut start = solution[0..pos[0]].to_vec();
-                let slice = solution[pos[0]..pos[1] + 1].to_vec();
-                let mut end = solution[pos[1] + 1..].to_vec();
-                start.append(&mut end);
-                let r = rng.gen_range(0..start.len());
-                for (count, i) in slice.into_iter().enumerate() {
-                    start.insert(r + count, i);
-                }
-                *solution = start;
+            let dim = solution.len();
+            let mut pos: Vec<usize> = (0..dim).choose_multiple(rng, 2);
+            pos.sort_unstable();
+            // TODO: this is extremely ugly, try to improve later!
+            let mut start = solution[0..pos[0]].to_vec();
+            let slice = solution[pos[0]..pos[1] + 1].to_vec();
+            let mut end = solution[pos[1] + 1..].to_vec();
+            start.append(&mut end);
+            let r = rng.gen_range(0..start.len());
+            for (count, i) in slice.into_iter().enumerate() {
+                start.insert(r + count, i);
             }
+            *solution = start;
         }
     }
 }
@@ -639,7 +613,7 @@ mod translocation_mutation {
     #[test]
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
-        let comp = TranslocationMutation { pm: 1.0 };
+        let comp = TranslocationMutation;
         let mut state = State::new_root();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
