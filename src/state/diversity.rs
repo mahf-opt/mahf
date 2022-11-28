@@ -134,12 +134,12 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
     }
 }
 
-/// State for logging/tracking population diversity
+/// State for logging/tracking population diversity.
 #[derive(Debug)]
 pub struct DiversityState<I> {
     /// Normalized diversity.
     pub diversity: f64,
-    // Non-normalized maximal diversity.
+    /// Non-normalized maximal diversity.
     pub max_diversity: f64,
     phantom: PhantomData<I>,
 }
