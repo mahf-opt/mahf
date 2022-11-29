@@ -10,9 +10,50 @@ use crate::{
     state::{common::Population, CustomState, State},
 };
 
-/// Measures population diversity.
+/// Specialized component trait to measure population diversity.
+///
+/// # Implementing [Component]
+///
+/// Types implementing this trait can implement [Component] by wrapping the type in a [DiversityMeasurement].
 pub trait DiversityMeasure<P: Problem>: Default {
     fn measure(&self, problem: &P, solutions: &[&P::Encoding]) -> f64;
+}
+
+#[derive(serde::Serialize, Clone)]
+pub struct DiversityMeasurement<T: Clone>(pub T);
+
+impl<P, I> Component<P> for DiversityMeasurement<I>
+where
+    P: Problem,
+    I: AnyComponent + DiversityMeasure<P> + Serialize + Clone,
+{
+    fn initialize(&self, _problem: &P, state: &mut State) {
+        state.insert(DiversityState::<I>::default());
+    }
+
+    fn execute(&self, problem: &P, state: &mut State) {
+        let (population_stack, diversity_state) =
+            state.get_multiple_mut::<(Population<P>, DiversityState<I>)>();
+
+        let population = population_stack.current();
+
+        if population.is_empty() {
+            diversity_state.diversity = 0.0;
+            return;
+        }
+
+        let solutions: Vec<_> = population.iter().map(|i| i.solution()).collect();
+
+        diversity_state.diversity = self.0.measure(problem, solutions.as_slice());
+
+        // Set new maximum diversity found so far
+        if diversity_state.diversity > diversity_state.max_diversity {
+            diversity_state.max_diversity = diversity_state.diversity
+        }
+
+        // Normalize by division with maximum diversity
+        diversity_state.diversity /= diversity_state.max_diversity;
+    }
 }
 
 #[derive(serde::Serialize, Clone, Default)]
@@ -154,40 +195,3 @@ impl<I> Default for DiversityState<I> {
 }
 
 impl<I: Send + 'static> CustomState for DiversityState<I> {}
-
-#[derive(serde::Serialize, Clone)]
-pub struct DiversityMeasurement<T: Clone>(pub T);
-
-impl<P, I> Component<P> for DiversityMeasurement<I>
-where
-    P: Problem,
-    I: AnyComponent + DiversityMeasure<P> + Serialize + Clone,
-{
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.insert(DiversityState::<I>::default());
-    }
-
-    fn execute(&self, problem: &P, state: &mut State) {
-        let (population_stack, diversity_state) =
-            state.get_multiple_mut::<(Population<P>, DiversityState<I>)>();
-
-        let population = population_stack.current();
-
-        if population.is_empty() {
-            diversity_state.diversity = 0.0;
-            return;
-        }
-
-        let solutions: Vec<_> = population.iter().map(|i| i.solution()).collect();
-
-        diversity_state.diversity = self.0.measure(problem, solutions.as_slice());
-
-        // Set new maximum diversity found so far
-        if diversity_state.diversity > diversity_state.max_diversity {
-            diversity_state.max_diversity = diversity_state.diversity
-        }
-
-        // Normalize by division with maximum diversity
-        diversity_state.diversity /= diversity_state.max_diversity;
-    }
-}
