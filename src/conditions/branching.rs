@@ -23,7 +23,7 @@ where
     P: Problem,
 {
     fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        self.p == 1.0 || state.random_mut().gen_bool(self.p)
+        state.random_mut().gen_bool(self.p)
     }
 }
 
