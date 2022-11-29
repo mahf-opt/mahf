@@ -28,6 +28,7 @@ where
         .do_(random_walk(
             Parameters {
                 neighbor: generation::mutation::FixedDeviationDelta::new(deviation),
+                constraints: constraints::Saturation::new(),
             },
             termination,
             logger,
@@ -57,6 +58,7 @@ where
         .do_(random_walk(
             Parameters {
                 neighbor: generation::mutation::SwapMutation::new(n_swap),
+                constraints: misc::Noop::new(),
             },
             termination,
             logger,
@@ -66,6 +68,7 @@ where
 
 pub struct Parameters<P> {
     pub neighbor: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Random Search template.
@@ -77,13 +80,17 @@ pub fn random_walk<P>(
 where
     P: SingleObjectiveProblem,
 {
-    let Parameters { neighbor } = params;
+    let Parameters {
+        neighbor,
+        constraints,
+    } = params;
 
     Configuration::builder()
         .while_(termination, |builder| {
             builder
                 .do_(selection::All::new())
                 .do_(neighbor)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement::Generational::new(1))

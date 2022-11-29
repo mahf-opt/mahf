@@ -42,6 +42,7 @@ where
             Parameters {
                 particle_init: state::PsoState::initializer(v_max),
                 particle_update: generation::swarm::PsoGeneration::new(weight, c_one, c_two, v_max),
+                constraints: constraints::Saturation::new(),
                 state_update: state::PsoState::updater(),
             },
             termination,
@@ -54,6 +55,7 @@ where
 pub struct Parameters<P> {
     particle_init: Box<dyn Component<P>>,
     particle_update: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
     state_update: Box<dyn Component<P>>,
 }
 
@@ -69,6 +71,7 @@ where
     let Parameters {
         particle_init,
         particle_update,
+        constraints,
         state_update,
     } = params;
 
@@ -77,6 +80,7 @@ where
         .while_(termination, |builder| {
             builder
                 .do_(particle_update)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(state_update)
