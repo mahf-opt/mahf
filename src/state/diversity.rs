@@ -176,7 +176,7 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 }
 
 /// State for logging/tracking population diversity.
-#[derive(Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct DiversityState<I> {
     /// Normalized diversity.
     pub diversity: f64,

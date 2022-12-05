@@ -20,10 +20,10 @@ fn main() -> anyhow::Result<()> {
                 lambda: 15,
                 deviation: 0.2,
                 crossover: UniformCrossover::new(probability, true),
-                div_measure_1: DiversityMeasure::DW,
-                div_measure_2: DiversityMeasure::PW,
-                div_measure_3: DiversityMeasure::TD,
-                div_measure_4: DiversityMeasure::DTAP,
+                div_measure_1: DimensionWiseDiversity::new(),
+                div_measure_2: PairwiseDistanceDiversity::new(),
+                div_measure_3: DistanceToAveragePointDiversity::new(),
+                div_measure_4: TrueDiversity::new(),
             },
             termination::FixedEvaluations::new(1000) & termination::TargetHit::new(),
             tracking::Logger::builder()
@@ -35,10 +35,10 @@ fn main() -> anyhow::Result<()> {
                         .with_auto_logger::<common::Progress>()
                         .with_logger(functions::best_individual::<CocoInstance>)
                         .with_logger(functions::best_objective_value::<CocoInstance>)
-                        .with_logger(functions::auto::<DiversityState>)
-                        //.with_logger(functions::auto::<DiversityState<D>>)
-                        //.with_logger(functions::auto::<DiversityState<D>>)
-                        //.with_logger(functions::auto::<DiversityState<D>>),
+                        .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
+                        .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
+                        .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
+                        .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
                 )
                 .build(),
         );
@@ -53,10 +53,10 @@ fn main() -> anyhow::Result<()> {
                 lambda: 15,
                 deviation: 0.2,
                 crossover: NPointCrossover::new(probability, 1, true),
-                div_measure_1: DiversityMeasure::DW,
-                div_measure_2: DiversityMeasure::PW,
-                div_measure_3: DiversityMeasure::TD,
-                div_measure_4: DiversityMeasure::DTAP,
+                div_measure_1: DimensionWiseDiversity::new(),
+                div_measure_2: PairwiseDistanceDiversity::new(),
+                div_measure_3: DistanceToAveragePointDiversity::new(),
+                div_measure_4: TrueDiversity::new(),
             },
             termination::FixedEvaluations::new(1000) & termination::TargetHit::new(),
             tracking::Logger::builder()
@@ -68,10 +68,10 @@ fn main() -> anyhow::Result<()> {
                         .with_auto_logger::<common::Progress>()
                         .with_logger(functions::best_individual::<CocoInstance>)
                         .with_logger(functions::best_objective_value::<CocoInstance>)
-                        .with_logger(functions::auto::<DiversityState>)
-                        //.with_logger(functions::auto::<DiversityState<D>>)
-                        //.with_logger(functions::auto::<DiversityState<D>>)
-                        //.with_logger(functions::auto::<DiversityState<D>>),
+                        .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
+                        .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
+                        .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
+                        .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
                 )
                 .build(),
         );
@@ -90,10 +90,10 @@ pub struct RealProblemParameters<P> {
     pub lambda: u32,
     pub deviation: f64,
     pub crossover: Box<dyn Component<P>>,
-    pub div_measure_1: DiversityMeasure,
-    pub div_measure_2: DiversityMeasure,
-    pub div_measure_3: DiversityMeasure,
-    pub div_measure_4: DiversityMeasure,
+    pub div_measure_1: Box<dyn Component<P>>,
+    pub div_measure_2: Box<dyn Component<P>>,
+    pub div_measure_3: Box<dyn Component<P>>,
+    pub div_measure_4: Box<dyn Component<P>>,
 }
 
 /* An example single-objective evolutionary algorithm operating on a real search space.
@@ -128,10 +128,10 @@ pub fn diversity_ea<P>(
                 crossover,
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
                 replacement: replacement::MuPlusLambda::new(population_size),
-                diversity_1: DiversityState::for_float_vector(div_measure_1),
-                diversity_2: DiversityState::for_float_vector(div_measure_2),
-                diversity_3: DiversityState::for_float_vector(div_measure_3),
-                diversity_4: DiversityState::for_float_vector(div_measure_4),
+                diversity_1: div_measure_1,
+                diversity_2: div_measure_2,
+                diversity_3: div_measure_3,
+                diversity_4: div_measure_4,
             },
             termination,
             logger,
