@@ -46,7 +46,6 @@ where
 /// Parameters for [permutation_local_search].
 pub struct PermutationProblemParameters {
     pub n_neighbors: u32,
-    pub pm: f64,
     pub n_swap: usize,
 }
 
@@ -62,7 +61,6 @@ where
 {
     let PermutationProblemParameters {
         n_neighbors,
-        pm,
         n_swap,
     } = params;
 
@@ -73,7 +71,7 @@ where
         .do_(local_search(
             Parameters {
                 n_neighbors,
-                neighbors: generation::mutation::SwapMutation::new(pm, n_swap),
+                neighbors: generation::mutation::SwapMutation::new(n_swap),
             },
             termination,
             logger,
