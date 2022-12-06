@@ -73,6 +73,7 @@ where
                 intermolecular_ineffective_collision: generation::mutation::UniformMutation::new(
                     1.,
                 ),
+                constraints: constraints::Saturation::new(),
             },
             termination,
             logger,
@@ -94,6 +95,7 @@ pub struct Parameters<P> {
     pub synthesis_criterion: Box<dyn Condition<P>>,
     pub synthesis: Box<dyn Component<P>>,
     pub intermolecular_ineffective_collision: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Chemical Reaction Optimization template.
@@ -118,6 +120,7 @@ pub fn cro<P: SingleObjectiveProblem>(
         synthesis_criterion,
         synthesis,
         intermolecular_ineffective_collision,
+        constraints,
     } = params;
 
     Configuration::builder()
@@ -133,6 +136,7 @@ pub fn cro<P: SingleObjectiveProblem>(
                                             |builder| {
                                                 builder
                                                     .do_(decomposition)
+                                                    .do_(constraints.clone())
                                                     .evaluate_sequential()
                                                     .update_best_individual()
                                                     .do_(state::CroState::decomposition_update())
@@ -140,6 +144,7 @@ pub fn cro<P: SingleObjectiveProblem>(
                                             |builder| {
                                                 builder
                                                     .do_(on_wall_ineffective_collision)
+                                                    .do_(constraints.clone())
                                                     .evaluate_sequential()
                                                     .update_best_individual()
                                                     .do_(state::CroState::on_wall_ineffective_collision_update(
@@ -156,6 +161,7 @@ pub fn cro<P: SingleObjectiveProblem>(
                                             |builder| {
                                                 builder
                                                     .do_(synthesis)
+                                                    .do_(constraints.clone())
                                                     .evaluate_sequential()
                                                     .update_best_individual()
                                                     .do_(state::CroState::synthesis_update())
@@ -163,6 +169,7 @@ pub fn cro<P: SingleObjectiveProblem>(
                                             |builder| {
                                                 builder
                                                     .do_(intermolecular_ineffective_collision)
+                                                    .do_(constraints.clone())
                                                     .evaluate_sequential()
                                                     .update_best_individual()
                                                     .do_(state::CroState::intermolecular_ineffective_collision_update())
