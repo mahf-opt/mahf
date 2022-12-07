@@ -139,7 +139,7 @@ where
     /// Create a new [Change] [Trigger] based on a threshold.
     ///
     /// Requires `S` to dereference to something that implements [Sub] and [Ord].
-    pub fn new<P>(threshhold: S::Target) -> Box<dyn Trigger<P>> {
+    pub fn new<P>(threshold: S::Target) -> Box<dyn Trigger<P>> {
         Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {
                 let old = old.deref();
@@ -148,7 +148,7 @@ where
                 let min = Ord::min(old, new).clone();
                 let max = Ord::max(old, new).clone();
 
-                (max - min) >= threshhold
+                (max - min) >= threshold
             }),
         })
     }

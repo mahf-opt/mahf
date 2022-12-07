@@ -11,74 +11,70 @@ use mahf::state::diversity::*;
 fn main() -> anyhow::Result<()> {
     let folder = "data/diversity/ea";
     // set the crossover probabilities to use
-    let probabilities = [0.2, 0.5, 0.9];
-    for probability in probabilities {
-        let output = format!("{}{}{}{}", folder, "/", "UX_", probability.to_string());
-        let config = diversity_ea(
-            RealProblemParameters {
-                population_size: 5,
-                lambda: 15,
-                deviation: 0.2,
-                crossover: UniformCrossover::new(probability, true),
-                div_measure_1: DimensionWiseDiversity::new(),
-                div_measure_2: PairwiseDistanceDiversity::new(),
-                div_measure_3: DistanceToAveragePointDiversity::new(),
-                div_measure_4: TrueDiversity::new(),
-            },
-            termination::FixedEvaluations::new(1000) & termination::TargetHit::new(),
-            tracking::Logger::builder()
-                .log_set(
-                    tracking::LogSet::new()
-                        .with_trigger(trigger::Iteration::new(50))
-                        .with_trigger(trigger::FinalEval::new(1000))
-                        .with_auto_logger::<common::Evaluations>()
-                        .with_auto_logger::<common::Progress>()
-                        .with_logger(functions::best_individual::<CocoInstance>)
-                        .with_logger(functions::best_objective_value::<CocoInstance>)
-                        .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
-                        .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
-                        .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
-                        .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
-                )
-                .build(),
-        );
-        let suite = suits::bbob();
+    let crossover_prob = [0.2, 0.5, 0.9];
+    // set the mutation deviations to use
+    let mutation_dev = [0.01, 0.2, 0.5];
+    for probability in crossover_prob {
+        for dev in mutation_dev {
+            let output = format!("{}{}{}{}{}{}", folder, "/", "UX_", probability.to_string(), "_", dev);
+            let config = diversity_ea(
+                RealProblemParameters {
+                    population_size: 5,
+                    lambda: 15,
+                    deviation: dev,
+                    crossover: UniformCrossover::new(probability, true),
+                },
+                termination::FixedEvaluations::new(10000) & termination::TargetHit::new(),
+                tracking::Logger::builder()
+                    .log_set(
+                        tracking::LogSet::new()
+                            .with_trigger(trigger::Iteration::new(50))
+                            .with_trigger(trigger::FinalEval::new(10000))
+                            .with_auto_logger::<common::Evaluations>()
+                            .with_auto_logger::<common::Progress>()
+                            .with_logger(functions::best_individual::<CocoInstance>)
+                            .with_logger(functions::best_objective_value::<CocoInstance>)
+                            .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
+                            .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
+                            .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
+                            .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
+                    )
+                    .build(),
+            );
+            let suite = suits::bbob();
 
-        suits::evaluate_suite(suite, config, &output).expect("TODO: panic message");
+            suits::evaluate_suite(suite, config, &output).expect("TODO: panic message");
 
-        let output = format!("{}{}{}{}", folder, "/", "NPX_", probability.to_string());
-        let config = diversity_ea(
-            RealProblemParameters {
-                population_size: 5,
-                lambda: 15,
-                deviation: 0.2,
-                crossover: NPointCrossover::new(probability, 1, true),
-                div_measure_1: DimensionWiseDiversity::new(),
-                div_measure_2: PairwiseDistanceDiversity::new(),
-                div_measure_3: DistanceToAveragePointDiversity::new(),
-                div_measure_4: TrueDiversity::new(),
-            },
-            termination::FixedEvaluations::new(1000) & termination::TargetHit::new(),
-            tracking::Logger::builder()
-                .log_set(
-                    tracking::LogSet::new()
-                        .with_trigger(trigger::Iteration::new(50))
-                        .with_trigger(trigger::FinalEval::new(1000))
-                        .with_auto_logger::<common::Evaluations>()
-                        .with_auto_logger::<common::Progress>()
-                        .with_logger(functions::best_individual::<CocoInstance>)
-                        .with_logger(functions::best_objective_value::<CocoInstance>)
-                        .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
-                        .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
-                        .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
-                        .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
-                )
-                .build(),
-        );
+            let output = format!("{}{}{}{}{}{}", folder, "/", "NPX_", probability.to_string(), "_", dev);
+            let config = diversity_ea(
+                RealProblemParameters {
+                    population_size: 5,
+                    lambda: 15,
+                    deviation: dev,
+                    crossover: NPointCrossover::new(probability, 1, true),
+                },
+                termination::FixedEvaluations::new(10000) & termination::TargetHit::new(),
+                tracking::Logger::builder()
+                    .log_set(
+                        tracking::LogSet::new()
+                            .with_trigger(trigger::Iteration::new(50))
+                            .with_trigger(trigger::FinalEval::new(10000))
+                            .with_auto_logger::<common::Evaluations>()
+                            .with_auto_logger::<common::Progress>()
+                            .with_logger(functions::best_individual::<CocoInstance>)
+                            .with_logger(functions::best_objective_value::<CocoInstance>)
+                            .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
+                            .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
+                            .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
+                            .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
+                    )
+                    .build(),
+            );
 
-        let suite2 = suits::bbob();
+            let suite2 = suits::bbob();
 
-        suits::evaluate_suite(suite2, config, &output).expect("TODO: panic message");
+            suits::evaluate_suite(suite2, config, &output).expect("TODO: panic message");
+        }
     }
     Ok(())
 }
@@ -90,10 +86,6 @@ pub struct RealProblemParameters<P> {
     pub lambda: u32,
     pub deviation: f64,
     pub crossover: Box<dyn Component<P>>,
-    pub div_measure_1: Box<dyn Component<P>>,
-    pub div_measure_2: Box<dyn Component<P>>,
-    pub div_measure_3: Box<dyn Component<P>>,
-    pub div_measure_4: Box<dyn Component<P>>,
 }
 
 /* An example single-objective evolutionary algorithm operating on a real search space.
@@ -112,10 +104,6 @@ pub fn diversity_ea<P>(
         lambda,
         deviation,
         crossover,
-        div_measure_1,
-        div_measure_2,
-        div_measure_3,
-        div_measure_4,
     } = params;
 
     Configuration::builder()
@@ -128,10 +116,10 @@ pub fn diversity_ea<P>(
                 crossover,
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
                 replacement: replacement::MuPlusLambda::new(population_size),
-                diversity_1: div_measure_1,
-                diversity_2: div_measure_2,
-                diversity_3: div_measure_3,
-                diversity_4: div_measure_4,
+                diversity_1: DimensionWiseDiversity::new(),
+                diversity_2: PairwiseDistanceDiversity::new(),
+                diversity_3: DistanceToAveragePointDiversity::new(),
+                diversity_4: TrueDiversity::new(),
             },
             termination,
             logger,
