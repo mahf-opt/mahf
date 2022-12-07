@@ -36,6 +36,7 @@ where
             Parameters {
                 n_neighbors,
                 neighbors: generation::mutation::FixedDeviationDelta::new(deviation),
+                constraints: constraints::Saturation::new(),
             },
             termination,
             logger,
@@ -72,6 +73,7 @@ where
             Parameters {
                 n_neighbors,
                 neighbors: generation::mutation::SwapMutation::new(n_swap),
+                constraints: misc::Noop::new(),
             },
             termination,
             logger,
@@ -83,6 +85,7 @@ where
 pub struct Parameters<P> {
     pub n_neighbors: u32,
     pub neighbors: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Local Search template.
@@ -94,6 +97,7 @@ pub fn local_search<P: SingleObjectiveProblem>(
     let Parameters {
         n_neighbors,
         neighbors,
+        constraints,
     } = params;
 
     Configuration::builder()
@@ -101,6 +105,7 @@ pub fn local_search<P: SingleObjectiveProblem>(
             builder
                 .do_(selection::DuplicateSingle::new(n_neighbors))
                 .do_(neighbors)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))

@@ -40,6 +40,7 @@ where
             Parameters {
                 selection: selection::FullyRandom::new(lambda),
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
+                constraints: constraints::Saturation::new(),
                 archive: None,
                 replacement: replacement::MuPlusLambda::new(population_size),
             },
@@ -53,6 +54,7 @@ where
 pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub mutation: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
     pub archive: Option<Box<dyn Component<P>>>,
     pub replacement: Box<dyn Component<P>>,
 }
@@ -66,6 +68,7 @@ pub fn es<P: SingleObjectiveProblem>(
     let Parameters {
         selection,
         mutation,
+        constraints,
         archive,
         replacement,
     } = params;
@@ -75,6 +78,7 @@ pub fn es<P: SingleObjectiveProblem>(
             builder
                 .do_(selection)
                 .do_(mutation)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_optional_(archive)

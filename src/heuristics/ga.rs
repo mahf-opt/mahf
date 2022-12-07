@@ -49,6 +49,7 @@ where
                 crossover: generation::recombination::UniformCrossover::new_both(pc),
                 pm,
                 mutation: generation::mutation::BitflipMutation::new(rm),
+                constraints: misc::Noop::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
             },
@@ -96,6 +97,7 @@ where
                 crossover: generation::recombination::UniformCrossover::new_both(pc),
                 pm,
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
+                constraints: constraints::Saturation::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
             },
@@ -111,6 +113,7 @@ pub struct Parameters<P> {
     pub crossover: Box<dyn Component<P>>,
     pub pm: f64,
     pub mutation: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
     pub archive: Option<Box<dyn Component<P>>>,
     pub replacement: Box<dyn Component<P>>,
 }
@@ -129,6 +132,7 @@ pub fn ga<P: SingleObjectiveProblem>(
         crossover,
         pm,
         mutation,
+        constraints,
         archive,
         replacement,
     } = params;
@@ -141,6 +145,7 @@ pub fn ga<P: SingleObjectiveProblem>(
                 .if_(branching::RandomChance::new(pm), |builder| {
                     builder.do_(mutation)
                 })
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_optional_(archive)

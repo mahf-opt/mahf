@@ -84,8 +84,7 @@ where
             }
 
             for i in 0..x.len() {
-                //TODO we will need constraint handling here
-                x[i] = (x[i] + v[i]).clamp(-1.0, 1.0);
+                x[i] += v[i];
             }
 
             offspring.push(Individual::<P>::new_unevaluated(x));

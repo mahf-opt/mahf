@@ -43,6 +43,7 @@ where
                 selection: selection::DEBest::new(y),
                 mutation: generation::mutation::DEMutation::new(y, f),
                 crossover: generation::recombination::DEBinomialCrossover::new(pc),
+                constraints: constraints::Saturation::new(),
                 replacement: replacement::IndividualPlus::new(),
             },
             termination,
@@ -56,6 +57,7 @@ pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub mutation: Box<dyn Component<P>>,
     pub crossover: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
     pub replacement: Box<dyn Component<P>>,
 }
 
@@ -69,6 +71,7 @@ pub fn de<P: SingleObjectiveProblem>(
         selection,
         mutation,
         crossover,
+        constraints,
         replacement,
     } = params;
 
@@ -78,6 +81,7 @@ pub fn de<P: SingleObjectiveProblem>(
                 .do_(selection)
                 .do_(mutation)
                 .do_(crossover)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement)

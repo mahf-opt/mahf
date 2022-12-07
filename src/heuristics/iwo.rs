@@ -63,6 +63,7 @@ where
                     final_deviation,
                     modulation_index,
                 ),
+                constraints: constraints::Saturation::new(),
             },
             termination,
             logger,
@@ -76,6 +77,7 @@ pub struct Parameters<P> {
     pub min_number_of_seeds: u32,
     pub max_number_of_seeds: u32,
     pub mutation: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Invasive Weed Optimization template.
@@ -89,6 +91,7 @@ pub fn iwo<P: SingleObjectiveProblem>(
         min_number_of_seeds,
         max_number_of_seeds,
         mutation,
+        constraints,
     } = params;
 
     Configuration::builder()
@@ -99,6 +102,7 @@ pub fn iwo<P: SingleObjectiveProblem>(
                     max_number_of_seeds,
                 ))
                 .do_(mutation)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
