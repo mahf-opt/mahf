@@ -56,7 +56,7 @@ pub struct RandomSpread {
     pub initial_population_size: Option<u32>,
 }
 impl RandomSpread {
-    /// Create this component as an initializer, pushing a new population on the stack.
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
@@ -110,6 +110,7 @@ pub struct RandomPermutation {
     pub initial_population_size: Option<u32>,
 }
 impl RandomPermutation {
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -160,6 +161,8 @@ pub struct RandomBitstring {
 }
 impl RandomBitstring {
     /// Initializes the component with p being the probability for a 1.
+    ///
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32, p: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
@@ -171,6 +174,8 @@ impl RandomBitstring {
     }
 
     /// Initializes the component with uniform probability for 0 and 1.
+    ///
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_uniform_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
