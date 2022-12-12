@@ -24,20 +24,20 @@ fn main() -> anyhow::Result<()> {
                     deviation: dev,
                     crossover: UniformCrossover::new(probability, true),
                 },
-                termination::FixedEvaluations::new(10000) & termination::TargetHit::new(),
+                termination::FixedEvaluations::new(1000) & termination::TargetHit::new(),
                 tracking::Logger::builder()
                     .log_set(
                         tracking::LogSet::new()
                             .with_trigger(trigger::Iteration::new(50))
-                            .with_trigger(trigger::FinalEval::new(10000))
+                            .with_trigger(trigger::FinalEval::new(1000))
                             .with_auto_logger::<common::Evaluations>()
                             .with_auto_logger::<common::Progress>()
                             .with_logger(functions::best_individual::<CocoInstance>)
                             .with_logger(functions::best_objective_value::<CocoInstance>)
-                            .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
-                            .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
-                            .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
-                            .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
+                            .with_logger(functions::normalized_diversity::<DimensionWiseDiversity>)
+                            .with_logger(functions::normalized_diversity::<PairwiseDistanceDiversity>)
+                            .with_logger(functions::normalized_diversity::<DistanceToAveragePointDiversity>)
+                            .with_logger(functions::normalized_diversity::<TrueDiversity>),
                     )
                     .build(),
             );
@@ -53,20 +53,20 @@ fn main() -> anyhow::Result<()> {
                     deviation: dev,
                     crossover: NPointCrossover::new(probability, 1, true),
                 },
-                termination::FixedEvaluations::new(10000) & termination::TargetHit::new(),
+                termination::FixedEvaluations::new(1000) & termination::TargetHit::new(),
                 tracking::Logger::builder()
                     .log_set(
                         tracking::LogSet::new()
                             .with_trigger(trigger::Iteration::new(50))
-                            .with_trigger(trigger::FinalEval::new(10000))
+                            .with_trigger(trigger::FinalEval::new(1000))
                             .with_auto_logger::<common::Evaluations>()
                             .with_auto_logger::<common::Progress>()
                             .with_logger(functions::best_individual::<CocoInstance>)
                             .with_logger(functions::best_objective_value::<CocoInstance>)
-                            .with_logger(functions::auto::<DiversityState<DimensionWiseDiversity>>)
-                            .with_logger(functions::auto::<DiversityState<PairwiseDistanceDiversity>>)
-                            .with_logger(functions::auto::<DiversityState<DistanceToAveragePointDiversity>>)
-                            .with_logger(functions::auto::<DiversityState<TrueDiversity>>),
+                            .with_logger(functions::normalized_diversity::<DimensionWiseDiversity>)
+                            .with_logger(functions::normalized_diversity::<PairwiseDistanceDiversity>)
+                            .with_logger(functions::normalized_diversity::<DistanceToAveragePointDiversity>)
+                            .with_logger(functions::normalized_diversity::<TrueDiversity>),
                     )
                     .build(),
             );
@@ -115,6 +115,7 @@ pub fn diversity_ea<P>(
                 selection: selection::FullyRandom::new(lambda),
                 crossover,
                 mutation: generation::mutation::FixedDeviationDelta::new(deviation),
+                constraints: constraints::Saturation::new(),
                 replacement: replacement::MuPlusLambda::new(population_size),
                 diversity_1: DimensionWiseDiversity::new(),
                 diversity_2: PairwiseDistanceDiversity::new(),
@@ -132,6 +133,7 @@ pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub crossover: Box<dyn Component<P>>,
     pub mutation: Box<dyn Component<P>>,
+    pub constraints: Box<dyn Component<P>>,
     pub replacement: Box<dyn Component<P>>,
     pub diversity_1: Box<dyn Component<P>>,
     pub diversity_2: Box<dyn Component<P>>,
@@ -149,6 +151,7 @@ pub fn custom_ea<P: SingleObjectiveProblem>(
         selection,
         crossover,
         mutation,
+        constraints,
         replacement,
         diversity_1,
         diversity_2,
@@ -162,6 +165,7 @@ pub fn custom_ea<P: SingleObjectiveProblem>(
                 .do_(selection)
                 .do_(crossover)
                 .do_(mutation)
+                .do_(constraints)
                 .evaluate_sequential()
                 .update_best_individual()
                 .do_(replacement)

@@ -5,6 +5,7 @@ use crate::{
 };
 use serde::Serialize;
 use std::{any::type_name, ops::Deref};
+use crate::state::diversity::DiversityState;
 
 /// A function to turn some state into an [Entry].
 pub type LogFn = fn(&State) -> Entry;
@@ -53,5 +54,13 @@ where
     Entry {
         name: "BestObjectiveValue",
         value: Box::new(state.best_objective_value::<P>().cloned()),
+    }
+}
+
+/// A function for logging the diversity value of the DiversityState.
+pub fn normalized_diversity<I: Send + 'static>(state: &State) -> Entry {
+    Entry {
+        name: type_name::<DiversityState<I>>(),
+        value: Box::new(state.get::<DiversityState<I>>().diversity)
     }
 }
