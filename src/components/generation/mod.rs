@@ -163,7 +163,7 @@ impl RandomBitstring {
     /// Initializes the component with p being the probability for a 1.
     ///
     /// Creates this component as an generator, modifying the current population.
-    pub fn new_gen<P, D>(p: f64) -> Box<dyn Component<P>>
+    pub fn new_gen<P>(p: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
     {
@@ -176,7 +176,7 @@ impl RandomBitstring {
     /// Initializes the component with uniform probability for 0 and 1.
     ///
     /// Creates this component as an generator, modifying the current population.
-    pub fn new_uniform_gen<P, D>() -> Box<dyn Component<P>>
+    pub fn new_uniform_gen<P>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
     {
