@@ -154,10 +154,17 @@ mod generational {
 }
 
 /// Keeps random individuals from parents and children.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct RandomReplacement {
     /// Limits the population growth.
     pub max_population_size: u32,
+}
+impl RandomReplacement {
+    pub fn new<P: Problem>(max_population_size: u32) -> Box<dyn Component<P>> {
+        Box::new(Replacer(Self {
+            max_population_size,
+        }))
+    }
 }
 impl<P: Problem> Replacement<P> for RandomReplacement {
     fn replace_population(
