@@ -204,9 +204,7 @@ mod ant_ops {
                 route.push(0);
                 while !remaining.is_empty() {
                     let last = *route.last().unwrap();
-                    let distances = remaining
-                        .iter()
-                        .map(|&r| problem.distance((last, r)) as f64);
+                    let distances = remaining.iter().map(|&r| problem.distance((last, r)));
                     let pheromones = remaining.iter().map(|&r| pm[last][r]);
                     let weights = pheromones.zip(distances).map(|(m, d)| {
                         // TODO: This should not be zero.

@@ -85,7 +85,7 @@ pub fn evaluate_suite(
     while finished_runs < total_runs {
         let hit = rx.recv().unwrap()?;
         finished_runs += 1;
-        successful_runs += if hit { 1 } else { 0 };
+        successful_runs += i32::from(hit);
         print!(
             "Runs: {}/{}/{}\r",
             successful_runs, finished_runs, total_runs
