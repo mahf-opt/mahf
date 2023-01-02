@@ -72,6 +72,7 @@ impl<P: Problem> Logger<P> {
     }
 
     /// Creates an empty [Logger] [Component].
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Box<dyn Component<P>> {
         Logger::builder().build()
     }

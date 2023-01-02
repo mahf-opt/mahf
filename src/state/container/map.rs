@@ -67,7 +67,7 @@ impl StateMap {
     pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
         self.map
             .entry(TypeId::of::<T>())
-            .or_insert_with(|| Box::new(T::default()))
+            .or_insert_with(|| Box::<T>::default())
             .as_mut_any()
             .downcast_mut()
             .unwrap()
