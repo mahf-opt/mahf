@@ -3,7 +3,9 @@
 use crate::{
     components::*,
     conditions::*,
-    framework::{self, components::Component, conditions::Condition, Configuration},
+    framework::{
+        self, components::Component, conditions::Condition, Configuration, ConfigurationBuilder,
+    },
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
     state,
 };
@@ -123,6 +125,15 @@ pub fn cro<P: SingleObjectiveProblem>(
         constraints,
     } = params;
 
+    let elementary_reaction = |builder: ConfigurationBuilder<P>, reaction, update| {
+        builder
+            .do_(reaction)
+            .do_(constraints.clone())
+            .evaluate_sequential()
+            .update_best_individual()
+            .do_(update)
+    };
+
     Configuration::builder()
         .do_(state::CroState::initializer(initial_kinetic_energy, buffer))
         .while_(termination, |builder| {
@@ -134,20 +145,17 @@ pub fn cro<P: SingleObjectiveProblem>(
                                   .do_(selection::All::new())
                                   .if_else_(decomposition_criterion,
                                             |builder| {
-                                                builder
-                                                    .do_(decomposition)
-                                                    .do_(constraints.clone())
-                                                    .evaluate_sequential()
-                                                    .update_best_individual()
-                                                    .do_(state::CroState::decomposition_update())
+                                                elementary_reaction(
+                                                    builder,
+                                                    decomposition,
+                                                    state::CroState::decomposition_update()
+                                                )
                                             },
                                             |builder| {
-                                                builder
-                                                    .do_(on_wall_ineffective_collision)
-                                                    .do_(constraints.clone())
-                                                    .evaluate_sequential()
-                                                    .update_best_individual()
-                                                    .do_(state::CroState::on_wall_ineffective_collision_update(
+                                                elementary_reaction(
+                                                    builder,
+                                                    on_wall_ineffective_collision,
+                                                    state::CroState::on_wall_ineffective_collision_update(
                                                         kinetic_energy_loss_rate,
                                                     ))
                                             },
@@ -159,20 +167,18 @@ pub fn cro<P: SingleObjectiveProblem>(
                                   .do_(selection::All::new())
                                   .if_else_(synthesis_criterion,
                                             |builder| {
-                                                builder
-                                                    .do_(synthesis)
-                                                    .do_(constraints.clone())
-                                                    .evaluate_sequential()
-                                                    .update_best_individual()
-                                                    .do_(state::CroState::synthesis_update())
+                                                elementary_reaction(
+                                                    builder,
+                                                    synthesis,
+                                                    state::CroState::synthesis_update()
+                                                )
                                             },
                                             |builder| {
-                                                builder
-                                                    .do_(intermolecular_ineffective_collision)
-                                                    .do_(constraints.clone())
-                                                    .evaluate_sequential()
-                                                    .update_best_individual()
-                                                    .do_(state::CroState::intermolecular_ineffective_collision_update())
+                                                elementary_reaction(
+                                                    builder,
+                                                    intermolecular_ineffective_collision,
+                                                    state::CroState::intermolecular_ineffective_collision_update()
+                                                )
                                             },
                                   )
                           },
