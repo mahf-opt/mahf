@@ -6,14 +6,15 @@ use crate::{
     framework::Individual,
     problems::{MultiObjectiveProblem, SingleObjectiveProblem},
 };
+use better_any::Tid;
 use derive_deref::{Deref, DerefMut};
 use serde::Serialize;
 
 /// Saves the [Individual] with best objective value.
 ///
 /// To insert and update this state, use the [UpdateBestIndividual][crate::components::evaluation::UpdateBestIndividual] component.
-#[derive(Deref, DerefMut)]
-pub struct BestIndividual<P: SingleObjectiveProblem>(pub Option<Individual<P>>);
+#[derive(Deref, DerefMut, Tid)]
+pub struct BestIndividual<P: SingleObjectiveProblem + 'static>(pub Option<Individual<P>>);
 impl<P: SingleObjectiveProblem> BestIndividual<P> {
     pub fn replace_if_better(&mut self, candidate: &Individual<P>) -> bool {
         if let Some(individual) = &mut self.0 {
@@ -29,7 +30,7 @@ impl<P: SingleObjectiveProblem> BestIndividual<P> {
         }
     }
 }
-impl<P: SingleObjectiveProblem> CustomState for BestIndividual<P> {}
+impl<P: SingleObjectiveProblem> CustomState<'_> for BestIndividual<P> {}
 
 impl<P: SingleObjectiveProblem> Default for BestIndividual<P> {
     fn default() -> Self {
@@ -37,23 +38,23 @@ impl<P: SingleObjectiveProblem> Default for BestIndividual<P> {
     }
 }
 
-#[derive(Deref, DerefMut, Clone, Serialize)]
+#[derive(Deref, DerefMut, Clone, Serialize, Tid)]
 pub struct Evaluations(pub u32);
-impl CustomState for Evaluations {}
+impl CustomState<'_> for Evaluations {}
 
-#[derive(Deref, DerefMut, Clone, Serialize)]
+#[derive(Deref, DerefMut, Clone, Serialize, Tid)]
 pub struct Iterations(pub u32);
-impl CustomState for Iterations {}
+impl CustomState<'_> for Iterations {}
 
-#[derive(Deref, DerefMut, Clone, Serialize)]
+#[derive(Deref, DerefMut, Clone, Serialize, Tid)]
 pub struct Progress(pub f64);
-impl CustomState for Progress {}
+impl CustomState<'_> for Progress {}
 
 /// Saves non-pareto-dominated [Individual]'s.
 ///
 /// To insert and update this state, use the [UpdateParetoFront][crate::components::evaluation::UpdateParetoFront] component.
-#[derive(Deref, DerefMut)]
-pub struct ParetoFront<P: MultiObjectiveProblem>(Vec<Individual<P>>);
+#[derive(Deref, DerefMut, Tid)]
+pub struct ParetoFront<P: MultiObjectiveProblem + 'static>(Vec<Individual<P>>);
 impl<P: MultiObjectiveProblem> ParetoFront<P> {
     pub fn new() -> Self {
         Self(Vec::new())
@@ -84,7 +85,7 @@ impl<P: MultiObjectiveProblem> ParetoFront<P> {
         &self.0
     }
 }
-impl<P: MultiObjectiveProblem> CustomState for ParetoFront<P> {}
+impl<P: MultiObjectiveProblem> CustomState<'_> for ParetoFront<P> {}
 
 impl<P: MultiObjectiveProblem> Default for ParetoFront<P> {
     fn default() -> Self {
@@ -92,15 +93,15 @@ impl<P: MultiObjectiveProblem> Default for ParetoFront<P> {
     }
 }
 
-#[derive(Deref, DerefMut)]
+#[derive(Deref, DerefMut, Tid)]
 pub struct Loop(pub bool);
-impl CustomState for Loop {}
+impl CustomState<'_> for Loop {}
 
-#[derive(Default)]
-pub struct Population<P: Problem> {
+#[derive(Default, Tid)]
+pub struct Population<P: Problem + 'static> {
     stack: Vec<Vec<Individual<P>>>,
 }
-impl<P: Problem> CustomState for Population<P> {}
+impl<P: Problem> CustomState<'_> for Population<P> {}
 impl<P: Problem> Population<P> {
     pub fn new() -> Self {
         Self { stack: Vec::new() }

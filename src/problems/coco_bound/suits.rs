@@ -10,7 +10,7 @@ use std::{
     fs::{self, File},
     io::{BufWriter, Write},
     path::PathBuf,
-    sync::{mpsc, Arc},
+    sync::{mpsc, Arc, Mutex},
     thread,
 };
 
@@ -27,7 +27,7 @@ pub fn largescale() -> Suite {
 }
 
 pub fn evaluate_suite(
-    mut suite: Suite,
+    suite: Suite,
     configuration: Configuration<CocoInstance>,
     output_dir: &str,
 ) -> anyhow::Result<()> {
@@ -47,18 +47,19 @@ pub fn evaluate_suite(
     let total_runs = suite.number_of_problems();
     let (tx, rx) = mpsc::channel();
 
+    let suite = Arc::new(Mutex::new(suite));
     coco_rs::set_log_level(coco_rs::LogLevel::Warning);
 
     let configuration = Arc::new(configuration);
     thread::spawn(move || {
         let mut pool = SyncThreadPool::default();
-        while let Some(problem) = suite.next_problem(None) {
+        while let Some(problem) = suite.lock().unwrap().next_problem(None) {
             let tx = tx.clone();
             let data_dir = data_dir.clone();
             let configuration = configuration.clone();
-            let problem: CocoInstance = problem.into();
+            let problem = CocoInstance::from(&suite, problem);
             pool.enqueue(move || {
-                let result: anyhow::Result<_> = (|| {
+                let result: anyhow::Result<_> = (move || {
                     let experiment_desc = problem.format_name();
                     let log_file = data_dir.join(format!("{}.log", experiment_desc));
 

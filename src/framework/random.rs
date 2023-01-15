@@ -1,5 +1,6 @@
 //! Abstractions for the [rand] crate.
 
+use better_any::Tid;
 use rand::{RngCore, SeedableRng};
 use serde::Serialize;
 use std::any::type_name;
@@ -9,11 +10,12 @@ use crate::state::CustomState;
 /// A random number generator.
 ///
 /// This can only be backed by seedable rngs to allow reconstruction.
+#[derive(Tid)]
 pub struct Random {
     config: RandomConfig,
     inner: Box<dyn RngCore + Send>,
 }
-impl CustomState for Random {}
+impl CustomState<'_> for Random {}
 
 /// Describes a [Random] generator.
 ///

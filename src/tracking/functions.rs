@@ -10,7 +10,7 @@ use std::{any::type_name, ops::Deref};
 pub type LogFn = fn(&State) -> Entry;
 
 /// A function to log anything that implements [Clone] + [Serialize]
-pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
+pub fn auto<'a, T: CustomState<'a> + Clone + Serialize>(state: &State) -> Entry {
     debug_assert!(state.has::<T>(), "missing state: {}", type_name::<T>());
 
     let instance = state.get::<T>();

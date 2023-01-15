@@ -3,18 +3,20 @@ use crate::{
     problems::{LimitedVectorProblem, Problem, SingleObjectiveProblem},
     state::{CustomState, State},
 };
+use better_any::Tid;
 use rand::Rng;
 
 /// State required for PSO.
 ///
 /// For preserving velocities of particles, own best values and global best particle.
-pub struct PsoState<P: Problem> {
+#[derive(Tid)]
+pub struct PsoState<P: Problem + 'static> {
     pub velocities: Vec<Vec<f64>>,
     pub bests: Vec<Individual<P>>,
     pub global_best: Individual<P>,
 }
 
-impl<P: Problem> CustomState for PsoState<P> {}
+impl<P: Problem> CustomState<'_> for PsoState<P> {}
 
 impl<P: Problem> PsoState<P>
 where

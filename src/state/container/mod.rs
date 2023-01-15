@@ -10,23 +10,23 @@ use crate::{
 };
 
 mod many;
+use better_any::Tid;
 pub use many::{MultiStateTuple, MutState};
 
 mod map;
-use map::AsAny;
 pub(crate) use map::StateMap;
 
 /// A marker trait for custom state.
-pub trait CustomState: AsAny + Send {}
+pub trait CustomState<'a>: Tid<'a> + Send {}
 
 /// Container for storing and managing state.
 #[derive(Default)]
-pub struct State {
-    parent: Option<Box<State>>,
-    map: StateMap,
+pub struct State<'a> {
+    parent: Option<Box<State<'a>>>,
+    map: StateMap<'a>,
 }
 
-impl State {
+impl<'a> State<'a> {
     /// Creates a new state container.
     ///
     /// Only needed for tests.
@@ -58,12 +58,12 @@ impl State {
     }
 
     /// Inserts new state, overriding existing state.
-    pub fn insert<T: CustomState>(&mut self, state: T) {
+    pub fn insert<T: CustomState<'a>>(&mut self, state: T) {
         self.map.insert(state);
     }
 
     /// Checks whether the state exists.
-    pub fn has<T: CustomState>(&self) -> bool {
+    pub fn has<T: CustomState<'a>>(&self) -> bool {
         self.map.has::<T>() || self.parent().map(|p| p.has::<T>()).unwrap_or_default()
     }
 
@@ -72,7 +72,7 @@ impl State {
     /// This is the recommended way to ensure the state
     /// is available in [Component::initialize](crate::framework::components::Component::initialize).
     #[track_caller]
-    pub fn require<T: CustomState>(&self) {
+    pub fn require<T: CustomState<'a>>(&self) {
         assert!(
             self.has::<T>(),
             "operator requires {} state",
@@ -85,7 +85,7 @@ impl State {
     /// # Panics
     /// If the state does not exist.
     #[track_caller]
-    pub fn get<T: CustomState>(&self) -> &T {
+    pub fn get<T: CustomState<'a>>(&self) -> &T {
         if self.map.has::<T>() {
             self.map.get::<T>()
         } else {
@@ -94,7 +94,7 @@ impl State {
     }
 
     /// Returns the state or inserts its default.
-    pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
+    pub fn get_or_insert_default<T: CustomState<'a> + Default>(&mut self) -> &mut T {
         self.map.get_or_insert_default()
     }
 
@@ -107,7 +107,7 @@ impl State {
     #[track_caller]
     pub fn get_value<T>(&self) -> T::Target
     where
-        T: CustomState + Deref,
+        T: CustomState<'a> + Deref,
         T::Target: Sized + Copy,
     {
         if self.map.has::<T>() {
@@ -122,7 +122,7 @@ impl State {
     /// # Panics
     /// If the state does not exist.
     #[track_caller]
-    pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
+    pub fn get_mut<T: CustomState<'a>>(&mut self) -> &mut T {
         if self.map.has::<T>() {
             self.map.get_mut::<T>()
         } else {
@@ -150,7 +150,7 @@ impl State {
     ///
     /// // Do something with rng and population, or borrow additional types.
     /// ```
-    pub fn get_states_mut(&mut self) -> MutState<'_> {
+    pub fn get_states_mut<'b>(&'b mut self) -> MutState<'b, 'a> {
         MutState::new(self)
     }
 
@@ -162,7 +162,7 @@ impl State {
     /// If the state does not exist.
     pub fn set_value<T>(&mut self, value: T::Target)
     where
-        T: CustomState + DerefMut,
+        T: CustomState<'a> + DerefMut,
         T::Target: Sized,
     {
         if self.map.has::<T>() {
@@ -181,7 +181,7 @@ impl State {
     #[track_caller]
     pub fn get_value_mut<T>(&mut self) -> &mut T::Target
     where
-        T: CustomState + DerefMut,
+        T: CustomState<'a> + DerefMut,
         T::Target: Sized,
     {
         if self.map.has::<T>() {
@@ -214,7 +214,7 @@ impl State {
     /// // Do something with rng and the population.
     /// ```
     #[track_caller]
-    pub fn get_multiple_mut<'a, T: MultiStateTuple<'a>>(&'a mut self) -> T::References {
+    pub fn get_multiple_mut<'b, T: MultiStateTuple<'b, 'a>>(&'b mut self) -> T::References {
         T::fetch(self)
     }
 }
@@ -223,16 +223,6 @@ impl State {
 ///
 /// If some state does not exist, the function will panic.
 macro_rules! impl_convenience_functions {
-    ($item:ident, $l:lifetime, $t:ty) => {
-        impl<$l> $item<$l> {
-            impl_convenience_functions!($l, $t);
-        }
-    };
-    ($item:ident) => {
-        impl $item {
-            impl_convenience_functions!('_, &Self);
-        }
-    };
     ($l:lifetime, $t:ty) => {
         /// Returns [Iterations](common::Iterations) state.
         pub fn iterations(self: $t) -> u32 {
@@ -245,12 +235,14 @@ macro_rules! impl_convenience_functions {
         }
 
         /// Returns [BestIndividual](common::BestIndividual) state.
-        pub fn best_individual<P: SingleObjectiveProblem>(self: $t) -> Option<&Individual<P>> {
+        pub fn best_individual<P: SingleObjectiveProblem>(self: $t) -> Option<&$l Individual<P>> {
             self.get::<common::BestIndividual<P>>().as_ref()
         }
 
         /// Returns the objective value of the [BestIndividual](common::BestIndividual).
-        pub fn best_objective_value<P: SingleObjectiveProblem>(self: $t) -> Option<&SingleObjective> {
+        pub fn best_objective_value<P: SingleObjectiveProblem>(
+            self: $t,
+        ) -> Option<&SingleObjective> {
             self.best_individual::<P>().map(|i| i.objective())
         }
 
@@ -281,5 +273,14 @@ macro_rules! impl_convenience_functions {
     };
 }
 
-impl_convenience_functions!(State);
-impl_convenience_functions!(MutState, 'a, &mut Self);
+impl<'a> State<'a> {
+    // Uses '_ as 'self lifetime.
+    // This has to match the lifetime bounds of [State::get].
+    impl_convenience_functions!('_, &Self);
+}
+
+impl<'a, 's> MutState<'a, 's> {
+    // Uses 'a as the internal [State]s lifetime.
+    // This has to match the lifetime bounds of [MutState::get].
+    impl_convenience_functions!('a, &mut Self);
+}

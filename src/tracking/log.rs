@@ -1,4 +1,5 @@
 use crate::state::{common, CustomState, State};
+use better_any::{Tid, TidAble};
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
 use std::any::type_name;
@@ -7,13 +8,13 @@ use std::any::type_name;
 ///
 /// [Log] implements [CustomState] and will be
 /// automatically inserted for every run.
-#[derive(Default, Serialize)]
+#[derive(Default, Serialize, Tid)]
 #[serde(transparent)]
 pub struct Log {
     steps: Vec<Step>,
 }
 
-impl CustomState for Log {}
+impl CustomState<'_> for Log {}
 
 impl Log {
     /// Creates a new, empty log.

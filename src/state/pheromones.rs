@@ -1,7 +1,8 @@
 use crate::state::CustomState;
+use better_any::Tid;
 use serde::Serialize;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Tid)]
 pub struct PheromoneMatrix {
     dimension: usize,
     inner: Vec<f64>,
@@ -39,4 +40,4 @@ impl std::ops::MulAssign<f64> for PheromoneMatrix {
         }
     }
 }
-impl CustomState for PheromoneMatrix {}
+impl CustomState<'_> for PheromoneMatrix {}

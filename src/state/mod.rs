@@ -3,7 +3,7 @@
 mod container;
 pub use container::{CustomState, MultiStateTuple, MutState, State};
 
-pub mod archive;
+// pub mod archive;
 pub mod common;
 pub mod diversity;
 

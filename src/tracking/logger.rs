@@ -41,9 +41,9 @@ impl<P: Problem> Logger<P> {
     }
 
     /// Log state `S` when `S` changes by `delta` or more.
-    pub fn log_on_change<S>(self, delta: S::Target) -> Self
+    pub fn log_on_change<'s, S>(self, delta: S::Target) -> Self
     where
-        S: CustomState + Clone + Serialize + Deref,
+        S: CustomState<'s> + Clone + Serialize + Deref,
         S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
     {
         self.log_set(

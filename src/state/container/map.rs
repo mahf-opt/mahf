@@ -1,23 +1,8 @@
-use std::{
-    any::{Any, TypeId},
-    collections::BTreeMap,
-};
+use std::{any::TypeId, collections::BTreeMap};
+
+use better_any::TidExt;
 
 use crate::state::CustomState;
-
-/// Utility trait to upcast [CustomState](CustomState) to [Any].
-pub trait AsAny: Any {
-    fn as_any(&self) -> &dyn Any;
-    fn as_mut_any(&mut self) -> &mut dyn Any;
-}
-impl<S: CustomState> AsAny for S {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-    fn as_mut_any(&mut self) -> &mut dyn Any {
-        self
-    }
-}
 
 /// Stores custom state.
 ///
@@ -27,48 +12,48 @@ impl<S: CustomState> AsAny for S {
 ///
 /// [new type]: https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html
 #[derive(Default)]
-pub struct StateMap {
-    map: BTreeMap<TypeId, Box<dyn CustomState>>,
+pub struct StateMap<'a> {
+    map: BTreeMap<TypeId, Box<dyn CustomState<'a>>>,
 }
 
-impl StateMap {
+impl<'a> StateMap<'a> {
     pub(crate) fn new() -> Self {
         StateMap {
             map: BTreeMap::new(),
         }
     }
 
-    pub fn insert<T: CustomState>(&mut self, state: T) {
-        self.map.insert(TypeId::of::<T>(), Box::new(state));
+    pub fn insert<T: CustomState<'a>>(&mut self, state: T) {
+        self.map.insert(T::id(), Box::new(state));
     }
 
-    pub fn has<T: CustomState>(&self) -> bool {
-        self.map.contains_key(&TypeId::of::<T>())
+    pub fn has<T: CustomState<'a>>(&self) -> bool {
+        self.map.contains_key(&T::id())
     }
 
-    pub fn get<T: CustomState>(&self) -> &T {
+    pub fn get<T: CustomState<'a>>(&self) -> &T {
         self.map
-            .get(&TypeId::of::<T>())
+            .get(&T::id())
             .unwrap()
-            .as_any()
+            .as_ref()
             .downcast_ref()
             .unwrap()
     }
 
-    pub fn get_mut<T: CustomState>(&mut self) -> &mut T {
+    pub fn get_mut<T: CustomState<'a>>(&mut self) -> &mut T {
         self.map
-            .get_mut(&TypeId::of::<T>())
+            .get_mut(&T::id())
             .unwrap()
-            .as_mut_any()
+            .as_mut()
             .downcast_mut()
             .unwrap()
     }
 
-    pub fn get_or_insert_default<T: CustomState + Default>(&mut self) -> &mut T {
+    pub fn get_or_insert_default<T: CustomState<'a> + Default>(&mut self) -> &mut T {
         self.map
-            .entry(TypeId::of::<T>())
+            .entry(T::id())
             .or_insert_with(|| Box::new(T::default()))
-            .as_mut_any()
+            .as_mut()
             .downcast_mut()
             .unwrap()
     }

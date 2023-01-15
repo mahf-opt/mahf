@@ -1,5 +1,5 @@
 use crate::{framework::SingleObjective, problems};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 pub use coco_rs::{Problem, Suite};
 
@@ -8,7 +8,7 @@ pub mod suits;
 #[derive(serde::Serialize)]
 pub struct CocoInstance {
     #[serde(skip)]
-    problem: Mutex<Problem>,
+    problem: Arc<Mutex<Suite>>,
     function: usize,
     instance: usize,
     dimension: usize,
@@ -16,17 +16,15 @@ pub struct CocoInstance {
 
 impl CocoInstance {
     pub fn format_name(&self) -> String {
-        self.problem.lock().unwrap().id().to_string()
+        todo!()
     }
-}
 
-impl From<Problem> for CocoInstance {
-    fn from(problem: Problem) -> Self {
+    fn from(suite: &Arc<Mutex<Suite>>, problem: Problem) -> Self {
         CocoInstance {
             function: problem.function_index(),
             instance: problem.instance_index(),
             dimension: problem.dimension_index(),
-            problem: Mutex::new(problem),
+            problem: Arc::clone(suite),
         }
     }
 }
@@ -36,12 +34,7 @@ impl problems::Problem for CocoInstance {
     type Objective = SingleObjective;
 
     fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
-        let output = &mut [0.0];
-        self.problem
-            .lock()
-            .unwrap()
-            .evaluate_function(solution, output);
-        output[0].try_into().unwrap()
+        unimplemented!()
     }
 
     fn name(&self) -> &str {
@@ -53,22 +46,18 @@ impl problems::VectorProblem for CocoInstance {
     type T = f64;
 
     fn dimension(&self) -> usize {
-        self.problem.lock().unwrap().dimension()
+        self.dimension
     }
 }
 
 impl problems::LimitedVectorProblem for CocoInstance {
     fn range(&self, dimension: usize) -> std::ops::Range<Self::T> {
-        let problem = self.problem.lock().unwrap();
-        let range = problem.get_ranges_of_interest()[dimension].clone();
-
-        let (start, end) = range.into_inner();
-        start..end
+        todo!()
     }
 }
 
 impl problems::HasKnownTarget for CocoInstance {
     fn target_hit(&self, _target: SingleObjective) -> bool {
-        self.problem.lock().unwrap().final_target_hit()
+        todo!()
     }
 }

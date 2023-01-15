@@ -1,4 +1,5 @@
 use crate::state::{common::Iterations, CustomState, State};
+use better_any::Tid;
 use derive_deref::Deref;
 use std::{
     any::Any,
@@ -32,9 +33,9 @@ impl<P> Trigger<P> for Iteration {
     }
 }
 
-#[derive(Deref)]
-struct Previous<S>(S);
-impl<S: 'static + Send> CustomState for Previous<S> {}
+#[derive(Deref, Tid)]
+struct Previous<S: 'static>(S);
+impl<S: 'static + Send> CustomState<'_> for Previous<S> {}
 
 /// Triggers when `S` changes base on a predicate.
 #[derive(serde::Serialize)]
@@ -43,9 +44,9 @@ pub struct Change<S> {
     check: Box<dyn Fn(&S, &S) -> bool + Send + Sync>,
 }
 
-impl<S> Change<S>
+impl<'s, S> Change<S>
 where
-    S: CustomState + Clone,
+    S: CustomState<'s> + Clone,
 {
     /// Create a new [Change] [Trigger] with a custom predicate.
     ///
@@ -59,9 +60,9 @@ where
     }
 }
 
-impl<S> Change<S>
+impl<'s, S> Change<S>
 where
-    S: CustomState + Clone + Deref,
+    S: CustomState<'s> + Clone + Deref,
     S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
 {
     /// Create a new [Change] [Trigger] based on a threshhold.
@@ -82,9 +83,9 @@ where
     }
 }
 
-impl<S, P> Trigger<P> for Change<S>
+impl<'s, S, P> Trigger<P> for Change<S>
 where
-    S: CustomState + Clone,
+    S: CustomState<'s> + Clone,
 {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<S>();

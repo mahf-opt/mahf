@@ -54,7 +54,7 @@ impl<P: Problem + 'static> LogSet<P> {
     /// Adds a generated [LogFn] for the [CustomState] `T`.
     ///
     /// Works for any `T` implementing [CustomState] and [Clone] + [Serialize].
-    pub fn with_auto_logger<T: CustomState + Clone + Serialize>(self) -> Self {
+    pub fn with_auto_logger<'s, T: CustomState<'s> + Clone + Serialize>(self) -> Self {
         self.with_logger(functions::auto::<T>)
     }
 
