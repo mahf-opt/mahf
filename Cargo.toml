@@ -25,7 +25,10 @@ trait-set = "0.3.0"
 dyn-clone = "1.0.9"
 derivative = "2.2.0"
 itertools = "0.10.5"
-better_any = { version = "0.2.0", features = ["derive"], path="../../../Git/better_any/better_any" }
+better_any = { version = "0.2.0", features = ["derive"] }
+
+[patch.crates-io]
+better_typeid_derive = { git = "https://github.com/luleyleo/better_any", branch = "no-use-tidable", package = "better_typeid_derive" }
 
 [dev-dependencies]
 proptest = "1.0.0"
