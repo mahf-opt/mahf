@@ -5,7 +5,6 @@ use crate::{
     framework::{components::Component, conditions::Condition, Configuration},
     heuristics::ls,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    tracking,
 };
 
 /// Parameters for [real_iterated_local_search].
@@ -36,12 +35,8 @@ where
         .do_(iterated_local_search(
             Parameters {
                 perturbation: generation::RandomSpread::new_gen(),
-                local_search: ls::real_local_search(
-                    local_search_params,
-                    local_search_termination,
-                    tracking::Logger::default(),
-                )
-                .into_inner(),
+                local_search: ls::real_local_search(local_search_params, local_search_termination)
+                    .into_inner(),
             },
             termination,
             logger,
@@ -80,7 +75,6 @@ where
                 local_search: ls::permutation_local_search(
                     local_search_params,
                     local_search_termination,
-                    tracking::Logger::default(),
                 )
                 .into_inner(),
             },

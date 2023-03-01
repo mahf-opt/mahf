@@ -8,7 +8,7 @@
 pub mod components;
 pub mod conditions;
 pub mod framework;
-// pub mod heuristics;
+pub mod heuristics;
 pub mod prelude;
 pub mod problems;
 pub mod state;
