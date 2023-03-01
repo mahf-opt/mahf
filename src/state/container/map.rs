@@ -31,6 +31,11 @@ impl<'a> StateMap<'a> {
         self.map.contains_key(&T::id())
     }
 
+    pub fn take<T: CustomState<'a>>(&mut self) -> T {
+        let item = self.map.remove(&T::id()).unwrap();
+        *item.downcast_box().unwrap_or_else(|_| panic!("wrong type"))
+    }
+
     pub fn get<T: CustomState<'a>>(&self) -> &T {
         self.map
             .get(&T::id())
@@ -52,7 +57,7 @@ impl<'a> StateMap<'a> {
     pub fn get_or_insert_default<T: CustomState<'a> + Default>(&mut self) -> &mut T {
         self.map
             .entry(T::id())
-            .or_insert_with(|| Box::new(T::default()))
+            .or_insert_with(|| Box::<T>::default())
             .as_mut()
             .downcast_mut()
             .unwrap()

@@ -1,5 +1,5 @@
 use crate::state::{common, CustomState, State};
-use better_any::{Tid, TidAble};
+use better_any::Tid;
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
 use std::any::type_name;

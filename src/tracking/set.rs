@@ -4,70 +4,51 @@ use crate::{
     tracking::{
         functions::{self, LogFn},
         log::Step,
-        trigger::{self, Trigger},
+        trigger::Trigger,
     },
 };
-use serde::Serialize;
+use better_any::Tid;
 
 /// A combination of [Trigger] and [LogFn].
-#[derive(Default)]
-pub struct LogSet<P> {
-    pub(crate) criteria: Vec<Box<dyn Trigger<P>>>,
-    pub(crate) loggers: Vec<LogFn>,
+#[derive(Default, Tid)]
+pub struct LogSet<'a, P: 'static> {
+    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P>>, LogFn<'a>)>,
 }
 
-impl<P: Problem + 'static> LogSet<P> {
+impl<'a, P> CustomState<'a> for LogSet<'a, P> {}
+
+impl<'a, P: Problem + 'static> LogSet<'a, P> {
     /// Creates a new, empty instance.
     pub fn new() -> Self {
         Self {
-            criteria: Vec::new(),
-            loggers: Vec::new(),
+            entries: Vec::new(),
         }
+    }
+
+    pub fn with(mut self, trigger: Box<dyn Trigger<'a, P>>, extractor: LogFn<'a>) -> Self {
+        self.entries.push((trigger, extractor));
+        self
     }
 
     /// Returns a common log set.
     ///
     /// Every 10 [Iteration][common::Iterations], [common::Evaluations] and [common::Progress] are logged.
-    pub fn common() -> Self {
+    pub fn with_common_extractors(trigger: Box<dyn Trigger<'a, P>>) -> Self {
         Self::new()
-            .with_trigger(trigger::Iteration::new(10))
-            .with_auto_logger::<common::Evaluations>()
-            .with_auto_logger::<common::Progress>()
+            .with(
+                dyn_clone::clone_box(&*trigger),
+                functions::auto::<common::Evaluations>,
+            )
+            .with(
+                dyn_clone::clone_box(&*trigger),
+                functions::auto::<common::Progress>,
+            )
     }
 
-    /// Adds a [Trigger].
-    ///
-    /// The logset will be executed whenever one of the [Trigger]s fires.
-    pub fn with_trigger(mut self, trigger: Box<dyn Trigger<P>>) -> Self {
-        self.criteria.push(trigger);
-        self
-    }
-
-    /// Adds a [LogFn].
-    ///
-    /// When a trigger fires the [LogFn] will be called.
-    pub fn with_logger(mut self, logger: LogFn) -> Self {
-        self.loggers.push(logger);
-        self
-    }
-
-    /// Adds a generated [LogFn] for the [CustomState] `T`.
-    ///
-    /// Works for any `T` implementing [CustomState] and [Clone] + [Serialize].
-    pub fn with_auto_logger<'s, T: CustomState<'s> + Clone + Serialize>(self) -> Self {
-        self.with_logger(functions::auto::<T>)
-    }
-
-    pub(crate) fn execute(&self, problem: &P, state: &mut State, step: &mut Step) {
-        let trigger = self
-            .criteria
-            .iter()
-            .map(|c| c.evaluate(problem, state))
-            .any(|b| b); // normal any would be short-circuiting
-
-        if trigger {
-            for logger in &self.loggers {
-                step.push((logger)(state));
+    pub(crate) fn execute(&self, problem: &P, state: &mut State<'a>, step: &mut Step) {
+        for (trigger, extractor) in &self.entries {
+            if trigger.evaluate(problem, state) {
+                step.push((extractor)(state));
             }
         }
     }

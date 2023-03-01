@@ -7,10 +7,13 @@ use serde::Serialize;
 use std::{any::type_name, ops::Deref};
 
 /// A function to turn some state into an [Entry].
-pub type LogFn = fn(&State) -> Entry;
+pub type LogFn<'a> = fn(&State<'a>) -> Entry;
 
 /// A function to log anything that implements [Clone] + [Serialize]
-pub fn auto<'a, T: CustomState<'a> + Clone + Serialize>(state: &State) -> Entry {
+pub fn auto<'a, T>(state: &State<'a>) -> Entry
+where
+    T: CustomState<'a> + Clone + Serialize + 'static,
+{
     debug_assert!(state.has::<T>(), "missing state: {}", type_name::<T>());
 
     let instance = state.get::<T>();

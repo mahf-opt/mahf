@@ -80,6 +80,15 @@ impl<'a> State<'a> {
         );
     }
 
+    #[track_caller]
+    pub fn take<T: CustomState<'a>>(&mut self) -> T {
+        if self.map.has::<T>() {
+            self.map.take::<T>()
+        } else {
+            self.parent_mut().unwrap().take::<T>()
+        }
+    }
+
     /// Returns the state.
     ///
     /// # Panics
