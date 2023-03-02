@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{
     framework::components::Component,
-    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    problems::{EvaluatorState, MultiObjectiveProblem, Problem, SingleObjectiveProblem},
     state::{common, State},
 };
 
@@ -18,29 +18,26 @@ impl SequentialEvaluator {
 }
 
 impl<P: Problem> Component<P> for SequentialEvaluator {
-    fn initialize(&self, _problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State) {
         state.require::<common::Population<P>>();
         state.insert(common::Evaluations(0));
+
+        if !state.has::<EvaluatorState<P>>() {
+            state.insert(EvaluatorState::from(problem.default_evaluator()));
+        }
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        let mut mut_state = state.get_states_mut();
+        if let Some(mut population) = state.population_stack_mut().try_pop() {
+            state.holding::<EvaluatorState<P>>(|evaluator_state, state| {
+                evaluator_state
+                    .evaluator
+                    .evaluate(problem, state, &mut population);
+            });
 
-        // Evaluate population
-        let population = mut_state.population_stack_mut();
-
-        if population.is_empty() {
-            return;
+            *state.get_value_mut::<common::Evaluations>() += population.len() as u32;
+            state.population_stack_mut().push(population);
         }
-
-        for individual in population.current_mut().iter_mut() {
-            if !individual.is_evaluated() {
-                problem.evaluate(individual);
-            }
-        }
-
-        // Update evaluations
-        *mut_state.get_value_mut::<common::Evaluations>() += population.current().len() as u32;
     }
 }
 

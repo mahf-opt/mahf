@@ -80,6 +80,9 @@ impl<'a> State<'a> {
         );
     }
 
+    /// Removes `T` from state and returns it.
+    ///
+    /// If `T` should only be removed temporarily, consider using [State::holding] instead.
     #[track_caller]
     pub fn take<T: CustomState<'a>>(&mut self) -> T {
         if self.map.has::<T>() {
@@ -87,6 +90,17 @@ impl<'a> State<'a> {
         } else {
             self.parent_mut().unwrap().take::<T>()
         }
+    }
+
+    /// Access `T` mutably without borrowing the state.
+    ///
+    /// To make this possible, `T` will be removed temporarily.
+    /// This should only be used, if the state has to be passed to another function,
+    /// whilst borrowing from it.
+    pub fn holding<T: CustomState<'a>>(&mut self, code: impl FnOnce(&mut T, &mut Self)) {
+        let mut state = self.take::<T>();
+        code(&mut state, self);
+        self.insert(state);
     }
 
     /// Returns the state.

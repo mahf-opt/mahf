@@ -123,6 +123,10 @@ impl<P: Problem> Population<P> {
         self.stack.pop().unwrap()
     }
 
+    pub fn try_pop(&mut self) -> Option<Vec<Individual<P>>> {
+        self.stack.pop()
+    }
+
     pub fn peek(&self, index: usize) -> &[Individual<P>] {
         let n = self.stack.len();
         &self.stack[n - 1 - index]

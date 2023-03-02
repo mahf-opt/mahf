@@ -15,6 +15,18 @@ pub struct LogSet<'a, P: 'static> {
     pub(crate) entries: Vec<(Box<dyn Trigger<'a, P>>, LogFn<'a>)>,
 }
 
+impl<'a, P> Clone for LogSet<'a, P> {
+    fn clone(&self) -> Self {
+        let mut entries = Vec::with_capacity(self.entries.len());
+
+        for (trigger, logfn) in &self.entries {
+            entries.push((dyn_clone::clone_box(&**trigger), *logfn));
+        }
+
+        LogSet { entries }
+    }
+}
+
 impl<'a, P> CustomState<'a> for LogSet<'a, P> {}
 
 impl<'a, P: Problem + 'static> LogSet<'a, P> {
@@ -33,16 +45,15 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     /// Returns a common log set.
     ///
     /// Every 10 [Iteration][common::Iterations], [common::Evaluations] and [common::Progress] are logged.
-    pub fn with_common_extractors(trigger: Box<dyn Trigger<'a, P>>) -> Self {
-        Self::new()
-            .with(
-                dyn_clone::clone_box(&*trigger),
-                functions::auto::<common::Evaluations>,
-            )
-            .with(
-                dyn_clone::clone_box(&*trigger),
-                functions::auto::<common::Progress>,
-            )
+    pub fn with_common_extractors(self, trigger: Box<dyn Trigger<'a, P>>) -> Self {
+        self.with(
+            dyn_clone::clone_box(&*trigger),
+            functions::auto::<common::Evaluations>,
+        )
+        .with(
+            dyn_clone::clone_box(&*trigger),
+            functions::auto::<common::Progress>,
+        )
     }
 
     pub(crate) fn execute(&self, problem: &P, state: &mut State<'a>, step: &mut Step) {

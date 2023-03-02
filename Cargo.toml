@@ -26,9 +26,11 @@ dyn-clone = "1.0.9"
 derivative = "2.2.0"
 itertools = "0.10.5"
 better_any = { version = "0.2.0", features = ["derive"] }
+scoped_threadpool = "0.1.9"
 
 [patch.crates-io]
 better_typeid_derive = { git = "https://github.com/luleyleo/better_any", branch = "no-use-tidable", package = "better_typeid_derive" }
+coco-rs = { path = '../../coco/code-experiments/build/rust' }
 
 [dev-dependencies]
 proptest = "1.0.0"

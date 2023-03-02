@@ -2,7 +2,7 @@
 
 use crate::{
     framework::{Individual, SingleObjective},
-    problems::{HasKnownOptimum, Problem, SingleObjectiveProblem},
+    problems::{Evaluator, HasKnownOptimum, Problem, SingleObjectiveProblem},
 };
 use std::borrow::Borrow;
 
@@ -13,18 +13,35 @@ impl Problem for TestProblem {
     type Encoding = ();
     type Objective = SingleObjective;
 
-    fn evaluate_solution(&self, _solution: &Self::Encoding) -> Self::Objective {
-        0.0.try_into().unwrap()
-    }
-
     fn name(&self) -> &str {
         "TestProblem"
+    }
+
+    fn default_evaluator(&self) -> Box<dyn crate::problems::Evaluator<Problem = Self>> {
+        Box::new(TestEvaluator)
     }
 }
 
 impl HasKnownOptimum for TestProblem {
     fn known_optimum(&self) -> SingleObjective {
         0.0.try_into().unwrap()
+    }
+}
+
+pub struct TestEvaluator;
+
+impl Evaluator for TestEvaluator {
+    type Problem = TestProblem;
+
+    fn evaluate(
+        &mut self,
+        _problem: &Self::Problem,
+        _state: &mut crate::state::State,
+        individuals: &mut [Individual<Self::Problem>],
+    ) {
+        for individual in individuals {
+            individual.evaluate(0.0.try_into().unwrap());
+        }
     }
 }
 

@@ -68,11 +68,11 @@ impl<P: Problem> Configuration<P> {
     /// and a [Log][tracking::Log].
     /// If no random generator is inserted in `init_state`, it will default
     /// to a randomly seeded RNG ([Random::default]).
-    pub fn optimize_with(
+    pub fn optimize_with<'a>(
         &self,
         problem: &P,
-        init_state: impl FnOnce(&mut state::State),
-    ) -> state::State {
+        init_state: impl FnOnce(&mut state::State<'a>),
+    ) -> state::State<'a> {
         let heuristic = self.heuristic();
         let mut state = state::State::new_root();
 

@@ -4,7 +4,7 @@ use crate::{
     framework::SingleObjective,
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
-        Problem, VectorProblem,
+        Evaluator, Problem, VectorProblem,
     },
 };
 use anyhow::{anyhow, Error, Result};
@@ -310,11 +310,25 @@ pub struct SymmetricTsp {
     distance_measure: DistanceMeasure,
 }
 
-impl Problem for SymmetricTsp {
-    type Encoding = Route;
-    type Objective = SingleObjective;
+struct SymmetricTspEvaluator;
 
-    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
+impl Evaluator for SymmetricTspEvaluator {
+    type Problem = SymmetricTsp;
+
+    fn evaluate(
+        &mut self,
+        problem: &Self::Problem,
+        _state: &mut crate::state::State,
+        individuals: &mut [crate::framework::Individual<Self::Problem>],
+    ) {
+        for individual in individuals {
+            individual.evaluate(problem.evaluate_solution(individual.solution()));
+        }
+    }
+}
+
+impl SymmetricTsp {
+    fn evaluate_solution(&self, solution: &Route) -> SingleObjective {
         solution
             .iter()
             .copied()
@@ -324,9 +338,18 @@ impl Problem for SymmetricTsp {
             .try_into()
             .unwrap()
     }
+}
+
+impl Problem for SymmetricTsp {
+    type Encoding = Route;
+    type Objective = SingleObjective;
 
     fn name(&self) -> &str {
         "SymmetricTsp"
+    }
+
+    fn default_evaluator(&self) -> Box<dyn Evaluator<Problem = Self>> {
+        Box::new(SymmetricTspEvaluator)
     }
 }
 
