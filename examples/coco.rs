@@ -1,4 +1,4 @@
-use mahf::{prelude::*, tracking::LogSet};
+use mahf::{prelude::*, state::common, tracking::LogSet};
 use problems::coco_bound::{suits, CocoInstance};
 use tracking::{functions, trigger};
 
@@ -22,6 +22,10 @@ fn main() -> anyhow::Result<()> {
         state.insert(
             LogSet::<CocoInstance>::new()
                 .with_common_extractors(trigger::Iteration::new(10))
+                .with(
+                    trigger::Change::<common::Progress>::new(0.1),
+                    functions::auto::<common::Progress>,
+                )
                 .with(
                     trigger::Iteration::new(50),
                     functions::best_individual::<CocoInstance>,
