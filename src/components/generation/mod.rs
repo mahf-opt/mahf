@@ -104,6 +104,7 @@ where
 
 pub use crate::components::initialization::RandomPermutation;
 impl RandomPermutation {
+    /// Creates this component as an generator, modifying the current population.
     pub fn new_gen<P>() -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -130,7 +131,7 @@ where
 
 pub use crate::components::initialization::RandomSpread;
 impl RandomSpread {
-    /// Create this component as an generator, modifying the current population.
+    /// Creates this component as an generator, modifying the current population.
     pub fn new_gen<P, D>() -> Box<dyn Component<P>>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
@@ -154,6 +155,49 @@ where
     ) {
         let population_size = population.len() as u32;
         *population = self.random_spread(problem, state.random_mut(), population_size);
+    }
+}
+
+pub use crate::components::initialization::RandomBitstring;
+impl RandomBitstring {
+    /// Initializes the component with p being the probability for a 1.
+    ///
+    /// Creates this component as an generator, modifying the current population.
+    pub fn new_gen<P>(p: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    {
+        Box::new(Generator(Self {
+            initial_population_size: None,
+            p,
+        }))
+    }
+
+    /// Initializes the component with uniform probability for 0 and 1.
+    ///
+    /// Creates this component as an generator, modifying the current population.
+    pub fn new_uniform_gen<P>() -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    {
+        Box::new(Generator(Self {
+            initial_population_size: None,
+            p: 0.5,
+        }))
+    }
+}
+impl<P> Generation<P> for RandomBitstring
+where
+    P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+{
+    fn generate_population(
+        &self,
+        population: &mut Vec<P::Encoding>,
+        problem: &P,
+        state: &mut State,
+    ) {
+        let population_size = population.len() as u32;
+        *population = self.random_bitstring(problem, state.random_mut(), population_size);
     }
 }
 
