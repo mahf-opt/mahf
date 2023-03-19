@@ -6,9 +6,8 @@ pub mod tests;
 
 use crate::{
     framework::SingleObjective,
-    problems::{
-        Evaluator, HasKnownOptimum, HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem,
-    },
+    problems::{HasKnownOptimum, HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem},
+    state::common::EvaluatorInstance,
 };
 use anyhow::anyhow;
 use std::convert::TryFrom;
@@ -44,25 +43,12 @@ impl Problem for BenchmarkFunction {
         self.name
     }
 
-    fn default_evaluator(&self) -> Box<dyn Evaluator<Problem = Self>> {
-        Box::new(BenchmarkFunctionEvaluator)
-    }
-}
-
-struct BenchmarkFunctionEvaluator;
-
-impl Evaluator for BenchmarkFunctionEvaluator {
-    type Problem = BenchmarkFunction;
-
-    fn evaluate(
-        &mut self,
-        problem: &Self::Problem,
-        _state: &mut crate::state::State,
-        individuals: &mut [crate::framework::Individual<Self::Problem>],
-    ) {
-        for individual in individuals {
-            individual.evaluate(problem.evaluate_solution(individual.solution()));
-        }
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
+        EvaluatorInstance::functional(|problem, _state, individuals| {
+            for individual in individuals {
+                individual.evaluate(problem.evaluate_solution(individual.solution()));
+            }
+        })
     }
 }
 

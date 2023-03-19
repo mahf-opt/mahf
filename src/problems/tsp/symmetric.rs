@@ -6,6 +6,7 @@ use crate::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Evaluator, Problem, VectorProblem,
     },
+    state::common::EvaluatorInstance,
 };
 use anyhow::{anyhow, Error, Result};
 use pest_consume::Parser;
@@ -348,8 +349,12 @@ impl Problem for SymmetricTsp {
         "SymmetricTsp"
     }
 
-    fn default_evaluator(&self) -> Box<dyn Evaluator<Problem = Self>> {
-        Box::new(SymmetricTspEvaluator)
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
+        EvaluatorInstance::functional(|problem, _state, individuals| {
+            for individual in individuals {
+                individual.evaluate(problem.evaluate_solution(individual.solution()));
+            }
+        })
     }
 }
 

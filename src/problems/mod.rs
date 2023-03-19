@@ -7,7 +7,7 @@
 
 use crate::{
     framework::{Individual, MultiObjective, Objective, SingleObjective},
-    state::State,
+    state::{common::EvaluatorInstance, State},
 };
 use std::{any::Any, ops::Range};
 
@@ -33,7 +33,11 @@ pub trait Problem: 'static {
     /// The name of the problem.
     fn name(&self) -> &str;
 
-    fn default_evaluator(&self) -> Box<dyn Evaluator<Problem = Self>>;
+    /// Returns the default evaluator for the problem.
+    ///
+    /// Can be set to [unimplemented] when the evaluator
+    /// requires additional setup by the user.
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self>;
 }
 
 /// Defines how a population should be evaluated.

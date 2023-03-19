@@ -33,7 +33,7 @@ impl<P: Problem> Component<P> for Evaluator {
         state.insert(common::Evaluations(0));
 
         if !state.has::<common::EvaluatorInstance<P>>() {
-            state.insert(common::EvaluatorInstance::from(problem.default_evaluator()));
+            state.insert(problem.default_evaluator());
         }
     }
 

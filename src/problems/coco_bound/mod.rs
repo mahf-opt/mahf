@@ -3,6 +3,7 @@ use std::ops::RangeInclusive;
 use crate::{
     framework::SingleObjective,
     problems::{self, Evaluator},
+    state::common::EvaluatorInstance,
 };
 
 pub use coco_rs::{Problem, Suite};
@@ -53,7 +54,7 @@ impl problems::Problem for CocoInstance {
         "Coco"
     }
 
-    fn default_evaluator(&self) -> Box<dyn problems::Evaluator<Problem = Self>> {
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
         unimplemented!("the evaluator has to be inserted manually")
     }
 }

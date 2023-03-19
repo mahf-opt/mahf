@@ -3,6 +3,7 @@
 use crate::{
     framework::{Individual, SingleObjective},
     problems::{Evaluator, HasKnownOptimum, Problem, SingleObjectiveProblem},
+    state::common::EvaluatorInstance,
 };
 use std::borrow::Borrow;
 
@@ -17,8 +18,8 @@ impl Problem for TestProblem {
         "TestProblem"
     }
 
-    fn default_evaluator(&self) -> Box<dyn crate::problems::Evaluator<Problem = Self>> {
-        Box::new(TestEvaluator)
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
+        EvaluatorInstance::new(TestEvaluator)
     }
 }
 
