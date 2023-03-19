@@ -1,7 +1,7 @@
 //! Common state used in most heuristics.
 
 use super::CustomState;
-use crate::problems::Problem;
+use crate::problems::{Evaluator, Problem};
 use crate::{
     framework::Individual,
     problems::{MultiObjectiveProblem, SingleObjectiveProblem},
@@ -9,6 +9,24 @@ use crate::{
 use better_any::Tid;
 use derive_deref::{Deref, DerefMut};
 use serde::Serialize;
+
+#[derive(Tid)]
+pub struct EvaluatorInstance<'a, P: 'static> {
+    pub(crate) evaluator: Box<dyn Evaluator<Problem = P> + 'a>,
+}
+impl<'a, P: 'static> CustomState<'a> for EvaluatorInstance<'a, P> {}
+impl<'a, P: 'static> From<Box<dyn Evaluator<Problem = P> + 'a>> for EvaluatorInstance<'a, P> {
+    fn from(evaluator: Box<dyn Evaluator<Problem = P> + 'a>) -> Self {
+        EvaluatorInstance { evaluator }
+    }
+}
+impl<'a, P: 'static> EvaluatorInstance<'a, P> {
+    pub fn new(evaluator: impl Evaluator<Problem = P> + 'a) -> Self {
+        EvaluatorInstance {
+            evaluator: Box::new(evaluator),
+        }
+    }
+}
 
 /// Saves the [Individual] with best objective value.
 ///

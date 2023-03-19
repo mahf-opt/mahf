@@ -2,9 +2,9 @@ use crate::{
     framework::Configuration,
     problems::{
         coco_bound::{CocoEvaluator, CocoInstance},
-        EvaluatorState, HasKnownTarget,
+        HasKnownTarget,
     },
-    state::State,
+    state::{common, State},
     tracking::{files, Log},
 };
 use anyhow::Context;
@@ -95,7 +95,9 @@ pub fn evaluate_suite(
                             let log_file = data_dir.join(format!("{}.log", experiment_desc));
 
                             let state = configuration.optimize_with(&instance, |state| {
-                                state.insert(EvaluatorState::new(CocoEvaluator { problem }));
+                                state.insert(common::EvaluatorInstance::new(CocoEvaluator {
+                                    problem,
+                                }));
                                 setup(state);
                             });
                             let log = state.get::<Log>();

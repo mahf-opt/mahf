@@ -5,11 +5,9 @@
 //! If a given problem has certain properties, then those will be expressed as traits as well.
 //! Those traits are quite specific and when writing a component they'll allow you to only require those you really need.
 
-use better_any::Tid;
-
 use crate::{
     framework::{Individual, MultiObjective, Objective, SingleObjective},
-    state::{CustomState, State},
+    state::State,
 };
 use std::{any::Any, ops::Range};
 
@@ -47,24 +45,6 @@ pub trait Evaluator: Send {
         state: &mut State,
         individuals: &mut [Individual<Self::Problem>],
     );
-}
-
-#[derive(Tid)]
-pub struct EvaluatorState<'a, P: 'static> {
-    pub(crate) evaluator: Box<dyn Evaluator<Problem = P> + 'a>,
-}
-impl<'a, P: 'static> CustomState<'a> for EvaluatorState<'a, P> {}
-impl<'a, P: 'static> From<Box<dyn Evaluator<Problem = P> + 'a>> for EvaluatorState<'a, P> {
-    fn from(evaluator: Box<dyn Evaluator<Problem = P> + 'a>) -> Self {
-        EvaluatorState { evaluator }
-    }
-}
-impl<'a, P: 'static> EvaluatorState<'a, P> {
-    pub fn new(evaluator: impl Evaluator<Problem = P> + 'a) -> Self {
-        EvaluatorState {
-            evaluator: Box::new(evaluator),
-        }
-    }
 }
 
 /// A single objective problem.

@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::{
     framework::components::Component,
-    problems::{EvaluatorState, MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
     state::{common, State},
 };
 
@@ -22,14 +22,14 @@ impl<P: Problem> Component<P> for SequentialEvaluator {
         state.require::<common::Population<P>>();
         state.insert(common::Evaluations(0));
 
-        if !state.has::<EvaluatorState<P>>() {
-            state.insert(EvaluatorState::from(problem.default_evaluator()));
+        if !state.has::<common::EvaluatorInstance<P>>() {
+            state.insert(common::EvaluatorInstance::from(problem.default_evaluator()));
         }
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
         if let Some(mut population) = state.population_stack_mut().try_pop() {
-            state.holding::<EvaluatorState<P>>(|evaluator_state, state| {
+            state.holding::<common::EvaluatorInstance<P>>(|evaluator_state, state| {
                 evaluator_state
                     .evaluator
                     .evaluate(problem, state, &mut population);
