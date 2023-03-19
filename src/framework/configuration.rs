@@ -202,7 +202,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     }
 
     pub fn evaluate_sequential(self) -> Self {
-        self.do_(components::evaluation::SequentialEvaluator::new())
+        self.do_(components::evaluation::Evaluator::new())
     }
 }
 

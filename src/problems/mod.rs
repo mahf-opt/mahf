@@ -36,9 +36,17 @@ pub trait Problem: 'static {
     fn default_evaluator(&self) -> Box<dyn Evaluator<Problem = Self>>;
 }
 
+/// Defines how a population should be evaluated.
 pub trait Evaluator: Send {
     type Problem: Problem;
 
+    /// Evaluates all individuals.
+    ///
+    /// After calling this function, [Individual::is_evaluated]
+    /// should be true for all individuals.
+    ///
+    /// Individuals might already be evaluated prior to calling this function,
+    /// in which case they can be skipped.
     fn evaluate(
         &mut self,
         problem: &Self::Problem,

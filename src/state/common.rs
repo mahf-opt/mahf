@@ -10,6 +10,9 @@ use better_any::Tid;
 use derive_deref::{Deref, DerefMut};
 use serde::Serialize;
 
+/// Instance of an [Evaluator] stored in the state.
+///
+/// Can be inserted manually to customize evaluation behavior.
 #[derive(Tid)]
 pub struct EvaluatorInstance<'a, P: 'static> {
     pub(crate) evaluator: Box<dyn Evaluator<Problem = P> + 'a>,

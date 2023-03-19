@@ -8,16 +8,26 @@ use crate::{
     state::{common, State},
 };
 
+/// Evaluates all individuals in the current population.
+///
+/// This component should be inserted after every generating component.
+///
+/// Only the head of the [common::Population] will be evaluated.
+/// Requires either [common::EvaluatorInstance] to be present
+/// in the [State] or [Problem::default_evaluator] to be implemented.
+///
+/// By inserting a custom [common::EvaluatorInstance] the evaluation
+/// behavior can be customized.
 #[derive(Serialize, Clone)]
-pub struct SequentialEvaluator;
+pub struct Evaluator;
 
-impl SequentialEvaluator {
+impl Evaluator {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: Problem> Component<P> for SequentialEvaluator {
+impl<P: Problem> Component<P> for Evaluator {
     fn initialize(&self, problem: &P, state: &mut State) {
         state.require::<common::Population<P>>();
         state.insert(common::Evaluations(0));
@@ -42,6 +52,9 @@ impl<P: Problem> Component<P> for SequentialEvaluator {
 }
 
 /// Inserts and updates the [common::BestIndividual] state.
+///
+/// Should be inserted right after [Evaluator].
+/// For [MultiObjectiveProblem]s see [UpdateParetoFront].
 #[derive(Serialize, Clone)]
 pub struct UpdateBestIndividual;
 
@@ -74,6 +87,9 @@ impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
 }
 
 /// Inserts and updates the [common::ParetoFront] state.
+///
+/// Should be inserted right after [Evaluator].
+/// For [SingleObjectiveProblem]s see [UpdateBestIndividual].
 #[derive(Serialize, Clone)]
 pub struct UpdateParetoFront;
 
