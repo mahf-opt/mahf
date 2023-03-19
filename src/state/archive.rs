@@ -5,16 +5,18 @@ use crate::{
     problems::SingleObjectiveProblem,
     state::{CustomState, State},
 };
+use better_any::Tid;
 use serde::{Deserialize, Serialize};
 
 /// State required for Elitism.
 ///
 /// For preserving n elitist individuals.
-pub struct ElitistArchive<P: SingleObjectiveProblem> {
+#[derive(Tid)]
+pub struct ElitistArchive<P: SingleObjectiveProblem + 'static> {
     elitists: Vec<Individual<P>>,
 }
 
-impl<P: SingleObjectiveProblem> CustomState for ElitistArchive<P> {}
+impl<P: SingleObjectiveProblem> CustomState<'_> for ElitistArchive<P> {}
 
 impl<P: SingleObjectiveProblem> ElitistArchive<P> {
     fn new() -> Self {
