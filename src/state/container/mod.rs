@@ -97,6 +97,7 @@ impl<'a> State<'a> {
     /// To make this possible, `T` will be removed temporarily.
     /// This should only be used, if the state has to be passed to another function,
     /// whilst borrowing from it.
+    #[track_caller]
     pub fn holding<T: CustomState<'a>>(&mut self, code: impl FnOnce(&mut T, &mut Self)) {
         let mut state = self.take::<T>();
         code(&mut state, self);
