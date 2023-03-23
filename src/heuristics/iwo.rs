@@ -51,7 +51,7 @@ where
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(iwo(
             Parameters {
@@ -101,7 +101,7 @@ pub fn iwo<P: SingleObjectiveProblem>(
                 ))
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
                 .do_(Logger::new())

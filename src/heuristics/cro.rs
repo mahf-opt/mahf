@@ -49,7 +49,7 @@ where
         .do_(initialization::RandomSpread::new_init(
             initial_population_size,
         ))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(cro(
             Parameters {
@@ -129,7 +129,7 @@ pub fn cro<P: SingleObjectiveProblem>(
         builder
             .do_(reaction)
             .do_(constraints.clone())
-            .evaluate_sequential()
+            .evaluate()
             .update_best_individual()
             .do_(update)
     };

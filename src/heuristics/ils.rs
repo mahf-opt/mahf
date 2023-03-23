@@ -30,7 +30,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(iterated_local_search(
             Parameters {
@@ -65,7 +65,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomPermutation::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(iterated_local_search(
             Parameters {
@@ -101,7 +101,7 @@ pub fn iterated_local_search<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .do_(perturbation)
-                .evaluate_sequential()
+                .evaluate()
                 .do_(selection::All::new())
                 .scope_(|builder| builder.do_(local_search))
                 .update_best_individual()

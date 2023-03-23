@@ -201,7 +201,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(components::misc::Debug::new(behaviour))
     }
 
-    pub fn evaluate_sequential(self) -> Self {
+    pub fn evaluate(self) -> Self {
         self.do_(components::evaluation::Evaluator::new())
     }
 }
