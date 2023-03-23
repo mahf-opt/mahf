@@ -29,23 +29,27 @@ impl Logger {
 
 impl<P: Problem> Component<P> for Logger {
     fn initialize(&self, problem: &P, state: &mut State) {
-        state.holding::<LogSet<P>>(|sets, state| {
-            for (trigger, _) in &sets.entries {
-                trigger.initialize(problem, state);
-            }
-        });
+        if state.has::<LogSet<P>>() {
+            state.holding::<LogSet<P>>(|sets, state| {
+                for (trigger, _) in &sets.entries {
+                    trigger.initialize(problem, state);
+                }
+            });
+        }
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        state.holding::<LogSet<P>>(|sets, state| {
-            let mut step = Step::default();
+        if state.has::<LogSet<P>>() {
+            state.holding::<LogSet<P>>(|sets, state| {
+                let mut step = Step::default();
 
-            sets.execute(problem, state, &mut step);
+                sets.execute(problem, state, &mut step);
 
-            if !step.entries().is_empty() {
-                step.push_iteration(state);
-                state.get_mut::<Log>().push(step);
-            }
-        });
+                if !step.entries().is_empty() {
+                    step.push_iteration(state);
+                    state.get_mut::<Log>().push(step);
+                }
+            });
+        }
     }
 }
