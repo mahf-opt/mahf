@@ -62,9 +62,27 @@ impl<'a> State<'a> {
         self.map.insert(state);
     }
 
+    /// Tires to find an inner map containing T.
+    fn find<T: CustomState<'a>>(&self) -> Option<&Self> {
+        if self.map.has::<T>() {
+            Some(self)
+        } else {
+            self.parent()
+        }
+    }
+
+    /// Tires to find an inner map containing T.
+    fn find_mut<T: CustomState<'a>>(&mut self) -> Option<&mut Self> {
+        if self.map.has::<T>() {
+            Some(self)
+        } else {
+            self.parent_mut()
+        }
+    }
+
     /// Checks whether the state exists.
     pub fn has<T: CustomState<'a>>(&self) -> bool {
-        self.map.has::<T>() || self.parent().map(|p| p.has::<T>()).unwrap_or_default()
+        self.find::<T>().is_some()
     }
 
     /// Panics if the state does not exist.
@@ -85,11 +103,7 @@ impl<'a> State<'a> {
     /// If `T` should only be removed temporarily, consider using [State::holding] instead.
     #[track_caller]
     pub fn take<T: CustomState<'a>>(&mut self) -> T {
-        if self.map.has::<T>() {
-            self.map.take::<T>()
-        } else {
-            self.parent_mut().unwrap().take::<T>()
-        }
+        self.find_mut::<T>().unwrap().map.take::<T>()
     }
 
     /// Access `T` mutably without borrowing the state.
@@ -110,11 +124,7 @@ impl<'a> State<'a> {
     /// If the state does not exist.
     #[track_caller]
     pub fn get<T: CustomState<'a>>(&self) -> &T {
-        if self.map.has::<T>() {
-            self.map.get::<T>()
-        } else {
-            self.parent().unwrap().get::<T>()
-        }
+        self.find::<T>().unwrap().map.get::<T>()
     }
 
     /// Returns the state or inserts its default.
@@ -134,11 +144,7 @@ impl<'a> State<'a> {
         T: CustomState<'a> + Deref,
         T::Target: Sized + Copy,
     {
-        if self.map.has::<T>() {
-            *self.map.get::<T>().deref()
-        } else {
-            *self.parent().unwrap().get::<T>().deref()
-        }
+        *self.find::<T>().unwrap().map.get::<T>().deref()
     }
 
     /// Returns the state mutably.
@@ -147,11 +153,7 @@ impl<'a> State<'a> {
     /// If the state does not exist.
     #[track_caller]
     pub fn get_mut<T: CustomState<'a>>(&mut self) -> &mut T {
-        if self.map.has::<T>() {
-            self.map.get_mut::<T>()
-        } else {
-            self.parent_mut().unwrap().get_mut::<T>()
-        }
+        self.find_mut::<T>().unwrap().map.get_mut::<T>()
     }
 
     /// Allows borrowing an arbitrary number of [CustomState]'s mutable at the same time.
@@ -184,16 +186,13 @@ impl<'a> State<'a> {
     ///
     /// # Panics
     /// If the state does not exist.
+    #[track_caller]
     pub fn set_value<T>(&mut self, value: T::Target)
     where
         T: CustomState<'a> + DerefMut,
         T::Target: Sized,
     {
-        if self.map.has::<T>() {
-            *self.map.get_mut::<T>().deref_mut() = value;
-        } else {
-            *self.parent_mut().unwrap().get_mut::<T>().deref_mut() = value;
-        }
+        *self.get_value_mut::<T>() = value;
     }
 
     /// Returns the states inner value mutably.
@@ -208,11 +207,7 @@ impl<'a> State<'a> {
         T: CustomState<'a> + DerefMut,
         T::Target: Sized,
     {
-        if self.map.has::<T>() {
-            self.map.get_mut::<T>().deref_mut()
-        } else {
-            self.parent_mut().unwrap().get_mut::<T>().deref_mut()
-        }
+        self.find_mut::<T>().unwrap().map.get_mut::<T>().deref_mut()
     }
 
     /// Allows borrowing up to eight [CustomState]'s mutable at the same time, given they are different.
