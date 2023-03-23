@@ -113,9 +113,14 @@ impl<'a> State<'a> {
     /// whilst borrowing from it.
     #[track_caller]
     pub fn holding<T: CustomState<'a>>(&mut self, code: impl FnOnce(&mut T, &mut Self)) {
-        let mut state = self.take::<T>();
-        code(&mut state, self);
-        self.insert(state);
+        let state_with_t = self.find_mut::<T>().unwrap() as *mut Self;
+
+        let mut instance = self.take::<T>();
+        code(&mut instance, self);
+
+        // Insert the state where it was before.
+        // This is save, because inner states can not be removed.
+        unsafe { state_with_t.as_mut().unwrap().insert(instance) };
     }
 
     /// Returns the state.
