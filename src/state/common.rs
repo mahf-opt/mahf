@@ -8,7 +8,7 @@ use crate::{
     problems::{MultiObjectiveProblem, SingleObjectiveProblem},
 };
 use better_any::Tid;
-use derive_deref::{Deref, DerefMut};
+use derive_more::{Deref, DerefMut};
 use serde::Serialize;
 
 /// Instance of an [Evaluator] stored in the state.
@@ -34,8 +34,8 @@ impl<'a, P: Problem> EvaluatorInstance<'a, P> {
     /// Wraps a function as an evaluator.
     ///
     /// Good for simple, stateless evaluators.
-    pub fn functional(evaluation: fn(&P, &mut State, &mut [Individual<P>])) -> Self {
-        struct FunctionalEvaluator<P: Problem>(fn(&P, &mut State, &mut [Individual<P>]));
+    pub fn functional(evaluation: fn(&P, &mut State<P>, &mut [Individual<P>])) -> Self {
+        struct FunctionalEvaluator<P: Problem>(fn(&P, &mut State<P>, &mut [Individual<P>]));
 
         impl<P: Problem> Evaluator for FunctionalEvaluator<P> {
             type Problem = P;
@@ -43,7 +43,7 @@ impl<'a, P: Problem> EvaluatorInstance<'a, P> {
             fn evaluate(
                 &mut self,
                 problem: &Self::Problem,
-                state: &mut crate::state::State,
+                state: &mut State<P>,
                 individuals: &mut [Individual<Self::Problem>],
             ) {
                 (self.0)(problem, state, individuals)
@@ -137,16 +137,13 @@ impl<P: MultiObjectiveProblem> Default for ParetoFront<P> {
     }
 }
 
-#[derive(Deref, DerefMut, Tid)]
-pub struct Loop(pub bool);
-impl CustomState<'_> for Loop {}
-
 #[derive(Default, Tid)]
-pub struct Population<P: Problem + 'static> {
+pub struct Populations<P: Problem + 'static> {
     stack: Vec<Vec<Individual<P>>>,
 }
-impl<P: Problem> CustomState<'_> for Population<P> {}
-impl<P: Problem> Population<P> {
+
+impl<P: Problem> CustomState<'_> for Populations<P> {}
+impl<P: Problem> Populations<P> {
     pub fn new() -> Self {
         Self { stack: Vec::new() }
     }

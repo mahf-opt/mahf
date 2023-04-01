@@ -1,12 +1,12 @@
 //! This module contains instances of the symmetric traveling salesman problem.
 
 use crate::{
-    framework::SingleObjective,
+    framework::{Individual, SingleObjective},
     problems::{
         tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Evaluator, Problem, VectorProblem,
     },
-    state::common::EvaluatorInstance,
+    state::{common::EvaluatorInstance, State},
 };
 use anyhow::{anyhow, Error, Result};
 use pest_consume::Parser;
@@ -319,8 +319,8 @@ impl Evaluator for SymmetricTspEvaluator {
     fn evaluate(
         &mut self,
         problem: &Self::Problem,
-        _state: &mut crate::state::State,
-        individuals: &mut [crate::framework::Individual<Self::Problem>],
+        _state: &mut State<Self::Problem>,
+        individuals: &mut [Individual<Self::Problem>],
     ) {
         for individual in individuals {
             individual.evaluate(problem.evaluate_solution(individual.solution()));

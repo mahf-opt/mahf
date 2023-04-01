@@ -5,6 +5,7 @@ use std::fmt;
 use trait_set::trait_set;
 
 trait_set! {
+    /// Collection of traits required by every objective.
     pub trait AnyObjective = fmt::Debug + Clone + Eq + Any + PartialOrd + Send + Sync
 }
 

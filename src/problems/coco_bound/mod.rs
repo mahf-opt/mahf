@@ -1,9 +1,9 @@
 use std::ops::RangeInclusive;
 
 use crate::{
-    framework::SingleObjective,
+    framework::{Individual, SingleObjective},
     problems::{self, Evaluator},
-    state::common::EvaluatorInstance,
+    state::{common::EvaluatorInstance, State},
 };
 
 pub use coco_rs::{Problem, Suite};
@@ -92,8 +92,8 @@ impl Evaluator for CocoEvaluator<'_> {
     fn evaluate(
         &mut self,
         _problem: &Self::Problem,
-        _state: &mut crate::state::State,
-        individuals: &mut [crate::framework::Individual<Self::Problem>],
+        _state: &mut State<Self::Problem>,
+        individuals: &mut [Individual<Self::Problem>],
     ) {
         for individual in individuals {
             let mut out = [0.0];

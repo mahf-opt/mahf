@@ -13,7 +13,7 @@ use crate::{
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [BoundaryConstrainer].
 pub trait BoundaryConstraint<P: Problem> {
-    fn constrain(&self, solution: &mut P::Encoding, problem: &P, state: &mut State);
+    fn constrain(&self, solution: &mut P::Encoding, problem: &P, state: &mut State<P>);
 }
 
 #[derive(serde::Serialize, Clone)]
@@ -24,14 +24,12 @@ where
     P: Problem,
     T: AnyComponent + BoundaryConstraint<P> + Serialize + Clone,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
-        let mut population = state.population_stack_mut::<P>().pop();
-
+    fn execute(&self, problem: &P, state: &mut State<P>) {
+        let mut population = state.populations_mut().pop();
         for individual in population.iter_mut() {
             self.0.constrain(individual.solution_mut(), problem, state);
         }
-
-        state.population_stack_mut().push(population);
+        state.populations_mut().push(population);
     }
 }
 
@@ -47,7 +45,7 @@ impl Saturation {
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Saturation
 {
-    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State) {
+    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State<P>) {
         for (d, x) in solution.iter_mut().enumerate() {
             let range = problem.range(d);
             *x = x.clamp(range.start, range.end);
@@ -68,7 +66,7 @@ impl Toroidal {
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Toroidal
 {
-    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State) {
+    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State<P>) {
         for (d, x) in solution.iter_mut().enumerate() {
             let range = problem.range(d);
             let a = range.start;
@@ -97,7 +95,7 @@ impl Mirror {
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Mirror
 {
-    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State) {
+    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State<P>) {
         for (d, x) in solution.iter_mut().enumerate() {
             let range = problem.range(d);
             let a = range.start;
@@ -133,7 +131,7 @@ impl CompleteOneTailedNormalCorrection {
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for CompleteOneTailedNormalCorrection
 {
-    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, state: &mut State) {
+    fn constrain(&self, solution: &mut Vec<f64>, problem: &P, state: &mut State<P>) {
         for (d, x) in solution.iter_mut().enumerate() {
             let range = problem.range(d);
             let a = range.start;

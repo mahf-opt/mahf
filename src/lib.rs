@@ -19,7 +19,7 @@ pub mod utils;
 pub mod testing;
 
 // re-exports
-pub use derive_deref;
+pub use derive_more;
 pub use float_eq;
 pub use rand;
 pub use rand_distr;

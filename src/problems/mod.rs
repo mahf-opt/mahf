@@ -54,7 +54,7 @@ pub trait Evaluator: Send {
     fn evaluate(
         &mut self,
         problem: &Self::Problem,
-        state: &mut State,
+        state: &mut State<Self::Problem>,
         individuals: &mut [Individual<Self::Problem>],
     );
 }

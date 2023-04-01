@@ -8,14 +8,14 @@ use crate::{
     state::{common::Iterations, CustomState, State},
 };
 use better_any::{Tid, TidAble};
-use derive_deref::Deref;
+use derive_more::Deref;
 use dyn_clone::DynClone;
 
 /// Like [Condition](crate::framework::conditions::Condition) but non-serializable.
 pub trait Trigger<'a, P>: DynClone + Send {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State<'a>) {}
-    fn evaluate(&self, problem: &P, state: &mut State<'a>) -> bool;
+    fn initialize(&self, problem: &P, state: &mut State<'a, P>) {}
+    fn evaluate(&self, problem: &P, state: &mut State<'a, P>) -> bool;
 }
 dyn_clone::clone_trait_object!(<'a, P> Trigger<'a, P>);
 
@@ -24,23 +24,24 @@ dyn_clone::clone_trait_object!(<'a, P> Trigger<'a, P>);
 pub struct Iteration(u32);
 
 impl Iteration {
-    pub fn new<'a, P: 'static>(iterations: u32) -> Box<dyn Trigger<'a, P>> {
+    pub fn new<'a, P: Problem + 'static>(iterations: u32) -> Box<dyn Trigger<'a, P>> {
         Box::new(Iteration(iterations))
     }
 }
 
-impl<'a, P: 'static> Trigger<'a, P> for Iteration {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Iterations>();
+impl<'a, P: Problem + 'static> Trigger<'a, P> for Iteration {
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, Iterations>();
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         state.iterations() % self.0 == 0
     }
 }
 
 #[derive(Deref, Tid)]
 struct Previous<'a, S: TidAble<'a> + Send> {
+    #[deref]
     pub inner: S,
     _phantom: PhantomData<&'a ()>,
 }
@@ -112,17 +113,18 @@ where
     }
 }
 
-impl<'s, S, P: 's> Trigger<'s, P> for Change<'s, S>
+impl<'s, S, P> Trigger<'s, P> for Change<'s, S>
 where
     S: CustomState<'s> + TidAble<'s> + Clone,
+    P: Problem + 's,
 {
-    fn initialize(&self, _problem: &P, state: &mut State<'s>) {
-        state.require::<S>();
+    fn initialize(&self, _problem: &P, state: &mut State<'s, P>) {
+        state.require::<Self, S>();
         let current = state.get::<S>().clone();
         state.insert(Previous::new(current));
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State<'s>) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<'s, P>) -> bool {
         let previous = state.get::<Previous<S>>();
         let current = state.get::<S>();
         let changed = self.check.compare(previous, current);

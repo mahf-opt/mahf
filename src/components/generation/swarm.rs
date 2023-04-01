@@ -41,11 +41,11 @@ impl<P> Component<P> for PsoGeneration
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>>,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<PsoState<P>>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, PsoState<P>>();
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
         let &Self {
             weight,
             c_one,
@@ -54,7 +54,7 @@ where
         } = self;
 
         let mut offspring = Vec::new();
-        let mut parents = state.population_stack_mut::<P>().pop();
+        let mut parents = state.populations_mut().pop();
 
         let rng = state.random_mut();
         let rng_iter = |rng: &mut Random| {
@@ -90,6 +90,6 @@ where
             offspring.push(Individual::<P>::new_unevaluated(x));
         }
 
-        state.population_stack_mut().push(offspring);
+        state.populations_mut().push(offspring);
     }
 }

@@ -1,4 +1,7 @@
-use crate::state::{common, CustomState, State};
+use crate::{
+    problems::Problem,
+    state::{common, CustomState, State},
+};
 use better_any::Tid;
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
@@ -58,7 +61,7 @@ impl Step {
     /// Pushes the current iteration if it has not been logged yet.
     ///
     /// Will also ensure that the iteration is at index 0.
-    pub(crate) fn push_iteration(&mut self, state: &State) {
+    pub(crate) fn push_iteration<P: Problem>(&mut self, state: &State<P>) {
         let name = type_name::<common::Iterations>();
 
         if !self.contains(name) {

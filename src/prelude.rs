@@ -5,5 +5,7 @@ pub use crate::{
     conditions::*,
     framework::{self, Configuration, Random},
     heuristics::*,
-    problems, tracking,
+    problems,
+    state::{self, State},
+    tracking,
 };

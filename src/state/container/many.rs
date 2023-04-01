@@ -1,7 +1,10 @@
 use std::ops::{Deref, DerefMut};
 use std::{any::TypeId, collections::HashSet};
 
-use crate::state::{CustomState, State};
+use crate::{
+    problems::Problem,
+    state::{CustomState, State},
+};
 
 /// Allows borrowing multiple [CustomState]'s mutable from [State] at the same time.
 /// It is meant to significantly simplify the definition of [Component][crate::framework::components::Component]'s
@@ -16,12 +19,12 @@ use crate::state::{CustomState, State};
 ///
 /// The only exception to this rule are [get_value][MutState::get_value] and [set_value][MutState::set_value],
 /// which can be called repeatedly using the same [CustomState], given that no reference to it already exists.
-pub struct MutState<'a, 's> {
-    state: &'a mut State<'s>,
+pub struct MutState<'a, 's, P> {
+    state: &'a mut State<'s, P>,
     borrowed: HashSet<TypeId>,
 }
-impl<'a, 's> MutState<'a, 's> {
-    pub(super) fn new(state: &'a mut State<'s>) -> Self {
+impl<'a, 's, P: Problem> MutState<'a, 's, P> {
+    pub(super) fn new(state: &'a mut State<'s, P>) -> Self {
         Self {
             state,
             borrowed: HashSet::new(),
@@ -85,7 +88,7 @@ pub trait MultiStateTuple<'a, 's>: 'a {
     fn validate() -> bool;
 
     #[track_caller]
-    fn fetch(state: &'a mut State<'s>) -> Self::References;
+    fn fetch<P: Problem>(state: &'a mut State<'s, P>) -> Self::References;
 }
 
 macro_rules! impl_multi_state_tuple {
@@ -101,10 +104,10 @@ macro_rules! impl_multi_state_tuple {
                 $(set.insert($item::id()))&&*
             }
 
-            fn fetch(state: &'a mut State<'s>) -> Self::References {
+            fn fetch<P: Problem>(state: &'a mut State<'s, P>) -> Self::References {
                 assert!(Self::validate(), "each type can only be borrowed once");
 
-                let state = state as *mut State;
+                let state = state as *mut State<P>;
                 unsafe { ($((*state).get_mut::<$item>()),*) }
             }
         }

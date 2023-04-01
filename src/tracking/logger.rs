@@ -28,7 +28,7 @@ impl Logger {
 }
 
 impl<P: Problem> Component<P> for Logger {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         if state.has::<LogSet<P>>() {
             state.holding::<LogSet<P>>(|sets, state| {
                 for (trigger, _) in &sets.entries {
@@ -38,7 +38,7 @@ impl<P: Problem> Component<P> for Logger {
         }
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         if state.has::<LogSet<P>>() {
             state.holding::<LogSet<P>>(|sets, state| {
                 let mut step = Step::default();

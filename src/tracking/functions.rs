@@ -1,5 +1,5 @@
 use crate::{
-    problems::SingleObjectiveProblem,
+    problems::{Problem, SingleObjectiveProblem},
     state::{common, CustomState, State},
     tracking::log::Entry,
 };
@@ -7,12 +7,13 @@ use serde::Serialize;
 use std::{any::type_name, ops::Deref};
 
 /// A function to turn some state into an [Entry].
-pub type Extractor<'a> = fn(&State<'a>) -> Entry;
+pub type Extractor<'a, P> = fn(&State<'a, P>) -> Entry;
 
 /// A function to log anything that implements [Clone] + [Serialize]
-pub fn auto<'a, T>(state: &State<'a>) -> Entry
+pub fn auto<'a, T, P>(state: &State<'a, P>) -> Entry
 where
     T: CustomState<'a> + Clone + Serialize + 'static,
+    P: Problem,
 {
     debug_assert!(state.has::<T>(), "missing state: {}", type_name::<T>());
 
@@ -24,8 +25,8 @@ where
 
 /// A function which logs the best individual.
 ///
-/// Requires the [Problem::Encoding](crate::problems::Problem::Encoding) to implement [Clone] and [Serialize].
-pub fn best_individual<P>(state: &State) -> Entry
+/// Requires the [Problem::Encoding](Problem::Encoding) to implement [Clone] and [Serialize].
+pub fn best_individual<P>(state: &State<P>) -> Entry
 where
     P: SingleObjectiveProblem,
     P::Encoding: Clone + Serialize + Sized + 'static,
@@ -48,12 +49,12 @@ where
     Entry { name, value }
 }
 
-pub fn best_objective_value<P>(state: &State) -> Entry
+pub fn best_objective_value<P>(state: &State<P>) -> Entry
 where
     P: SingleObjectiveProblem,
 {
     Entry {
         name: "BestObjectiveValue",
-        value: Box::new(state.best_objective_value::<P>().cloned()),
+        value: Box::new(state.best_objective_value().cloned()),
     }
 }

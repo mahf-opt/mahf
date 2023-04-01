@@ -61,7 +61,7 @@ where
         parents: Vec<Vec<D>>,
         offspring: &mut Vec<Vec<D>>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let dim: usize = parents
             .iter()
@@ -120,7 +120,7 @@ mod npoint_crossover {
             points: 3,
             keep_both: true,
         };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -179,7 +179,7 @@ where
         parents: Vec<Vec<D>>,
         offspring: &mut Vec<Vec<D>>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         for pairs in parents.chunks(2) {
             if pairs.len() == 1 {
@@ -226,7 +226,7 @@ mod uniform_crossover {
             pc: 1.0,
             keep_both: true,
         };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -269,7 +269,7 @@ where
         parents: Vec<Vec<D>>,
         offspring: &mut Vec<Vec<D>>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         for pairs in parents.chunks(2) {
             if pairs.len() == 1 {
@@ -325,7 +325,7 @@ mod cycle_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = CycleCrossover { pc: 1.0 };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = vec![
             vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
@@ -357,12 +357,12 @@ impl<P> Component<P> for DEBinomialCrossover
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
-        let stack = mut_state.population_stack_mut::<P>();
+        let populations = mut_state.populations_mut();
 
-        let mut mutations = stack.pop();
-        let bases = stack.current();
+        let mut mutations = populations.pop();
+        let bases = populations.current();
 
         let rng = mut_state.random_mut();
 
@@ -379,14 +379,14 @@ where
             }
         }
 
-        stack.push(mutations);
+        populations.push(mutations);
     }
 }
 #[cfg(test)]
 mod de_binomial_crossover {
     use crate::framework::{Individual, Random};
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::common::Population;
+    use crate::state::common::Populations;
 
     use super::*;
 
@@ -394,10 +394,10 @@ mod de_binomial_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = DEBinomialCrossover { pc: 1.0 };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
 
-        let mut stack = Population::<BenchmarkFunction>::new();
+        let mut stack = Populations::<BenchmarkFunction>::new();
         stack.push(
             vec![
                 vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
@@ -422,7 +422,7 @@ mod de_binomial_crossover {
         comp.initialize(&problem, &mut state);
         comp.execute(&problem, &mut state);
 
-        let stack = state.population_stack_mut::<BenchmarkFunction>();
+        let stack = state.populations_mut();
 
         let offspring = stack.pop();
         let parents = stack.current();
@@ -450,12 +450,12 @@ impl<P> Component<P> for DEExponentialCrossover
 where
     P: Problem<Encoding = Vec<f64>> + VectorProblem,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
-        let stack = mut_state.population_stack_mut::<P>();
+        let populations = mut_state.populations_mut();
 
-        let mut mutations = stack.pop();
-        let bases = stack.current();
+        let mut mutations = populations.pop();
+        let bases = populations.current();
 
         let rng = mut_state.random_mut();
 
@@ -476,14 +476,14 @@ where
             }
         }
 
-        stack.push(mutations);
+        populations.push(mutations);
     }
 }
 #[cfg(test)]
 mod de_exponential_crossover {
     use crate::framework::{Individual, Random};
     use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::common::Population;
+    use crate::state::common::Populations;
 
     use super::*;
 
@@ -491,10 +491,10 @@ mod de_exponential_crossover {
     fn all_recombined() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = DEExponentialCrossover { pc: 1.0 };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
 
-        let mut stack = Population::<BenchmarkFunction>::new();
+        let mut stack = Populations::<BenchmarkFunction>::new();
         stack.push(
             vec![
                 vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
@@ -519,7 +519,7 @@ mod de_exponential_crossover {
         comp.initialize(&problem, &mut state);
         comp.execute(&problem, &mut state);
 
-        let stack = state.population_stack_mut::<BenchmarkFunction>();
+        let stack = state.populations_mut();
 
         let offspring = stack.pop();
         let parents = stack.current();
