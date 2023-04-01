@@ -3,6 +3,7 @@ use crate::{
     problems::{Problem, SingleObjectiveProblem},
     state::{CustomState, State},
 };
+use better_any::Tid;
 use rand::Rng;
 
 #[derive(Clone)]
@@ -39,11 +40,12 @@ impl<P: SingleObjectiveProblem> Molecule<P> {
 /// State required for CRO.
 ///
 /// For preserving energy buffer level and molecule data.
-pub struct CroState<P: Problem> {
+#[derive(Tid)]
+pub struct CroState<P: Problem + 'static> {
     pub buffer: f64,
     pub molecules: Vec<Molecule<P>>,
 }
-impl<P: Problem> CustomState for CroState<P> {}
+impl<P: Problem> CustomState<'_> for CroState<P> {}
 
 #[derive(Debug, serde::Serialize, Clone)]
 pub struct CroStateInitialization {

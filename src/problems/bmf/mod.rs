@@ -7,6 +7,7 @@ pub mod tests;
 use crate::{
     framework::SingleObjective,
     problems::{HasKnownOptimum, HasKnownTarget, LimitedVectorProblem, Problem, VectorProblem},
+    state::common::EvaluatorInstance,
 };
 use anyhow::anyhow;
 use std::convert::TryFrom;
@@ -28,16 +29,26 @@ pub struct BenchmarkFunction {
     implementation: Function,
 }
 
+impl BenchmarkFunction {
+    fn evaluate_solution(&self, solution: &[f64]) -> SingleObjective {
+        (self.implementation)(solution).try_into().unwrap()
+    }
+}
+
 impl Problem for BenchmarkFunction {
     type Encoding = Vec<f64>;
     type Objective = SingleObjective;
 
-    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
-        (self.implementation)(solution).try_into().unwrap()
-    }
-
     fn name(&self) -> &str {
         self.name
+    }
+
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
+        EvaluatorInstance::functional(|problem, _state, individuals| {
+            for individual in individuals {
+                individual.evaluate(problem.evaluate_solution(individual.solution()));
+            }
+        })
     }
 }
 

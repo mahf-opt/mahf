@@ -2,6 +2,7 @@
 
 use std::marker::PhantomData;
 
+use better_any::Tid;
 use serde::Serialize;
 
 use crate::{
@@ -176,8 +177,8 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 }
 
 /// State for logging/tracking population diversity.
-#[derive(Debug)]
-pub struct DiversityState<I> {
+#[derive(Debug, Tid)]
+pub struct DiversityState<I: 'static> {
     /// Normalized diversity.
     pub diversity: f64,
     /// Non-normalized maximal diversity.
@@ -194,4 +195,4 @@ impl<I> Default for DiversityState<I> {
     }
 }
 
-impl<I: Send + 'static> CustomState for DiversityState<I> {}
+impl<I: Send + 'static> CustomState<'_> for DiversityState<I> {}

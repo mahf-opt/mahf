@@ -5,7 +5,10 @@
 //! If a given problem has certain properties, then those will be expressed as traits as well.
 //! Those traits are quite specific and when writing a component they'll allow you to only require those you really need.
 
-use crate::framework::{Individual, MultiObjective, Objective, SingleObjective};
+use crate::{
+    framework::{Individual, MultiObjective, Objective, SingleObjective},
+    state::{common::EvaluatorInstance, State},
+};
 use std::{any::Any, ops::Range};
 
 pub mod bmf;
@@ -27,19 +30,33 @@ pub trait Problem: 'static {
     /// See [SingleObjective] and [MultiObjective].
     type Objective: Objective;
 
-    /// Evaluate a single solution.
-    ///
-    /// Likely going to be moved into its own in the future.
-    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective;
-
-    /// Evaluate an individual using [Self::evaluate_solution].
-    fn evaluate(&self, individual: &mut Individual<Self>) {
-        let objective = self.evaluate_solution(individual.solution());
-        individual.evaluate(objective);
-    }
-
     /// The name of the problem.
     fn name(&self) -> &str;
+
+    /// Returns the default evaluator for the problem.
+    ///
+    /// Can be set to [unimplemented] when the evaluator
+    /// requires additional setup by the user.
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self>;
+}
+
+/// Defines how a population should be evaluated.
+pub trait Evaluator: Send {
+    type Problem: Problem;
+
+    /// Evaluates all individuals.
+    ///
+    /// After calling this function, [Individual::is_evaluated]
+    /// should be true for all individuals.
+    ///
+    /// Individuals might already be evaluated prior to calling this function,
+    /// in which case they can be skipped.
+    fn evaluate(
+        &mut self,
+        problem: &Self::Problem,
+        state: &mut State,
+        individuals: &mut [Individual<Self::Problem>],
+    );
 }
 
 /// A single objective problem.
@@ -65,15 +82,6 @@ pub trait VectorProblem: Problem {
 pub trait LimitedVectorProblem: VectorProblem {
     /// Returns the range of the given dimension.
     fn range(&self, dimension: usize) -> Range<Self::T>;
-}
-
-/// A [Problem] which can be evaluated in batches.
-pub trait BatchEvaluationProblem: Problem {
-    fn evaluate_batch(&self, population: &mut [Individual<Self>]) {
-        for individual in population.iter_mut() {
-            self.evaluate(individual);
-        }
-    }
 }
 
 /// A [Problem] where one can check for the target.

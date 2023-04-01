@@ -33,6 +33,7 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// Panics if the individual already contains a valid objective value.
     pub fn evaluate(&mut self, objective: P::Objective) {
         if self.objective.is_some() {
+            // TODO: this should only emit a warning or maybe just be ignored.
             panic!("Individual got evaluated twice");
         }
         self.objective = Some(objective);

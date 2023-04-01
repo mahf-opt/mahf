@@ -41,7 +41,7 @@ where
         .do_(initialization::RandomBitstring::new_uniform_init(
             population_size,
         ))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(ga(
             Parameters {
@@ -89,7 +89,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(ga(
             Parameters {
@@ -146,7 +146,7 @@ pub fn ga<P: SingleObjectiveProblem>(
                     builder.do_(mutation)
                 })
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_optional_(archive)
                 .do_(replacement)

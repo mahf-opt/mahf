@@ -14,7 +14,6 @@ fn main() -> anyhow::Result<()> {
             v_max: 1.0,
         },
         termination::FixedIterations::new(500),
-        tracking::Logger::default(),
     );
 
     let state = config.optimize_with(&problem, |state| state.insert(Random::seeded(0)));

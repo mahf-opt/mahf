@@ -1,5 +1,10 @@
-use crate::{framework::SingleObjective, problems};
-use std::sync::Mutex;
+use std::ops::RangeInclusive;
+
+use crate::{
+    framework::SingleObjective,
+    problems::{self, Evaluator},
+    state::common::EvaluatorInstance,
+};
 
 pub use coco_rs::{Problem, Suite};
 
@@ -7,26 +12,36 @@ pub mod suits;
 
 #[derive(serde::Serialize)]
 pub struct CocoInstance {
-    #[serde(skip)]
-    problem: Mutex<Problem>,
-    function: usize,
-    instance: usize,
+    function_idx: usize,
+    instance_idx: usize,
+    dimension_idx: usize,
+
+    name: String,
     dimension: usize,
+    ranges_of_interest: Vec<RangeInclusive<f64>>,
+    final_target_value: f64,
 }
 
 impl CocoInstance {
     pub fn format_name(&self) -> String {
-        self.problem.lock().unwrap().id().to_string()
+        self.name.clone()
     }
-}
 
-impl From<Problem> for CocoInstance {
-    fn from(problem: Problem) -> Self {
+    fn from(problem: &Problem) -> Self {
+        let name = problem.id().to_string();
+        let dimension = problem.dimension();
+        let ranges_of_interest = problem.get_ranges_of_interest();
+        let final_target_value = problem.final_target_value();
+
         CocoInstance {
-            function: problem.function_index(),
-            instance: problem.instance_index(),
-            dimension: problem.dimension_index(),
-            problem: Mutex::new(problem),
+            function_idx: problem.function_index(),
+            instance_idx: problem.instance_index(),
+            dimension_idx: problem.dimension_index(),
+
+            name,
+            dimension,
+            ranges_of_interest,
+            final_target_value,
         }
     }
 }
@@ -35,17 +50,12 @@ impl problems::Problem for CocoInstance {
     type Encoding = Vec<f64>;
     type Objective = SingleObjective;
 
-    fn evaluate_solution(&self, solution: &Self::Encoding) -> Self::Objective {
-        let output = &mut [0.0];
-        self.problem
-            .lock()
-            .unwrap()
-            .evaluate_function(solution, output);
-        output[0].try_into().unwrap()
-    }
-
     fn name(&self) -> &str {
         "Coco"
+    }
+
+    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
+        unimplemented!("the evaluator has to be inserted manually")
     }
 }
 
@@ -53,14 +63,13 @@ impl problems::VectorProblem for CocoInstance {
     type T = f64;
 
     fn dimension(&self) -> usize {
-        self.problem.lock().unwrap().dimension()
+        self.dimension
     }
 }
 
 impl problems::LimitedVectorProblem for CocoInstance {
     fn range(&self, dimension: usize) -> std::ops::Range<Self::T> {
-        let problem = self.problem.lock().unwrap();
-        let range = problem.get_ranges_of_interest()[dimension].clone();
+        let range = self.ranges_of_interest[dimension].clone();
 
         let (start, end) = range.into_inner();
         start..end
@@ -68,7 +77,29 @@ impl problems::LimitedVectorProblem for CocoInstance {
 }
 
 impl problems::HasKnownTarget for CocoInstance {
-    fn target_hit(&self, _target: SingleObjective) -> bool {
-        self.problem.lock().unwrap().final_target_hit()
+    fn target_hit(&self, target: SingleObjective) -> bool {
+        target.value() <= self.final_target_value
+    }
+}
+
+struct CocoEvaluator<'s> {
+    pub problem: Problem<'s>,
+}
+
+impl Evaluator for CocoEvaluator<'_> {
+    type Problem = CocoInstance;
+
+    fn evaluate(
+        &mut self,
+        _problem: &Self::Problem,
+        _state: &mut crate::state::State,
+        individuals: &mut [crate::framework::Individual<Self::Problem>],
+    ) {
+        for individual in individuals {
+            let mut out = [0.0];
+            self.problem
+                .evaluate_function(individual.solution(), &mut out);
+            individual.evaluate(SingleObjective::try_from(out[0]).unwrap())
+        }
     }
 }

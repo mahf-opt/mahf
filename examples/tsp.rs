@@ -14,7 +14,6 @@ fn main() -> anyhow::Result<()> {
             local_search_termination: termination::FixedIterations::new(100),
         },
         termination::FixedIterations::new(10),
-        tracking::Logger::default(),
     )
     .into_builder()
     .assert(|state| state.population_stack::<P>().current().len() == 1)

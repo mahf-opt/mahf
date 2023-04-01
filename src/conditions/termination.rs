@@ -8,6 +8,7 @@ use crate::{
         CustomState, State,
     },
 };
+use better_any::Tid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -221,6 +222,7 @@ mod distance_to_opt {
 /// State required for Termination by Steps without Improvement.
 ///
 /// For preserving current number of steps without improvement and corresponding fitness value.
+#[derive(Tid)]
 struct FitnessImprovementState {
     pub current_steps: usize,
     pub current_objective: SingleObjective,
@@ -237,7 +239,7 @@ impl FitnessImprovementState {
         }
     }
 }
-impl CustomState for FitnessImprovementState {}
+impl CustomState<'_> for FitnessImprovementState {}
 
 /// Terminates after a specified number of steps (iterations) did not yield any improvement.
 ///

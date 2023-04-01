@@ -8,43 +8,53 @@ use crate::{
     state::{common, State},
 };
 
+/// Evaluates all individuals in the current population.
+///
+/// This component should be inserted after every generating component.
+///
+/// Only the head of the [common::Population] will be evaluated.
+/// Requires either [common::EvaluatorInstance] to be present
+/// in the [State] or [Problem::default_evaluator] to be implemented.
+///
+/// By inserting a custom [common::EvaluatorInstance] the evaluation
+/// behavior can be customized.
 #[derive(Serialize, Clone)]
-pub struct SequentialEvaluator;
+pub struct Evaluator;
 
-impl SequentialEvaluator {
+impl Evaluator {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: Problem> Component<P> for SequentialEvaluator {
-    fn initialize(&self, _problem: &P, state: &mut State) {
+impl<P: Problem> Component<P> for Evaluator {
+    fn initialize(&self, problem: &P, state: &mut State) {
         state.require::<common::Population<P>>();
         state.insert(common::Evaluations(0));
+
+        if !state.has::<common::EvaluatorInstance<P>>() {
+            state.insert(problem.default_evaluator());
+        }
     }
 
     fn execute(&self, problem: &P, state: &mut State) {
-        let mut mut_state = state.get_states_mut();
+        if let Some(mut population) = state.population_stack_mut().try_pop() {
+            state.holding::<common::EvaluatorInstance<P>>(|evaluator_state, state| {
+                evaluator_state
+                    .evaluator
+                    .evaluate(problem, state, &mut population);
+            });
 
-        // Evaluate population
-        let population = mut_state.population_stack_mut();
-
-        if population.is_empty() {
-            return;
+            *state.get_value_mut::<common::Evaluations>() += population.len() as u32;
+            state.population_stack_mut().push(population);
         }
-
-        for individual in population.current_mut().iter_mut() {
-            if !individual.is_evaluated() {
-                problem.evaluate(individual);
-            }
-        }
-
-        // Update evaluations
-        *mut_state.get_value_mut::<common::Evaluations>() += population.current().len() as u32;
     }
 }
 
 /// Inserts and updates the [common::BestIndividual] state.
+///
+/// Should be inserted right after [Evaluator].
+/// For [MultiObjectiveProblem]s see [UpdateParetoFront].
 #[derive(Serialize, Clone)]
 pub struct UpdateBestIndividual;
 
@@ -77,6 +87,9 @@ impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
 }
 
 /// Inserts and updates the [common::ParetoFront] state.
+///
+/// Should be inserted right after [Evaluator].
+/// For [SingleObjectiveProblem]s see [UpdateBestIndividual].
 #[derive(Serialize, Clone)]
 pub struct UpdateParetoFront;
 

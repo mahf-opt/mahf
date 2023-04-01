@@ -127,7 +127,7 @@ pub fn aco<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .do_(generation)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(pheromone_update)
                 .do_(logger)

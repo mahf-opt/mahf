@@ -1,4 +1,5 @@
 use crate::state::{common, CustomState, State};
+use better_any::Tid;
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
 use std::any::type_name;
@@ -7,13 +8,13 @@ use std::any::type_name;
 ///
 /// [Log] implements [CustomState] and will be
 /// automatically inserted for every run.
-#[derive(Default, Serialize)]
+#[derive(Default, Serialize, Tid)]
 #[serde(transparent)]
 pub struct Log {
     steps: Vec<Step>,
 }
 
-impl CustomState for Log {}
+impl CustomState<'_> for Log {}
 
 impl Log {
     /// Creates a new, empty log.
@@ -48,18 +49,10 @@ impl Step {
     }
 
     /// Logs a new [Entry] at this [Step].
-    ///
-    /// # Panics
-    /// Will panic if an entry with the same name already exists.
-    /// This can be checked prior using [contains](Step::contains) if deemed necessary.
     pub fn push(&mut self, entry: Entry) {
-        debug_assert!(
-            !self.contains(entry.name),
-            "entry with name {} already exists",
-            entry.name
-        );
-
-        self.entries.push(entry);
+        if !self.contains(entry.name) {
+            self.entries.push(entry);
+        }
     }
 
     /// Pushes the current iteration if it has not been logged yet.

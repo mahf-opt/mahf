@@ -1,28 +1,35 @@
-use crate::state::{common::Iterations, CustomState, State};
-use derive_deref::Deref;
 use std::{
-    any::Any,
+    marker::PhantomData,
     ops::{Deref, Sub},
 };
 
+use crate::{
+    problems::Problem,
+    state::{common::Iterations, CustomState, State},
+};
+use better_any::{Tid, TidAble};
+use derive_deref::Deref;
+use dyn_clone::DynClone;
+
 /// Like [Condition](crate::framework::conditions::Condition) but non-serializable.
-pub trait Trigger<P>: Any + Send + Sync {
+pub trait Trigger<'a, P>: DynClone + Send {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State) {}
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
+    fn initialize(&self, problem: &P, state: &mut State<'a>) {}
+    fn evaluate(&self, problem: &P, state: &mut State<'a>) -> bool;
 }
+dyn_clone::clone_trait_object!(<'a, P> Trigger<'a, P>);
 
 /// Triggers every `n` iterations.
-#[derive(serde::Serialize)]
+#[derive(Clone, serde::Serialize)]
 pub struct Iteration(u32);
 
 impl Iteration {
-    pub fn new<P>(iterations: u32) -> Box<dyn Trigger<P>> {
+    pub fn new<'a, P: 'static>(iterations: u32) -> Box<dyn Trigger<'a, P>> {
         Box::new(Iteration(iterations))
     }
 }
 
-impl<P> Trigger<P> for Iteration {
+impl<'a, P: 'static> Trigger<'a, P> for Iteration {
     fn initialize(&self, _problem: &P, state: &mut State) {
         state.require::<Iterations>();
     }
@@ -32,49 +39,72 @@ impl<P> Trigger<P> for Iteration {
     }
 }
 
-#[derive(Deref)]
-struct Previous<S>(S);
-impl<S: 'static + Send> CustomState for Previous<S> {}
-
-/// Triggers when `S` changes base on a predicate.
-#[derive(serde::Serialize)]
-pub struct Change<S> {
-    #[serde(skip)]
-    check: Box<dyn Fn(&S, &S) -> bool + Send + Sync>,
+#[derive(Deref, Tid)]
+struct Previous<'a, S: TidAble<'a> + Send> {
+    pub inner: S,
+    _phantom: PhantomData<&'a ()>,
+}
+impl<'a, S: TidAble<'a> + Send> Previous<'a, S> {
+    pub fn new(inner: S) -> Self {
+        Previous {
+            inner,
+            _phantom: PhantomData::default(),
+        }
+    }
 }
 
-impl<S> Change<S>
+impl<'a, S: TidAble<'a> + Send> CustomState<'a> for Previous<'a, S> {}
+
+/// Triggers when `S` changes base on a predicate.
+#[derive(Tid, Clone)]
+pub struct Change<'a, S> {
+    check: Box<dyn Comparator<S> + 'a>,
+}
+
+pub trait Comparator<S>: Send + Sync + DynClone {
+    fn compare(&self, a: &S, b: &S) -> bool;
+}
+dyn_clone::clone_trait_object!(<S> Comparator<S>);
+
+impl<S, F> Comparator<S> for F
 where
-    S: CustomState + Clone,
+    F: Fn(&S, &S) -> bool + Send + Sync + Clone,
+{
+    fn compare(&self, a: &S, b: &S) -> bool {
+        self(a, b)
+    }
+}
+
+impl<'s, S> Change<'s, S>
+where
+    S: CustomState<'s> + TidAble<'s> + Clone,
 {
     /// Create a new [Change] [Trigger] with a custom predicate.
     ///
     /// Will trigger when the predicate evaluates to `true`.
-    pub fn custom<P>(
-        check: impl Fn(&S, &S) -> bool + Send + Sync + 'static,
-    ) -> Box<dyn Trigger<P>> {
+    pub fn custom<P: Problem>(check: impl Comparator<S> + 's) -> Box<dyn Trigger<'s, P> + 's> {
         Box::new(Change {
             check: Box::new(check),
         })
     }
 }
 
-impl<S> Change<S>
+impl<'s, S> Change<'s, S>
 where
-    S: CustomState + Clone + Deref,
-    S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
+    S: CustomState<'s> + TidAble<'s> + Clone + Deref,
+    S::Target: Clone + Sub<Output = S::Target> + PartialOrd + Send + Sync,
 {
     /// Create a new [Change] [Trigger] based on a threshhold.
     ///
     /// Requires `S` to dereference to something that implements [Sub] and [Ord].
-    pub fn new<P>(threshhold: S::Target) -> Box<dyn Trigger<P>> {
+    pub fn new<P: Problem>(threshhold: S::Target) -> Box<dyn Trigger<'s, P> + 's> {
         Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {
                 let old = old.deref();
                 let new = new.deref();
 
-                let min = Ord::min(old, new).clone();
-                let max = Ord::max(old, new).clone();
+                let min = min(old, new).clone();
+                let max = max(old, new).clone();
 
                 (max - min) >= threshhold
             }),
@@ -82,20 +112,20 @@ where
     }
 }
 
-impl<S, P> Trigger<P> for Change<S>
+impl<'s, S, P: 's> Trigger<'s, P> for Change<'s, S>
 where
-    S: CustomState + Clone,
+    S: CustomState<'s> + TidAble<'s> + Clone,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
+    fn initialize(&self, _problem: &P, state: &mut State<'s>) {
         state.require::<S>();
         let current = state.get::<S>().clone();
-        state.insert(Previous(current));
+        state.insert(Previous::new(current));
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<'s>) -> bool {
         let previous = state.get::<Previous<S>>();
         let current = state.get::<S>();
-        let changed = (self.check)(previous, current);
+        let changed = self.check.compare(previous, current);
 
         if changed {
             let new = current.clone();
@@ -103,5 +133,23 @@ where
         }
 
         changed
+    }
+}
+
+#[inline]
+fn min<T: PartialOrd>(a: T, b: T) -> T {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn max<T: PartialOrd>(a: T, b: T) -> T {
+    if a > b {
+        a
+    } else {
+        b
     }
 }

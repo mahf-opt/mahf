@@ -1,4 +1,4 @@
-use mahf::prelude::*;
+use mahf::{prelude::*, state::common, tracking::LogSet};
 use problems::coco_bound::{suits, CocoInstance};
 use tracking::{functions, trigger};
 
@@ -15,16 +15,21 @@ fn main() -> anyhow::Result<()> {
             modulation_index: 3,
         },
         termination::FixedIterations::new(500) & termination::TargetHit::new(),
-        tracking::Logger::builder()
-            .log_common_sets()
-            .log_set(
-                tracking::LogSet::new()
-                    .with_trigger(trigger::Iteration::new(50))
-                    .with_logger(functions::best_individual::<CocoInstance>),
-            )
-            .build(),
     );
     let suite = suits::bbob();
 
-    suits::evaluate_suite(suite, config, output)
+    suits::evaluate_suite(suite, config, output, |state| {
+        state.insert(
+            LogSet::<CocoInstance>::new()
+                .with_common_extractors(trigger::Iteration::new(10))
+                .with(
+                    trigger::Change::<common::Progress>::new(0.1),
+                    functions::auto::<common::Progress>,
+                )
+                .with(
+                    trigger::Iteration::new(50),
+                    functions::best_individual::<CocoInstance>,
+                ),
+        )
+    })
 }
