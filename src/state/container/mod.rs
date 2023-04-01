@@ -67,7 +67,7 @@ impl<'a> State<'a> {
         if self.map.has::<T>() {
             Some(self)
         } else {
-            self.parent()
+            self.parent().and_then(Self::find::<T>)
         }
     }
 
@@ -76,7 +76,7 @@ impl<'a> State<'a> {
         if self.map.has::<T>() {
             Some(self)
         } else {
-            self.parent_mut()
+            self.parent_mut().and_then(Self::find_mut::<T>)
         }
     }
 
