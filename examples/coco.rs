@@ -24,7 +24,7 @@ fn main() -> anyhow::Result<()> {
                 .with_common_extractors(trigger::Iteration::new(10))
                 .with(
                     trigger::Change::<common::Progress>::new(0.1),
-                    functions::auto::<common::Progress>,
+                    functions::auto::<common::Progress, _>,
                 )
                 .with(
                     trigger::Iteration::new(50),

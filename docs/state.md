@@ -12,7 +12,7 @@ You would start by defining the state like this:
 
 ```rust
 use mahf::framework::state::CustomState;
-use mahf::derive_deref::{Deref, DerefMut};
+use mahf::derive_more::{Deref, DerefMut};
 use mahf::serde::Serialize;
 
 #[derive(Default, Debug, Deref, DerefMut, Serialize)]
@@ -32,7 +32,7 @@ Now you can use it in your component:
 
 The [CustomState] trait serves as a marker for custom state.
 You can take a look at its documentation to get a list off all state types provided by MAHF.
-If you have custom state representing a single value, it is recommended to also derive [Deref](derive_deref::Deref), [DerefMut](derive_deref::DerefMut) and [serde::Serialize].
+If you have custom state representing a single value, it is recommended to also derive [Deref](derive_more::Deref), [DerefMut](derive_more::DerefMut) and [serde::Serialize].
 
 ## Mutable Access
 
