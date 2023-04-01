@@ -127,8 +127,8 @@ impl<P: Problem> Component<P> for Loop<P> {
     fn initialize(&self, problem: &P, state: &mut State<P>) {
         state.insert(common::Iterations(0));
 
-        self.body.initialize(problem, state);
         self.condition.initialize(problem, state);
+        self.body.initialize(problem, state);
     }
 
     fn execute(&self, problem: &P, state: &mut State<P>) {
