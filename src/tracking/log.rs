@@ -49,18 +49,10 @@ impl Step {
     }
 
     /// Logs a new [Entry] at this [Step].
-    ///
-    /// # Panics
-    /// Will panic if an entry with the same name already exists.
-    /// This can be checked prior using [contains](Step::contains) if deemed necessary.
     pub fn push(&mut self, entry: Entry) {
-        debug_assert!(
-            !self.contains(entry.name),
-            "entry with name {} already exists",
-            entry.name
-        );
-
-        self.entries.push(entry);
+        if !self.contains(entry.name) {
+            self.entries.push(entry);
+        }
     }
 
     /// Pushes the current iteration if it has not been logged yet.
