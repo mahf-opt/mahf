@@ -1,6 +1,9 @@
 #![doc = include_str!("../../../docs/state.md")]
 
-use std::ops::{Deref, DerefMut};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 use crate::{
     framework::{Individual, Random, SingleObjective},
@@ -10,7 +13,7 @@ use crate::{
 };
 
 mod many;
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 pub use many::{MultiStateTuple, MutState};
 
 mod map;
@@ -112,15 +115,19 @@ impl<'a> State<'a> {
     /// This should only be used, if the state has to be passed to another function,
     /// whilst borrowing from it.
     #[track_caller]
-    pub fn holding<T: CustomState<'a>>(&mut self, code: impl FnOnce(&mut T, &mut Self)) {
-        let state_with_t = self.find_mut::<T>().unwrap() as *mut Self;
+    pub fn holding<T>(&mut self, code: impl FnOnce(&mut T, &mut Self))
+    where
+        T: CustomState<'a> + TidAble<'a>,
+    {
+        let state_with_t = self.find_mut::<T>().unwrap();
 
-        let mut instance = self.take::<T>();
+        state_with_t.insert(Placeholder::<T>(PhantomData));
+        let mut instance = state_with_t.take::<T>();
         code(&mut instance, self);
 
-        // Insert the state where it was before.
-        // This is save, because inner states can not be removed.
-        unsafe { state_with_t.as_mut().unwrap().insert(instance) };
+        let state_with_t = self.find_mut::<Placeholder<T>>().unwrap();
+        state_with_t.insert(instance);
+        state_with_t.take::<Placeholder<T>>();
     }
 
     /// Returns the state.
@@ -308,3 +315,7 @@ impl<'a, 's> MutState<'a, 's> {
     // This has to match the lifetime bounds of [MutState::get].
     impl_convenience_functions!('a, &mut Self);
 }
+
+#[derive(Tid)]
+struct Placeholder<T>(PhantomData<T>);
+impl<'a, T: CustomState<'a> + TidAble<'a>> CustomState<'a> for Placeholder<T> {}
