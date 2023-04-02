@@ -14,7 +14,7 @@ use crate::tracking::Log;
 #[derive(Default, Serialize)]
 struct CompressedLog<'a> {
     names: Vec<&'static str>,
-    entries: Vec<Vec<CompressedEntry<'a>>>,
+    entries: Vec<HashMap<usize, &'a dyn DynSerialize>>,
 }
 
 #[derive(Serialize)]
@@ -31,7 +31,8 @@ impl<'a> From<&'a Log> for CompressedLog<'a> {
         let mut keys: HashMap<&'static str, usize> = HashMap::new();
 
         for step in log.steps() {
-            let mut cstep = Vec::with_capacity(step.entries().len());
+            let mut cstep: HashMap<usize, &'a dyn DynSerialize> =
+                HashMap::with_capacity(step.entries().len());
 
             for entry in step.entries() {
                 let key = *keys.entry(entry.name).or_insert_with(|| {
@@ -42,7 +43,7 @@ impl<'a> From<&'a Log> for CompressedLog<'a> {
                 });
                 let value = &entry.value;
 
-                cstep.push(CompressedEntry { key, value });
+                cstep.insert(key, value);
             }
 
             clog.entries.push(cstep);
