@@ -38,7 +38,11 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
         }
     }
 
-    pub fn with(mut self, trigger: Box<dyn Trigger<'a, P> + 'a>, extractor: Extractor<'a, P>) -> Self {
+    pub fn with(
+        mut self,
+        trigger: Box<dyn Trigger<'a, P> + 'a>,
+        extractor: Extractor<'a, P>,
+    ) -> Self {
         self.entries.push((trigger, extractor));
         self
     }
