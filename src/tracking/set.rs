@@ -2,7 +2,7 @@ use crate::{
     problems::Problem,
     state::{common, CustomState, State},
     tracking::{
-        functions::{self, LogFn},
+        functions::{self, Extractor},
         log::Step,
         trigger::Trigger,
     },
@@ -13,7 +13,7 @@ use serde::Serialize;
 /// A combination of [Trigger] and [LogFn].
 #[derive(Default, Tid)]
 pub struct LogSet<'a, P: 'static> {
-    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P> + 'a>, LogFn<'a>)>,
+    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P> + 'a>, Extractor<'a>)>,
 }
 
 impl<'a, P> Clone for LogSet<'a, P> {
@@ -38,7 +38,7 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
         }
     }
 
-    pub fn with(mut self, trigger: Box<dyn Trigger<'a, P> + 'a>, extractor: LogFn<'a>) -> Self {
+    pub fn with(mut self, trigger: Box<dyn Trigger<'a, P> + 'a>, extractor: Extractor<'a>) -> Self {
         self.entries.push((trigger, extractor));
         self
     }

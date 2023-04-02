@@ -7,7 +7,7 @@ use serde::Serialize;
 use std::{any::type_name, ops::Deref};
 
 /// A function to turn some state into an [Entry].
-pub type LogFn<'a> = fn(&State<'a>) -> Entry;
+pub type Extractor<'a> = fn(&State<'a>) -> Entry;
 
 /// A function to log anything that implements [Clone] + [Serialize]
 pub fn auto<'a, T>(state: &State<'a>) -> Entry
