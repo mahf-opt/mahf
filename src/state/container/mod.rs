@@ -26,7 +26,7 @@ pub trait CustomState<'a>: Tid<'a> + Send {}
 pub struct State<'a, P> {
     parent: Option<Box<State<'a, P>>>,
     map: StateMap<'a>,
-    _phantom: std::marker::PhantomData<P>,
+    _phantom: PhantomData<P>,
 }
 
 impl<P: Problem> Default for State<'_, P> {
@@ -43,7 +43,7 @@ impl<'a, P: Problem> State<'a, P> {
         State {
             parent: None,
             map: StateMap::new(),
-            _phantom: std::marker::PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -52,7 +52,7 @@ impl<'a, P: Problem> State<'a, P> {
         let mut substate: State<P> = Self {
             parent: Some(Box::new(std::mem::take(self))),
             map: StateMap::new(),
-            _phantom: std::marker::PhantomData,
+            _phantom: PhantomData,
         };
         fun(&mut substate);
         *self = *substate.parent.unwrap();
@@ -73,11 +73,14 @@ impl<'a, P: Problem> State<'a, P> {
         self.map.insert(state);
     }
 
+    /// Changes the problem type of the state.
+    ///
+    /// Only needed for obscure use-cases when the state is reused for multiple problems.
     pub fn transmute<O: Problem>(self: State<'a, P>) -> State<'a, O> {
         State {
             parent: self.parent.map(|parent| Box::new(parent.transmute::<O>())),
             map: self.map,
-            _phantom: std::marker::PhantomData::<O>,
+            _phantom: PhantomData::<O>,
         }
     }
 
@@ -104,10 +107,37 @@ impl<'a, P: Problem> State<'a, P> {
         self.find::<T>().is_some()
     }
 
-    /// Panics if the state does not exist.
+    /// Panics if the state `T` does not exist, but is needed by the component `C`.
     ///
     /// This is the recommended way to ensure the state
     /// is available in [Component::initialize](crate::framework::components::Component::initialize).
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    /// ```
+    /// use mahf::prelude::*;
+    /// use mahf::framework::components::Component;
+    /// use mahf::state::CustomState;
+    ///
+    /// #[derive(better_any::Tid)]
+    /// struct RequiredCustomState;
+    /// impl CustomState<'_> for RequiredCustomState {}
+    ///
+    /// #[derive(Clone, serde::Serialize)]
+    /// struct ExampleComponent;
+    ///
+    /// impl<P: problems::Problem> Component<P> for ExampleComponent {
+    ///     fn initialize(&self, problem: &P, state: &mut State<P>) {
+    ///         // Panics with an error message if `RequiredCustomState` is not present.
+    ///         state.require::<Self, RequiredCustomState>();
+    ///     }
+    ///
+    ///     fn execute(&self, problem: &P, state: &mut State<P>) {
+    ///         unimplemented!()
+    ///     }
+    /// }
+    /// ```
     #[track_caller]
     pub fn require<C, T: CustomState<'a>>(&self) {
         assert!(
