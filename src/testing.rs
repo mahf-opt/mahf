@@ -3,7 +3,7 @@
 use crate::{
     framework::{Individual, SingleObjective},
     problems::{Evaluator, HasKnownOptimum, Problem, SingleObjectiveProblem},
-    state::common::EvaluatorInstance,
+    state::{common::EvaluatorInstance, State},
 };
 use std::borrow::Borrow;
 
@@ -37,7 +37,7 @@ impl Evaluator for TestEvaluator {
     fn evaluate(
         &mut self,
         _problem: &Self::Problem,
-        _state: &mut crate::state::State,
+        _state: &mut State<Self::Problem>,
         individuals: &mut [Individual<Self::Problem>],
     ) {
         for individual in individuals {

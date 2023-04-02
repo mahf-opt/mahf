@@ -18,7 +18,7 @@ pub mod swarm;
 
 /// Specialized component trait to generate a new population from the current one.
 ///
-/// This trait is especially useful for components which modify solutions independently.
+/// This trait is especially useful for components that modify solutions independently.
 /// For combining multiple solutions, see [Recombination].
 ///
 /// # Implementing [Component]
@@ -29,7 +29,7 @@ pub trait Generation<P: Problem> {
         &self,
         population: &mut Vec<P::Encoding>,
         problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     );
 }
 
@@ -41,8 +41,8 @@ where
     P: Problem,
     T: AnyComponent + Generation<P> + Serialize + Clone,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.population_stack_mut::<P>().pop();
+    fn execute(&self, problem: &P, state: &mut State<P>) {
+        let population = state.populations_mut().pop();
         let mut population = population
             .into_iter()
             .map(Individual::into_solution)
@@ -52,13 +52,13 @@ where
             .into_iter()
             .map(Individual::<P>::new_unevaluated)
             .collect();
-        state.population_stack_mut().push(population);
+        state.populations_mut().push(population);
     }
 }
 
 /// Specialized component trait to generate a new population from the current one.
 ///
-/// This trait is especially useful for components which combine multiple solutions.
+/// This trait is especially useful for components that combine multiple solutions.
 /// For modifying solutions independently, see [Generation].
 ///
 /// # Implementing [Component]
@@ -70,7 +70,7 @@ pub trait Recombination<P: Problem> {
         parents: Vec<P::Encoding>,
         offspring: &mut Vec<P::Encoding>,
         problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     );
 }
 
@@ -83,8 +83,8 @@ where
     T: AnyComponent + Recombination<P> + Serialize + Clone,
     D: Clone + PartialEq + 'static,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
-        let population = state.population_stack_mut::<P>().pop();
+    fn execute(&self, problem: &P, state: &mut State<P>) {
+        let population = state.populations_mut().pop();
         let population = population
             .into_iter()
             .map(Individual::into_solution)
@@ -96,7 +96,7 @@ where
             .into_iter()
             .map(Individual::<P>::new_unevaluated)
             .collect();
-        state.population_stack_mut().push(offspring);
+        state.populations_mut().push(offspring);
     }
 }
 
@@ -122,7 +122,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let population_size = population.len() as u32;
         *population = self.random_permutation(problem, state.random_mut(), population_size);
@@ -151,7 +151,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let population_size = population.len() as u32;
         *population = self.random_spread(problem, state.random_mut(), population_size);
@@ -194,7 +194,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let population_size = population.len() as u32;
         *population = self.random_bitstring(problem, state.random_mut(), population_size);
@@ -209,11 +209,11 @@ impl DuplicatePopulation {
     }
 }
 impl<P: Problem> Component<P> for DuplicatePopulation {
-    fn execute(&self, _problem: &P, state: &mut State) {
-        let population = state.population_stack_mut::<P>().pop();
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
+        let population = state.populations_mut().pop();
         let duplicates = population.clone();
 
         let population = population.into_iter().interleave(duplicates).collect();
-        state.population_stack_mut().push(population);
+        state.populations_mut().push(population);
     }
 }

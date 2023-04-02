@@ -33,7 +33,7 @@ pub fn evaluate_suite(
     mut suite: Suite,
     configuration: Configuration<CocoInstance>,
     output_dir: &str,
-    setup: impl Fn(&mut State) + Send + Sync,
+    setup: impl Fn(&mut State<CocoInstance>) + Send + Sync,
 ) -> anyhow::Result<()> {
     #[allow(unused_variables)]
     let num_threads = 1;
@@ -103,9 +103,7 @@ pub fn evaluate_suite(
                             let log = state.get::<Log>();
                             files::write_log_file(log_file, log)?;
 
-                            let target_hit = if let Some(fitness) =
-                                state.best_objective_value::<CocoInstance>()
-                            {
+                            let target_hit = if let Some(fitness) = state.best_objective_value() {
                                 instance.target_hit(*fitness)
                             } else {
                                 false

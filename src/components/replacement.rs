@@ -20,7 +20,7 @@ pub trait Replacement<P: Problem> {
         &self,
         parents: &mut Vec<Individual<P>>,
         offspring: &mut Vec<Individual<P>>,
-        state: &mut State,
+        state: &mut State<P>,
     );
 }
 
@@ -32,12 +32,12 @@ where
     P: Problem,
     T: AnyComponent + Replacement<P> + Serialize + Clone,
 {
-    fn execute(&self, _problem: &P, state: &mut State) {
-        let mut offspring = state.population_stack_mut().pop();
-        let mut parents = state.population_stack_mut().pop();
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
+        let mut offspring = state.populations_mut().pop();
+        let mut parents = state.populations_mut().pop();
         self.0
             .replace_population(&mut parents, &mut offspring, state);
-        state.population_stack_mut().push(parents);
+        state.populations_mut().push(parents);
     }
 }
 
@@ -54,7 +54,7 @@ impl<P: Problem> Replacement<P> for Noop {
         &self,
         _parents: &mut Vec<Individual<P>>,
         _offspring: &mut Vec<Individual<P>>,
-        _state: &mut State,
+        _state: &mut State<P>,
     ) {
     }
 }
@@ -77,7 +77,7 @@ impl<P: SingleObjectiveProblem> Replacement<P> for MuPlusLambda {
         &self,
         parents: &mut Vec<Individual<P>>,
         offspring: &mut Vec<Individual<P>>,
-        _state: &mut State,
+        _state: &mut State<P>,
     ) {
         parents.append(offspring);
         parents.sort_unstable_by_key(|i| *i.objective());
@@ -94,7 +94,7 @@ mod mupluslambda {
 
     #[test]
     fn keeps_right_individuals() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         let comp = MuPlusLambda {
             max_population_size: 3,
         };
@@ -125,7 +125,7 @@ impl<P: Problem> Replacement<P> for Generational {
         &self,
         parents: &mut Vec<Individual<P>>,
         offspring: &mut Vec<Individual<P>>,
-        _state: &mut State,
+        _state: &mut State<P>,
     ) {
         parents.clear();
         parents.append(offspring);
@@ -140,7 +140,7 @@ mod generational {
 
     #[test]
     fn keeps_all_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         let comp = Generational {
             max_population_size: 5,
         };
@@ -171,7 +171,7 @@ impl<P: Problem> Replacement<P> for RandomReplacement {
         &self,
         parents: &mut Vec<Individual<P>>,
         offspring: &mut Vec<Individual<P>>,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         parents.append(offspring);
         parents.shuffle(state.random_mut());
@@ -187,7 +187,7 @@ mod random_replacement {
 
     #[test]
     fn keeps_right_amount_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let comp = RandomReplacement {
             max_population_size: 5,
@@ -213,7 +213,7 @@ impl<P: SingleObjectiveProblem> Replacement<P> for IndividualPlus {
         &self,
         parents: &mut Vec<Individual<P>>,
         offspring: &mut Vec<Individual<P>>,
-        _state: &mut State,
+        _state: &mut State<P>,
     ) {
         assert_eq!(parents.len(), offspring.len());
 
@@ -232,7 +232,7 @@ mod greedy_index {
 
     #[test]
     fn keeps_right_amount_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let comp = IndividualPlus;
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);

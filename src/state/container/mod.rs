@@ -23,31 +23,39 @@ pub(crate) use map::StateMap;
 pub trait CustomState<'a>: Tid<'a> + Send {}
 
 /// Container for storing and managing state.
-#[derive(Default)]
-pub struct State<'a> {
-    parent: Option<Box<State<'a>>>,
+pub struct State<'a, P> {
+    parent: Option<Box<State<'a, P>>>,
     map: StateMap<'a>,
+    _phantom: PhantomData<P>,
 }
 
-impl<'a> State<'a> {
+impl<P: Problem> Default for State<'_, P> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'a, P: Problem> State<'a, P> {
     /// Creates a new state container.
     ///
     /// Only needed for tests.
-    pub fn new_root() -> Self {
+    pub fn new() -> Self {
         State {
             parent: None,
             map: StateMap::new(),
+            _phantom: PhantomData,
         }
     }
 
     /// Runs a closure within a new scope.
-    pub fn with_substate(&mut self, fun: impl FnOnce(&mut State)) {
-        let mut substate: State = Self {
+    pub fn with_substate(&mut self, fun: impl FnOnce(&mut State<P>)) {
+        let mut substate: State<P> = Self {
             parent: Some(Box::new(std::mem::take(self))),
             map: StateMap::new(),
+            _phantom: PhantomData,
         };
         fun(&mut substate);
-        *self = *substate.parent.unwrap()
+        *self = *substate.parent.unwrap();
     }
 
     /// Returns the parent state.
@@ -65,7 +73,7 @@ impl<'a> State<'a> {
         self.map.insert(state);
     }
 
-    /// Tires to find an inner map containing T.
+    /// Tries to find an inner map containing T.
     fn find<T: CustomState<'a>>(&self) -> Option<&Self> {
         if self.map.has::<T>() {
             Some(self)
@@ -88,15 +96,43 @@ impl<'a> State<'a> {
         self.find::<T>().is_some()
     }
 
-    /// Panics if the state does not exist.
+    /// Panics if the state `T` does not exist, but is needed by the component `C`.
     ///
     /// This is the recommended way to ensure the state
     /// is available in [Component::initialize](crate::framework::components::Component::initialize).
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    /// ```
+    /// use mahf::prelude::*;
+    /// use mahf::framework::components::Component;
+    /// use mahf::state::CustomState;
+    ///
+    /// #[derive(better_any::Tid)]
+    /// struct RequiredCustomState;
+    /// impl CustomState<'_> for RequiredCustomState {}
+    ///
+    /// #[derive(Clone, serde::Serialize)]
+    /// struct ExampleComponent;
+    ///
+    /// impl<P: problems::Problem> Component<P> for ExampleComponent {
+    ///     fn initialize(&self, problem: &P, state: &mut State<P>) {
+    ///         // Panics with an error message if `RequiredCustomState` is not present.
+    ///         state.require::<Self, RequiredCustomState>();
+    ///     }
+    ///
+    ///     fn execute(&self, problem: &P, state: &mut State<P>) {
+    ///         unimplemented!()
+    ///     }
+    /// }
+    /// ```
     #[track_caller]
-    pub fn require<T: CustomState<'a>>(&self) {
+    pub fn require<C, T: CustomState<'a>>(&self) {
         assert!(
             self.has::<T>(),
-            "operator requires {} state",
+            "{} requires {} state",
+            std::any::type_name::<C>(),
             std::any::type_name::<T>()
         );
     }
@@ -178,7 +214,7 @@ impl<'a> State<'a> {
     /// ```
     /// use mahf::{state::{State, common::Population}, framework::Random, problems::bmf::BenchmarkFunction};
     /// let problem = BenchmarkFunction::sphere(3);
-    /// let mut state = State::new_root();
+    /// let mut state = State::new();
     /// state.insert(Random::testing());
     /// state.insert(Population::<BenchmarkFunction>::new());
     ///
@@ -188,7 +224,7 @@ impl<'a> State<'a> {
     ///
     /// // Do something with rng and population, or borrow additional types.
     /// ```
-    pub fn get_states_mut<'b>(&'b mut self) -> MutState<'b, 'a> {
+    pub fn get_states_mut<'b>(&'b mut self) -> MutState<'b, 'a, P> {
         MutState::new(self)
     }
 
@@ -236,7 +272,7 @@ impl<'a> State<'a> {
     /// ```
     /// use mahf::{state::{State, common::Population}, framework::Random, problems::bmf::BenchmarkFunction};
     /// let problem = BenchmarkFunction::sphere(3);
-    /// let mut state = State::new_root();
+    /// let mut state = State::new();
     /// state.insert(Random::testing());
     /// state.insert(Population::<BenchmarkFunction>::new());
     ///
@@ -250,70 +286,107 @@ impl<'a> State<'a> {
     }
 }
 
-/// Convenience functions for often required state.
-///
-/// If some state does not exist, the function will panic.
-macro_rules! impl_convenience_functions {
-    ($l:lifetime, $t:ty) => {
+macro_rules! impl_convenience_methods {
+    ($lifetime:lifetime, $self_type:ty) => {
         /// Returns [Iterations](common::Iterations) state.
-        pub fn iterations(self: $t) -> u32 {
+        pub fn iterations(self: $self_type) -> u32 {
             self.get_value::<common::Iterations>()
         }
 
         /// Returns [Evaluations](common::Evaluations) state.
-        pub fn evaluations(self: $t) -> u32 {
+        pub fn evaluations(self: $self_type) -> u32 {
             self.get_value::<common::Evaluations>()
         }
 
-        /// Returns [BestIndividual](common::BestIndividual) state.
-        pub fn best_individual<P: SingleObjectiveProblem>(self: $t) -> Option<&$l Individual<P>> {
-            self.get::<common::BestIndividual<P>>().as_ref()
+        /// Returns [Population](common::Populations) state.
+        pub fn populations(self: $self_type) -> &$lifetime common::Populations<P> {
+            self.get::<common::Populations<P>>()
         }
 
-        /// Returns the objective value of the [BestIndividual](common::BestIndividual).
-        pub fn best_objective_value<P: SingleObjectiveProblem>(
-            self: $t,
-        ) -> Option<&SingleObjective> {
-            self.best_individual::<P>().map(|i| i.objective())
-        }
-
-        /// Returns [ParetoFront](common::ParetoFront) state.
-        pub fn pareto_front<P: MultiObjectiveProblem>(self: $t) -> &$l common::ParetoFront<P> {
-            self.get::<common::ParetoFront<P>>()
-        }
-
-        /// Returns [Population](common::Population) state.
-        pub fn population_stack<P: Problem>(self: $t) -> &$l common::Population<P> {
-            self.get::<common::Population<P>>()
-        }
-
-        /// Returns mutable [Population](common::Population) state.
-        pub fn population_stack_mut<P: Problem>(&mut self) -> &$l mut common::Population<P> {
-            self.get_mut::<common::Population<P>>()
+        /// Returns mutable [Population](common::Populations) state.
+        pub fn populations_mut(&mut self) -> &$lifetime mut common::Populations<P> {
+            self.get_mut::<common::Populations<P>>()
         }
 
         /// Returns mutable [Random](random::Random) state.
-        pub fn random_mut(&mut self) -> &$l mut Random {
+        pub fn random_mut(&mut self) -> &$lifetime mut Random {
             self.get_mut::<Random>()
         }
 
         /// Returns the [Log].
-        pub fn log(self: $t) -> &$l Log {
+        pub fn log(self: $self_type) -> &$lifetime Log {
             self.get::<Log>()
         }
     };
 }
 
-impl<'a> State<'a> {
+impl<'a, P: Problem> State<'a, P> {
     // Uses '_ as 'self lifetime.
     // This has to match the lifetime bounds of [State::get].
-    impl_convenience_functions!('_, &Self);
+    impl_convenience_methods!('_, &Self);
 }
 
-impl<'a, 's> MutState<'a, 's> {
+impl<'a, 's, P: Problem> MutState<'a, 's, P> {
     // Uses 'a as the internal [State]s lifetime.
     // This has to match the lifetime bounds of [MutState::get].
-    impl_convenience_functions!('a, &mut Self);
+    impl_convenience_methods!('a, &mut Self);
+}
+
+macro_rules! impl_single_objective_convenience_methods {
+    ($lifetime:lifetime, $self_type:ty) => {
+        /// Returns [BestIndividual](common::BestIndividual) state.
+        pub fn best_individual(self: $self_type) -> Option<&$lifetime Individual<P>> {
+            self.get::<common::BestIndividual<P>>().as_ref()
+        }
+
+        /// Returns [BestIndividual](common::BestIndividual) state.
+        pub fn best_individual_mut(&mut self) -> Option<&$lifetime mut Individual<P>> {
+            self.get_mut::<common::BestIndividual<P>>().as_mut()
+        }
+
+        /// Returns the objective value of the [BestIndividual](common::BestIndividual).
+        pub fn best_objective_value(self: $self_type) -> Option<&$lifetime SingleObjective> {
+            self.best_individual().map(|i| i.objective())
+        }
+    };
+}
+
+impl<'a, P: SingleObjectiveProblem> State<'a, P> {
+    // Uses '_ as 'self lifetime.
+    // This has to match the lifetime bounds of [State::get].
+    impl_single_objective_convenience_methods!('_, &Self);
+}
+
+impl<'a, 's, P: SingleObjectiveProblem> MutState<'a, 's, P> {
+    // Uses 'a as the internal [State]s lifetime.
+    // This has to match the lifetime bounds of [MutState::get].
+    impl_single_objective_convenience_methods!('a, &mut Self);
+}
+
+macro_rules! impl_multi_objective_convenience_methods {
+    ($lifetime:lifetime, $self_type:ty) => {
+        /// Returns [ParetoFront](common::ParetoFront) state.
+        pub fn pareto_front(self: $self_type) -> &$lifetime common::ParetoFront<P> {
+            self.get::<common::ParetoFront<P>>()
+        }
+
+        /// Returns [ParetoFront](common::ParetoFront) state.
+        pub fn pareto_front_mut(&mut self) -> &$lifetime mut common::ParetoFront<P> {
+            self.get_mut::<common::ParetoFront<P>>()
+        }
+    };
+}
+
+impl<'a, P: MultiObjectiveProblem> State<'a, P> {
+    // Uses '_ as 'self lifetime.
+    // This has to match the lifetime bounds of [State::get].
+    impl_multi_objective_convenience_methods!('_, &Self);
+}
+
+impl<'a, 's, P: MultiObjectiveProblem> MutState<'a, 's, P> {
+    // Uses 'a as the internal [State]s lifetime.
+    // This has to match the lifetime bounds of [MutState::get].
+    impl_multi_objective_convenience_methods!('a, &mut Self);
 }
 
 #[derive(Tid)]

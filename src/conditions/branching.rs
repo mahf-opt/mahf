@@ -22,7 +22,7 @@ impl<P> Condition<P> for RandomChance
 where
     P: Problem,
 {
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         state.random_mut().gen_bool(self.p)
     }
 }
@@ -44,8 +44,8 @@ impl<P> Condition<P> for LessThanNIndividuals
 where
     P: Problem,
 {
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        state.population_stack::<P>().current().len() < self.n
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
+        state.populations().current().len() < self.n
     }
 }
 
@@ -67,13 +67,13 @@ impl<P> Condition<P> for DecompositionCriterion
 where
     P: Problem,
 {
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         let mut mut_state = state.get_states_mut();
         let cro_state = mut_state.get::<state::CroState<P>>();
-        let stack = mut_state.population_stack::<P>();
+        let populations = mut_state.populations();
 
-        let selected = stack.peek(0).first().unwrap();
-        let population = stack.peek(1);
+        let selected = populations.peek(0).first().unwrap();
+        let population = populations.peek(1);
 
         let selected_index = population.iter().position(|i| i == selected).unwrap();
         let molecule = &cro_state.molecules[selected_index];
@@ -100,13 +100,13 @@ impl<P> Condition<P> for SynthesisCriterion
 where
     P: Problem,
 {
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         let mut mut_state = state.get_states_mut();
         let cro_state = mut_state.get::<state::CroState<P>>();
-        let stack = mut_state.population_stack::<P>();
+        let populations = mut_state.populations();
 
-        let [s1, s2] = TryInto::<&[_; 2]>::try_into(stack.peek(0)).unwrap();
-        let population = stack.peek(1);
+        let [s1, s2] = TryInto::<&[_; 2]>::try_into(populations.peek(0)).unwrap();
+        let population = populations.peek(1);
 
         let s1_index = population.iter().position(|i| i == s1).unwrap();
         let s1_molecule = &cro_state.molecules[s1_index];

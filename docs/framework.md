@@ -61,9 +61,9 @@ Configuration::builder()
 Every component has to implement the [Component](components::Component) trait, which looks like this:
 ```ignore
 pub trait Component<P: Problem>: AnyComponent {
-    fn execute(&self, problem: &P, state: &mut State);
+    fn execute(&self, problem: &P, state: &mut State<P>);
 
-    fn initialize(&self, problem: &P, state: &mut State) { ... }
+    fn initialize(&self, problem: &P, state: &mut State<P>) { ... }
 }
 ```
 

@@ -47,13 +47,13 @@ impl<P: Problem> Configuration<P> {
     ///
     /// For initializing the state with custom state,
     /// see [optimize_with][Configuration::optimize_with].
-    pub fn optimize(&self, problem: &P) -> state::State {
+    pub fn optimize(&self, problem: &P) -> state::State<P> {
         let heuristic = self.heuristic();
-        let mut state = state::State::new_root();
+        let mut state = state::State::new();
 
         state.insert(tracking::Log::new());
         state.insert(Random::default());
-        state.insert(state::common::Population::<P>::new());
+        state.insert(state::common::Populations::<P>::new());
 
         heuristic.initialize(problem, &mut state);
         heuristic.execute(problem, &mut state);
@@ -71,13 +71,13 @@ impl<P: Problem> Configuration<P> {
     pub fn optimize_with<'a>(
         &self,
         problem: &P,
-        init_state: impl FnOnce(&mut state::State<'a>),
-    ) -> state::State<'a> {
+        init_state: impl FnOnce(&mut state::State<'a, P>),
+    ) -> state::State<'a, P> {
         let heuristic = self.heuristic();
-        let mut state = state::State::new_root();
+        let mut state = state::State::new();
 
         state.insert(tracking::Log::new());
-        state.insert(state::common::Population::<P>::new());
+        state.insert(state::common::Populations::<P>::new());
 
         init_state(&mut state);
 
@@ -188,7 +188,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     #[track_caller]
     pub fn assert(
         self,
-        assert: impl Fn(&state::State) -> bool + Send + Sync + Clone + 'static,
+        assert: impl Fn(&state::State<P>) -> bool + Send + Sync + Clone + 'static,
     ) -> Self {
         self.debug(move |_problem, state| assert!(assert(state)))
     }
@@ -196,7 +196,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     /// Constructs a [Debug][components::misc::Debug] component with the given behaviour.
     pub fn debug(
         self,
-        behaviour: impl Fn(&P, &mut state::State) + Send + Sync + Clone + 'static,
+        behaviour: impl Fn(&P, &mut state::State<P>) + Send + Sync + Clone + 'static,
     ) -> Self {
         self.do_(components::misc::Debug::new(behaviour))
     }

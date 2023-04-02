@@ -13,7 +13,7 @@ use serde::Serialize;
 /// A combination of [Trigger] and [LogFn].
 #[derive(Default, Tid)]
 pub struct LogSet<'a, P: 'static> {
-    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P> + 'a>, Extractor<'a>)>,
+    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P> + 'a>, Extractor<'a, P>)>,
 }
 
 impl<'a, P> Clone for LogSet<'a, P> {
@@ -38,7 +38,11 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
         }
     }
 
-    pub fn with(mut self, trigger: Box<dyn Trigger<'a, P> + 'a>, extractor: Extractor<'a>) -> Self {
+    pub fn with(
+        mut self,
+        trigger: Box<dyn Trigger<'a, P> + 'a>,
+        extractor: Extractor<'a, P>,
+    ) -> Self {
         self.entries.push((trigger, extractor));
         self
     }
@@ -47,7 +51,7 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     where
         T: CustomState<'a> + Clone + Serialize + 'static,
     {
-        self.entries.push((trigger, functions::auto::<T>));
+        self.entries.push((trigger, functions::auto::<T, P>));
         self
     }
 
@@ -55,11 +59,11 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     ///
     /// Every 10 [Iteration][common::Iterations], [common::Evaluations] and [common::Progress] are logged.
     pub fn with_common_extractors(self, trigger: Box<dyn Trigger<'a, P> + 'a>) -> Self {
-        self.with(trigger.clone(), functions::auto::<common::Evaluations>)
-            .with(trigger.clone(), functions::auto::<common::Progress>)
+        self.with(trigger.clone(), functions::auto::<common::Evaluations, _>)
+            .with(trigger.clone(), functions::auto::<common::Progress, _>)
     }
 
-    pub(crate) fn execute(&self, problem: &P, state: &mut State<'a>, step: &mut Step) {
+    pub(crate) fn execute(&self, problem: &P, state: &mut State<'a, P>, step: &mut Step) {
         for (trigger, extractor) in &self.entries {
             if trigger.evaluate(problem, state) {
                 step.push((extractor)(state));

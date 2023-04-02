@@ -22,7 +22,7 @@ pub trait Selection<P: Problem> {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>>;
 }
 
@@ -34,34 +34,25 @@ where
     P: Problem,
     T: AnyComponent + Selection<P> + Serialize + Clone,
 {
-    fn execute(&self, _problem: &P, state: &mut State) {
-        let population = state.population_stack_mut().pop();
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
+        let population = state.populations_mut().pop();
         let selection: Vec<_> = self
             .0
             .select_offspring(&population, state)
             .into_iter()
             .cloned()
             .collect();
-        state.population_stack_mut().push(population);
-        state.population_stack_mut().push(selection);
+        state.populations_mut().push(population);
+        state.populations_mut().push(selection);
     }
 }
 
 /// Helper function to obtain minimum and maximum objective ranges for normalization.
 fn get_objective_range<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> (f64, f64) {
-    let best = population
-        .iter()
-        .map(Individual::objective)
-        .min()
-        .unwrap()
-        .value();
-    let worst = population
-        .iter()
-        .map(Individual::objective)
-        .max()
-        .unwrap()
-        .value();
-    (worst, best)
+    let objectives: Vec<_> = population.iter().map(Individual::objective).collect();
+    let min = objectives.iter().min().unwrap().value();
+    let max = objectives.iter().max().unwrap().value();
+    (max, min)
 }
 
 /// Helper function to calculate normalized fitness weights from the population,
@@ -114,7 +105,7 @@ impl<P: Problem> Selection<P> for All {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        _state: &mut State,
+        _state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         population.iter().collect()
     }
@@ -132,7 +123,7 @@ impl<P: Problem> Selection<P> for None {
     fn select_offspring<'p>(
         &self,
         _population: &'p [Individual<P>],
-        _state: &mut State,
+        _state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         Vec::new()
     }
@@ -153,7 +144,7 @@ impl<P: Problem> Selection<P> for DuplicateSingle {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        _state: &mut State,
+        _state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         assert_eq!(population.len(), 1);
         let single_solution = population.first().unwrap();
@@ -172,7 +163,7 @@ mod duplicate_single {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         // Note that the population contains exactly one element
         let population = new_test_population(&[1.0]);
         let comp = DuplicateSingle { offspring: 4 };
@@ -198,12 +189,11 @@ impl<P: Problem> Selection<P> for FullyRandom {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
-        let rng = state.random_mut();
         let mut selection = Vec::new();
         for _ in 0..self.offspring {
-            selection.push(population.choose(rng).unwrap());
+            selection.push(population.choose(state.random_mut()).unwrap());
         }
         selection
     }
@@ -217,7 +207,7 @@ mod fully_random {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = FullyRandom { offspring: 4 };
@@ -243,11 +233,10 @@ impl<P: Problem> Selection<P> for RandomWithoutRepetition {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
-        let rng = state.random_mut();
         population
-            .choose_multiple(rng, self.offspring as usize)
+            .choose_multiple(state.random_mut(), self.offspring as usize)
             .collect()
     }
 }
@@ -260,7 +249,7 @@ mod random_without_repetition {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = RandomWithoutRepetition { offspring: 2 };
@@ -313,7 +302,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportiona
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        _state: &mut State,
+        _state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         let (worst, best) = get_objective_range(population);
 
@@ -352,7 +341,7 @@ mod deterministic_fitness_proportional {
 
     #[test]
     fn selects_right_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = DeterministicFitnessProportional {
@@ -392,13 +381,12 @@ impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
-        let rng = state.random_mut();
         let weights_min = get_minimizing_weights(population);
         let wheel = WeightedIndex::new(weights_min).unwrap();
         wheel
-            .sample_iter(rng)
+            .sample_iter(state.random_mut())
             .take(self.offspring as usize)
             .map(|i| &population[i])
             .collect()
@@ -413,7 +401,7 @@ mod roulette_wheel {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = RouletteWheel { offspring: 4 };
@@ -440,7 +428,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         let rng = state.random_mut();
         let weights_min = get_minimizing_weights(population);
@@ -476,7 +464,7 @@ mod stochastic_universal_sampling {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = StochasticUniversalSampling { offspring: 4 };
@@ -504,25 +492,17 @@ impl<P: SingleObjectiveProblem> Selection<P> for Tournament {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         assert!(population.len() >= self.size as usize);
-        let rng = state.random_mut();
         let mut selection = Vec::new();
-        // For each individual
         for _ in 0..self.offspring {
-            // choose size competitors in tournament
-            let mut tournament: Vec<&Individual<P>> = population
-                .choose_multiple(rng, self.size as usize)
-                .collect();
-            // and evaluate them against each other, placing the winner first
-            tournament.sort_unstable_by(|x, y| {
-                (x.objective().value())
-                    .partial_cmp(&(y.objective().value()))
-                    .unwrap()
-            });
-            // Add winner (first) to selection
-            selection.push(tournament[0]);
+            // Choose `size` competitors in tournament and select the winner
+            let winner = population
+                .choose_multiple(state.random_mut(), self.size as usize)
+                .min_by_key(|&i| i.objective())
+                .unwrap();
+            selection.push(winner);
         }
         assert_eq!(selection.len(), self.offspring as usize);
         selection
@@ -537,7 +517,7 @@ mod tournament {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = Tournament {
@@ -566,14 +546,13 @@ impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
-        let rng = state.random_mut();
         let weights = get_ranking(population);
         let wheel = WeightedIndex::new(&weights).unwrap();
         let mut selection = Vec::new();
         for _ in 0..self.offspring {
-            selection.push(&population[wheel.sample(rng)]);
+            selection.push(&population[wheel.sample(state.random_mut())]);
         }
         assert_eq!(selection.len(), self.offspring as usize);
         selection
@@ -588,7 +567,7 @@ mod linear_rank {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = LinearRank { offspring: 4 };
@@ -618,9 +597,8 @@ impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
-        let rng = state.random_mut();
         let ranking = get_ranking(population);
         // Weight ranking by exponential equation, worst has smallest weight
         let weights: Vec<f64> = ranking
@@ -633,7 +611,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
         let wheel = WeightedIndex::new(&weights).unwrap();
         let mut selection = Vec::new();
         for _ in 0..self.offspring {
-            selection.push(&population[wheel.sample(rng)]);
+            selection.push(&population[wheel.sample(state.random_mut())]);
         }
         assert_eq!(selection.len(), self.offspring as usize);
         selection
@@ -648,7 +626,7 @@ mod exponential_rank {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let comp = ExponentialRank {
@@ -679,7 +657,7 @@ impl<P: Problem> Selection<P> for DERand {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         (0..population.len())
             .flat_map(|_| population.choose_multiple(state.random_mut(), self.y * 2 + 1))
@@ -695,7 +673,7 @@ mod de_rand {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let y = 1;
@@ -728,7 +706,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DEBest {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         let mut offspring = Vec::new();
 
@@ -750,7 +728,7 @@ mod de_best {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let y = 1;
@@ -779,7 +757,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
     fn select_offspring<'p>(
         &self,
         population: &'p [Individual<P>],
-        state: &mut State,
+        state: &mut State<P>,
     ) -> Vec<&'p Individual<P>> {
         let mut offspring = Vec::new();
 
@@ -809,7 +787,7 @@ mod de_current_to_best {
 
     #[test]
     fn selects_right_number_of_children() {
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let population = new_test_population(&[1.0, 2.0, 3.0]);
         let y = 1;

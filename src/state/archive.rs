@@ -55,16 +55,16 @@ impl<P: SingleObjectiveProblem> ElitistArchive<P> {
         where
             P: SingleObjectiveProblem,
         {
-            fn initialize(&self, _problem: &P, state: &mut State) {
-                state.insert::<ElitistArchive<P>>(ElitistArchive::new());
+            fn initialize(&self, _problem: &P, state: &mut State<P>) {
+                state.insert(ElitistArchive::<P>::new());
             }
 
-            fn execute(&self, _problem: &P, state: &mut State) {
-                let population = state.population_stack_mut().pop();
+            fn execute(&self, _problem: &P, state: &mut State<P>) {
+                let population = state.populations_mut().pop();
                 state
                     .get_mut::<ElitistArchive<P>>()
                     .state_update(&population, self.n_elitists);
-                state.population_stack_mut().push(population);
+                state.populations_mut().push(population);
             }
         }
 
@@ -80,12 +80,12 @@ impl<P: SingleObjectiveProblem> ElitistArchive<P> {
         where
             P: SingleObjectiveProblem,
         {
-            fn initialize(&self, _problem: &P, state: &mut State) {
-                state.require::<ElitistArchive<P>>();
+            fn initialize(&self, _problem: &P, state: &mut State<P>) {
+                state.require::<Self, ElitistArchive<P>>();
             }
 
-            fn execute(&self, _problem: &P, state: &mut State) {
-                let mut population = state.population_stack_mut().pop();
+            fn execute(&self, _problem: &P, state: &mut State<P>) {
+                let mut population = state.populations_mut().pop();
                 let elitism_state = state.get::<ElitistArchive<P>>();
 
                 for elitist in elitism_state.elitists() {
@@ -94,7 +94,7 @@ impl<P: SingleObjectiveProblem> ElitistArchive<P> {
                     }
                 }
 
-                state.population_stack_mut().push(population);
+                state.populations_mut().push(population);
             }
         }
 

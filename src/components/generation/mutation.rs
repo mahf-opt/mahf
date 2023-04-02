@@ -39,12 +39,12 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let distribution = rand_distr::Normal::new(0.0, self.deviation).unwrap();
 
-        for solution in population.iter_mut() {
-            for x in solution.iter_mut() {
+        for solution in population {
+            for x in solution {
                 *x += distribution.sample(state.random_mut());
             }
         }
@@ -99,13 +99,13 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let deviation = self.deviation(state.get_value::<Progress>());
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
-        for solution in population.iter_mut() {
-            for x in solution.iter_mut() {
+        for solution in population {
+            for x in solution {
                 *x += distribution.sample(state.random_mut());
             }
         }
@@ -155,7 +155,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let rng = state.random_mut();
 
@@ -180,7 +180,7 @@ mod uniform_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = UniformMutation { rm: 1.0 };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = population.len();
@@ -223,13 +223,13 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let distribution = rand_distr::Normal::new(0.0, self.deviation).unwrap();
         let rng = state.random_mut();
 
-        for solution in population.iter_mut() {
-            for x in solution.iter_mut() {
+        for solution in population {
+            for x in solution {
                 if rng.gen_bool(self.rm) {
                     *x += distribution.sample(rng);
                 }
@@ -252,7 +252,7 @@ mod gaussian_mutation {
             rm: 1.0,
             deviation: 0.1,
         };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
         let parents_length = population.len();
@@ -292,12 +292,12 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let rng = state.random_mut();
 
-        for solution in population.iter_mut() {
-            for x in solution.iter_mut() {
+        for solution in population {
+            for x in solution {
                 if rng.gen_bool(self.rm) {
                     *x = !*x;
                 }
@@ -330,7 +330,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         assert!(self.n_swap > 1);
         let rng = state.random_mut();
@@ -364,7 +364,7 @@ mod swap_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = SwapMutation { n_swap: 2 };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = population.len();
@@ -401,7 +401,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let rng = state.random_mut();
 
@@ -422,7 +422,7 @@ mod scramble_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = ScrambleMutation;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = population.len();
@@ -459,7 +459,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let rng = state.random_mut();
 
@@ -481,7 +481,7 @@ mod insertion_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = InsertionMutation;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = population.len();
@@ -518,7 +518,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let rng = state.random_mut();
         for solution in population.iter_mut() {
@@ -543,7 +543,7 @@ mod inversion_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = InversionMutation;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = population.len();
@@ -582,7 +582,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         _problem: &P,
-        state: &mut State,
+        state: &mut State<P>,
     ) {
         let rng = state.random_mut();
         for solution in population.iter_mut() {
@@ -614,7 +614,7 @@ mod translocation_mutation {
     fn all_mutated() {
         let problem = BenchmarkFunction::sphere(3);
         let comp = TranslocationMutation;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
         let parents_length = population.len();
@@ -657,7 +657,7 @@ where
         &self,
         population: &mut Vec<P::Encoding>,
         problem: &P,
-        _state: &mut State,
+        _state: &mut State<P>,
     ) {
         assert_eq!(population.len() % (self.y * 2 + 1), 0);
 
@@ -706,7 +706,7 @@ mod de_mutation {
         let problem = BenchmarkFunction::sphere(3);
         let y = 1;
         let comp = DEMutation { y, f: 1. };
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Random::testing());
         let mut population = vec![
             vec![0.1, 0.2, 0.4, 0.5, 0.9],
@@ -743,15 +743,15 @@ where
     P: Problem<Encoding = Vec<D>>,
     D: Clone,
 {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         self.mutation.initialize(problem, state);
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         let mut partial_population = Vec::new();
         let mut population_indices = Vec::new();
 
-        let mut population: Vec<Individual<P>> = state.population_stack_mut::<P>().pop();
+        let mut population = state.populations_mut().pop();
 
         // Decide which indices/dimensions to mutate,
         // and keep indices and solution from selected indices
@@ -777,9 +777,9 @@ where
         }
 
         // Mutate the partial solutions
-        state.population_stack_mut::<P>().push(partial_population);
+        state.populations_mut().push(partial_population);
         self.mutation.execute(problem, state);
-        let partial_population = state.population_stack_mut::<P>().pop();
+        let partial_population = state.populations_mut().pop();
 
         // Insert mutated dimensions into original solutions
         for (indices, solution, partial) in
@@ -792,6 +792,6 @@ where
         }
 
         // Push partially mutated population back
-        state.population_stack_mut::<P>().push(population);
+        state.populations_mut().push(population);
     }
 }
