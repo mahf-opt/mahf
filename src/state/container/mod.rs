@@ -73,17 +73,6 @@ impl<'a, P: Problem> State<'a, P> {
         self.map.insert(state);
     }
 
-    /// Changes the problem type of the state.
-    ///
-    /// Only needed for obscure use-cases when the state is reused for multiple problems.
-    pub fn transmute<O: Problem>(self: State<'a, P>) -> State<'a, O> {
-        State {
-            parent: self.parent.map(|parent| Box::new(parent.transmute::<O>())),
-            map: self.map,
-            _phantom: PhantomData::<O>,
-        }
-    }
-
     /// Tries to find an inner map containing T.
     fn find<T: CustomState<'a>>(&self) -> Option<&Self> {
         if self.map.has::<T>() {
