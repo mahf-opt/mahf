@@ -5,6 +5,7 @@ use crate::{
     framework::{components::Component, conditions::Condition, Configuration},
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
     state,
+    tracking::Logger,
 };
 
 /// Parameters for [real_pso].
@@ -21,7 +22,6 @@ pub struct RealProblemParameters {
 pub fn real_pso<P>(
     params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
@@ -36,7 +36,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(num_particles))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(pso(
             Parameters {
@@ -46,7 +46,6 @@ where
                 state_update: state::PsoState::updater(),
             },
             termination,
-            logger,
         ))
         .build()
 }
@@ -60,11 +59,7 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Particle Swarm Optimization template.
-pub fn pso<P>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>>
+pub fn pso<P>(params: Parameters<P>, termination: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
 {
@@ -81,10 +76,10 @@ where
             builder
                 .do_(particle_update)
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(state_update)
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

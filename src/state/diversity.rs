@@ -2,12 +2,13 @@
 
 use std::marker::PhantomData;
 
+use better_any::Tid;
 use serde::Serialize;
 
 use crate::{
     framework::components::*,
     problems::{Problem, VectorProblem},
-    state::{common::Population, CustomState, State},
+    state::{common::Populations, CustomState, State},
 };
 
 /// Specialized component trait to measure population diversity.
@@ -27,15 +28,15 @@ where
     P: Problem,
     I: AnyComponent + DiversityMeasure<P> + Serialize + Clone,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
         state.insert(DiversityState::<I>::default());
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
-        let (population_stack, diversity_state) =
-            state.get_multiple_mut::<(Population<P>, DiversityState<I>)>();
+    fn execute(&self, problem: &P, state: &mut State<P>) {
+        let (populations, diversity_state) =
+            state.get_multiple_mut::<(Populations<P>, DiversityState<I>)>();
 
-        let population = population_stack.current();
+        let population = populations.current();
 
         if population.is_empty() {
             diversity_state.diversity = 0.0;
@@ -72,7 +73,6 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
         let d = problem.dimension();
 
         (0..d)
-            .into_iter()
             .map(|k| {
                 let xk = solutions.iter().map(|s| s[k]).sum::<f64>() / n;
                 solutions.iter().map(|s| (s[k] - xk).abs()).sum::<f64>() / n
@@ -131,7 +131,6 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
         let d = problem.dimension();
 
         (0..d)
-            .into_iter()
             .map(|k| {
                 let xk = solutions.iter().map(|s| s[k]).sum::<f64>() / n;
                 let sum = solutions.iter().map(|i| i[k].powi(2)).sum::<f64>() / n;
@@ -176,8 +175,8 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 }
 
 /// State for logging/tracking population diversity.
-#[derive(serde::Serialize, Debug, Clone)]
-pub struct DiversityState<I> {
+#[derive(Debug, Tid)]
+pub struct DiversityState<I: 'static> {
     /// Normalized diversity.
     pub diversity: f64,
     /// Non-normalized maximal diversity.
@@ -194,4 +193,4 @@ impl<I> Default for DiversityState<I> {
     }
 }
 
-impl<I: Send + 'static> CustomState for DiversityState<I> {}
+impl<I: Send + 'static> CustomState<'_> for DiversityState<I> {}

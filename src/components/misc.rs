@@ -22,7 +22,7 @@ impl Noop {
     }
 }
 impl<P: Problem> Component<P> for Noop {
-    fn execute(&self, _problem: &P, _state: &mut State) {
+    fn execute(&self, _problem: &P, _state: &mut State<P>) {
         // Noop
     }
 }
@@ -36,17 +36,20 @@ impl ClearPopulation {
     }
 }
 impl<P: Problem> Component<P> for ClearPopulation {
-    fn execute(&self, _problem: &P, state: &mut State) {
-        state.population_stack_mut::<P>().current_mut().clear();
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
+        state.populations_mut().current_mut().clear();
     }
 }
 
 /// Helper trait to allow cloning of debug functions.
-pub trait DynCustomFunc<P: Problem>: Fn(&P, &mut State) + Send + Sync + DynClone + 'static {}
+pub trait DynCustomFunc<P: Problem>:
+    Fn(&P, &mut State<P>) + Send + Sync + DynClone + 'static
+{
+}
 dyn_clone::clone_trait_object!(<P: Problem> DynCustomFunc<P>);
 
 impl<P: Problem, F> DynCustomFunc<P> for F where
-    F: Fn(&P, &mut State) + Send + Sync + Clone + 'static
+    F: Fn(&P, &mut State<P>) + Send + Sync + Clone + 'static
 {
 }
 
@@ -59,16 +62,16 @@ impl<P: Problem, F> DynCustomFunc<P> for F where
 /// [Component] for your struct.
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-pub struct Debug<P: Problem>(Box<dyn DynCustomFunc<P>>);
+pub struct Debug<P: Problem>(Box<dyn DynCustomFunc<P, Output = ()>>);
 impl<P: Problem> Debug<P> {
     pub fn new(
-        custom: impl Fn(&P, &mut State) + Send + Sync + Clone + 'static,
+        custom: impl Fn(&P, &mut State<P>) + Send + Sync + Clone + 'static,
     ) -> Box<dyn Component<P>> {
         Box::new(Self(Box::new(custom)))
     }
 }
 impl<P: Problem> Component<P> for Debug<P> {
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         self.0(problem, state);
     }
 }
@@ -98,13 +101,13 @@ impl<P: SingleObjectiveProblem> Component<P> for PrintSingleObjectiveSummary
 where
     P::Encoding: std::fmt::Debug,
 {
-    fn execute(&self, _problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
         let heading = "--- SUMMARY ---";
         println!("{}", heading);
         println!("Iterations: {}", state.iterations());
         println!("Evaluations: {}", state.evaluations());
 
-        if let Some(individual) = state.best_individual::<P>() {
+        if let Some(individual) = state.best_individual() {
             println!("Optimum found: {:?}", individual.solution());
             println!("Best objective value: {:?}", individual.objective());
         } else {

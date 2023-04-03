@@ -5,7 +5,7 @@ use crate::{
     framework::{components::Component, conditions::Condition, Configuration},
     heuristics::ls,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    tracking,
+    tracking::Logger,
 };
 
 /// Parameters for [real_iterated_local_search].
@@ -19,7 +19,6 @@ pub struct RealProblemParameters<P> {
 pub fn real_iterated_local_search<P>(
     params: RealProblemParameters<P>,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
@@ -31,20 +30,15 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(iterated_local_search(
             Parameters {
                 perturbation: generation::RandomSpread::new_gen(),
-                local_search: ls::real_local_search(
-                    local_search_params,
-                    local_search_termination,
-                    tracking::Logger::default(),
-                )
-                .into_inner(),
+                local_search: ls::real_local_search(local_search_params, local_search_termination)
+                    .into_inner(),
             },
             termination,
-            logger,
         ))
         .build()
 }
@@ -60,7 +54,6 @@ pub struct PermutationProblemParameters<P> {
 pub fn permutation_iterated_local_search<P>(
     params: PermutationProblemParameters<P>,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -72,7 +65,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomPermutation::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(iterated_local_search(
             Parameters {
@@ -80,12 +73,10 @@ where
                 local_search: ls::permutation_local_search(
                     local_search_params,
                     local_search_termination,
-                    tracking::Logger::default(),
                 )
                 .into_inner(),
             },
             termination,
-            logger,
         ))
         .build()
 }
@@ -100,7 +91,6 @@ pub struct Parameters<P> {
 pub fn iterated_local_search<P: SingleObjectiveProblem>(
     params: Parameters<P>,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Box<dyn Component<P>> {
     let Parameters {
         perturbation,
@@ -111,12 +101,12 @@ pub fn iterated_local_search<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .do_(perturbation)
-                .evaluate_sequential()
+                .evaluate()
                 .do_(selection::All::new())
                 .scope_(|builder| builder.do_(local_search))
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

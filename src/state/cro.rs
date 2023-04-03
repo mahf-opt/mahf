@@ -3,6 +3,7 @@ use crate::{
     problems::{Problem, SingleObjectiveProblem},
     state::{CustomState, State},
 };
+use better_any::Tid;
 use rand::Rng;
 
 #[derive(Clone)]
@@ -39,11 +40,12 @@ impl<P: SingleObjectiveProblem> Molecule<P> {
 /// State required for CRO.
 ///
 /// For preserving energy buffer level and molecule data.
-pub struct CroState<P: Problem> {
+#[derive(Tid)]
+pub struct CroState<P: Problem + 'static> {
     pub buffer: f64,
     pub molecules: Vec<Molecule<P>>,
 }
-impl<P: Problem> CustomState for CroState<P> {}
+impl<P: Problem> CustomState<'_> for CroState<P> {}
 
 #[derive(Debug, serde::Serialize, Clone)]
 pub struct CroStateInitialization {
@@ -55,7 +57,7 @@ impl<P> Component<P> for CroStateInitialization
 where
     P: SingleObjectiveProblem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
         // Initialize with empty state to satisfy `state.require()` statements
         state.insert(CroState::<P> {
             buffer: 0.,
@@ -63,8 +65,8 @@ where
         })
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
-        let population = state.population_stack::<P>().current();
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
+        let population = state.populations().current();
         let molecules = population
             .iter()
             .map(|i| Molecule::new(self.initial_kinetic_energy, i))
@@ -86,21 +88,25 @@ impl<P> Component<P> for OnWallIneffectiveCollisionUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<CroState<P>>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, CroState<P>>();
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
-        let stack = mut_state.population_stack_mut::<P>();
+        let populations = mut_state.populations_mut();
         let mut cro_state = mut_state.get_mut::<CroState<P>>();
         let rng = mut_state.random_mut();
 
         // Get reaction reactant and product
-        let product = stack.pop().into_iter().next().unwrap();
-        let reactant = stack.pop().into_iter().next().unwrap();
+        let product = populations.pop().into_iter().next().unwrap();
+        let reactant = populations.pop().into_iter().next().unwrap();
 
-        let reactant_index = stack.current().iter().position(|i| i == &reactant).unwrap();
+        let reactant_index = populations
+            .current()
+            .iter()
+            .position(|i| i == &reactant)
+            .unwrap();
 
         cro_state.molecules[reactant_index].num_hit += 1;
 
@@ -121,7 +127,7 @@ where
             // Replace individual
             cro_state.molecules[reactant_index].kinetic_energy =
                 (total_reactant_energy - product_energy) * alpha;
-            stack.current_mut()[reactant_index] = product;
+            populations.current_mut()[reactant_index] = product;
         }
     }
 }
@@ -133,21 +139,25 @@ impl<P> Component<P> for DecompositionUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<CroState<P>>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, CroState<P>>();
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
-        let stack = mut_state.population_stack_mut::<P>();
+        let populations = mut_state.populations_mut();
         let mut cro_state = mut_state.get_mut::<CroState<P>>();
         let rng = mut_state.random_mut();
 
         // Get reaction reactant and products p1, p2
-        let [p1, p2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
-        let reactant = stack.pop().into_iter().next().unwrap();
+        let [p1, p2] = TryInto::<[_; 2]>::try_into(populations.pop()).ok().unwrap();
+        let reactant = populations.pop().into_iter().next().unwrap();
 
-        let reactant_index = stack.current().iter().position(|i| i == &reactant).unwrap();
+        let reactant_index = populations
+            .current()
+            .iter()
+            .position(|i| i == &reactant)
+            .unwrap();
 
         let total_reactant_energy =
             reactant.objective().value() + cro_state.molecules[reactant_index].kinetic_energy;
@@ -181,7 +191,7 @@ where
             .molecules
             .push(Molecule::new(decomposition_energy * (1. - d3), &p2));
 
-        let population = stack.current_mut();
+        let population = populations.current_mut();
         population[reactant_index] = p1;
         population.push(p2);
     }
@@ -194,22 +204,22 @@ impl<P> Component<P> for IntermolecularIneffectiveCollisionUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<CroState<P>>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, CroState<P>>();
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
-        let stack: &mut crate::state::common::Population<P> = mut_state.population_stack_mut::<P>();
+        let populations = mut_state.populations_mut();
         let cro_state = mut_state.get_mut::<CroState<P>>();
         let rng = mut_state.random_mut();
 
         // Get reaction reactants r1, r2 and products p1, p2
-        let [p1, p2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
-        let [r1, r2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
+        let [p1, p2] = TryInto::<[_; 2]>::try_into(populations.pop()).ok().unwrap();
+        let [r1, r2] = TryInto::<[_; 2]>::try_into(populations.pop()).ok().unwrap();
 
-        let r1_index = stack.current().iter().position(|i| i == &r1).unwrap();
-        let r2_index = stack.current().iter().position(|i| i == &r2).unwrap();
+        let r1_index = populations.current().iter().position(|i| i == &r1).unwrap();
+        let r2_index = populations.current().iter().position(|i| i == &r2).unwrap();
 
         if r1_index == r2_index {
             panic!("Molecule can't collide with itself.");
@@ -241,7 +251,7 @@ where
             cro_state.molecules[r2_index].update_best(&p2);
 
             // Replace individual
-            let population = stack.current_mut();
+            let population = populations.current_mut();
             population[r1_index] = p1;
             population[r2_index] = p2;
         }
@@ -255,21 +265,21 @@ impl<P> Component<P> for SynthesisUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<CroState<P>>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, CroState<P>>();
     }
 
-    fn execute(&self, _problem: &P, state: &mut State) {
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
-        let stack: &mut crate::state::common::Population<P> = mut_state.population_stack_mut::<P>();
+        let populations = mut_state.populations_mut();
         let cro_state = mut_state.get_mut::<CroState<P>>();
 
         // Get reaction reactants r1, r2 and product
-        let product = stack.pop().into_iter().next().unwrap();
-        let [r1, r2] = TryInto::<[_; 2]>::try_into(stack.pop()).ok().unwrap();
+        let product = populations.pop().into_iter().next().unwrap();
+        let [r1, r2] = TryInto::<[_; 2]>::try_into(populations.pop()).ok().unwrap();
 
-        let r1_index = stack.current().iter().position(|i| i == &r1).unwrap();
-        let r2_index = stack.current().iter().position(|i| i == &r2).unwrap();
+        let r1_index = populations.current().iter().position(|i| i == &r1).unwrap();
+        let r2_index = populations.current().iter().position(|i| i == &r2).unwrap();
 
         if r1_index == r2_index {
             panic!("Molecule can't collide with itself.");
@@ -289,7 +299,7 @@ where
             cro_state.molecules.remove(r2_index);
 
             // Replace one individual and remove other
-            let population = stack.current_mut();
+            let population = populations.current_mut();
             population[r1_index] = product;
             population.remove(r2_index);
         }

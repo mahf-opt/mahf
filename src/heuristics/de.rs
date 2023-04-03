@@ -36,7 +36,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(de(
             Parameters {
@@ -82,7 +82,7 @@ pub fn de<P: SingleObjectiveProblem>(
                 .do_(mutation)
                 .do_(crossover)
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(replacement)
                 .do_(logger)

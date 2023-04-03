@@ -4,6 +4,7 @@ use crate::{
     components::*,
     framework::{components::Component, conditions::Condition, Configuration},
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    tracking::Logger,
 };
 
 #[derive(Clone, Debug)]
@@ -30,7 +31,6 @@ pub struct RealProblemParameters {
 pub fn real_iwo<P>(
     params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
@@ -51,7 +51,7 @@ where
         .do_(initialization::RandomSpread::new_init(
             params.initial_population_size,
         ))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(iwo(
             Parameters {
@@ -66,7 +66,6 @@ where
                 constraints: constraints::Saturation::new(),
             },
             termination,
-            logger,
         ))
         .build()
 }
@@ -84,7 +83,6 @@ pub struct Parameters<P> {
 pub fn iwo<P: SingleObjectiveProblem>(
     params: Parameters<P>,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Box<dyn Component<P>> {
     let Parameters {
         max_population_size,
@@ -103,10 +101,10 @@ pub fn iwo<P: SingleObjectiveProblem>(
                 ))
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

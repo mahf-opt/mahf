@@ -8,6 +8,7 @@ use crate::{
         CustomState, State,
     },
 };
+use better_any::Tid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -24,8 +25,8 @@ impl<P> Condition<P> for TargetHit
 where
     P: SingleObjectiveProblem + HasKnownTarget,
 {
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        if let Some(fitness) = state.best_objective_value::<P>() {
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
+        if let Some(fitness) = state.best_objective_value() {
             !problem.target_hit(*fitness)
         } else {
             false
@@ -53,12 +54,12 @@ impl<P> Condition<P> for FixedIterations
 where
     P: Problem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Iterations>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, Iterations>();
         state.insert(Progress(0.));
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         let iterations = state.iterations();
         state.set_value::<Progress>(iterations as f64 / self.max_iterations as f64);
 
@@ -73,7 +74,7 @@ mod fixed_iterations {
     #[test]
     fn terminates() {
         let problem = TestProblem;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Iterations(0));
         let comp = FixedIterations {
             max_iterations: 200,
@@ -88,7 +89,7 @@ mod fixed_iterations {
     #[test]
     fn updates_progress() {
         let problem = TestProblem;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Iterations(0));
         let comp = FixedIterations {
             max_iterations: 200,
@@ -123,12 +124,12 @@ impl<P> Condition<P> for FixedEvaluations
 where
     P: Problem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Evaluations>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, Evaluations>();
         state.insert(Progress(0.));
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         let evaluations = state.evaluations();
         state.set_value::<Progress>(evaluations as f64 / self.max_evaluations as f64);
         evaluations < self.max_evaluations
@@ -142,7 +143,7 @@ mod fixed_evaluations {
     #[test]
     fn terminates() {
         let problem = TestProblem;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Evaluations(0));
         let comp = FixedEvaluations {
             max_evaluations: 200,
@@ -157,7 +158,7 @@ mod fixed_evaluations {
     #[test]
     fn updates_progress() {
         let problem = TestProblem;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(Evaluations(0));
         let comp = FixedEvaluations {
             max_evaluations: 200,
@@ -193,8 +194,8 @@ impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
 where
     P: Problem,
 {
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        state.best_objective_value::<P>().unwrap().value()
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
+        state.best_objective_value().unwrap().value()
             >= problem.known_optimum().value() + self.distance
     }
 }
@@ -207,7 +208,7 @@ mod distance_to_opt {
     #[test]
     fn terminates() {
         let problem = TestProblem;
-        let mut state = State::new_root();
+        let mut state = State::new();
         state.insert(common::BestIndividual::<TestProblem>::default());
         let comp = DistanceToOpt { distance: 0.1 };
 
@@ -221,6 +222,7 @@ mod distance_to_opt {
 /// State required for Termination by Steps without Improvement.
 ///
 /// For preserving current number of steps without improvement and corresponding fitness value.
+#[derive(Tid)]
 struct FitnessImprovementState {
     pub current_steps: usize,
     pub current_objective: SingleObjective,
@@ -237,7 +239,7 @@ impl FitnessImprovementState {
         }
     }
 }
-impl CustomState for FitnessImprovementState {}
+impl CustomState<'_> for FitnessImprovementState {}
 
 /// Terminates after a specified number of steps (iterations) did not yield any improvement.
 ///
@@ -259,15 +261,15 @@ impl<P> Condition<P> for StepsWithoutImprovement
 where
     P: SingleObjectiveProblem,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
         state.insert(FitnessImprovementState {
             current_steps: 0,
             current_objective: Default::default(),
         })
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
-        let best_fitness = *state.best_objective_value::<P>().unwrap();
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
+        let best_fitness = *state.best_objective_value().unwrap();
         let termination_state = state.get_mut::<FitnessImprovementState>();
         termination_state.update(&best_fitness);
 
@@ -283,7 +285,7 @@ mod steps_without_improvement {
     #[test]
     fn terminates() {
         let problem = TestProblem;
-        let mut state = State::new_root();
+        let mut state = State::new();
         let comp = StepsWithoutImprovement { steps: 20 };
         state.insert(FitnessImprovementState {
             current_steps: 0,

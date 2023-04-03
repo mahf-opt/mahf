@@ -4,6 +4,7 @@ use crate::{
     components::*,
     framework::{components::Component, conditions::Condition, Configuration},
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    tracking::Logger,
 };
 
 /// Parameters for [real_local_search].
@@ -17,7 +18,6 @@ pub struct RealProblemParameters {
 pub fn real_local_search<P>(
     params: RealProblemParameters,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
@@ -29,7 +29,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(evaluation::UpdateBestIndividual::new())
         .do_(local_search(
@@ -39,7 +39,6 @@ where
                 constraints: constraints::Saturation::new(),
             },
             termination,
-            logger,
         ))
         .build()
 }
@@ -55,7 +54,6 @@ pub struct PermutationProblemParameters {
 pub fn permutation_local_search<P>(
     params: PermutationProblemParameters,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
     P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -67,7 +65,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomPermutation::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(local_search(
             Parameters {
@@ -76,7 +74,6 @@ where
                 constraints: misc::Noop::new(),
             },
             termination,
-            logger,
         ))
         .build()
 }
@@ -92,7 +89,6 @@ pub struct Parameters<P> {
 pub fn local_search<P: SingleObjectiveProblem>(
     params: Parameters<P>,
     termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
 ) -> Box<dyn Component<P>> {
     let Parameters {
         n_neighbors,
@@ -106,10 +102,10 @@ pub fn local_search<P: SingleObjectiveProblem>(
                 .do_(selection::DuplicateSingle::new(n_neighbors))
                 .do_(neighbors)
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

@@ -15,7 +15,7 @@ use crate::{
 ///
 /// Types implementing this trait can implement [Component] by wrapping the type in a [Initializer].
 pub trait Initialization<P: Problem>: AnyComponent {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>>;
+    fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>>;
 }
 
 #[derive(Serialize, Clone)]
@@ -26,9 +26,9 @@ where
     P: Problem,
     T: AnyComponent + Initialization<P> + Serialize + Clone,
 {
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         let population = self.0.initialize_population(problem, state);
-        state.population_stack_mut().push(population);
+        state.populations_mut().push(population);
     }
 }
 
@@ -44,7 +44,7 @@ impl Empty {
     }
 }
 impl<P: Problem> Initialization<P> for Empty {
-    fn initialize_population(&self, _problem: &P, _state: &mut State) -> Vec<Individual<P>> {
+    fn initialize_population(&self, _problem: &P, _state: &mut State<P>) -> Vec<Individual<P>> {
         Vec::new()
     }
 }
@@ -56,7 +56,7 @@ pub struct RandomSpread {
     pub initial_population_size: Option<u32>,
 }
 impl RandomSpread {
-    /// Create this component as an initializer, pushing a new population on the stack.
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
@@ -94,7 +94,7 @@ where
     D: SampleUniform + Clone + PartialOrd + 'static,
     P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
 {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
+    fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
         self.random_spread(problem, state.random_mut(), population_size)
             .into_iter()
@@ -110,6 +110,7 @@ pub struct RandomPermutation {
     pub initial_population_size: Option<u32>,
 }
 impl RandomPermutation {
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -141,7 +142,7 @@ impl<P> Initialization<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
 {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
+    fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
         self.random_permutation(problem, state.random_mut(), population_size)
             .into_iter()
@@ -160,6 +161,8 @@ pub struct RandomBitstring {
 }
 impl RandomBitstring {
     /// Initializes the component with p being the probability for a 1.
+    ///
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32, p: f64) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
@@ -171,6 +174,8 @@ impl RandomBitstring {
     }
 
     /// Initializes the component with uniform probability for 0 and 1.
+    ///
+    /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_uniform_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
@@ -204,7 +209,7 @@ impl<P> Initialization<P> for RandomBitstring
 where
     P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
 {
-    fn initialize_population(&self, problem: &P, state: &mut State) -> Vec<Individual<P>> {
+    fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
         self.random_bitstring(problem, state.random_mut(), population_size)
             .into_iter()

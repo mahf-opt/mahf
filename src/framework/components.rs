@@ -27,8 +27,8 @@ trait_set! {
 /// change during a run. All mutable state has to be stored in the [State].
 pub trait Component<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State) {}
-    fn execute(&self, problem: &P, state: &mut State);
+    fn initialize(&self, problem: &P, state: &mut State<P>) {}
+    fn execute(&self, problem: &P, state: &mut State<P>);
 }
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
 dyn_clone::clone_trait_object!(<P: Problem> Component<P>);
@@ -48,11 +48,11 @@ pub struct Scope<P: Problem> {
     body: Box<dyn Component<P>>,
 
     #[serde(skip)]
-    init: fn(&mut State),
+    init: fn(&mut State<P>),
 }
 
 impl<P: Problem> Component<P> for Scope<P> {
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         state.with_substate(|state| {
             (self.init)(state);
             self.body.initialize(problem, state);
@@ -72,7 +72,7 @@ impl<P: Problem> Scope<P> {
 
     /// Creates a new [Scope] while overriding some state.
     pub fn new_with(
-        init: fn(&mut State),
+        init: fn(&mut State<P>),
         body: Vec<Box<dyn Component<P>>>,
     ) -> Box<dyn Component<P>> {
         let body = Block::new(body);
@@ -90,13 +90,13 @@ impl<P: Problem> Scope<P> {
 pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
 impl<P: Problem> Component<P> for Block<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         for component in &self.0 {
             component.initialize(problem, state);
         }
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         for component in &self.0 {
             component.execute(problem, state);
         }
@@ -124,14 +124,14 @@ pub struct Loop<P: Problem> {
 }
 
 impl<P: Problem> Component<P> for Loop<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         state.insert(common::Iterations(0));
 
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         self.condition.initialize(problem, state);
         while self.condition.evaluate(problem, state) {
             self.body.execute(problem, state);
@@ -161,7 +161,7 @@ pub struct Branch<P: Problem> {
 }
 
 impl<P: Problem> Component<P> for Branch<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         self.condition.initialize(problem, state);
         self.if_body.initialize(problem, state);
         if let Some(else_body) = &self.else_body {
@@ -169,7 +169,7 @@ impl<P: Problem> Component<P> for Branch<P> {
         }
     }
 
-    fn execute(&self, problem: &P, state: &mut State) {
+    fn execute(&self, problem: &P, state: &mut State<P>) {
         if self.condition.evaluate(problem, state) {
             self.if_body.execute(problem, state);
         } else if let Some(else_body) = &self.else_body {

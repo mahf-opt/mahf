@@ -10,10 +10,10 @@ use crate::{framework::components::AnyComponent, problems::Problem, state::State
 /// but `evaluate` replaces `execute` and returns a `bool`.
 ///
 /// These can be combined using binary AND and OR (`|` and `&`).
-pub trait Condition<P>: AnyComponent {
+pub trait Condition<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State) {}
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
+    fn initialize(&self, problem: &P, state: &mut State<P>) {}
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool;
 }
 erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);
 dyn_clone::clone_trait_object!(<P: Problem> Condition<P>);
@@ -29,13 +29,13 @@ impl<P: Problem> And<P> {
     }
 }
 impl<P: Problem> Condition<P> for And<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         for condition in self.0.iter() {
             condition.initialize(problem, state);
         }
     }
 
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
         self.0
             .iter()
             .all(|condition| condition.evaluate(problem, state))
@@ -60,13 +60,13 @@ impl<P: Problem> Or<P> {
     }
 }
 impl<P: Problem> Condition<P> for Or<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         for condition in self.0.iter() {
             condition.initialize(problem, state);
         }
     }
 
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
         self.0
             .iter()
             .any(|condition| condition.evaluate(problem, state))
@@ -91,11 +91,11 @@ impl<P: Problem> Not<P> {
     }
 }
 impl<P: Problem> Condition<P> for Not<P> {
-    fn initialize(&self, problem: &P, state: &mut State) {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
         self.0.initialize(problem, state);
     }
 
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
         !self.0.evaluate(problem, state)
     }
 }

@@ -127,7 +127,7 @@ pub fn aco<P: SingleObjectiveProblem>(
         .while_(termination, |builder| {
             builder
                 .do_(generation)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(pheromone_update)
                 .do_(logger)
@@ -135,7 +135,7 @@ pub fn aco<P: SingleObjectiveProblem>(
         .build_component()
 }
 
-mod ant_ops {
+pub mod ant_ops {
     use crate::state::PheromoneMatrix;
     use crate::{
         framework::{components::*, Individual, Random, SingleObjective},
@@ -167,14 +167,14 @@ mod ant_ops {
         }
     }
     impl Component<SymmetricTsp> for AcoGeneration {
-        fn initialize(&self, problem: &SymmetricTsp, state: &mut State) {
+        fn initialize(&self, problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
             state.insert(PheromoneMatrix::new(
                 problem.dimension,
                 self.default_pheromones,
             ));
         }
 
-        fn execute(&self, problem: &SymmetricTsp, state: &mut State) {
+        fn execute(&self, problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
             let (pm, rng) = state.get_multiple_mut::<(PheromoneMatrix, Random)>();
             let mut routes = Vec::new();
 
@@ -204,9 +204,7 @@ mod ant_ops {
                 route.push(0);
                 while !remaining.is_empty() {
                     let last = *route.last().unwrap();
-                    let distances = remaining
-                        .iter()
-                        .map(|&r| problem.distance((last, r)) as f64);
+                    let distances = remaining.iter().map(|&r| problem.distance((last, r)));
                     let pheromones = remaining.iter().map(|&r| pm[last][r]);
                     let weights = pheromones.zip(distances).map(|(m, d)| {
                         // TODO: This should not be zero.
@@ -224,7 +222,7 @@ mod ant_ops {
                 .into_iter()
                 .map(Individual::<SymmetricTsp>::new_unevaluated)
                 .collect();
-            *state.population_stack_mut().current_mut() = population;
+            *state.populations_mut().current_mut() = population;
         }
     }
 
@@ -242,14 +240,14 @@ mod ant_ops {
         }
     }
     impl Component<SymmetricTsp> for AsPheromoneUpdate {
-        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State) {
-            state.require::<PheromoneMatrix>();
+        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+            state.require::<Self, PheromoneMatrix>();
         }
 
-        fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
+        fn execute(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
             let mut mut_state = state.get_states_mut();
             let pm = mut_state.get_mut::<PheromoneMatrix>();
-            let population = mut_state.population_stack::<SymmetricTsp>().current();
+            let population = mut_state.populations().current();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;
@@ -291,14 +289,14 @@ mod ant_ops {
         }
     }
     impl Component<SymmetricTsp> for MinMaxPheromoneUpdate {
-        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State) {
-            state.require::<PheromoneMatrix>();
+        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+            state.require::<Self, PheromoneMatrix>();
         }
 
-        fn execute(&self, _problem: &SymmetricTsp, state: &mut State) {
+        fn execute(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
             let mut mut_state = state.get_states_mut();
             let pm = mut_state.get_mut::<PheromoneMatrix>();
-            let population = mut_state.population_stack::<SymmetricTsp>().current();
+            let population = mut_state.populations().current();
 
             // Evaporation
             *pm *= 1.0 - self.evaporation;

@@ -1,35 +1,42 @@
-use crate::state::{common::Iterations, CustomState, State};
-use derive_deref::Deref;
 use std::{
-    any::Any,
+    marker::PhantomData,
     ops::{Deref, Sub},
 };
 use crate::problems::{HasKnownTarget, SingleObjectiveProblem};
 use crate::state::common::Evaluations;
 
+use crate::{
+    problems::Problem,
+    state::{common::Iterations, CustomState, State},
+};
+use better_any::{Tid, TidAble};
+use derive_more::Deref;
+use dyn_clone::DynClone;
+
 /// Like [Condition](crate::framework::conditions::Condition) but non-serializable.
-pub trait Trigger<P>: Any + Send + Sync {
+pub trait Trigger<'a, P>: DynClone + Send {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State) {}
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool;
+    fn initialize(&self, problem: &P, state: &mut State<'a, P>) {}
+    fn evaluate(&self, problem: &P, state: &mut State<'a, P>) -> bool;
 }
+dyn_clone::clone_trait_object!(<'a, P> Trigger<'a, P>);
 
 /// Triggers every `n` iterations.
-#[derive(serde::Serialize)]
+#[derive(Clone, serde::Serialize)]
 pub struct Iteration(u32);
 
 impl Iteration {
-    pub fn new<P>(iterations: u32) -> Box<dyn Trigger<P>> {
+    pub fn new<'a, P: Problem + 'static>(iterations: u32) -> Box<dyn Trigger<'a, P>> {
         Box::new(Iteration(iterations))
     }
 }
 
-impl<P> Trigger<P> for Iteration {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Iterations>();
+impl<'a, P: Problem + 'static> Trigger<'a, P> for Iteration {
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Self, Iterations>();
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         state.iterations() % self.0 == 0
     }
 }
@@ -37,7 +44,7 @@ impl<P> Trigger<P> for Iteration {
 /// Triggers on final iteration.
 ///
 /// Works only if termination uses FixedIterations.
-#[derive(serde::Serialize)]
+#[derive(Clone, serde::Serialize)]
 pub struct FinalIter(u32);
 
 impl FinalIter {
@@ -47,11 +54,11 @@ impl FinalIter {
 }
 
 impl<P> Trigger<P> for FinalIter {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Iterations>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Iterations, T>();
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         state.iterations() == self.0 - 1
     }
 }
@@ -59,7 +66,7 @@ impl<P> Trigger<P> for FinalIter {
 /// Triggers on final evaluation.
 ///
 /// Works only if termination uses FixedEvaluations.
-#[derive(serde::Serialize)]
+#[derive(Clone, serde::Serialize)]
 pub struct FinalEval(u32);
 
 impl FinalEval {
@@ -69,11 +76,11 @@ impl FinalEval {
 }
 
 impl<P> Trigger<P> for FinalEval {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<Evaluations>();
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.require::<Evaluations, T>();
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         state.evaluations() >= self.0
     }
 }
@@ -81,7 +88,7 @@ impl<P> Trigger<P> for FinalEval {
 /// Triggers on target hit.
 ///
 /// Works only if optimum has known target.
-#[derive(serde::Serialize)]
+#[derive(Clone, serde::Serialize)]
 pub struct TargetHit;
 
 impl TargetHit {
@@ -91,12 +98,12 @@ impl TargetHit {
 }
 
 impl<P: HasKnownTarget + SingleObjectiveProblem> Trigger<P> for TargetHit {
-    fn initialize(&self, _problem: &P, _state: &mut State) {
+    fn initialize(&self, _problem: &P, _state: &mut State<P>) {
 
     }
 
-    fn evaluate(&self, problem: &P, state: &mut State) -> bool {
-        if let Some(fitness) = state.best_objective_value::<P>() {
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
+        if let Some(fitness) = state.best_objective_value() {
             problem.target_hit(*fitness)
         } else {
             false
@@ -104,49 +111,73 @@ impl<P: HasKnownTarget + SingleObjectiveProblem> Trigger<P> for TargetHit {
     }
 }
 
-#[derive(Deref)]
-struct Previous<S>(S);
-impl<S: 'static + Send> CustomState for Previous<S> {}
-
-/// Triggers when `S` changes base on a predicate.
-#[derive(serde::Serialize)]
-pub struct Change<S> {
-    #[serde(skip)]
-    check: Box<dyn Fn(&S, &S) -> bool + Send + Sync>,
+#[derive(Deref, Tid)]
+struct Previous<'a, S: TidAble<'a> + Send> {
+    #[deref]
+    pub inner: S,
+    _phantom: PhantomData<&'a ()>,
+}
+impl<'a, S: TidAble<'a> + Send> Previous<'a, S> {
+    pub fn new(inner: S) -> Self {
+        Previous {
+            inner,
+            _phantom: PhantomData::default(),
+        }
+    }
 }
 
-impl<S> Change<S>
+impl<'a, S: TidAble<'a> + Send> CustomState<'a> for Previous<'a, S> {}
+
+/// Triggers when `S` changes base on a predicate.
+#[derive(Tid, Clone)]
+pub struct Change<'a, S> {
+    check: Box<dyn Comparator<S> + 'a>,
+}
+
+pub trait Comparator<S>: Send + Sync + DynClone {
+    fn compare(&self, a: &S, b: &S) -> bool;
+}
+dyn_clone::clone_trait_object!(<S> Comparator<S>);
+
+impl<S, F> Comparator<S> for F
 where
-    S: CustomState + Clone,
+    F: Fn(&S, &S) -> bool + Send + Sync + Clone,
+{
+    fn compare(&self, a: &S, b: &S) -> bool {
+        self(a, b)
+    }
+}
+
+impl<'s, S> Change<'s, S>
+where
+    S: CustomState<'s> + TidAble<'s> + Clone,
 {
     /// Create a new [Change] [Trigger] with a custom predicate.
     ///
     /// Will trigger when the predicate evaluates to `true`.
-    pub fn custom<P>(
-        check: impl Fn(&S, &S) -> bool + Send + Sync + 'static,
-    ) -> Box<dyn Trigger<P>> {
+    pub fn custom<P: Problem>(check: impl Comparator<S> + 's) -> Box<dyn Trigger<'s, P> + 's> {
         Box::new(Change {
             check: Box::new(check),
         })
     }
 }
 
-impl<S> Change<S>
+impl<'s, S> Change<'s, S>
 where
-    S: CustomState + Clone + Deref,
-    S::Target: Clone + Sub<Output = S::Target> + Ord + Send + Sync + 'static,
+    S: CustomState<'s> + TidAble<'s> + Clone + Deref,
+    S::Target: Clone + Sub<Output = S::Target> + PartialOrd + Send + Sync,
 {
     /// Create a new [Change] [Trigger] based on a threshold.
     ///
     /// Requires `S` to dereference to something that implements [Sub] and [Ord].
-    pub fn new<P>(threshold: S::Target) -> Box<dyn Trigger<P>> {
+    pub fn new<P: Problem>(threshhold: S::Target) -> Box<dyn Trigger<'s, P> + 's> {
         Box::new(Change {
             check: Box::new(move |old: &S, new: &S| {
                 let old = old.deref();
                 let new = new.deref();
 
-                let min = Ord::min(old, new).clone();
-                let max = Ord::max(old, new).clone();
+                let min = min(old, new).clone();
+                let max = max(old, new).clone();
 
                 (max - min) >= threshold
             }),
@@ -154,20 +185,21 @@ where
     }
 }
 
-impl<S, P> Trigger<P> for Change<S>
+impl<'s, S, P> Trigger<'s, P> for Change<'s, S>
 where
-    S: CustomState + Clone,
+    S: CustomState<'s> + TidAble<'s> + Clone,
+    P: Problem + 's,
 {
-    fn initialize(&self, _problem: &P, state: &mut State) {
-        state.require::<S>();
+    fn initialize(&self, _problem: &P, state: &mut State<'s, P>) {
+        state.require::<Self, S>();
         let current = state.get::<S>().clone();
-        state.insert(Previous(current));
+        state.insert(Previous::new(current));
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State) -> bool {
+    fn evaluate(&self, _problem: &P, state: &mut State<'s, P>) -> bool {
         let previous = state.get::<Previous<S>>();
         let current = state.get::<S>();
-        let changed = (self.check)(previous, current);
+        let changed = self.check.compare(previous, current);
 
         if changed {
             let new = current.clone();
@@ -175,5 +207,23 @@ where
         }
 
         changed
+    }
+}
+
+#[inline]
+fn min<T: PartialOrd>(a: T, b: T) -> T {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn max<T: PartialOrd>(a: T, b: T) -> T {
+    if a > b {
+        a
+    } else {
+        b
     }
 }

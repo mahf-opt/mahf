@@ -7,8 +7,8 @@ version = "0.1.0"
 [dependencies]
 anyhow = "1.0.51"
 ciborium = "0.2.0"
-coco-rs = "0.4"
-derive_deref = "1.1.1"
+coco-rs = "0.5"
+derive_more = { version = "0.99.17", features = ["deref", "deref_mut"]}
 embed-doc-image = "0.1.4"
 erased-serde = "0.3.16"
 float_eq = "0.7.0"
@@ -25,6 +25,12 @@ trait-set = "0.3.0"
 dyn-clone = "1.0.9"
 derivative = "2.2.0"
 itertools = "0.10.5"
+better_any = { version = "0.2.0", features = ["derive"] }
+scoped_threadpool = "0.1.9"
+
+[patch.crates-io]
+better_typeid_derive = { git = "https://github.com/luleyleo/better_any", branch = "no-use-tidable", package = "better_typeid_derive" }
+coco-rs = { git = "https://github.com/luleyleo/coco", branch = "rust-0.6" }
 
 [dev-dependencies]
 proptest = "1.0.0"

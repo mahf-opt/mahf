@@ -1,8 +1,11 @@
 use crate::{
     framework::Configuration,
-    problems::{coco_bound::CocoInstance, HasKnownTarget},
+    problems::{
+        coco_bound::{CocoEvaluator, CocoInstance},
+        HasKnownTarget,
+    },
+    state::{common, State},
     tracking::{files, Log},
-    utils::threads::SyncThreadPool,
 };
 use anyhow::Context;
 use coco_rs::{Suite, SuiteName};
@@ -10,7 +13,7 @@ use std::{
     fs::{self, File},
     io::{BufWriter, Write},
     path::PathBuf,
-    sync::{mpsc, Arc},
+    sync::mpsc,
     thread,
 };
 
@@ -30,9 +33,14 @@ pub fn evaluate_suite(
     mut suite: Suite,
     configuration: Configuration<CocoInstance>,
     output_dir: &str,
+    setup: impl Fn(&mut State<CocoInstance>) + Send + Sync,
 ) -> anyhow::Result<()> {
-    let data_dir = Arc::new(PathBuf::from(output_dir));
-    fs::create_dir_all(data_dir.as_ref())?;
+    #[allow(unused_variables)]
+    let num_threads = 1;
+    let num_threads = num_cpus::get() as u32;
+
+    let data_dir = &PathBuf::from(output_dir);
+    fs::create_dir_all(data_dir)?;
 
     let config_log_file = data_dir.join("configuration.ron");
     ron::ser::to_writer_pretty(
@@ -49,50 +57,80 @@ pub fn evaluate_suite(
 
     coco_rs::set_log_level(coco_rs::LogLevel::Warning);
 
-    let configuration = Arc::new(configuration);
-    thread::spawn(move || {
-        let mut pool = SyncThreadPool::default();
-        while let Some(problem) = suite.next_problem(None) {
-            let tx = tx.clone();
-            let data_dir = data_dir.clone();
-            let configuration = configuration.clone();
-            let problem: CocoInstance = problem.into();
-            pool.enqueue(move || {
-                let result: anyhow::Result<_> = (|| {
-                    let experiment_desc = problem.format_name();
-                    let log_file = data_dir.join(format!("{}.log", experiment_desc));
+    let configuration = &configuration;
+    let setup = &setup;
 
-                    let state = configuration.optimize(&problem);
-                    let log = state.get::<Log>();
-                    files::write_log_file(log_file, log)?;
+    thread::scope(move |scope| {
+        scope.spawn(move || {
+            let mut pool = scoped_threadpool::Pool::new(num_threads);
 
-                    let target_hit =
-                        if let Some(fitness) = state.best_objective_value::<CocoInstance>() {
-                            problem.target_hit(*fitness)
-                        } else {
-                            false
-                        };
-                    Ok(target_hit)
-                })();
+            loop {
+                let (function_idx, dimension_idx, instance_idx) = match suite.next_problem(None) {
+                    None => break,
+                    Some(problem) => (
+                        problem.function_index(),
+                        problem.dimension_index(),
+                        problem.instance_index(),
+                    ),
+                };
 
-                let _ = tx.send(result);
-            });
+                // Create a new suite, because COCO doesn't guarantee that
+                // multiple problems can be created from one suite simultaneously.
+                let mut suite = suite.clone();
+                let tx = tx.clone();
+
+                pool.scoped(move |pool| {
+                    pool.execute(move || {
+                        let problem = suite
+                            .problem_by_function_dimension_instance_index(
+                                function_idx,
+                                dimension_idx,
+                                instance_idx,
+                            )
+                            .unwrap();
+                        let instance = CocoInstance::from(&problem);
+
+                        let result: anyhow::Result<_> = (move || {
+                            let experiment_desc = instance.format_name();
+                            let log_file = data_dir.join(format!("{}.log", experiment_desc));
+
+                            let state = configuration.optimize_with(&instance, |state| {
+                                state.insert(common::EvaluatorInstance::new(CocoEvaluator {
+                                    problem,
+                                }));
+                                setup(state);
+                            });
+                            let log = state.get::<Log>();
+                            files::write_log_file(log_file, log)?;
+
+                            let target_hit = if let Some(fitness) = state.best_objective_value() {
+                                instance.target_hit(*fitness)
+                            } else {
+                                false
+                            };
+                            Ok(target_hit)
+                        })();
+
+                        let _ = tx.send(result);
+                    });
+                });
+            }
+        });
+
+        let mut finished_runs = 0;
+        let mut successful_runs = 0;
+        while finished_runs < total_runs {
+            let hit = rx.recv().unwrap()?;
+            finished_runs += 1;
+            successful_runs += i32::from(hit);
+            print!(
+                "Runs: {}/{}/{}\r",
+                successful_runs, finished_runs, total_runs
+            );
+            std::io::stdout().flush().unwrap();
         }
-    });
+        println!("\nDone.");
 
-    let mut finished_runs = 0;
-    let mut successful_runs = 0;
-    while finished_runs < total_runs {
-        let hit = rx.recv().unwrap()?;
-        finished_runs += 1;
-        successful_runs += if hit { 1 } else { 0 };
-        print!(
-            "Runs: {}/{}/{}\r",
-            successful_runs, finished_runs, total_runs
-        );
-        std::io::stdout().flush().unwrap();
-    }
-    println!("\nDone.");
-
-    Ok(())
+        Ok(())
+    })
 }

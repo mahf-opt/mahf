@@ -3,18 +3,20 @@ use crate::{
     problems::{LimitedVectorProblem, Problem, SingleObjectiveProblem},
     state::{CustomState, State},
 };
+use better_any::Tid;
 use rand::Rng;
 
 /// State required for PSO.
 ///
 /// For preserving velocities of particles, own best values and global best particle.
-pub struct PsoState<P: Problem> {
+#[derive(Tid)]
+pub struct PsoState<P: Problem + 'static> {
     pub velocities: Vec<Vec<f64>>,
     pub bests: Vec<Individual<P>>,
     pub global_best: Individual<P>,
 }
 
-impl<P: Problem> CustomState for PsoState<P> {}
+impl<P: Problem> CustomState<'_> for PsoState<P> {}
 
 impl<P: Problem> PsoState<P>
 where
@@ -33,7 +35,7 @@ where
         where
             P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
         {
-            fn initialize(&self, _problem: &P, state: &mut State) {
+            fn initialize(&self, _problem: &P, state: &mut State<P>) {
                 // Initialize with empty state to satisfy `state.require()` statements
                 state.insert(PsoState {
                     velocities: vec![],
@@ -42,19 +44,17 @@ where
                 })
             }
 
-            fn execute(&self, problem: &P, state: &mut State) {
-                let population = state.population_stack_mut::<P>().pop();
+            fn execute(&self, problem: &P, state: &mut State<P>) {
+                let population = state.populations_mut().pop();
                 let rng = state.random_mut();
 
-                let velocities = population
-                    .iter()
-                    .map(|_| {
-                        (0..problem.dimension())
-                            .into_iter()
-                            .map(|_| rng.gen_range(-self.v_max..=self.v_max))
-                            .collect::<Vec<f64>>()
-                    })
-                    .collect::<Vec<Vec<f64>>>();
+                let velocities = std::iter::repeat_with(|| {
+                    std::iter::repeat_with(|| rng.gen_range(-self.v_max..=self.v_max))
+                        .take(problem.dimension())
+                        .collect::<Vec<_>>()
+                })
+                .take(population.len())
+                .collect::<Vec<_>>();
 
                 let bests = population.to_vec();
 
@@ -64,7 +64,7 @@ where
                     .cloned()
                     .unwrap();
 
-                state.population_stack_mut().push(population);
+                state.populations_mut().push(population);
 
                 state.insert(PsoState {
                     velocities,
@@ -88,25 +88,28 @@ where
         where
             P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
         {
-            fn initialize(&self, _problem: &P, state: &mut State) {
-                state.require::<PsoState<P>>();
+            fn initialize(&self, _problem: &P, state: &mut State<P>) {
+                state.require::<Self, PsoState<P>>();
             }
 
-            fn execute(&self, _problem: &P, state: &mut State) {
-                let population = state.population_stack_mut().pop();
-                let mut pso_state = state.get_mut::<PsoState<P>>();
+            fn execute(&self, _problem: &P, state: &mut State<P>) {
+                let population = state.populations_mut().pop();
 
-                for (i, individual) in population.iter().enumerate() {
-                    if pso_state.bests[i].objective() > individual.objective() {
-                        pso_state.bests[i] = individual.clone();
+                let PsoState {
+                    bests, global_best, ..
+                } = &mut state.get_mut::<PsoState<P>>();
 
-                        if pso_state.global_best.objective() > individual.objective() {
-                            pso_state.global_best = individual.clone();
+                for (individual, best) in population.iter().zip(bests.iter_mut()) {
+                    if best.objective() > individual.objective() {
+                        *best = individual.clone();
+
+                        if global_best.objective() > individual.objective() {
+                            *global_best = individual.clone();
                         }
                     }
                 }
 
-                state.population_stack_mut().push(population);
+                state.populations_mut().push(population);
             }
         }
 

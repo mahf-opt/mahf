@@ -1,5 +1,5 @@
 use crate::{
-    problems::SingleObjectiveProblem,
+    problems::{Problem, SingleObjectiveProblem},
     state::{common, CustomState, State},
     tracking::log::Entry,
 };
@@ -8,10 +8,14 @@ use std::{any::type_name, ops::Deref};
 use crate::state::diversity::DiversityState;
 
 /// A function to turn some state into an [Entry].
-pub type LogFn = fn(&State) -> Entry;
+pub type Extractor<'a, P> = fn(&State<'a, P>) -> Entry;
 
 /// A function to log anything that implements [Clone] + [Serialize]
-pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
+pub fn auto<'a, T, P>(state: &State<'a, P>) -> Entry
+where
+    T: CustomState<'a> + Clone + Serialize + 'static,
+    P: Problem,
+{
     debug_assert!(state.has::<T>(), "missing state: {}", type_name::<T>());
 
     let instance = state.get::<T>();
@@ -22,8 +26,8 @@ pub fn auto<T: CustomState + Clone + Serialize>(state: &State) -> Entry {
 
 /// A function which logs the best individual.
 ///
-/// Requires the [Problem::Encoding](crate::problems::Problem::Encoding) to implement [Clone] and [Serialize].
-pub fn best_individual<P>(state: &State) -> Entry
+/// Requires the [Problem::Encoding](Problem::Encoding) to implement [Clone] and [Serialize].
+pub fn best_individual<P>(state: &State<P>) -> Entry
 where
     P: SingleObjectiveProblem,
     P::Encoding: Clone + Serialize + Sized + 'static,
@@ -46,19 +50,18 @@ where
     Entry { name, value }
 }
 
-/// A function which logs the best objective value found so far.
-pub fn best_objective_value<P>(state: &State) -> Entry
+pub fn best_objective_value<P>(state: &State<P>) -> Entry
 where
     P: SingleObjectiveProblem,
 {
     Entry {
         name: "BestObjectiveValue",
-        value: Box::new(state.best_objective_value::<P>().cloned()),
+        value: Box::new(state.best_objective_value().cloned()),
     }
 }
 
 /// A function for logging the diversity value of the DiversityState.
-pub fn normalized_diversity<I: Send + 'static>(state: &State) -> Entry {
+pub fn normalized_diversity<I: Send + 'static>(state: &State<P>) -> Entry {
     Entry {
         name: type_name::<DiversityState<I>>(),
         value: Box::new(state.get::<DiversityState<I>>().diversity)

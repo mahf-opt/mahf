@@ -1,7 +1,10 @@
 use std::ops::{Deref, DerefMut};
 use std::{any::TypeId, collections::HashSet};
 
-use crate::state::{CustomState, State};
+use crate::{
+    problems::Problem,
+    state::{CustomState, State},
+};
 
 /// Allows borrowing multiple [CustomState]'s mutable from [State] at the same time.
 /// It is meant to significantly simplify the definition of [Component][crate::framework::components::Component]'s
@@ -16,56 +19,56 @@ use crate::state::{CustomState, State};
 ///
 /// The only exception to this rule are [get_value][MutState::get_value] and [set_value][MutState::set_value],
 /// which can be called repeatedly using the same [CustomState], given that no reference to it already exists.
-pub struct MutState<'a> {
-    state: &'a mut State,
+pub struct MutState<'a, 's, P> {
+    state: &'a mut State<'s, P>,
     borrowed: HashSet<TypeId>,
 }
-impl<'a> MutState<'a> {
-    pub(super) fn new(state: &'a mut State) -> Self {
+impl<'a, 's, P: Problem> MutState<'a, 's, P> {
+    pub(super) fn new(state: &'a mut State<'s, P>) -> Self {
         Self {
             state,
             borrowed: HashSet::new(),
         }
     }
 
-    pub fn get_mut<T: CustomState>(&mut self) -> &'a mut T {
+    pub fn get_mut<T: CustomState<'s>>(&mut self) -> &'a mut T {
         let custom = self.state.get_mut::<T>() as *mut T;
         assert!(
-            self.borrowed.insert(TypeId::of::<T>()),
+            self.borrowed.insert(T::id()),
             "each type can only be borrowed once"
         );
         unsafe { &mut *custom }
     }
 
-    pub fn has<T: CustomState>(&self) -> bool {
+    pub fn has<T: CustomState<'s>>(&self) -> bool {
         self.state.has::<T>()
     }
 
-    pub fn get<T: CustomState>(&mut self) -> &'a T {
+    pub fn get<T: CustomState<'s>>(&mut self) -> &'a T {
         self.get_mut()
     }
 
     pub fn get_value<T>(&self) -> T::Target
     where
-        T: CustomState + Deref,
+        T: CustomState<'s> + Deref,
         T::Target: Sized + Copy,
     {
-        assert!(!self.borrowed.contains(&TypeId::of::<T>()));
+        assert!(!self.borrowed.contains(&T::id()));
         self.state.get_value::<T>()
     }
 
     pub fn set_value<T>(&mut self, value: T::Target)
     where
-        T: CustomState + DerefMut,
+        T: CustomState<'s> + DerefMut,
         T::Target: Sized,
     {
-        assert!(!self.borrowed.contains(&TypeId::of::<T>()));
+        assert!(!self.borrowed.contains(&T::id()));
         self.state.set_value::<T>(value);
     }
 
     pub fn get_value_mut<T>(&mut self) -> &'a mut T::Target
     where
-        T: CustomState + DerefMut,
+        T: CustomState<'s> + DerefMut,
         T::Target: Sized,
     {
         self.get_mut::<T>().deref_mut()
@@ -79,32 +82,32 @@ impl<'a> MutState<'a> {
 /// # Panics
 ///
 /// Panics on type duplicates in the tuple.
-pub trait MultiStateTuple<'a>: 'a {
+pub trait MultiStateTuple<'a, 's>: 'a {
     type References: 'a;
 
     fn validate() -> bool;
 
     #[track_caller]
-    fn fetch(state: &'a mut State) -> Self::References;
+    fn fetch<P: Problem>(state: &'a mut State<'s, P>) -> Self::References;
 }
 
 macro_rules! impl_multi_state_tuple {
     (($($item:ident),+)) => {
-        impl<'a, $($item),*> MultiStateTuple<'a> for ($($item),*)
+        impl<'a, 's, $($item: 'a),*> MultiStateTuple<'a, 's> for ($($item),*)
         where
-            $($item: CustomState),*
+            $($item: CustomState<'s>),*
         {
             type References = ($(&'a mut $item),*);
 
             fn validate() -> bool {
                 let mut set = HashSet::new();
-                $(set.insert(TypeId::of::<$item>()))&&*
+                $(set.insert($item::id()))&&*
             }
 
-            fn fetch(state: &'a mut State) -> Self::References {
+            fn fetch<P: Problem>(state: &'a mut State<'s, P>) -> Self::References {
                 assert!(Self::validate(), "each type can only be borrowed once");
 
-                let state = state as *mut State;
+                let state = state as *mut State<P>;
                 unsafe { ($((*state).get_mut::<$item>()),*) }
             }
         }

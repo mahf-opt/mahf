@@ -17,7 +17,7 @@ where
 {
     Configuration::builder()
         .do_(generation::RandomSpread::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(random_search(
             Parameters {
@@ -40,7 +40,7 @@ where
 {
     Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(random_search(
             Parameters {
@@ -73,7 +73,7 @@ where
             builder
                 .do_(selection::All::new())
                 .do_(randomizer)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(logger)

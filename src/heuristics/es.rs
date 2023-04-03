@@ -34,7 +34,7 @@ where
 
     Configuration::builder()
         .do_(initialization::RandomSpread::new_init(population_size))
-        .evaluate_sequential()
+        .evaluate()
         .update_best_individual()
         .do_(es(
             Parameters {
@@ -79,7 +79,7 @@ pub fn es<P: SingleObjectiveProblem>(
                 .do_(selection)
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate_sequential()
+                .evaluate()
                 .update_best_individual()
                 .do_optional_(archive)
                 .do_(replacement)

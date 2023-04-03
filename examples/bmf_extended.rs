@@ -11,9 +11,9 @@ use std::{
     sync::{Arc},
 };
 use anyhow::Context;
-use mahf::tracking::{files, Log};
+use mahf::tracking::{files, Log, LogSet};
 
-type P = problems::bmf::BenchmarkFunction;
+type P = BenchmarkFunction;
 
 fn main() -> anyhow::Result<()> {
     let folder = "data/bmf";
@@ -30,17 +30,6 @@ fn main() -> anyhow::Result<()> {
             v_max,
         },
         termination::FixedIterations::new(5000),
-        tracking::Logger::builder()
-            .log_set(
-                tracking::LogSet::new()
-                    .with_trigger(trigger::Iteration::new(50))
-                    .with_trigger(trigger::FinalIter::new(5000))
-                    .with_auto_logger::<common::Evaluations>()
-                    .with_auto_logger::<common::Progress>()
-                    .with_logger(functions::best_individual::<BenchmarkFunction>)
-                    .with_logger(functions::best_objective_value::<BenchmarkFunction>),
-            )
-            .build(),
     );
 
     let data_dir = Arc::new(PathBuf::from(&output));
@@ -61,18 +50,38 @@ fn main() -> anyhow::Result<()> {
             let experiment_desc = problem.name();
             let log_file = data_dir.join(format!("{}{}{}.log", experiment_desc, '_', run.to_string()));
 
-            let state = config.optimize_with(&problem, |state| state.insert(Random::seeded(run)));
+            let state = config.optimize_with(&problem, |state|
+                state.insert(LogSet::<BenchmarkFunction>::new()
+                     .with_common_extractors(trigger::Iteration::new(50))
+                     .with(
+                          trigger::Iteration::new(50),
+                          functions::best_individual::<BenchmarkFunction>,
+                     )
+                    .with(
+                        trigger::Iteration::new(50),
+                        functions::best_objective_value::<BenchmarkFunction>,
+                    )
+                    .with(
+                        trigger::FinalIter::new(5000),
+                        functions::best_individual::<BenchmarkFunction>,
+                    )
+                    .with(
+                        trigger::FinalIter::new(5000),
+                        functions::best_objective_value::<BenchmarkFunction>,
+                    )
+                )
+            );
             let log = state.get::<Log>();
             files::write_log_file(log_file, log)?;
 
 
             println!(
                 "Found Fitness: {:?}",
-                state.best_objective_value::<P>().unwrap()
+                state.best_objective_value().unwrap()
             );
             println!(
                 "Found Individual: {:?}",
-                state.best_individual::<P>().unwrap(),
+                state.best_individual().unwrap(),
             );
             println!("Global Optimum: {}", problem.known_optimum());
         }
