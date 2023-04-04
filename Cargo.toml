@@ -3,6 +3,10 @@ authors = ["Leopold Luley <git@leopoldluley.de>"]
 edition = "2021"
 name = "mahf"
 version = "0.1.0"
+description = "A framework for modular construction and evaluation of metaheuristics."
+license = "GPL-3.0-or-later"
+license-file = "LICENSE"
+repository = "https://github.com/mahf-opt/mahf"
 
 [dependencies]
 anyhow = "1.0.51"
