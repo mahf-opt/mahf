@@ -1,12 +1,9 @@
 use crate::{
-    components,
-    framework::{
-        components::{Block, Branch, Component, Loop, Scope},
-        conditions::Condition,
-        Random,
-    },
+    components::{self, Block, Branch, Component, Loop, Scope},
+    conditions::Condition,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state, tracking,
+    state::{self, Random},
+    tracking,
 };
 
 /// A heuristic, constructed from a set of components.
@@ -117,12 +114,19 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self
     }
 
-    pub fn do_optional_(self, component: Option<Box<dyn Component<P>>>) -> Self {
+    pub fn do_if_some_(self, component: Option<Box<dyn Component<P>>>) -> Self {
         if let Some(component) = component {
             self.do_(component)
         } else {
             self
         }
+    }
+
+    pub fn do_many_(mut self, components: impl IntoIterator<Item = Box<dyn Component<P>>>) -> Self {
+        for component in components {
+            self.components.push(component);
+        }
+        self
     }
 
     /// Runs the body while the condition is true.

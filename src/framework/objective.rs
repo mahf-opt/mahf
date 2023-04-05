@@ -1,7 +1,7 @@
 //! Utility type to store an individuals fitness.
 
-use std::any::Any;
-use std::fmt;
+use std::{any::Any, fmt};
+
 use trait_set::trait_set;
 
 trait_set! {

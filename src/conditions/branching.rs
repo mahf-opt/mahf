@@ -3,13 +3,14 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::{framework::conditions::Condition, problems::Problem, state, state::State};
+use crate::{conditions::Condition, problems::Problem, state, state::State};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RandomChance {
     // Probability of the condition evaluating to `true`.
     p: f64,
 }
+
 impl RandomChance {
     pub fn new<P>(p: f64) -> Box<dyn Condition<P>>
     where
@@ -18,6 +19,7 @@ impl RandomChance {
         Box::new(Self { p })
     }
 }
+
 impl<P> Condition<P> for RandomChance
 where
     P: Problem,
@@ -32,6 +34,7 @@ pub struct LessThanNIndividuals {
     /// Number of individuals.
     pub n: usize,
 }
+
 impl LessThanNIndividuals {
     pub fn new<P>(n: usize) -> Box<dyn Condition<P>>
     where
@@ -40,6 +43,7 @@ impl LessThanNIndividuals {
         Box::new(Self { n })
     }
 }
+
 impl<P> Condition<P> for LessThanNIndividuals
 where
     P: Problem,
@@ -55,6 +59,7 @@ pub struct DecompositionCriterion {
     // A lower value makes Decomposition more likely.
     alpha: u32,
 }
+
 impl DecompositionCriterion {
     pub fn new<P>(alpha: u32) -> Box<dyn Condition<P>>
     where
@@ -63,6 +68,7 @@ impl DecompositionCriterion {
         Box::new(Self { alpha })
     }
 }
+
 impl<P> Condition<P> for DecompositionCriterion
 where
     P: Problem,
@@ -88,6 +94,7 @@ pub struct SynthesisCriterion {
     // A higher value makes Synthesis more likely.
     beta: f64,
 }
+
 impl SynthesisCriterion {
     pub fn new<P>(beta: f64) -> Box<dyn Condition<P>>
     where
@@ -96,6 +103,7 @@ impl SynthesisCriterion {
         Box::new(Self { beta })
     }
 }
+
 impl<P> Condition<P> for SynthesisCriterion
 where
     P: Problem,

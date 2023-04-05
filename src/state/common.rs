@@ -1,15 +1,14 @@
 //! Common state used in most heuristics.
 
-use super::CustomState;
-use crate::problems::{Evaluator, Problem};
-use crate::state::State;
-use crate::{
-    framework::Individual,
-    problems::{MultiObjectiveProblem, SingleObjectiveProblem},
-};
 use better_any::Tid;
 use derive_more::{Deref, DerefMut};
 use serde::Serialize;
+
+use crate::{
+    framework::Individual,
+    problems::{Evaluator, MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    state::{CustomState, State},
+};
 
 /// Instance of an [Evaluator] stored in the state.
 ///

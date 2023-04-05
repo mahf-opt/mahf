@@ -5,10 +5,56 @@ use std::cmp::max;
 use rand::{seq::IteratorRandom, Rng};
 use serde::{Deserialize, Serialize};
 
-use crate::problems::VectorProblem;
-use crate::{framework::components::*, problems::Problem, state::State};
+use crate::{
+    components::Component,
+    framework::{AnyComponent, Individual},
+    problems::{Problem, VectorProblem},
+    state::State,
+};
 
-use super::{Recombination, Recombinator};
+/// Specialized component trait to generate a new population from the current one.
+///
+/// This trait is especially useful for components that combine multiple solutions.
+/// For modifying solutions independently, see [Generation].
+///
+/// # Implementing [Component]
+///
+/// Types implementing this trait can implement [Component] by wrapping the type in a [Recombinator].
+pub trait Recombination<P: Problem> {
+    fn recombine_solutions(
+        &self,
+        parents: Vec<P::Encoding>,
+        offspring: &mut Vec<P::Encoding>,
+        problem: &P,
+        state: &mut State<P>,
+    );
+}
+
+#[derive(serde::Serialize, Clone)]
+pub struct Recombinator<T: Clone>(pub T);
+
+impl<T, P, D> Component<P> for Recombinator<T>
+where
+    P: Problem<Encoding = Vec<D>>,
+    T: AnyComponent + Recombination<P> + Serialize + Clone,
+    D: Clone + PartialEq + 'static,
+{
+    fn execute(&self, problem: &P, state: &mut State<P>) {
+        let population = state.populations_mut().pop();
+        let population = population
+            .into_iter()
+            .map(Individual::into_solution)
+            .collect();
+        let mut offspring = Vec::new();
+        self.0
+            .recombine_solutions(population, &mut offspring, problem, state);
+        let offspring = offspring
+            .into_iter()
+            .map(Individual::<P>::new_unevaluated)
+            .collect();
+        state.populations_mut().push(offspring);
+    }
+}
 
 /// Applies a n-point crossover to two parent solutions depending on crossover probability.
 ///
@@ -107,8 +153,8 @@ where
 
 #[cfg(test)]
 mod npoint_crossover {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -214,8 +260,8 @@ where
 
 #[cfg(test)]
 mod uniform_crossover {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -316,8 +362,8 @@ where
 
 #[cfg(test)]
 mod cycle_crossover {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -384,9 +430,10 @@ where
 }
 #[cfg(test)]
 mod de_binomial_crossover {
-    use crate::framework::{Individual, Random};
+    use crate::framework::Individual;
     use crate::problems::bmf::BenchmarkFunction;
     use crate::state::common::Populations;
+    use crate::state::Random;
 
     use super::*;
 
@@ -481,9 +528,10 @@ where
 }
 #[cfg(test)]
 mod de_exponential_crossover {
-    use crate::framework::{Individual, Random};
+    use crate::framework::Individual;
     use crate::problems::bmf::BenchmarkFunction;
     use crate::state::common::Populations;
+    use crate::state::Random;
 
     use super::*;
 

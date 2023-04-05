@@ -1,3 +1,6 @@
+use better_any::Tid;
+use serde::Serialize;
+
 use crate::{
     problems::Problem,
     state::{common, CustomState, State},
@@ -7,8 +10,6 @@ use crate::{
         trigger::Trigger,
     },
 };
-use better_any::Tid;
-use serde::Serialize;
 
 /// A combination of [Trigger] and [LogFn].
 #[derive(Default, Tid)]
@@ -44,6 +45,17 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
         extractor: Extractor<'a, P>,
     ) -> Self {
         self.entries.push((trigger, extractor));
+        self
+    }
+
+    pub fn with_many(
+        mut self,
+        trigger: Box<dyn Trigger<'a, P> + 'a>,
+        extractors: impl IntoIterator<Item = Extractor<'a, P>>,
+    ) -> Self {
+        for extractor in extractors {
+            self.entries.push((trigger.clone(), extractor));
+        }
         self
     }
 

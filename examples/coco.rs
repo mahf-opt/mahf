@@ -26,10 +26,7 @@ fn main() -> anyhow::Result<()> {
                     trigger::Change::<common::Progress>::new(0.1),
                     functions::auto::<common::Progress, _>,
                 )
-                .with(
-                    trigger::Iteration::new(50),
-                    functions::best_individual::<CocoInstance>,
-                ),
+                .with(trigger::Iteration::new(50), functions::best_individual),
         )
     })
 }

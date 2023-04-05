@@ -2,7 +2,8 @@ use rand::prelude::*;
 use serde::Serialize;
 
 use crate::{
-    framework::components::{AnyComponent, Component},
+    components::Component,
+    framework::AnyComponent,
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     state::State,
 };
@@ -36,12 +37,14 @@ where
 /// Clamps the values to the domain boundaries.
 #[derive(serde::Serialize, Clone)]
 pub struct Saturation;
+
 impl Saturation {
     pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
     ) -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
+
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Saturation
 {
@@ -57,12 +60,14 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorPro
 /// as if the boundaries are connected and the domain forms a ring.
 #[derive(serde::Serialize, Clone)]
 pub struct Toroidal;
+
 impl Toroidal {
     pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
     ) -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
+
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Toroidal
 {
@@ -86,12 +91,14 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorPro
 /// The amount exceeding the boundary is reflected inwards at the same boundary.
 #[derive(serde::Serialize, Clone)]
 pub struct Mirror;
+
 impl Mirror {
     pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
     ) -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
+
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Mirror
 {
@@ -122,12 +129,14 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorPro
 /// Re-sampling is performed until the value is within the domain.
 #[derive(serde::Serialize, Clone)]
 pub struct CompleteOneTailedNormalCorrection;
+
 impl CompleteOneTailedNormalCorrection {
     pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
     ) -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
+
 impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for CompleteOneTailedNormalCorrection
 {

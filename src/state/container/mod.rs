@@ -6,9 +6,9 @@ use std::{
 };
 
 use crate::{
-    framework::{Individual, Random, SingleObjective},
+    framework::{Individual, SingleObjective},
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state::common,
+    state::{common, Random},
     tracking::Log,
 };
 
@@ -212,7 +212,7 @@ impl<'a, P: Problem> State<'a, P> {
     /// Basic usage:
     ///
     /// ```
-    /// use mahf::{state::{State, common::Population}, framework::Random, problems::bmf::BenchmarkFunction};
+    /// use mahf::{prelude::*, problems::bmf::BenchmarkFunction};
     /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new();
     /// state.insert(Random::testing());
@@ -270,7 +270,7 @@ impl<'a, P: Problem> State<'a, P> {
     ///  Basic usage:
     ///
     /// ```
-    /// use mahf::{state::{State, common::Population}, framework::Random, problems::bmf::BenchmarkFunction};
+    /// use mahf::{prelude::*, problems::bmf::BenchmarkFunction};
     /// let problem = BenchmarkFunction::sphere(3);
     /// let mut state = State::new();
     /// state.insert(Random::testing());

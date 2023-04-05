@@ -1,11 +1,13 @@
+use std::any::type_name;
+
+use better_any::Tid;
+use erased_serde::Serialize as DynSerialize;
+use serde::Serialize;
+
 use crate::{
     problems::Problem,
     state::{common, CustomState, State},
 };
-use better_any::Tid;
-use erased_serde::Serialize as DynSerialize;
-use serde::Serialize;
-use std::any::type_name;
 
 /// A log tracking state throughout the run.
 ///

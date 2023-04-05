@@ -6,12 +6,51 @@ use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Individual},
+    components::Component,
+    framework::{AnyComponent, Individual},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
     state::{common::Progress, State},
 };
 
-use super::{Generation, Generator};
+/// Specialized component trait to generate a new population from the current one.
+///
+/// This trait is especially useful for components that modify solutions independently.
+/// For combining multiple solutions, see [Recombination].
+///
+/// # Implementing [Component]
+///
+/// Types implementing this trait can implement [Component] by wrapping the type in a [Generator].
+pub trait Generation<P: Problem> {
+    fn generate_population(
+        &self,
+        population: &mut Vec<P::Encoding>,
+        problem: &P,
+        state: &mut State<P>,
+    );
+}
+
+#[derive(serde::Serialize, Clone)]
+pub struct Generator<T: Clone>(pub T);
+
+impl<T, P> Component<P> for Generator<T>
+where
+    P: Problem,
+    T: AnyComponent + Generation<P> + Serialize + Clone,
+{
+    fn execute(&self, problem: &P, state: &mut State<P>) {
+        let population = state.populations_mut().pop();
+        let mut population = population
+            .into_iter()
+            .map(Individual::into_solution)
+            .collect();
+        self.0.generate_population(&mut population, problem, state);
+        let population = population
+            .into_iter()
+            .map(Individual::<P>::new_unevaluated)
+            .collect();
+        state.populations_mut().push(population);
+    }
+}
 
 /// Applies a fixed, component wise delta from a normal distribution.
 ///
@@ -23,6 +62,7 @@ pub struct FixedDeviationDelta {
     /// Standard Deviation for the mutation.
     pub deviation: f64,
 }
+
 impl FixedDeviationDelta {
     pub fn new<P>(deviation: f64) -> Box<dyn Component<P>>
     where
@@ -31,6 +71,7 @@ impl FixedDeviationDelta {
         Box::new(Generator(Self { deviation }))
     }
 }
+
 impl<P> Generation<P> for FixedDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
@@ -68,6 +109,7 @@ pub struct IWOAdaptiveDeviationDelta {
     /// Modulation index for the standard deviation.
     pub modulation_index: u32,
 }
+
 impl IWOAdaptiveDeviationDelta {
     pub fn new<P>(
         initial_deviation: f64,
@@ -91,6 +133,7 @@ impl IWOAdaptiveDeviationDelta {
                 * (self.initial_deviation - self.final_deviation)
     }
 }
+
 impl<P> Generation<P> for IWOAdaptiveDeviationDelta
 where
     P: Problem<Encoding = Vec<f64>>,
@@ -111,6 +154,7 @@ where
         }
     }
 }
+
 #[cfg(test)]
 mod adaptive_deviation_delta {
     use super::*;
@@ -139,6 +183,7 @@ pub struct UniformMutation {
     /// Probability of mutating one position.
     pub rm: f64,
 }
+
 impl UniformMutation {
     pub fn new<P>(rm: f64) -> Box<dyn Component<P>>
     where
@@ -147,6 +192,7 @@ impl UniformMutation {
         Box::new(Generator(Self { rm }))
     }
 }
+
 impl<P> Generation<P> for UniformMutation
 where
     P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
@@ -171,8 +217,8 @@ where
 
 #[cfg(test)]
 mod uniform_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -207,6 +253,7 @@ pub struct GaussianMutation {
     /// Standard Deviation for the mutation.
     pub deviation: f64,
 }
+
 impl GaussianMutation {
     pub fn new<P>(rm: f64, deviation: f64) -> Box<dyn Component<P>>
     where
@@ -215,6 +262,7 @@ impl GaussianMutation {
         Box::new(Generator(Self { rm, deviation }))
     }
 }
+
 impl<P> Generation<P> for GaussianMutation
 where
     P: Problem<Encoding = Vec<f64>>,
@@ -240,8 +288,8 @@ where
 
 #[cfg(test)]
 mod gaussian_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -276,6 +324,7 @@ pub struct BitflipMutation {
     /// Probability of mutating one position.
     pub rm: f64,
 }
+
 impl BitflipMutation {
     pub fn new<P>(rm: f64) -> Box<dyn Component<P>>
     where
@@ -284,6 +333,7 @@ impl BitflipMutation {
         Box::new(Generator(Self { rm }))
     }
 }
+
 impl<P> Generation<P> for BitflipMutation
 where
     P: Problem<Encoding = Vec<bool>>,
@@ -314,6 +364,7 @@ pub struct SwapMutation {
     /// Number of swaps.
     pub n_swap: usize,
 }
+
 impl SwapMutation {
     pub fn new<P, D: 'static>(n_swap: usize) -> Box<dyn Component<P>>
     where
@@ -322,6 +373,7 @@ impl SwapMutation {
         Box::new(Generator(Self { n_swap }))
     }
 }
+
 impl<P, D: 'static> Generation<P> for SwapMutation
 where
     P: Problem<Encoding = Vec<D>>,
@@ -355,8 +407,8 @@ where
 
 #[cfg(test)]
 mod swap_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -385,6 +437,7 @@ mod swap_mutation {
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ScrambleMutation;
+
 impl ScrambleMutation {
     pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
@@ -393,6 +446,7 @@ impl ScrambleMutation {
         Box::new(Generator(Self))
     }
 }
+
 impl<P, D: 'static> Generation<P> for ScrambleMutation
 where
     P: Problem<Encoding = Vec<D>>,
@@ -413,8 +467,8 @@ where
 
 #[cfg(test)]
 mod scramble_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -443,6 +497,7 @@ mod scramble_mutation {
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct InsertionMutation;
+
 impl InsertionMutation {
     pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
@@ -451,6 +506,7 @@ impl InsertionMutation {
         Box::new(Generator(Self))
     }
 }
+
 impl<P, D: 'static> Generation<P> for InsertionMutation
 where
     P: Problem<Encoding = Vec<D>>,
@@ -472,8 +528,8 @@ where
 
 #[cfg(test)]
 mod insertion_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -502,6 +558,7 @@ mod insertion_mutation {
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct InversionMutation;
+
 impl InversionMutation {
     pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
@@ -510,6 +567,7 @@ impl InversionMutation {
         Box::new(Generator(Self))
     }
 }
+
 impl<P, D: 'static> Generation<P> for InversionMutation
 where
     P: Problem<Encoding = Vec<D>>,
@@ -534,8 +592,8 @@ where
 
 #[cfg(test)]
 mod inversion_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -564,6 +622,7 @@ mod inversion_mutation {
 /// If pm = 1, the solution is mutated.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TranslocationMutation;
+
 impl TranslocationMutation {
     pub fn new<P, D: 'static>() -> Box<dyn Component<P>>
     where
@@ -573,6 +632,7 @@ impl TranslocationMutation {
         Box::new(Generator(Self))
     }
 }
+
 impl<P, D: 'static> Generation<P> for TranslocationMutation
 where
     P: Problem<Encoding = Vec<D>>,
@@ -605,8 +665,8 @@ where
 
 #[cfg(test)]
 mod translocation_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -638,6 +698,7 @@ pub struct DEMutation {
     // Difference vector scaling ∈ (0, 2].
     f: f64,
 }
+
 impl DEMutation {
     pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem>(
         y: usize,
@@ -696,8 +757,8 @@ where
 
 #[cfg(test)]
 mod de_mutation {
-    use crate::framework::Random;
     use crate::problems::bmf::BenchmarkFunction;
+    use crate::state::Random;
 
     use super::*;
 
@@ -729,6 +790,7 @@ pub struct UniformPartialMutation<P: Problem> {
     /// Mutation to partially apply to the solution.
     pub mutation: Box<dyn Component<P>>,
 }
+
 impl<P, D: 'static> UniformPartialMutation<P>
 where
     P: Problem<Encoding = Vec<D>>,
@@ -738,6 +800,7 @@ where
         Box::new(Self { ratio, mutation })
     }
 }
+
 impl<P, D: 'static> Component<P> for UniformPartialMutation<P>
 where
     P: Problem<Encoding = Vec<D>>,

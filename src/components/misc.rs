@@ -1,8 +1,9 @@
 use dyn_clone::DynClone;
 use serde::{Serialize, Serializer};
+use trait_set::trait_set;
 
 use crate::{
-    framework::components::Component,
+    components::Component,
     problems::{Problem, SingleObjectiveProblem},
     state::State,
 };
@@ -13,6 +14,7 @@ use crate::{
 /// the state at all, while [Empty][initialization::Empty] pushes an empty population on the stack.
 #[derive(Serialize, Clone)]
 pub struct Noop;
+
 impl Noop {
     pub fn new<P>() -> Box<dyn Component<P>>
     where
@@ -21,6 +23,7 @@ impl Noop {
         Box::new(Self)
     }
 }
+
 impl<P: Problem> Component<P> for Noop {
     fn execute(&self, _problem: &P, _state: &mut State<P>) {
         // Noop
@@ -30,28 +33,24 @@ impl<P: Problem> Component<P> for Noop {
 /// Clears the current population, deleting all individuals.
 #[derive(Serialize, Clone)]
 pub struct ClearPopulation;
+
 impl ClearPopulation {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
+
 impl<P: Problem> Component<P> for ClearPopulation {
     fn execute(&self, _problem: &P, state: &mut State<P>) {
         state.populations_mut().current_mut().clear();
     }
 }
 
-/// Helper trait to allow cloning of debug functions.
-pub trait DynCustomFunc<P: Problem>:
-    Fn(&P, &mut State<P>) + Send + Sync + DynClone + 'static
-{
+trait_set! {
+    /// Helper trait to allow cloning of debug functions.
+    pub trait DynCustomFunc<P: Problem> = Fn(&P, &mut State<P>) + Send + Sync + DynClone + 'static;
 }
 dyn_clone::clone_trait_object!(<P: Problem> DynCustomFunc<P>);
-
-impl<P: Problem, F> DynCustomFunc<P> for F where
-    F: Fn(&P, &mut State<P>) + Send + Sync + Clone + 'static
-{
-}
 
 /// Allows for minor custom behaviour for debug purposes, e.g., asserts.
 ///
@@ -63,13 +62,13 @@ impl<P: Problem, F> DynCustomFunc<P> for F where
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
 pub struct Debug<P: Problem>(Box<dyn DynCustomFunc<P, Output = ()>>);
+
 impl<P: Problem> Debug<P> {
-    pub fn new(
-        custom: impl Fn(&P, &mut State<P>) + Send + Sync + Clone + 'static,
-    ) -> Box<dyn Component<P>> {
+    pub fn new(custom: impl DynCustomFunc<P>) -> Box<dyn Component<P>> {
         Box::new(Self(Box::new(custom)))
     }
 }
+
 impl<P: Problem> Component<P> for Debug<P> {
     fn execute(&self, problem: &P, state: &mut State<P>) {
         self.0(problem, state);
@@ -89,6 +88,7 @@ impl<P: Problem> Serialize for Debug<P> {
 /// The summary includes statistics like number of iterations, evaluations and best solution found yet.
 #[derive(Serialize, Clone)]
 pub struct PrintSingleObjectiveSummary;
+
 impl PrintSingleObjectiveSummary {
     pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>>
     where
@@ -97,6 +97,7 @@ impl PrintSingleObjectiveSummary {
         Box::new(Self)
     }
 }
+
 impl<P: SingleObjectiveProblem> Component<P> for PrintSingleObjectiveSummary
 where
     P::Encoding: std::fmt::Debug,

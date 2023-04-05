@@ -3,9 +3,7 @@
 use crate::{
     components::*,
     conditions::*,
-    framework::{
-        self, components::Component, conditions::Condition, Configuration, ConfigurationBuilder,
-    },
+    framework::{Configuration, ConfigurationBuilder},
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
     state,
 };
@@ -59,7 +57,7 @@ where
                 buffer,
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
                 decomposition_criterion: branching::DecompositionCriterion::new(alpha),
-                decomposition: framework::components::Block::new(vec![
+                decomposition: Block::new([
                     generation::DuplicatePopulation::new(),
                     generation::mutation::UniformPartialMutation::new(
                         0.5,

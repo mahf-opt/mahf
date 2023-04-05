@@ -8,7 +8,8 @@ use rand::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Individual, SingleObjective},
+    components::Component,
+    framework::{AnyComponent, Individual, SingleObjective},
     problems::{Problem, SingleObjectiveProblem},
     state::State,
 };
@@ -96,11 +97,13 @@ fn get_ranking<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> Vec<u
 /// Selects all individuals once.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct All;
+
 impl All {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
         Box::new(Selector(Self))
     }
 }
+
 impl<P: Problem> Selection<P> for All {
     fn select_offspring<'p>(
         &self,
@@ -114,11 +117,13 @@ impl<P: Problem> Selection<P> for All {
 /// Selects no individual.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct None;
+
 impl None {
     pub fn new<P: Problem>() -> Box<dyn Component<P>> {
         Box::new(Selector(Self))
     }
 }
+
 impl<P: Problem> Selection<P> for None {
     fn select_offspring<'p>(
         &self,
@@ -135,11 +140,13 @@ pub struct DuplicateSingle {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+
 impl DuplicateSingle {
     pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
+
 impl<P: Problem> Selection<P> for DuplicateSingle {
     fn select_offspring<'p>(
         &self,
@@ -180,11 +187,13 @@ pub struct FullyRandom {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+
 impl FullyRandom {
     pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
+
 impl<P: Problem> Selection<P> for FullyRandom {
     fn select_offspring<'p>(
         &self,
@@ -198,9 +207,10 @@ impl<P: Problem> Selection<P> for FullyRandom {
         selection
     }
 }
+
 #[cfg(test)]
 mod fully_random {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -224,11 +234,13 @@ pub struct RandomWithoutRepetition {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+
 impl RandomWithoutRepetition {
     pub fn new<P: Problem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
+
 impl<P: Problem> Selection<P> for RandomWithoutRepetition {
     fn select_offspring<'p>(
         &self,
@@ -242,7 +254,7 @@ impl<P: Problem> Selection<P> for RandomWithoutRepetition {
 }
 #[cfg(test)]
 mod random_without_repetition {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -285,6 +297,7 @@ pub struct DeterministicFitnessProportional {
     /// Maximum offspring per individual per iteration
     pub max_offspring: u32,
 }
+
 impl DeterministicFitnessProportional {
     pub fn new<P: SingleObjectiveProblem>(
         min_offspring: u32,
@@ -334,7 +347,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportiona
 
 #[cfg(test)]
 mod deterministic_fitness_proportional {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -372,11 +385,13 @@ pub struct RouletteWheel {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+
 impl RouletteWheel {
     pub fn new<P: SingleObjectiveProblem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
     fn select_offspring<'p>(
         &self,
@@ -394,7 +409,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
 }
 #[cfg(test)]
 mod roulette_wheel {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -419,11 +434,13 @@ pub struct StochasticUniversalSampling {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+
 impl StochasticUniversalSampling {
     pub fn new<P: SingleObjectiveProblem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
     fn select_offspring<'p>(
         &self,
@@ -457,7 +474,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
 }
 #[cfg(test)]
 mod stochastic_universal_sampling {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -483,11 +500,13 @@ pub struct Tournament {
     /// Tournament size.
     pub size: u32,
 }
+
 impl Tournament {
     pub fn new<P: SingleObjectiveProblem>(offspring: u32, size: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring, size }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for Tournament {
     fn select_offspring<'p>(
         &self,
@@ -508,9 +527,10 @@ impl<P: SingleObjectiveProblem> Selection<P> for Tournament {
         selection
     }
 }
+
 #[cfg(test)]
 mod tournament {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -537,11 +557,13 @@ pub struct LinearRank {
     /// Offspring per iteration.
     pub offspring: u32,
 }
+
 impl LinearRank {
     pub fn new<P: SingleObjectiveProblem>(offspring: u32) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
     fn select_offspring<'p>(
         &self,
@@ -558,9 +580,10 @@ impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
         selection
     }
 }
+
 #[cfg(test)]
 mod linear_rank {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -580,7 +603,7 @@ mod linear_rank {
 ///
 /// Solutions can be selected multiple times in a single iteration.
 ///
-/// See [https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf](https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf) for details.
+/// See https://tik-old.ee.ethz.ch/file/6c0e384dceb283cd4301339a895b72b8/TIK-Report11.pdf for details.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ExponentialRank {
     /// Offspring per iteration.
@@ -588,11 +611,13 @@ pub struct ExponentialRank {
     /// Base of exponent within (0,1).
     pub base: f64,
 }
+
 impl ExponentialRank {
     pub fn new<P: SingleObjectiveProblem>(offspring: u32, base: f64) -> Box<dyn Component<P>> {
         Box::new(Selector(Self { offspring, base }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
     fn select_offspring<'p>(
         &self,
@@ -617,9 +642,10 @@ impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
         selection
     }
 }
+
 #[cfg(test)]
 mod exponential_rank {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -647,12 +673,14 @@ pub struct DERand {
     // Number of difference vectors ∈ {1, 2}.
     y: usize,
 }
+
 impl DERand {
     pub fn new<P: Problem>(y: usize) -> Box<dyn Component<P>> {
         assert!([1, 2].contains(&y));
         Box::new(Selector(Self { y }))
     }
 }
+
 impl<P: Problem> Selection<P> for DERand {
     fn select_offspring<'p>(
         &self,
@@ -664,9 +692,10 @@ impl<P: Problem> Selection<P> for DERand {
             .collect()
     }
 }
+
 #[cfg(test)]
 mod de_rand {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -696,12 +725,14 @@ pub struct DEBest {
     // Number of difference vectors ∈ {1, 2}.
     y: usize,
 }
+
 impl DEBest {
     pub fn new<P: SingleObjectiveProblem>(y: usize) -> Box<dyn Component<P>> {
         assert!([1, 2].contains(&y));
         Box::new(Selector(Self { y }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for DEBest {
     fn select_offspring<'p>(
         &self,
@@ -719,9 +750,10 @@ impl<P: SingleObjectiveProblem> Selection<P> for DEBest {
         offspring
     }
 }
+
 #[cfg(test)]
 mod de_best {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;
@@ -747,12 +779,14 @@ pub struct DECurrentToBest {
     // Number of difference vectors ∈ {1, 2}.
     y: usize,
 }
+
 impl DECurrentToBest {
     pub fn new<P: SingleObjectiveProblem>(y: usize) -> Box<dyn Component<P>> {
         assert!([1, 2].contains(&y));
         Box::new(Selector(Self { y }))
     }
 }
+
 impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
     fn select_offspring<'p>(
         &self,
@@ -778,9 +812,10 @@ impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
         offspring
     }
 }
+
 #[cfg(test)]
 mod de_current_to_best {
-    use crate::framework::Random;
+    use crate::state::Random;
     use crate::testing::*;
 
     use super::*;

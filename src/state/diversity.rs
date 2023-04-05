@@ -6,7 +6,8 @@ use better_any::Tid;
 use serde::Serialize;
 
 use crate::{
-    framework::components::*,
+    components::Component,
+    framework::AnyComponent,
     problems::{Problem, VectorProblem},
     state::{common::Populations, CustomState, State},
 };

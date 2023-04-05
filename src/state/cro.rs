@@ -1,10 +1,12 @@
+use better_any::Tid;
+use rand::Rng;
+
 use crate::{
-    framework::{components::*, Individual},
+    components::Component,
+    framework::Individual,
     problems::{Problem, SingleObjectiveProblem},
     state::{CustomState, State},
 };
-use better_any::Tid;
-use rand::Rng;
 
 #[derive(Clone)]
 pub struct Molecule<P: Problem> {

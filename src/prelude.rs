@@ -3,9 +3,9 @@
 pub use crate::{
     components::*,
     conditions::*,
-    framework::{self, Configuration, Random},
+    framework::{self, Configuration, Individual},
     heuristics::*,
     problems,
-    state::{self, State},
+    state::{self, Random, State},
     tracking,
 };

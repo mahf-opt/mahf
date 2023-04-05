@@ -1,5 +1,6 @@
-use crate::problems::Problem;
 use std::fmt::{Debug, Formatter};
+
+use crate::problems::Problem;
 
 /// An encoded solution with an associated (optional) objective value.
 pub struct Individual<P: Problem + ?Sized> {

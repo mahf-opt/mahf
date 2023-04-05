@@ -1,7 +1,8 @@
 //! Termination criteria
 
+use crate::conditions::Condition;
 use crate::{
-    framework::{conditions::Condition, SingleObjective},
+    framework::SingleObjective,
     problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
     state::{
         common::{Evaluations, Iterations, Progress},
@@ -13,6 +14,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TargetHit;
+
 impl TargetHit {
     pub fn new<P>() -> Box<dyn Condition<P>>
     where
@@ -21,6 +23,7 @@ impl TargetHit {
         Box::new(Self)
     }
 }
+
 impl<P> Condition<P> for TargetHit
 where
     P: SingleObjectiveProblem + HasKnownTarget,
@@ -42,6 +45,7 @@ pub struct FixedIterations {
     /// Maximum number of iterations.
     pub max_iterations: u32,
 }
+
 impl FixedIterations {
     pub fn new<P: Problem>(max_iterations: u32) -> Box<dyn Condition<P>>
     where
@@ -50,6 +54,7 @@ impl FixedIterations {
         Box::new(Self { max_iterations })
     }
 }
+
 impl<P> Condition<P> for FixedIterations
 where
     P: Problem,
@@ -66,6 +71,7 @@ where
         iterations < self.max_iterations
     }
 }
+
 #[cfg(test)]
 mod fixed_iterations {
     use super::*;
@@ -112,6 +118,7 @@ pub struct FixedEvaluations {
     /// Maximum number of evaluations.
     pub max_evaluations: u32,
 }
+
 impl FixedEvaluations {
     pub fn new<P: Problem>(max_evaluations: u32) -> Box<dyn Condition<P>>
     where
@@ -120,6 +127,7 @@ impl FixedEvaluations {
         Box::new(Self { max_evaluations })
     }
 }
+
 impl<P> Condition<P> for FixedEvaluations
 where
     P: Problem,
@@ -135,6 +143,7 @@ where
         evaluations < self.max_evaluations
     }
 }
+
 #[cfg(test)]
 mod fixed_evaluations {
     use super::*;
@@ -182,6 +191,7 @@ pub struct DistanceToOpt {
     /// Distance to known optimum.
     pub distance: f64,
 }
+
 impl DistanceToOpt {
     pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
     where
@@ -190,6 +200,7 @@ impl DistanceToOpt {
         Box::new(Self { distance })
     }
 }
+
 impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
 where
     P: Problem,
@@ -199,6 +210,7 @@ where
             >= problem.known_optimum().value() + self.distance
     }
 }
+
 #[cfg(test)]
 mod distance_to_opt {
     use super::*;
@@ -227,6 +239,7 @@ struct FitnessImprovementState {
     pub current_steps: usize,
     pub current_objective: SingleObjective,
 }
+
 impl FitnessImprovementState {
     pub fn update(&mut self, objective: &SingleObjective) -> bool {
         if objective >= &self.current_objective {
@@ -239,6 +252,7 @@ impl FitnessImprovementState {
         }
     }
 }
+
 impl CustomState<'_> for FitnessImprovementState {}
 
 /// Terminates after a specified number of steps (iterations) did not yield any improvement.
@@ -249,6 +263,7 @@ pub struct StepsWithoutImprovement {
     /// Number of steps without improvement.
     pub steps: usize,
 }
+
 impl StepsWithoutImprovement {
     pub fn new<P: Problem>(steps: usize) -> Box<dyn Condition<P>>
     where
@@ -257,6 +272,7 @@ impl StepsWithoutImprovement {
         Box::new(Self { steps })
     }
 }
+
 impl<P> Condition<P> for StepsWithoutImprovement
 where
     P: SingleObjectiveProblem,
@@ -276,6 +292,7 @@ where
         termination_state.current_steps < self.steps
     }
 }
+
 #[cfg(test)]
 mod steps_without_improvement {
     use super::*;
