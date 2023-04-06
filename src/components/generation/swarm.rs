@@ -1,21 +1,31 @@
 //! Swarm Operators
 
-use rand::distributions::Uniform;
+use better_any::Tid;
+use itertools::multizip;
 use rand::Rng;
+
+use derive_more::{Deref, DerefMut};
 
 use crate::{
     components::Component,
-    framework::Individual,
+    framework::PopulationExtensions,
     problems::SingleObjectiveProblem,
-    state::{PsoState, Random, State},
+    state::{ParticleSwarm, State},
+    CustomState,
 };
+
+/// Inertia weight for influence of old velocity.
+#[derive(Deref, DerefMut, Tid)]
+pub struct Weight(pub f64);
+
+impl CustomState<'_> for Weight {}
 
 /// Applies the PSO specific generation operator.
 ///
 /// Requires [PsoStateUpdate][PsoState::updater].
 #[derive(serde::Serialize, Clone)]
-pub struct PsoGeneration {
-    /// Inertia weight for influence of old velocity
+pub struct ParticleSwarmGeneration {
+    /// Initial inertia weight for influence of old velocity.
     pub weight: f64,
     /// First constant factor for influence of previous best (also called Acceleration coefficient 1)
     pub c_one: f64,
@@ -25,7 +35,7 @@ pub struct PsoGeneration {
     pub v_max: f64,
 }
 
-impl PsoGeneration {
+impl ParticleSwarmGeneration {
     pub fn new<P>(weight: f64, c_one: f64, c_two: f64, v_max: f64) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem<Encoding = Vec<f64>>,
@@ -39,59 +49,55 @@ impl PsoGeneration {
     }
 }
 
-impl<P> Component<P> for PsoGeneration
+impl<P> Component<P> for ParticleSwarmGeneration
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>>,
 {
     fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.require::<Self, PsoState<P>>();
+        state.insert(Weight(self.weight));
+    }
+
+    fn require(&self, _problem: &P, state: &State<P>) {
+        state.require::<Self, ParticleSwarm<P>>();
     }
 
     fn execute(&self, _problem: &P, state: &mut State<P>) {
         let &Self {
-            weight,
             c_one,
             c_two,
             v_max,
+            ..
         } = self;
 
-        let mut offspring = Vec::new();
-        let mut parents = state.populations_mut().pop();
+        let mut mut_state = state.get_states_mut();
+        let population = mut_state.populations_mut().current_mut();
+        let rng = mut_state.random_mut();
 
-        let rng = state.random_mut();
-        let rng_iter = |rng: &mut Random| {
-            rng.sample_iter(Uniform::new(0., 1.))
-                .take(parents.len())
-                .collect::<Vec<_>>()
-        };
+        let ParticleSwarm {
+            velocities: vs,
+            bests,
+            global_best,
+        } = mut_state.get_mut::<ParticleSwarm<P>>();
 
-        // it might be debatable if one should use a vector of different random numbers or of the same
-        // both versions exist in the literature
-        let r_one = rng_iter(rng);
-        let r_two = rng_iter(rng);
+        let w = mut_state.get_value::<Weight>();
 
-        let pso_state = state.get_mut::<PsoState<P>>();
+        let mut rand = move || rng.gen::<f64>();
 
-        for (i, x) in parents.drain(..).enumerate() {
-            let mut x = x.into_solution();
-            let v = &mut pso_state.velocities[i];
-            let xp = pso_state.bests[i].solution();
-            let xg = pso_state.global_best.solution();
+        let xs = population.solutions_mut();
+        let xps = bests.solutions();
+        let xg = global_best.solution();
 
+        for (x, v, xp) in multizip((xs, vs, xps)) {
+            // Update and clamp velocity
             for i in 0..v.len() {
-                v[i] = weight * v[i]
-                    + c_one * r_one[i] * (xp[i] - x[i])
-                    + c_two * r_two[i] * (xg[i] - x[i]);
+                v[i] = w * v[i] + c_one * rand() * (xp[i] - x[i]) + c_two * rand() * (xg[i] - x[i]);
                 v[i] = v[i].clamp(-v_max, v_max);
             }
 
+            // Add velocity to particle position
             for i in 0..x.len() {
                 x[i] += v[i];
             }
-
-            offspring.push(Individual::<P>::new_unevaluated(x));
         }
-
-        state.populations_mut().push(offspring);
     }
 }

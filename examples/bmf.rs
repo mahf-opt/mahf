@@ -3,13 +3,14 @@ use problems::bmf::BenchmarkFunction;
 
 fn main() {
     // Specify the problem: Sphere function with 10 dimensions.
-    let problem: BenchmarkFunction = BenchmarkFunction::sphere(/*dim: */ 10);
+    let problem: BenchmarkFunction = BenchmarkFunction::rastrigin(/*dim: */ 10);
     // Specify the metaheuristic: Particle Swarm Optimization (pre-implemented in MAHF).
     let config: Configuration<BenchmarkFunction> = pso::real_pso(
         /*params: */
         pso::RealProblemParameters {
             num_particles: 20,
-            weight: 1.0,
+            start_weight: 0.9,
+            end_weight: 0.4,
             c_one: 1.0,
             c_two: 1.0,
             v_max: 1.0,
@@ -26,4 +27,5 @@ fn main() {
     println!("Found Individual: {:?}", state.best_individual().unwrap());
     println!("This took {} iterations.", state.iterations());
     println!("Global Optimum: {}", problem.known_optimum());
+    println!("Population fitness mean: {:?}", state.populations().current().iter().map(|i| i.objective().value()).sum::<f64>() / 20.)
 }

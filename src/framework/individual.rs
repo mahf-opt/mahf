@@ -122,3 +122,31 @@ impl<E: Debug, P: Problem<Encoding = E>> Debug for Individual<P> {
         )
     }
 }
+
+pub trait PopulationExtensions<P: Problem> {
+    fn solutions(&self) -> Vec<&P::Encoding>;
+    fn solutions_mut(&mut self) -> Vec<&mut P::Encoding>;
+    fn into_solutions(self) -> Vec<P::Encoding>
+    where
+        Self: Sized;
+}
+
+impl<P> PopulationExtensions<P> for Vec<Individual<P>>
+where
+    P: Problem,
+{
+    fn solutions(&self) -> Vec<&P::Encoding> {
+        self.iter().map(Individual::solution).collect()
+    }
+
+    fn solutions_mut(&mut self) -> Vec<&mut P::Encoding> {
+        self.iter_mut().map(Individual::solution_mut).collect()
+    }
+
+    fn into_solutions(self) -> Vec<P::Encoding>
+    where
+        Self: Sized,
+    {
+        self.into_iter().map(Individual::into_solution).collect()
+    }
+}

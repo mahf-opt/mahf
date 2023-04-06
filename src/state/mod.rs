@@ -7,8 +7,8 @@ pub mod archive;
 pub mod common;
 pub mod diversity;
 
-mod pso;
-pub use pso::PsoState;
+pub mod pso;
+pub use pso::{ParticleSwarm};
 
 mod pheromones;
 pub use pheromones::PheromoneMatrix;

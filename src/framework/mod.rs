@@ -9,7 +9,7 @@ mod objective;
 pub use objective::{IllegalObjective, MultiObjective, Objective, SingleObjective};
 
 mod individual;
-pub use individual::Individual;
+pub use individual::{Individual, PopulationExtensions};
 
 trait_set! {
     /// Collection of traits required by every component.

@@ -15,6 +15,7 @@ pub mod initialization;
 pub mod misc;
 pub mod replacement;
 pub mod selection;
+pub mod mapping;
 
 /// Trait to represent a *component*, a (small) functionality with a common interface.
 ///

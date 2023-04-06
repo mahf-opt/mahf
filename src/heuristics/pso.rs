@@ -12,7 +12,8 @@ use crate::{
 /// Parameters for [real_pso].
 pub struct RealProblemParameters {
     pub num_particles: u32,
-    pub weight: f64,
+    pub start_weight: f64,
+    pub end_weight: f64,
     pub c_one: f64,
     pub c_two: f64,
     pub v_max: f64,
@@ -29,7 +30,8 @@ where
 {
     let RealProblemParameters {
         num_particles,
-        weight,
+        start_weight,
+        end_weight,
         c_one,
         c_two,
         v_max,
@@ -41,10 +43,20 @@ where
         .update_best_individual()
         .do_(pso(
             Parameters {
-                particle_init: state::PsoState::initializer(v_max),
-                particle_update: generation::swarm::PsoGeneration::new(weight, c_one, c_two, v_max),
+                particle_init: state::ParticleSwarm::initializer(v_max),
+                particle_update: generation::swarm::ParticleSwarmGeneration::new(
+                    start_weight,
+                    c_one,
+                    c_two,
+                    v_max,
+                ),
                 constraints: constraints::Saturation::new(),
-                state_update: state::PsoState::updater(),
+                inertia_weight_update: Some(mapping::Linear::new::<
+                    _,
+                    state::common::Progress,
+                    generation::swarm::Weight,
+                >(start_weight, end_weight)),
+                state_update: state::ParticleSwarm::updater(),
             },
             termination,
         ))
@@ -53,10 +65,11 @@ where
 
 /// Basic building blocks of Particle Swarm Optimization.
 pub struct Parameters<P> {
-    particle_init: Box<dyn Component<P>>,
-    particle_update: Box<dyn Component<P>>,
+    pub particle_init: Box<dyn Component<P>>,
+    pub particle_update: Box<dyn Component<P>>,
     pub constraints: Box<dyn Component<P>>,
-    state_update: Box<dyn Component<P>>,
+    pub inertia_weight_update: Option<Box<dyn Component<P>>>,
+    pub state_update: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Particle Swarm Optimization template.
@@ -68,6 +81,7 @@ where
         particle_init,
         particle_update,
         constraints,
+        inertia_weight_update,
         state_update,
     } = params;
 
@@ -79,6 +93,7 @@ where
                 .do_(constraints)
                 .evaluate()
                 .update_best_individual()
+                .do_if_some_(inertia_weight_update)
                 .do_(state_update)
                 .do_(Logger::new())
         })
