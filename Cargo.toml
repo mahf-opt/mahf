@@ -13,7 +13,7 @@ categories = ["science", "algorithms"]
 [dependencies]
 anyhow = "1.0.51"
 ciborium = "0.2.0"
-coco-rs = "0.5"
+coco-rs = "0.6"
 derive_more = { version = "0.99.17", features = ["deref", "deref_mut"]}
 embed-doc-image = "0.1.4"
 erased-serde = "0.3.16"
