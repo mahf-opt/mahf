@@ -115,5 +115,6 @@ where
             println!("No solution found.")
         }
         println!("{}", "-".repeat(heading.len()));
+        println!();
     }
 }

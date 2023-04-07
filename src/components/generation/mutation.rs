@@ -5,6 +5,7 @@ use rand::{prelude::SliceRandom, seq::IteratorRandom, Rng};
 use rand_distr::Distribution;
 use serde::{Deserialize, Serialize};
 
+use crate::state::common;
 use crate::{
     components::Component,
     framework::{AnyComponent, Individual},
@@ -144,7 +145,7 @@ where
         _problem: &P,
         state: &mut State<P>,
     ) {
-        let deviation = self.deviation(state.get_value::<Progress>());
+        let deviation = self.deviation(state.get_value::<Progress<common::Iterations>>());
         let distribution = rand_distr::Normal::new(0.0, deviation).unwrap();
 
         for solution in population {

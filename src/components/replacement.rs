@@ -1,6 +1,7 @@
 //! Replacement methods
 
 use rand::seq::SliceRandom;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -8,6 +9,7 @@ use crate::{
     framework::{AnyComponent, Individual},
     problems::{Problem, SingleObjectiveProblem},
     state::State,
+    CustomState,
 };
 
 /// Specialized component trait to replace the population with the child population,
@@ -60,6 +62,27 @@ impl<P: Problem> Replacement<P> for Noop {
         _offspring: &mut Vec<Individual<P>>,
         _state: &mut State<P>,
     ) {
+    }
+}
+
+/// Merges the parent and child populations.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Merge;
+
+impl Merge {
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Replacer(Self))
+    }
+}
+
+impl<P: Problem> Replacement<P> for Merge {
+    fn replace_population(
+        &self,
+        parents: &mut Vec<Individual<P>>,
+        offspring: &mut Vec<Individual<P>>,
+        _state: &mut State<P>,
+    ) {
+        parents.append(offspring);
     }
 }
 
@@ -209,13 +232,13 @@ mod random_replacement {
 
 /// Keeps the better individual from parent and offspring at the same index.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct IndividualPlus;
-impl IndividualPlus {
+pub struct KeepBetterAtIndex;
+impl KeepBetterAtIndex {
     pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Replacer(Self))
     }
 }
-impl<P: SingleObjectiveProblem> Replacement<P> for IndividualPlus {
+impl<P: SingleObjectiveProblem> Replacement<P> for KeepBetterAtIndex {
     fn replace_population(
         &self,
         parents: &mut Vec<Individual<P>>,
@@ -242,12 +265,52 @@ mod greedy_index {
     fn keeps_right_amount_of_children() {
         let mut state = State::new();
         state.insert(Random::testing());
-        let comp = IndividualPlus;
+        let comp = KeepBetterAtIndex;
         let mut population = new_test_population(&[1.0, 3.0, 5.0, 6.0, 7.0]);
         let mut offspring = new_test_population(&[2.0, 4.0, 8.0, 9.0, 10.0]);
         let offspring_len = offspring.len();
 
         comp.replace_population(&mut population, &mut offspring, &mut state);
         assert_eq!(population.len(), offspring_len);
+    }
+}
+
+#[derive(derive_more::Deref, derive_more::DerefMut, better_any::Tid, Default)]
+pub struct Temperature(pub f64);
+impl CustomState<'_> for Temperature {}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ExponentialAnnealingAcceptance {
+    t_0: f64,
+}
+
+impl ExponentialAnnealingAcceptance {
+    pub fn new<P: SingleObjectiveProblem>(t_0: f64) -> Box<dyn Component<P>> {
+        Box::new(Self { t_0 })
+    }
+}
+
+impl<P: SingleObjectiveProblem> Component<P> for ExponentialAnnealingAcceptance {
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.insert(Temperature(self.t_0));
+    }
+
+    #[contracts::invariant(state.populations().current().len() == 1, "population before and after should contain a single individual")]
+    #[contracts::requires(state.populations().peek(1).len() == 1, "parent population should contain a single individual")]
+    #[contracts::ensures(state.populations().len() == old(state.populations().len()) - 1)]
+    fn execute(&self, _problem: &P, state: &mut State<P>) {
+        let current = state.populations().peek(0).first().unwrap().objective();
+        let candidate = state.populations().peek(1).first().unwrap().objective();
+
+        let t = state.get_value::<Temperature>();
+        let p = ((current.value() - candidate.value()) / t).exp();
+
+        if candidate < current || state.random_mut().gen::<f64>() < p {
+            let candidate_individual = state.populations_mut().pop();
+            state.populations_mut().pop();
+            state.populations_mut().push(candidate_individual);
+        } else {
+            state.populations_mut().pop();
+        }
     }
 }

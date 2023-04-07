@@ -129,6 +129,7 @@ pub trait PopulationExtensions<P: Problem> {
     fn into_solutions(self) -> Vec<P::Encoding>
     where
         Self: Sized;
+    fn into_single(self) -> Individual<P>;
 }
 
 impl<P> PopulationExtensions<P> for Vec<Individual<P>>
@@ -148,5 +149,9 @@ where
         Self: Sized,
     {
         self.into_iter().map(Individual::into_solution).collect()
+    }
+
+    fn into_single(self) -> Individual<P> {
+        self.into_iter().next().unwrap()
     }
 }

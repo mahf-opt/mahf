@@ -16,9 +16,8 @@ use crate::{
 
 /// Inertia weight for influence of old velocity.
 #[derive(Deref, DerefMut, Tid)]
-pub struct Weight(pub f64);
-
-impl CustomState<'_> for Weight {}
+pub struct InertiaWeight(pub f64);
+impl CustomState<'_> for InertiaWeight {}
 
 /// Applies the PSO specific generation operator.
 ///
@@ -54,7 +53,7 @@ where
     P: SingleObjectiveProblem<Encoding = Vec<f64>>,
 {
     fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.insert(Weight(self.weight));
+        state.insert(InertiaWeight(self.weight));
     }
 
     fn require(&self, _problem: &P, state: &State<P>) {
@@ -79,7 +78,7 @@ where
             global_best,
         } = mut_state.get_mut::<ParticleSwarm<P>>();
 
-        let w = mut_state.get_value::<Weight>();
+        let w = mut_state.get_value::<InertiaWeight>();
 
         let mut rand = move || rng.gen::<f64>();
 

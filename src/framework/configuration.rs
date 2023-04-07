@@ -36,6 +36,12 @@ impl<P: Problem> Configuration<P> {
         ConfigurationBuilder::new().do_(self.0)
     }
 
+    pub fn run(&self, problem: &P, state: &mut state::State<P>) {
+        self.0.initialize(problem, state);
+        self.0.require(problem, state);
+        self.0.execute(problem, state);
+    }
+
     /// Runs the heuristic on the given problem, returning the final state of the heuristic.
     ///
     /// The state is pre-initialized with a [Population][state::common::Population]
@@ -45,15 +51,13 @@ impl<P: Problem> Configuration<P> {
     /// For initializing the state with custom state,
     /// see [optimize_with][Configuration::optimize_with].
     pub fn optimize(&self, problem: &P) -> state::State<P> {
-        let heuristic = self.heuristic();
         let mut state = state::State::new();
 
         state.insert(tracking::Log::new());
         state.insert(Random::default());
         state.insert(state::common::Populations::<P>::new());
 
-        heuristic.initialize(problem, &mut state);
-        heuristic.execute(problem, &mut state);
+        self.run(problem, &mut state);
 
         state
     }
@@ -70,7 +74,6 @@ impl<P: Problem> Configuration<P> {
         problem: &P,
         init_state: impl FnOnce(&mut state::State<'a, P>),
     ) -> state::State<'a, P> {
-        let heuristic = self.heuristic();
         let mut state = state::State::new();
 
         state.insert(tracking::Log::new());
@@ -82,8 +85,7 @@ impl<P: Problem> Configuration<P> {
             state.insert(Random::default());
         }
 
-        heuristic.initialize(problem, &mut state);
-        heuristic.execute(problem, &mut state);
+        self.run(problem, &mut state);
 
         state
     }

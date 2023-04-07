@@ -45,7 +45,7 @@ where
                 mutation: generation::mutation::DEMutation::new(y, f),
                 crossover: generation::recombination::DEBinomialCrossover::new(pc),
                 constraints: constraints::Saturation::new(),
-                replacement: replacement::IndividualPlus::new(),
+                replacement: replacement::KeepBetterAtIndex::new(),
             },
             termination,
             logger,

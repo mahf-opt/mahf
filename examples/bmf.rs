@@ -16,7 +16,7 @@ fn main() {
             v_max: 1.0,
         },
         /*termination: */
-        termination::FixedIterations::new(/*max_iterations: */ 500)
+        termination::LessThanN::<state::common::Iterations>::new(/*n: */ 500)
             & termination::DistanceToOpt::new(0.01),
     );
 
@@ -27,5 +27,14 @@ fn main() {
     println!("Found Individual: {:?}", state.best_individual().unwrap());
     println!("This took {} iterations.", state.iterations());
     println!("Global Optimum: {}", problem.known_optimum());
-    println!("Population fitness mean: {:?}", state.populations().current().iter().map(|i| i.objective().value()).sum::<f64>() / 20.)
+    println!(
+        "Population fitness mean: {:?}",
+        state
+            .populations()
+            .current()
+            .iter()
+            .map(|i| i.objective().value())
+            .sum::<f64>()
+            / 20.
+    )
 }

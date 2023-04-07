@@ -12,10 +12,10 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 pub mod evaluation;
 pub mod generation;
 pub mod initialization;
+pub mod mapping;
 pub mod misc;
 pub mod replacement;
 pub mod selection;
-pub mod mapping;
 
 /// Trait to represent a *component*, a (small) functionality with a common interface.
 ///

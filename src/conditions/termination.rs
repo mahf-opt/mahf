@@ -11,6 +11,7 @@ use crate::{
 };
 use better_any::Tid;
 use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TargetHit;
@@ -34,6 +35,47 @@ where
         } else {
             false
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, derivative::Derivative)]
+#[derivative(Clone(bound = ""))]
+pub struct LessThanN<T> {
+    pub n: u32,
+    _phantom: PhantomData<fn() -> T>,
+}
+
+impl<T> LessThanN<T> {
+    pub fn new<P: Problem>(n: u32) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+        T: for<'a> CustomState<'a> + std::ops::Deref<Target = u32> + Default,
+    {
+        Box::new(Self {
+            n,
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<P, T> Condition<P> for LessThanN<T>
+where
+    P: Problem,
+    T: for<'a> CustomState<'a> + std::ops::Deref<Target = u32> + Default,
+{
+    fn initialize(&self, _problem: &P, state: &mut State<P>) {
+        state.insert(Progress::<T>::default());
+    }
+
+    fn require(&self, _problem: &P, state: &State<P>) {
+        state.require::<Self, T>();
+    }
+
+    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
+        let value = state.get_value::<T>();
+        state.set_value::<Progress<T>>(value as f64 / self.n as f64);
+
+        value < self.n
     }
 }
 
@@ -61,12 +103,12 @@ where
 {
     fn initialize(&self, _problem: &P, state: &mut State<P>) {
         state.require::<Self, Iterations>();
-        state.insert(Progress(0.));
+        state.insert(Progress::<Iterations>::default());
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         let iterations = state.iterations();
-        state.set_value::<Progress>(iterations as f64 / self.max_iterations as f64);
+        state.set_value::<Progress<Iterations>>(iterations as f64 / self.max_iterations as f64);
 
         iterations < self.max_iterations
     }
@@ -103,10 +145,10 @@ mod fixed_iterations {
         comp.initialize(&problem, &mut state);
         state.set_value::<Iterations>(100);
         comp.evaluate(&problem, &mut state);
-        float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
+        float_eq::assert_float_eq!(state.get_value::<Progress<Iterations>>(), 0.5, ulps <= 2);
         state.set_value::<Iterations>(200);
         comp.evaluate(&problem, &mut state);
-        float_eq::assert_float_eq!(state.get_value::<Progress>(), 1.0, ulps <= 2);
+        float_eq::assert_float_eq!(state.get_value::<Progress<Iterations>>(), 1.0, ulps <= 2);
     }
 }
 
@@ -134,12 +176,12 @@ where
 {
     fn initialize(&self, _problem: &P, state: &mut State<P>) {
         state.require::<Self, Evaluations>();
-        state.insert(Progress(0.));
+        state.insert(Progress::<Evaluations>::default());
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State<P>) -> bool {
         let evaluations = state.evaluations();
-        state.set_value::<Progress>(evaluations as f64 / self.max_evaluations as f64);
+        state.set_value::<Progress<Evaluations>>(evaluations as f64 / self.max_evaluations as f64);
         evaluations < self.max_evaluations
     }
 }
@@ -175,10 +217,10 @@ mod fixed_evaluations {
         comp.initialize(&problem, &mut state);
         state.set_value::<Evaluations>(100);
         comp.evaluate(&problem, &mut state);
-        float_eq::assert_float_eq!(state.get_value::<Progress>(), 0.5, ulps <= 2);
+        float_eq::assert_float_eq!(state.get_value::<Progress<Evaluations>>(), 0.5, ulps <= 2);
         state.set_value::<Evaluations>(200);
         comp.evaluate(&problem, &mut state);
-        float_eq::assert_float_eq!(state.get_value::<Progress>(), 1.0, ulps <= 2);
+        float_eq::assert_float_eq!(state.get_value::<Progress<Evaluations>>(), 1.0, ulps <= 2);
     }
 }
 

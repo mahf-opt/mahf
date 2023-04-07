@@ -286,6 +286,82 @@ mod uniform_crossover {
     }
 }
 
+/// Applies a uniform crossover to two parent solutions depending on crossover probability.
+///
+/// If pc = 1, the solutions are recombined.
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ArithmeticCrossover {
+    /// Probability of recombining the solutions.
+    pub pc: f64,
+    /// If false, the second child is discarded.
+    pub keep_both: bool,
+}
+impl ArithmeticCrossover {
+    pub fn new<P>(pc: f64, keep_both: bool) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<f64>>,
+    {
+        Box::new(Recombinator(Self { pc, keep_both }))
+    }
+
+    pub fn new_single<P>(pc: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<f64>>,
+    {
+        Self::new(pc, false)
+    }
+
+    pub fn new_both<P>(pc: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem<Encoding = Vec<f64>>,
+    {
+        Self::new(pc, true)
+    }
+}
+impl<P> Recombination<P> for ArithmeticCrossover
+where
+    P: Problem<Encoding = Vec<f64>>,
+{
+    fn recombine_solutions(
+        &self,
+        parents: Vec<Vec<f64>>,
+        offspring: &mut Vec<Vec<f64>>,
+        _problem: &P,
+        state: &mut State<P>,
+    ) {
+        for pairs in parents.chunks(2) {
+            if pairs.len() == 1 {
+                let child1 = pairs[0].to_owned();
+                offspring.push(child1);
+                continue;
+            }
+            let mut child1 = Vec::new();
+            let mut child2 = Vec::new();
+            let rng = state.random_mut();
+            if rng.gen::<f64>() <= self.pc {
+                for i in 0..max(pairs[0].len(), pairs[1].len()) {
+                    if i < pairs[0].len() && i < pairs[1].len() {
+                        let alpha = rng.gen::<f64>();
+                        let x_1 = pairs[0][i];
+                        let x_2 = pairs[1][i];
+                        child1.push(x_1 * alpha + x_2 * (1. - alpha));
+                        child2.push(x_2 * alpha + x_1 * (1. - alpha));
+                    } else if i >= pairs[0].len() {
+                        child2.push(pairs[1][i]);
+                    } else if i >= pairs[1].len() {
+                        child1.push(pairs[0][i]);
+                    }
+                }
+            } else {
+                child1 = pairs[0].to_owned();
+                child2 = pairs[1].to_owned();
+            }
+            offspring.push(child1);
+            offspring.push(child2);
+        }
+    }
+}
+
 /// Applies a cycle crossover to two parent solutions depending on crossover probability.
 ///
 /// Usually exclusive to combinatorial problems.

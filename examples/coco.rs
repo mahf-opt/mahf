@@ -23,8 +23,8 @@ fn main() -> anyhow::Result<()> {
             LogSet::<CocoInstance>::new()
                 .with_common_extractors(trigger::Iteration::new(10))
                 .with(
-                    trigger::Change::<common::Progress>::new(0.1),
-                    functions::auto::<common::Progress, _>,
+                    trigger::Change::<common::Progress<common::Iterations>>::new(0.1),
+                    functions::auto::<common::Progress<common::Iterations>, _>,
                 )
                 .with(trigger::Iteration::new(50), functions::best_individual),
         )

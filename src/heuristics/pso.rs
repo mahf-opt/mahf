@@ -53,8 +53,8 @@ where
                 constraints: constraints::Saturation::new(),
                 inertia_weight_update: Some(mapping::Linear::new::<
                     _,
-                    state::common::Progress,
-                    generation::swarm::Weight,
+                    state::common::Progress<state::common::Iterations>,
+                    generation::swarm::InertiaWeight,
                 >(start_weight, end_weight)),
                 state_update: state::ParticleSwarm::updater(),
             },

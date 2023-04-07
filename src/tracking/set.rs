@@ -1,6 +1,7 @@
 use better_any::Tid;
 use serde::Serialize;
 
+use crate::state::common::Iterations;
 use crate::{
     problems::Problem,
     state::{common, CustomState, State},
@@ -72,7 +73,10 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     /// Every 10 [Iteration][common::Iterations], [common::Evaluations] and [common::Progress] are logged.
     pub fn with_common_extractors(self, trigger: Box<dyn Trigger<'a, P> + 'a>) -> Self {
         self.with(trigger.clone(), functions::auto::<common::Evaluations, _>)
-            .with(trigger.clone(), functions::auto::<common::Progress, _>)
+            .with(
+                trigger.clone(),
+                functions::auto::<common::Progress<Iterations>, _>,
+            )
     }
 
     pub(crate) fn execute(&self, problem: &P, state: &mut State<'a, P>, step: &mut Step) {

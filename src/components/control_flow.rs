@@ -32,6 +32,12 @@ impl<P: Problem> Component<P> for Block<P> {
         }
     }
 
+    fn require(&self, problem: &P, state: &State<P>) {
+        for component in &self.0 {
+            component.require(problem, state);
+        }
+    }
+
     fn execute(&self, problem: &P, state: &mut State<P>) {
         for component in &self.0 {
             component.execute(problem, state);
@@ -79,6 +85,11 @@ impl<P: Problem> Component<P> for Loop<P> {
 
         self.condition.initialize(problem, state);
         self.body.initialize(problem, state);
+    }
+
+    fn require(&self, problem: &P, state: &State<P>) {
+        self.condition.require(problem, state);
+        self.body.require(problem, state);
     }
 
     fn execute(&self, problem: &P, state: &mut State<P>) {
@@ -145,6 +156,14 @@ impl<P: Problem> Component<P> for Branch<P> {
         self.if_body.initialize(problem, state);
         if let Some(else_body) = &self.else_body {
             else_body.initialize(problem, state);
+        }
+    }
+
+    fn require(&self, problem: &P, state: &State<P>) {
+        self.condition.require(problem, state);
+        self.if_body.require(problem, state);
+        if let Some(else_body) = &self.else_body {
+            else_body.require(problem, state);
         }
     }
 

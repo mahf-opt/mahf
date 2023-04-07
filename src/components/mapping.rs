@@ -8,8 +8,12 @@ use crate::{
     components::Component, framework::AnyComponent, problems::Problem, state::State, CustomState,
 };
 
-pub trait Mapping<D, P: Problem> {
-    fn map(&self, value: D, problem: &P, state: &mut State<P>) -> D;
+pub trait Mapping<P: Problem> {
+    type Input;
+    type Output;
+    #[allow(unused_variables)]
+    fn initialize(&self, problem: &P, state: &mut State<P>) {}
+    fn map(&self, value: Self::Input, problem: &P, state: &mut State<P>) -> Self::Output;
 }
 
 #[derive(Serialize, derivative::Derivative)]
@@ -27,14 +31,19 @@ where
     }
 }
 
-impl<T, D, X, S, P> Component<P> for Mapper<T, X, S>
+impl<T, X, S, P> Component<P> for Mapper<T, X, S>
 where
     P: Problem,
-    T: AnyComponent + Mapping<D, P> + Serialize + Clone,
-    D: Copy,
-    X: for<'a> CustomState<'a> + std::ops::Deref<Target = D>,
-    S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = D>,
+    T: AnyComponent + Mapping<P> + Serialize + Clone,
+    <T as Mapping<P>>::Input: Copy,
+    <T as Mapping<P>>::Output: Copy,
+    X: for<'a> CustomState<'a> + std::ops::Deref<Target = <T as Mapping<P>>::Input>,
+    S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = <T as Mapping<P>>::Output>,
 {
+    fn initialize(&self, problem: &P, state: &mut State<P>) {
+        self.0.initialize(problem, state);
+    }
+
     fn require(&self, _problem: &P, state: &State<P>) {
         state.require::<Self, S>();
     }
@@ -56,14 +65,18 @@ impl Linear {
     pub fn new<P, X, S>(start: f64, end: f64) -> Box<dyn Component<P>>
     where
         P: Problem,
-        X: for<'a> CustomState<'a> + std::ops::Deref<Target = f64>,
-        S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = f64>,
+        X: for<'a> CustomState<'a> + std::ops::Deref<Target = <Self as Mapping<P>>::Input>,
+        S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = <Self as Mapping<P>>::Output>,
     {
         Box::new(Mapper::<_, X, S>::new(Self { start, end }))
     }
 }
 
-impl<P: Problem> Mapping<f64, P> for Linear {
+impl<P: Problem> Mapping<P> for Linear {
+    type Input = f64;
+    type Output = f64;
+
+    #[contracts::requires((0.0..=1.0).contains(&value))]
     fn map(&self, value: f64, _problem: &P, _state: &mut State<P>) -> f64 {
         (self.end - self.start) * value + self.start
     }
@@ -83,19 +96,47 @@ where
     pub fn new<P, X, S>(range: R) -> Box<dyn Component<P>>
     where
         P: Problem,
-        X: for<'a> CustomState<'a> + std::ops::Deref<Target = f64>,
-        S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = f64>,
+        X: for<'a> CustomState<'a> + std::ops::Deref<Target = <Self as Mapping<P>>::Input>,
+        S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = <Self as Mapping<P>>::Output>,
     {
         Box::new(Mapper::<_, X, S>::new(Self(range)))
     }
 }
 
-impl<P, R> Mapping<f64, P> for Random<R>
+impl<P, R> Mapping<P> for Random<R>
 where
     R: RandomRange,
     P: Problem,
 {
+    type Input = f64;
+    type Output = f64;
+
     fn map(&self, _value: f64, _problem: &P, state: &mut State<P>) -> f64 {
         state.random_mut().gen_range(self.0.clone())
+    }
+}
+
+#[derive(Clone, Serialize)]
+pub struct GeometricCooling {
+    pub alpha: f64,
+}
+
+impl GeometricCooling {
+    #[contracts::requires(((0.0..=1.0).contains(&alpha)))]
+    pub fn new<P, S>(alpha: f64) -> Box<dyn Component<P>>
+    where
+        P: Problem,
+        S: for<'a> CustomState<'a> + std::ops::DerefMut<Target = f64>,
+    {
+        Box::new(Mapper::<_, S, S>::new(Self { alpha }))
+    }
+}
+
+impl<P: Problem> Mapping<P> for GeometricCooling {
+    type Input = f64;
+    type Output = f64;
+
+    fn map(&self, value: Self::Input, _problem: &P, _state: &mut State<P>) -> Self::Output {
+        value * self.alpha
     }
 }

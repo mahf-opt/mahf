@@ -80,11 +80,11 @@ where
     /// Initializes velocities, best found solutions of particles and global best in [ParticleSwarm].
     pub fn initializer(v_max: f64) -> Box<dyn Component<P>> {
         #[derive(Debug, serde::Serialize, Clone)]
-        pub struct ParticleSwarmInitalization {
+        pub struct ParticleSwarmInitialization {
             v_max: f64,
         }
 
-        impl<P> Component<P> for ParticleSwarmInitalization
+        impl<P> Component<P> for ParticleSwarmInitialization
         where
             P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
         {
@@ -123,7 +123,7 @@ where
             }
         }
 
-        Box::new(ParticleSwarmInitalization { v_max })
+        Box::new(ParticleSwarmInitialization { v_max })
     }
 
     /// State update for PSO.

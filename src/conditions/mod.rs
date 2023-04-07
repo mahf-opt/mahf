@@ -20,6 +20,8 @@ pub mod termination;
 pub trait Condition<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
     fn initialize(&self, problem: &P, state: &mut State<P>) {}
+    #[allow(unused_variables)]
+    fn require(&self, problem: &P, state: &State<P>) {}
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool;
 }
 

@@ -81,17 +81,22 @@ impl<P: SingleObjectiveProblem> Default for BestIndividual<P> {
     }
 }
 
-#[derive(Deref, DerefMut, Clone, Serialize, Tid)]
+#[derive(Deref, DerefMut, Clone, Serialize, Tid, Default)]
 pub struct Evaluations(pub u32);
 impl CustomState<'_> for Evaluations {}
 
-#[derive(Deref, DerefMut, Clone, Serialize, Tid)]
+#[derive(Deref, DerefMut, Clone, Serialize, Tid, Default)]
 pub struct Iterations(pub u32);
 impl CustomState<'_> for Iterations {}
 
-#[derive(Deref, DerefMut, Clone, Serialize, Tid)]
-pub struct Progress(pub f64);
-impl CustomState<'_> for Progress {}
+#[derive(Deref, DerefMut, Clone, Serialize, Tid, Default)]
+pub struct Progress<T: 'static>(
+    #[deref]
+    #[deref_mut]
+    pub f64,
+    std::marker::PhantomData<fn() -> T>,
+);
+impl<T> CustomState<'_> for Progress<T> {}
 
 /// Saves non-pareto-dominated [Individual]'s.
 ///
@@ -174,5 +179,9 @@ impl<P: Problem> Populations<P> {
 
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.stack.len()
     }
 }
