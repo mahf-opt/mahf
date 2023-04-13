@@ -1,7 +1,7 @@
 use aco::ant_ops;
 use mahf::prelude::*;
 use problems::tsp::{self, SymmetricTsp};
-use tracking::{files, functions, trigger};
+use tracking::{extractor, files, trigger};
 
 fn main() {
     // Specify the problem: TSPLIB instance Berlin52.
@@ -34,7 +34,7 @@ fn main() {
         // Log the best individual every 50 iterations.
         state.insert(
             tracking::LogSet::<SymmetricTsp>::new()
-                .with(trigger::Iteration::new(50), functions::best_individual),
+                .with(trigger::Iteration::new(50), extractor::best_individual),
         );
     });
 

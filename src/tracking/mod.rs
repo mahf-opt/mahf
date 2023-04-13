@@ -8,7 +8,7 @@
 //! the optimization process.
 //!
 //! A Logger consists of [LogSet]s which in turn consist of
-//! [Trigger](trigger::Trigger) and [LogFn](functions::LogFn).
+//! [Trigger](trigger::Trigger) and [LogFn](extractor::LogFn).
 //! See their respective documentation pages for more information
 //! on how to use them.
 //!
@@ -23,7 +23,7 @@
 pub mod files;
 
 /// Utils to create log functions.
-pub mod functions;
+pub mod extractor;
 
 /// Collection of log triggers.
 pub mod trigger;

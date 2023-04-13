@@ -1,15 +1,37 @@
+use dyn_clone::DynClone;
 use std::{any::type_name, ops::Deref};
 
 use serde::Serialize;
 
 use crate::{
     problems::{Problem, SingleObjectiveProblem},
-    state::{common, CustomState, State},
+    state::{self, common, CustomState, State},
     tracking::log::Entry,
 };
 
-/// A function to turn some state into an [Entry].
-pub type Extractor<'a, P> = fn(&State<'a, P>) -> Entry;
+/// Extracts some state and turns it into an [Entry].
+pub trait Extractor<'a, P>: DynClone + Send {
+    fn extract(&self, state: &State<'a, P>) -> Entry;
+}
+dyn_clone::clone_trait_object!(<'a, P> Extractor<'a, P>);
+
+impl<'a, P, F> Extractor<'a, P> for F
+where
+    F: Fn(&State<'a, P>) -> Entry + Clone + Send + 'static,
+{
+    fn extract(&self, state: &State<'a, P>) -> Entry {
+        self(state)
+    }
+}
+
+impl<'a, P, F> From<F> for Box<dyn Extractor<'a, P>>
+where
+    F: Fn(&State<'a, P>) -> Entry + Clone + Send + 'static,
+{
+    fn from(value: F) -> Self {
+        Box::new(value)
+    }
+}
 
 /// A function to log anything that implements [Clone] + [Serialize]
 pub fn auto<'a, T, P>(state: &State<'a, P>) -> Entry
@@ -58,5 +80,17 @@ where
     Entry {
         name: "BestObjectiveValue",
         value: Box::new(state.best_objective_value().cloned()),
+    }
+}
+
+/// A function for logging the diversity value of the DiversityState.
+pub fn normalized_diversity<P: Problem, I: Send + 'static>(state: &State<P>) -> Entry {
+    Entry {
+        name: type_name::<state::diversity::NormalizedDiversity<I>>(),
+        value: Box::new(
+            state
+                .get::<state::diversity::NormalizedDiversity<I>>()
+                .diversity,
+        ),
     }
 }

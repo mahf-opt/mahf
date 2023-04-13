@@ -5,9 +5,8 @@ fn main() {
     let y = 2;
     let f = 1.;
 
-    // Specify the problem: Sphere function with 10 dimensions.
     let problem: BenchmarkFunction = BenchmarkFunction::rastrigin(/*dim: */ 30);
-    // Specify the metaheuristic: Particle Swarm Optimization (pre-implemented in MAHF).
+
     let config: Configuration<BenchmarkFunction> = Configuration::builder()
         .do_(initialization::RandomSpread::new_init(4 * 30))
         .evaluate()
@@ -15,7 +14,7 @@ fn main() {
         .do_(state::ParticleSwarm::initializer(1.))
         .while_(
             termination::LessThanN::<state::common::Iterations>::new(/*n: */ 500)
-                & termination::DistanceToOpt::new(0.01),
+                & termination::DistanceToOptGreaterThan::new(0.01),
             |builder| {
                 builder
                     .if_else_(

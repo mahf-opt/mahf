@@ -6,7 +6,7 @@ use crate::{
     problems::Problem,
     state::{common, CustomState, State},
     tracking::{
-        functions::{self, Extractor},
+        extractor::{self, Extractor},
         log::Step,
         trigger::Trigger,
     },
@@ -15,15 +15,15 @@ use crate::{
 /// A combination of [Trigger] and [LogFn].
 #[derive(Default, Tid)]
 pub struct LogSet<'a, P: 'static> {
-    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P> + 'a>, Extractor<'a, P>)>,
+    pub(crate) entries: Vec<(Box<dyn Trigger<'a, P> + 'a>, Box<dyn Extractor<'a, P>>)>,
 }
 
 impl<'a, P> Clone for LogSet<'a, P> {
     fn clone(&self) -> Self {
         let mut entries = Vec::with_capacity(self.entries.len());
 
-        for (trigger, logfn) in &self.entries {
-            entries.push((dyn_clone::clone_box(&**trigger), *logfn));
+        for (trigger, extractor) in &self.entries {
+            entries.push((trigger.clone(), extractor.clone()));
         }
 
         LogSet { entries }
@@ -43,16 +43,16 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     pub fn with(
         mut self,
         trigger: Box<dyn Trigger<'a, P> + 'a>,
-        extractor: Extractor<'a, P>,
+        extractor: impl Into<Box<dyn Extractor<'a, P>>>,
     ) -> Self {
-        self.entries.push((trigger, extractor));
+        self.entries.push((trigger, extractor.into()));
         self
     }
 
     pub fn with_many(
         mut self,
         trigger: Box<dyn Trigger<'a, P> + 'a>,
-        extractors: impl IntoIterator<Item = Extractor<'a, P>>,
+        extractors: impl IntoIterator<Item = Box<dyn Extractor<'a, P>>>,
     ) -> Self {
         for extractor in extractors {
             self.entries.push((trigger.clone(), extractor));
@@ -64,7 +64,7 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     where
         T: CustomState<'a> + Clone + Serialize + 'static,
     {
-        self.entries.push((trigger, functions::auto::<T, P>));
+        self.entries.push((trigger, extractor::auto::<T, P>.into()));
         self
     }
 
@@ -72,17 +72,17 @@ impl<'a, P: Problem + 'static> LogSet<'a, P> {
     ///
     /// Every 10 [Iteration][common::Iterations], [common::Evaluations] and [common::Progress] are logged.
     pub fn with_common_extractors(self, trigger: Box<dyn Trigger<'a, P> + 'a>) -> Self {
-        self.with(trigger.clone(), functions::auto::<common::Evaluations, _>)
+        self.with(trigger.clone(), extractor::auto::<common::Evaluations, _>)
             .with(
                 trigger.clone(),
-                functions::auto::<common::Progress<Iterations>, _>,
+                extractor::auto::<common::Progress<Iterations>, _>,
             )
     }
 
     pub(crate) fn execute(&self, problem: &P, state: &mut State<'a, P>, step: &mut Step) {
         for (trigger, extractor) in &self.entries {
             if trigger.evaluate(problem, state) {
-                step.push((extractor)(state));
+                step.push(extractor.extract(state));
             }
         }
     }

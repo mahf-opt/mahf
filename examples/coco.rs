@@ -1,6 +1,6 @@
 use mahf::{prelude::*, state::common, tracking::LogSet};
 use problems::coco_bound::{suits, CocoInstance};
-use tracking::{functions, trigger};
+use tracking::{extractor, trigger};
 
 fn main() -> anyhow::Result<()> {
     let output = "data/coco/iwo";
@@ -24,9 +24,9 @@ fn main() -> anyhow::Result<()> {
                 .with_common_extractors(trigger::Iteration::new(10))
                 .with(
                     trigger::Change::<common::Progress<common::Iterations>>::new(0.1),
-                    functions::auto::<common::Progress<common::Iterations>, _>,
+                    extractor::auto::<common::Progress<common::Iterations>, _>,
                 )
-                .with(trigger::Iteration::new(50), functions::best_individual),
+                .with(trigger::Iteration::new(50), extractor::best_individual),
         )
     })
 }

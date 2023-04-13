@@ -30,12 +30,12 @@ where
     I: AnyComponent + DiversityMeasure<P> + Serialize + Clone,
 {
     fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.insert(DiversityState::<I>::default());
+        state.insert(NormalizedDiversity::<I>::default());
     }
 
     fn execute(&self, problem: &P, state: &mut State<P>) {
         let (populations, diversity_state) =
-            state.get_multiple_mut::<(Populations<P>, DiversityState<I>)>();
+            state.get_multiple_mut::<(Populations<P>, NormalizedDiversity<I>)>();
 
         let population = populations.current();
 
@@ -177,14 +177,14 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 
 /// State for logging/tracking population diversity.
 #[derive(Debug, Tid)]
-pub struct DiversityState<I: 'static> {
+pub struct NormalizedDiversity<I: 'static> {
     /// Normalized diversity.
     pub diversity: f64,
     /// Non-normalized maximal diversity.
     pub max_diversity: f64,
     phantom: PhantomData<I>,
 }
-impl<I> Default for DiversityState<I> {
+impl<I> Default for NormalizedDiversity<I> {
     fn default() -> Self {
         Self {
             diversity: 0.0,
@@ -194,4 +194,4 @@ impl<I> Default for DiversityState<I> {
     }
 }
 
-impl<I: Send + 'static> CustomState<'_> for DiversityState<I> {}
+impl<I: Send + 'static> CustomState<'_> for NormalizedDiversity<I> {}

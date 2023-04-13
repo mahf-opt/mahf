@@ -11,13 +11,13 @@ fn main() {
             num_particles: 20,
             start_weight: 0.9,
             end_weight: 0.4,
-            c_one: 1.0,
-            c_two: 1.0,
+            c_one: 1.7,
+            c_two: 1.7,
             v_max: 1.0,
         },
         /*termination: */
         termination::LessThanN::<state::common::Iterations>::new(/*n: */ 500)
-            & termination::DistanceToOpt::new(0.01),
+            & termination::DistanceToOptGreaterThan::new(0.01),
     );
 
     // Execute the metaheuristic on the problem with a random seed.

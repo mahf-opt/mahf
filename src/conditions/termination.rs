@@ -229,12 +229,12 @@ mod fixed_evaluations {
 ///
 /// Progress is unknown, as optimizer should not have information on optimum.
 #[derive(Serialize, Deserialize, Clone)]
-pub struct DistanceToOpt {
+pub struct DistanceToOptGreaterThan {
     /// Distance to known optimum.
     pub distance: f64,
 }
 
-impl DistanceToOpt {
+impl DistanceToOptGreaterThan {
     pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
     where
         P: SingleObjectiveProblem,
@@ -243,7 +243,7 @@ impl DistanceToOpt {
     }
 }
 
-impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
+impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOptGreaterThan
 where
     P: Problem,
 {
@@ -264,7 +264,7 @@ mod distance_to_opt {
         let problem = TestProblem;
         let mut state = State::new();
         state.insert(common::BestIndividual::<TestProblem>::default());
-        let comp = DistanceToOpt { distance: 0.1 };
+        let comp = DistanceToOptGreaterThan { distance: 0.1 };
 
         state.set_value::<common::BestIndividual<TestProblem>>(Some(new_test_individual(0.2)));
         assert!(comp.evaluate(&problem, &mut state));

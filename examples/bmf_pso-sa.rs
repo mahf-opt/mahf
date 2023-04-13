@@ -38,16 +38,16 @@ fn main() {
     }
 
     #[derive(Clone, serde::Serialize)]
-    pub struct GlobalBestIntoPopulation;
+    pub struct GlobalBestToPopulation;
 
-    impl GlobalBestIntoPopulation {
+    impl GlobalBestToPopulation {
         #[allow(clippy::new_ret_no_self)]
         pub fn new<P: problems::SingleObjectiveProblem>() -> Box<dyn Component<P>> {
             Box::new(Self)
         }
     }
 
-    impl<P: problems::SingleObjectiveProblem> Component<P> for GlobalBestIntoPopulation {
+    impl<P: problems::SingleObjectiveProblem> Component<P> for GlobalBestToPopulation {
         fn require(&self, _problem: &P, state: &State<P>) {
             state.require::<Self, state::ParticleSwarm<P>>();
         }
@@ -81,7 +81,7 @@ fn main() {
     }
 
     let constraints = constraints::Saturation::new();
-    let cooling_schedule = mapping::GeometricCooling::new::<_, replacement::Temperature>(0.99);
+    let cooling_schedule = mapping::GeometricCooling::new::<_, replacement::Temperature>(0.95);
 
     // Specify the problem: Sphere function with 10 dimensions.
     let problem: BenchmarkFunction = BenchmarkFunction::rastrigin(/*dim: */ 30);
@@ -94,7 +94,7 @@ fn main() {
         // Outer PSO loop.
         .while_(
             termination::LessThanN::<state::common::Iterations>::new(/*n: */ 10_000)
-                & termination::DistanceToOpt::new(0.01),
+                & termination::DistanceToOptGreaterThan::new(0.01),
             |builder| {
                 builder
                     .do_(generation::swarm::ParticleSwarmGeneration::new(
@@ -109,10 +109,10 @@ fn main() {
                         !GlobalBestImproved::new(),
                         |builder| {
                             builder
-                                .do_(GlobalBestIntoPopulation::new())
+                                .do_(GlobalBestToPopulation::new())
                                 .do_(sa::sa(
                                     sa::Parameters {
-                                        t_0: 1000.,
+                                        t_0: 1.,
                                         generation: generation::mutation::GaussianMutation::new(
                                             1., 0.1,
                                         ),
