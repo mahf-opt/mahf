@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::components::Component,
+    components::Component,
     problems::Problem,
     state::State,
     tracking::{log::Step, Log, LogSet},

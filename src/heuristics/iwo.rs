@@ -2,7 +2,8 @@
 
 use crate::{
     components::*,
-    framework::{components::Component, conditions::Condition, Configuration},
+    conditions::Condition,
+    framework::Configuration,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
     tracking::Logger,
 };

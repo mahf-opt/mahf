@@ -1,7 +1,6 @@
 #![doc = include_str!("../../docs/framework.md")]
 
-pub mod components;
-pub mod conditions;
+use trait_set::trait_set;
 
 mod configuration;
 pub use configuration::{Configuration, ConfigurationBuilder};
@@ -12,5 +11,7 @@ pub use objective::{IllegalObjective, MultiObjective, Objective, SingleObjective
 mod individual;
 pub use individual::Individual;
 
-mod random;
-pub use random::{Random, RandomConfig};
+trait_set! {
+    /// Collection of traits required by every component.
+    pub trait AnyComponent = erased_serde::Serialize + std::any::Any + Send + Sync + dyn_clone::DynClone;
+}

@@ -2,7 +2,8 @@
 
 use crate::{
     components::*,
-    framework::{components::Component, conditions::Condition, Configuration},
+    conditions::Condition,
+    framework::Configuration,
     problems::{tsp, SingleObjectiveProblem},
 };
 
@@ -136,13 +137,14 @@ pub fn aco<P: SingleObjectiveProblem>(
 }
 
 pub mod ant_ops {
-    use crate::state::PheromoneMatrix;
-    use crate::{
-        framework::{components::*, Individual, Random, SingleObjective},
-        problems::tsp::SymmetricTsp,
-        state::State,
-    };
     use rand::distributions::{Distribution, WeightedIndex};
+
+    use crate::{
+        components::*,
+        framework::{Individual, SingleObjective},
+        problems::tsp::SymmetricTsp,
+        state::{PheromoneMatrix, Random, State},
+    };
 
     #[derive(serde::Serialize, Clone)]
     pub struct AcoGeneration {

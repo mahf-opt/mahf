@@ -1,6 +1,7 @@
-use crate::state::CustomState;
 use better_any::Tid;
 use serde::Serialize;
+
+use crate::state::CustomState;
 
 #[derive(Clone, Serialize, Tid)]
 pub struct PheromoneMatrix {

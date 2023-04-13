@@ -1,12 +1,14 @@
 //! Archiving methods
 
+use better_any::Tid;
+use serde::{Deserialize, Serialize};
+
 use crate::{
-    framework::{components::*, Individual},
+    components::Component,
+    framework::Individual,
     problems::SingleObjectiveProblem,
     state::{CustomState, State},
 };
-use better_any::Tid;
-use serde::{Deserialize, Serialize};
 
 /// State required for Elitism.
 ///

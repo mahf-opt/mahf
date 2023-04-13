@@ -6,12 +6,20 @@
 #![doc = include_str!("../docs/overview.md")]
 
 pub mod components;
+pub use components::Component;
+
 pub mod conditions;
+pub use conditions::Condition;
+
 pub mod framework;
+pub use framework::{Configuration, Individual};
+
 pub mod heuristics;
 pub mod prelude;
 pub mod problems;
 pub mod state;
+pub use state::{CustomState, Random, State};
+
 pub mod tracking;
 pub mod utils;
 

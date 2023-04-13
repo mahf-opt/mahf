@@ -1,9 +1,10 @@
 //! Abstractions for the [rand] crate.
 
+use std::any::type_name;
+
 use better_any::Tid;
 use rand::{RngCore, SeedableRng};
 use serde::Serialize;
-use std::any::type_name;
 
 use crate::state::CustomState;
 

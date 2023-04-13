@@ -15,3 +15,6 @@ pub use pheromones::PheromoneMatrix;
 
 mod cro;
 pub use cro::{CroState, Molecule};
+
+mod random;
+pub use random::{Random, RandomConfig};

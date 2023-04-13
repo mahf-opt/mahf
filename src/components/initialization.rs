@@ -4,9 +4,10 @@ use rand::{distributions::uniform::SampleUniform, seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    framework::{components::*, Individual, Random},
+    components::Component,
+    framework::{AnyComponent, Individual},
     problems::{LimitedVectorProblem, Problem, VectorProblem},
-    state::State,
+    state::{Random, State},
 };
 
 /// Specialized component trait to initialize a new population on the stack.
@@ -35,6 +36,7 @@ where
 /// Initializes an empty population.
 #[derive(Serialize, Clone)]
 pub struct Empty;
+
 impl Empty {
     pub fn new<P>() -> Box<dyn Component<P>>
     where
@@ -43,6 +45,7 @@ impl Empty {
         Box::new(Initializer(Self))
     }
 }
+
 impl<P: Problem> Initialization<P> for Empty {
     fn initialize_population(&self, _problem: &P, _state: &mut State<P>) -> Vec<Individual<P>> {
         Vec::new()
@@ -55,6 +58,7 @@ pub struct RandomSpread {
     /// Size of the initial population.
     pub initial_population_size: Option<u32>,
 }
+
 impl RandomSpread {
     /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
@@ -89,6 +93,7 @@ impl RandomSpread {
         population
     }
 }
+
 impl<P, D> Initialization<P> for RandomSpread
 where
     D: SampleUniform + Clone + PartialOrd + 'static,
@@ -109,6 +114,7 @@ pub struct RandomPermutation {
     /// Size of the initial population.
     pub initial_population_size: Option<u32>,
 }
+
 impl RandomPermutation {
     /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
@@ -138,6 +144,7 @@ impl RandomPermutation {
         population
     }
 }
+
 impl<P> Initialization<P> for RandomPermutation
 where
     P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
@@ -159,6 +166,7 @@ pub struct RandomBitstring {
     // Probability of generating a 1 or true.
     pub p: f64,
 }
+
 impl RandomBitstring {
     /// Initializes the component with p being the probability for a 1.
     ///
@@ -205,6 +213,7 @@ impl RandomBitstring {
         population
     }
 }
+
 impl<P> Initialization<P> for RandomBitstring
 where
     P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,

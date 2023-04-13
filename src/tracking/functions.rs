@@ -1,10 +1,12 @@
+use std::{any::type_name, ops::Deref};
+
+use serde::Serialize;
+
 use crate::{
     problems::{Problem, SingleObjectiveProblem},
     state::{common, CustomState, State},
     tracking::log::Entry,
 };
-use serde::Serialize;
-use std::{any::type_name, ops::Deref};
 
 /// A function to turn some state into an [Entry].
 pub type Extractor<'a, P> = fn(&State<'a, P>) -> Entry;

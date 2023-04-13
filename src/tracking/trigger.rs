@@ -3,13 +3,14 @@ use std::{
     ops::{Deref, Sub},
 };
 
+use better_any::{Tid, TidAble};
+use derive_more::Deref;
+use dyn_clone::DynClone;
+
 use crate::{
     problems::Problem,
     state::{common::Iterations, CustomState, State},
 };
-use better_any::{Tid, TidAble};
-use derive_more::Deref;
-use dyn_clone::DynClone;
 
 /// Like [Condition](crate::framework::conditions::Condition) but non-serializable.
 pub trait Trigger<'a, P>: DynClone + Send {

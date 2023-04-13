@@ -1,18 +1,18 @@
 //! Swarm Operators
 
-use crate::state::PsoState;
 use rand::distributions::Uniform;
 use rand::Rng;
 
 use crate::{
-    framework::{components::*, Individual, Random},
+    components::Component,
+    framework::Individual,
     problems::SingleObjectiveProblem,
-    state::State,
+    state::{PsoState, Random, State},
 };
 
 /// Applies the PSO specific generation operator.
 ///
-/// Requires [PsoStateUpdate][crate::heuristics::pso::pso_ops::PsoStateUpdate].
+/// Requires [PsoStateUpdate][PsoState::updater].
 #[derive(serde::Serialize, Clone)]
 pub struct PsoGeneration {
     /// Inertia weight for influence of old velocity
@@ -24,6 +24,7 @@ pub struct PsoGeneration {
     /// Maximum velocity
     pub v_max: f64,
 }
+
 impl PsoGeneration {
     pub fn new<P>(weight: f64, c_one: f64, c_two: f64, v_max: f64) -> Box<dyn Component<P>>
     where
@@ -37,6 +38,7 @@ impl PsoGeneration {
         })
     }
 }
+
 impl<P> Component<P> for PsoGeneration
 where
     P: SingleObjectiveProblem<Encoding = Vec<f64>>,

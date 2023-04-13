@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::{
-    framework::components::Component,
+    components::Component,
     problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
     state::{common, State},
 };
@@ -29,12 +29,15 @@ impl Evaluator {
 
 impl<P: Problem> Component<P> for Evaluator {
     fn initialize(&self, problem: &P, state: &mut State<P>) {
-        state.require::<Self, common::Populations<P>>();
         state.insert(common::Evaluations(0));
 
         if !state.has::<common::EvaluatorInstance<P>>() {
             state.insert(problem.default_evaluator());
         }
+    }
+
+    fn require(&self, _problem: &P, state: &State<P>) {
+        state.require::<Self, common::Populations<P>>();
     }
 
     fn execute(&self, problem: &P, state: &mut State<P>) {

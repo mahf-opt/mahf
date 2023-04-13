@@ -2,7 +2,8 @@
 
 use crate::{
     components::*,
-    framework::{components::Component, conditions::Condition, Configuration},
+    conditions::Condition,
+    framework::Configuration,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
@@ -81,7 +82,7 @@ pub fn es<P: SingleObjectiveProblem>(
                 .do_(constraints)
                 .evaluate()
                 .update_best_individual()
-                .do_optional_(archive)
+                .do_if_some_(archive)
                 .do_(replacement)
                 .do_(logger)
         })
