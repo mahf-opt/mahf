@@ -2,7 +2,6 @@ NAME : eil51.opt.tour
 COMMENT : Optimal tour for eil51.tsp  (426)
 TYPE : TOUR
 DIMENSION : 51
-BEST_SOLUTION: 426
 TOUR_SECTION
 1
 22

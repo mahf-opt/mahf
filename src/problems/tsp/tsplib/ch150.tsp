@@ -1,6 +1,6 @@
 NAME: ch150
-COMMENT: 150 city Problem (churritz)
 TYPE: TSP
+COMMENT: 150 city Problem (churritz)
 DIMENSION: 150
 EDGE_WEIGHT_TYPE: EUC_2D
 NODE_COORD_SECTION

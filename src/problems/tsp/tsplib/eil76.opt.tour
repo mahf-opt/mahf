@@ -2,7 +2,6 @@ NAME : eil76.opt.tour
 COMMENT : Optimum tour for eil76.tsp (538)
 TYPE : TOUR
 DIMENSION : 76
-BEST_SOLUTION: 538
 TOUR_SECTION
 1
 33

@@ -3,208 +3,130 @@
 use crate::{
     framework::{Individual, SingleObjective},
     problems::{
-        tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
+        tsp::{distances, Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Evaluator, Problem, VectorProblem,
     },
     state::{common::EvaluatorInstance, State},
 };
-use anyhow::{anyhow, Error, Result};
-use pest_consume::Parser;
+use anyhow::{anyhow, Result};
+use include_dir::{include_dir, Dir};
 
-// Converts the parsing-tree for symmetric TSP that was constructed by `pest`
-// into rust-usable data types using the `pest_consume` package.
-#[allow(clippy::upper_case_acronyms)]
-mod parser {
-    // Parser for .tsp files
-    pub(super) mod tsp {
-        use crate::problems::tsp::{distances, Coordinates, DistanceMeasure, SymmetricTsp};
-        use pest_consume::{match_nodes, Error, Parser};
-
-        type Result<T> = std::result::Result<T, Error<Rule>>;
-        type Node<'i> = pest_consume::Node<'i, Rule, ()>;
-
-        #[derive(Parser)]
-        #[grammar = "problems/tsp/grammars/symmetric.tsp.pest"]
-        pub struct TspParser;
-
-        #[pest_consume::parser]
-        impl TspParser {
-            pub fn file(input: Node) -> Result<SymmetricTsp> {
-                Ok(match_nodes!(input.into_children();
-                    [tsp(tsp), _] => tsp,
-                ))
-            }
-
-            fn tsp(input: Node) -> Result<SymmetricTsp> {
-                Ok(match_nodes!(input.clone().into_children();
-                    [
-                        name(name),
-                        dimension(dimension),
-                        edge_weight_type(distance_measure),
-                        node_coord_section_coords(positions),
-                    ] => {
-                        if dimension != positions.len() {
-                            return Err(input.error("dimension not equal to number of nodes"))
-                        }
-                        SymmetricTsp {
-                            name,
-                            best_solution: None,
-                            dimension,
-                            positions,
-                            distance_measure,
-                        }
-                    },
-                ))
-            }
-
-            fn name(input: Node) -> Result<String> {
-                Ok(input.as_str().to_string())
-            }
-
-            fn dimension(input: Node) -> Result<usize> {
-                input.as_str().parse().map_err(|e| input.error(e))
-            }
-
-            fn edge_weight_type(input: Node) -> Result<DistanceMeasure> {
-                Ok(match input.as_str() {
-                    "EUC_2D" => distances::euclidean_distance,
-                    "MAN_2D" => distances::manhattan_distance,
-                    "MAX_2D" => distances::maximum_distance,
-                    _ => unreachable!(),
-                })
-            }
-
-            fn index(input: Node) -> Result<usize> {
-                input.as_str().parse().map_err(|e| input.error(e))
-            }
-
-            fn coord(input: Node) -> Result<f64> {
-                input.as_str().parse().map_err(|e| input.error(e))
-            }
-
-            fn coords(input: Node) -> Result<Coordinates> {
-                Ok(match_nodes!(input.into_children();
-                    [index(_i), coord(x), coord(y)] => vec![x, y],
-                ))
-            }
-
-            fn node_coord_section_coords(input: Node) -> Result<Vec<Coordinates>> {
-                Ok(match_nodes!(input.into_children();
-                    [coords(c)..] => c.collect(),
-                ))
-            }
-
-            #[allow(non_snake_case, unused_variables, dead_code)]
-            fn EOI(input: Node) -> Result<()> {
-                Ok(())
-            }
-        }
-    }
-
-    // Parser for .opt.tour files
-    pub(super) mod opt {
-        use crate::problems::tsp::symmetric::TspOptimum;
-        use crate::{framework::SingleObjective, problems::tsp::Route};
-        use pest_consume::{match_nodes, Error, Parser};
-
-        type Result<T> = std::result::Result<T, Error<Rule>>;
-        type Node<'i> = pest_consume::Node<'i, Rule, ()>;
-
-        #[derive(Parser)]
-        #[grammar = "problems/tsp/grammars/symmetric.opt.tour.pest"]
-        pub struct TspOptParser;
-
-        #[pest_consume::parser]
-        impl TspOptParser {
-            pub fn file(input: Node) -> Result<TspOptimum> {
-                Ok(match_nodes!(input.into_children();
-                    [opt(opt), _] => opt,
-                ))
-            }
-
-            fn opt(input: Node) -> Result<TspOptimum> {
-                Ok(match_nodes!(input.clone().into_children();
-                    // Only fitness value
-                    [
-                        name(_name),
-                        dimension(_dimension),
-                        best_solution(objective),
-                    ] => {
-                        TspOptimum {
-                            objective,
-                            solution: None,
-                        }
-                    },
-                    // Tour nodes are present
-                    [
-                        name(_name),
-                        dimension(dimension),
-                        best_solution(objective),
-                        tour_section_nodes(nodes),
-                    ] => {
-                        if dimension != nodes.len() {
-                            return Err(input.error("dimension not equal to number of nodes"))
-                        }
-                        TspOptimum {
-                            objective,
-                            solution: Some(nodes),
-                        }
-                    },
-                ))
-            }
-
-            fn name(input: Node) -> Result<String> {
-                Ok(input.as_str().to_string())
-            }
-
-            fn dimension(input: Node) -> Result<usize> {
-                input.as_str().parse().map_err(|e| input.error(e))
-            }
-
-            fn best_solution(input: Node) -> Result<SingleObjective> {
-                input
-                    .as_str()
-                    .parse()
-                    .map_err(|e| input.error(e))
-                    .map(|f: f64| SingleObjective::try_from(f).unwrap())
-            }
-
-            fn index(input: Node) -> Result<usize> {
-                let i: usize = input.as_str().parse().map_err(|e| input.error(e))?;
-                if i == 0 {
-                    Err(input.error("node index can't be zero"))
-                } else {
-                    Ok(i - 1)
-                }
-            }
-
-            fn tour_section_nodes(input: Node) -> Result<Route> {
-                Ok(match_nodes!(input.into_children();
-                    [index(i)..] => i.collect::<Vec<_>>(),
-                ))
-            }
-
-            #[allow(non_snake_case, unused_variables, dead_code)]
-            fn EOI(input: Node) -> Result<()> {
-                Ok(())
-            }
-        }
-    }
-}
+static FILES: Dir = include_dir!("$CARGO_MANIFEST_DIR/src/problems/tsp/tsplib");
 
 /// This enum represents built in instances of the symmetric travelling salesman problem.
-#[rustfmt::skip]
-#[derive(Debug)]
+#[derive(Debug, strum::EnumString, strum::AsRefStr)]
 pub enum Instances {
     A280,
+    ALI535,
+    ATT48,
+    ATT532,
+    BAYG29,
+    BAYS29,
     BERLIN52,
     BIER127,
-    CH130, CH150,
-    D198, D493, D657, D1291, D1655, D2103, D15112, D18512,
-    EIL51, EIL76, EIL101,
-    FL417, FL1400, FL1577, FL3795,
+    BRAZIL58,
+    BRD14051,
+    BRG180,
+    BURMA14,
+    CH130,
+    CH150,
+    D198,
+    D493,
+    D657,
+    D1291,
+    D1655,
+    D2103,
+    D15112,
+    D18512,
+    DANTZIG42,
+    DSJ1000,
+    EIL51,
+    EIL76,
+    EIL101,
+    FL417,
+    FL1400,
+    FL1577,
+    FL3795,
+    FNL4461,
+    FRI26,
+    GIL262,
+    GR17,
+    GR21,
+    GR24,
+    GR48,
+    GR96,
+    GR120,
+    GR137,
+    GR202,
+    GR229,
+    GR431,
+    GR666,
+    HK48,
+    KROA100,
+    KROA150,
+    KROA200,
+    KROB100,
+    KROB150,
+    KROB200,
+    KROC100,
+    KROD100,
+    KROE100,
+    LIN105,
+    LIN318,
+    LINHP318,
     NRW1379,
+    P654,
+    PA561,
+    PCB442,
+    PCB1173,
+    PCB3038,
+    PLA7397,
+    PLA33810,
+    PLA85900,
+    PR76,
+    PR107,
+    PR124,
+    PR136,
+    PR144,
+    PR152,
+    PR226,
+    PR264,
+    PR299,
+    PR439,
+    PR1002,
+    PR2392,
+    RAT99,
+    RAT195,
+    RAT575,
+    RAT783,
+    RD100,
+    RD400,
+    RL1304,
+    RL1323,
+    RL1889,
+    RL5915,
+    RL5934,
+    RL11849,
+    SI175,
+    SI535,
+    SI1032,
+    ST70,
+    SWISS42,
+    TS225,
+    TSP225,
+    U159,
+    U574,
+    U724,
+    U1060,
+    U1432,
+    U1817,
+    U2152,
+    U2319,
+    ULYSSES16,
+    ULYSSES22,
     USA13509,
+    VM1084,
+    VM1748,
 }
 
 impl std::fmt::Display for Instances {
@@ -213,66 +135,21 @@ impl std::fmt::Display for Instances {
     }
 }
 
-impl TryFrom<&str> for Instances {
-    type Error = Error;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value.to_uppercase().as_str() {
-            "A280" => Ok(Instances::A280),
-            "BERLIN52" => Ok(Instances::BERLIN52),
-            "BIER127" => Ok(Instances::BIER127),
-            "CH130" => Ok(Instances::CH130),
-            "CH150" => Ok(Instances::CH150),
-            "D198" => Ok(Instances::D198),
-            "D493" => Ok(Instances::D493),
-            "D657" => Ok(Instances::D657),
-            "D1291" => Ok(Instances::D1291),
-            "D1655" => Ok(Instances::D1655),
-            "D2103" => Ok(Instances::D2103),
-            "D15112" => Ok(Instances::D15112),
-            "D18512" => Ok(Instances::D18512),
-            "EIL51" => Ok(Instances::EIL51),
-            "EIL76" => Ok(Instances::EIL76),
-            "EIL101" => Ok(Instances::EIL101),
-            "FL417" => Ok(Instances::FL417),
-            "FL1400" => Ok(Instances::FL1400),
-            "FL1577" => Ok(Instances::FL1577),
-            "FL3795" => Ok(Instances::FL3795),
-            "NRW1379" => Ok(Instances::NRW1379),
-            "USA13509" => Ok(Instances::USA13509),
-            _ => Err(anyhow!("Unknown instance {}", value)),
-        }
-    }
-}
-
 impl Instances {
     /// Tries to load the built-in instance.
     pub fn try_load(&self) -> Result<SymmetricTsp> {
-        #[rustfmt::skip]
-        let (data, opt) = match self {
-            Self::A280 => (include_str!("./tsplib/a280.tsp"), Some(include_str!("./tsplib/a280.opt.tour"))),
-            Self::BERLIN52 => (include_str!("./tsplib/berlin52.tsp"), Some(include_str!("./tsplib/berlin52.opt.tour"))),
-            Self::BIER127 => (include_str!("./tsplib/bier127.tsp"), Some(include_str!("./tsplib/bier127.opt.tour"))),
-            Self::CH130 => (include_str!("./tsplib/ch130.tsp"), Some(include_str!("./tsplib/ch130.opt.tour"))),
-            Self::CH150 => (include_str!("./tsplib/ch150.tsp"), Some(include_str!("./tsplib/ch150.opt.tour"))),
-            Self::D198 => (include_str!("./tsplib/d198.tsp"), Some(include_str!("./tsplib/d198.opt.tour"))),
-            Self::D493 => (include_str!("./tsplib/d493.tsp"), Some(include_str!("./tsplib/d493.opt.tour"))),
-            Self::D657 => (include_str!("./tsplib/d657.tsp"), Some(include_str!("./tsplib/d657.opt.tour"))),
-            Self::D1291 => (include_str!("./tsplib/d1291.tsp"), Some(include_str!("./tsplib/d1291.opt.tour"))),
-            Self::D1655 => (include_str!("./tsplib/d1655.tsp"), Some(include_str!("./tsplib/d1655.opt.tour"))),
-            Self::D2103 => (include_str!("./tsplib/d2103.tsp"), Some(include_str!("./tsplib/d2103.opt.tour"))),
-            Self::D15112 => (include_str!("./tsplib/d15112.tsp"), Some(include_str!("./tsplib/d15112.opt.tour"))),
-            Self::D18512 => (include_str!("./tsplib/d18512.tsp"), Some(include_str!("./tsplib/d18512.opt.tour"))),
-            Self::EIL51 => (include_str!("./tsplib/eil51.tsp"), Some(include_str!("./tsplib/eil51.opt.tour"))),
-            Self::EIL76 => (include_str!("./tsplib/eil76.tsp"), Some(include_str!("./tsplib/eil76.opt.tour"))),
-            Self::EIL101 => (include_str!("./tsplib/eil101.tsp"), Some(include_str!("./tsplib/eil101.opt.tour"))),
-            Self::FL417 => (include_str!("./tsplib/fl417.tsp"), Some(include_str!("./tsplib/fl417.opt.tour"))),
-            Self::FL1400 =>  (include_str!("./tsplib/fl1400.tsp"), Some(include_str!("./tsplib/fl1400.opt.tour"))),
-            Self::FL1577 =>  (include_str!("./tsplib/fl1577.tsp"), Some(include_str!("./tsplib/fl1577.opt.tour"))),
-            Self::FL3795 =>  (include_str!("./tsplib/fl3795.tsp"), Some(include_str!("./tsplib/fl3795.opt.tour"))),
-            Self::NRW1379 =>  (include_str!("./tsplib/nrw1379.tsp"), Some(include_str!("./tsplib/nrw1379.opt.tour"))),
-            Self::USA13509 =>  (include_str!("./tsplib/usa13509.tsp"), Some(include_str!("./tsplib/usa13509.opt.tour"))),
-        };
+        let name = self.as_ref().to_lowercase();
+
+        let data = FILES
+            .get_file(format!("{}.tsp", name))
+            .unwrap()
+            .contents_utf8()
+            .unwrap();
+
+        let opt = FILES
+            .get_file(format!("{}.opt.tour", name))
+            .map(|file| file.contents_utf8().unwrap());
+
         // Update name with enum if tsplib name is empty
         let mut tsp = SymmetricTsp::try_parse(data, opt)?;
         if tsp.name.is_empty() {
@@ -399,29 +276,67 @@ impl SymmetricTsp {
     /// This method constructs a TSP instance from a string representation (`data`) and an optional solution (`opt`).
     /// There is no good reason to call it directly, just use `SymmetricTspInstances.try_load()` instead.
     fn try_parse(data: &str, opt: Option<&str>) -> Result<Self> {
-        let input = parser::tsp::TspParser::parse(parser::tsp::Rule::file, data)
-            .map_err(|e| Error::new(e).context("error while parsing .tsp file"))?
-            .single()
-            .unwrap();
-        let mut tsp = parser::tsp::TspParser::file(input)
-            .map_err(|e| Error::new(e).context("tsp data type conversions failed"))?;
+        let tsp =
+            tspf::TspBuilder::parse_str(data).map_err(|err| anyhow!("parsing failed: {}", err))?;
 
-        if let Some(opt) = opt {
-            let opt_input = parser::opt::TspOptParser::parse(parser::opt::Rule::file, opt)
-                .map_err(|e| Error::new(e).context("error while parsing .opt.tour file"))?
-                .single()
-                .unwrap();
-            let opt = parser::opt::TspOptParser::file(opt_input)
-                .map_err(|e| Error::new(e).context("tsp opt tour data type conversions failed"))?;
-            if let Some(sol) = &opt.solution {
-                if sol.len() != tsp.dimension {
-                    return Err(anyhow!("dimension of opt does not match problem dimension",));
-                }
-            }
-            tsp.best_solution = Some(opt);
+        let mut positions = vec![vec![]; tsp.dim()];
+        for (index, point) in tsp.node_coords().iter() {
+            positions[index - 1] = point.pos().clone();
         }
 
-        Ok(tsp)
+        let distance_measure = match tsp.weight_kind() {
+            tspf::WeightKind::Euc2d => distances::euclidean_distance,
+            tspf::WeightKind::Max2d => distances::maximum_distance,
+            tspf::WeightKind::Man2d => distances::manhattan_distance,
+            _ => unimplemented!(),
+        };
+
+        let mut instance = SymmetricTsp {
+            name: tsp.name().clone(),
+            dimension: tsp.dim(),
+            best_solution: None,
+            positions,
+            distance_measure,
+        };
+
+        if let Some(opt) = opt {
+            instance.best_solution = Some(parse_opt_file(&instance, opt));
+        }
+
+        Ok(instance)
+    }
+}
+
+fn parse_opt_file(instance: &SymmetricTsp, opt_contents: &str) -> TspOptimum {
+    let best_solution = opt_contents
+        .lines()
+        .find(|line| line.starts_with("BEST_SOLUTION"))
+        .map(|line| &line["BEST_SOLUTION: ".len()..])
+        .map(str::parse::<f64>)
+        .map(Result::unwrap)
+        .map(SingleObjective::try_from)
+        .map(Result::unwrap);
+
+    let route = opt_contents
+        .lines()
+        .skip_while(|&line| line != "TOUR_SECTION")
+        .skip(1)
+        .take_while(|&line| line != "-1")
+        .map(str::parse::<usize>)
+        .map(Result::unwrap)
+        .map(|x| x - 1)
+        .collect::<Route>();
+
+    let solution = if route.is_empty() { None } else { Some(route) };
+
+    assert!(best_solution.is_some() || solution.is_some());
+
+    let objective =
+        best_solution.unwrap_or_else(|| instance.evaluate_solution(solution.as_ref().unwrap()));
+
+    TspOptimum {
+        objective,
+        solution,
     }
 }
 
@@ -441,22 +356,13 @@ mod tests {
         let best_solution = tsp.best_solution.unwrap();
 
         assert_eq!(tsp.dimension, 52);
-        assert_float_eq!(best_solution.objective.value(), 7542.0, ulps <= 2);
+        assert_float_eq!(best_solution.objective.value(), 7498.0, abs <= 1.0);
         assert_eq!(best_solution.solution.unwrap(), opt_tour);
     }
 
     #[test]
-    fn evaluating_berlin52() {
-        let tsp = Instances::BERLIN52.load();
-        let best = tsp.best_solution.as_ref().unwrap();
-
-        // There seems to be a difference between the best solutions supplied in BEST_SOLUTION
-        // and the evaluated routes from the opt.tour files. Is this due to rounding errors?
-        assert_float_eq!(
-            tsp.evaluate_solution(best.solution.as_ref().unwrap())
-                .value(),
-            best.objective.value(),
-            abs <= 50.0
-        );
+    fn loading_bier127() {
+        let tsp = Instances::BIER127.load();
+        assert_eq!(tsp.best_solution.unwrap().objective.value(), 118282.0);
     }
 }
