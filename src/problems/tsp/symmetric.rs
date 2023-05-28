@@ -3,7 +3,7 @@
 use crate::{
     framework::{Individual, SingleObjective},
     problems::{
-        tsp::{distances, Coordinates, Dimension, DistanceMeasure, Edge, Route},
+        tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
         Evaluator, Problem, VectorProblem,
     },
     state::{common::EvaluatorInstance, State},
@@ -285,9 +285,17 @@ impl SymmetricTsp {
         }
 
         let distance_measure = match tsp.weight_kind() {
-            tspf::WeightKind::Euc2d => distances::euclidean_distance,
-            tspf::WeightKind::Max2d => distances::maximum_distance,
-            tspf::WeightKind::Man2d => distances::manhattan_distance,
+            tspf::WeightKind::Euc2d => tspf::metric::euc_2d,
+            tspf::WeightKind::Euc3d => tspf::metric::euc_3d,
+            tspf::WeightKind::Geo => tspf::metric::geo,
+            tspf::WeightKind::Max2d => tspf::metric::max_2d,
+            tspf::WeightKind::Max3d => tspf::metric::max_3d,
+            tspf::WeightKind::Man2d => tspf::metric::man_2d,
+            tspf::WeightKind::Man3d => tspf::metric::man_3d,
+            tspf::WeightKind::Ceil2d => rounded_euc_2d,
+            tspf::WeightKind::Att => tspf::metric::att,
+            tspf::WeightKind::Xray1 => tspf::metric::xray1,
+            tspf::WeightKind::Xray2 => tspf::metric::xray2,
             _ => unimplemented!(),
         };
 
@@ -338,6 +346,12 @@ fn parse_opt_file(instance: &SymmetricTsp, opt_contents: &str) -> TspOptimum {
         objective,
         solution,
     }
+}
+
+/// Calculates the 2D-Euclidean distance between two points.
+#[inline]
+pub fn rounded_euc_2d(a: &[f64], b: &[f64]) -> f64 {
+    tspf::metric::euc_2d(a, b).round()
 }
 
 #[cfg(test)]
