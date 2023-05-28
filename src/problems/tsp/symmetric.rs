@@ -10,6 +10,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use include_dir::{include_dir, Dir};
+use tspf::WeightKind;
 
 static FILES: Dir = include_dir!("$CARGO_MANIFEST_DIR/src/problems/tsp/tsplib");
 
@@ -251,7 +252,13 @@ impl SymmetricTsp {
     /// Returns the weight/distance of the given edge.
     pub fn distance(&self, edge: Edge) -> f64 {
         let (a, b) = edge;
-        self.inner.weight(a + 1, b + 1).into()
+
+        // TODO: this seems like a bug in tspf
+        if self.inner.weight_kind() == WeightKind::Explicit {
+            self.inner.weight(a, b).into()
+        } else {
+            self.inner.weight(a + 1, b + 1).into()
+        }
     }
 
     /// Greedily constructs a Route, always taking the shortest edge.
