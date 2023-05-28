@@ -3,7 +3,7 @@
 use crate::{
     framework::{Individual, SingleObjective},
     problems::{
-        tsp::{Coordinates, Dimension, DistanceMeasure, Edge, Route},
+        tsp::{Coordinates, Dimension, Edge, Route},
         Evaluator, Problem, VectorProblem,
     },
     state::{common::EvaluatorInstance, State},
@@ -183,9 +183,9 @@ pub struct SymmetricTsp {
     /// The cities coordinates
     #[serde(skip)]
     pub positions: Vec<Coordinates>,
-    /// How distance should be computed
+    /// Inner tspf instance for distance measuring
     #[serde(skip)]
-    distance_measure: DistanceMeasure,
+    inner: tspf::Tsp,
 }
 
 struct SymmetricTspEvaluator;
@@ -251,7 +251,7 @@ impl SymmetricTsp {
     /// Returns the weight/distance of the given edge.
     pub fn distance(&self, edge: Edge) -> f64 {
         let (a, b) = edge;
-        (self.distance_measure)(&self.positions[a], &self.positions[b]).into()
+        self.inner.weight(a + 1, b + 1).into()
     }
 
     /// Greedily constructs a Route, always taking the shortest edge.
@@ -284,27 +284,12 @@ impl SymmetricTsp {
             positions[index - 1] = point.pos().clone();
         }
 
-        let distance_measure = match tsp.weight_kind() {
-            tspf::WeightKind::Euc2d => tspf::metric::euc_2d,
-            tspf::WeightKind::Euc3d => tspf::metric::euc_3d,
-            tspf::WeightKind::Geo => tspf::metric::geo,
-            tspf::WeightKind::Max2d => tspf::metric::max_2d,
-            tspf::WeightKind::Max3d => tspf::metric::max_3d,
-            tspf::WeightKind::Man2d => tspf::metric::man_2d,
-            tspf::WeightKind::Man3d => tspf::metric::man_3d,
-            tspf::WeightKind::Ceil2d => rounded_euc_2d,
-            tspf::WeightKind::Att => tspf::metric::att,
-            tspf::WeightKind::Xray1 => tspf::metric::xray1,
-            tspf::WeightKind::Xray2 => tspf::metric::xray2,
-            _ => unimplemented!(),
-        };
-
         let mut instance = SymmetricTsp {
             name: tsp.name().clone(),
             dimension: tsp.dim(),
             best_solution: None,
             positions,
-            distance_measure,
+            inner: tsp,
         };
 
         if let Some(opt) = opt {

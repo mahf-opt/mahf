@@ -8,7 +8,6 @@ pub use symmetric::{Instances, SymmetricTsp};
 pub mod asymmetric {}
 
 type Coordinates = Vec<f64>;
-type DistanceMeasure = fn(&[f64], &[f64]) -> f64;
 type Dimension = usize;
 
 pub type Edge = (usize, usize);
