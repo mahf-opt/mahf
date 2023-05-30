@@ -255,9 +255,9 @@ impl SymmetricTsp {
 
         // TODO: this seems like a bug in tspf
         if self.inner.weight_kind() == WeightKind::Explicit {
-            self.inner.weight(a, b).into()
+            self.inner.weight(a, b)
         } else {
-            self.inner.weight(a + 1, b + 1).into()
+            self.inner.weight(a + 1, b + 1)
         }
     }
 
