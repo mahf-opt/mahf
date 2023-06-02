@@ -1,6 +1,6 @@
 //! Common state used in most heuristics.
 
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
 use serde::Serialize;
 

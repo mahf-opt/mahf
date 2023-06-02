@@ -2,7 +2,7 @@
 
 use std::marker::PhantomData;
 
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 use serde::Serialize;
 
 use crate::{

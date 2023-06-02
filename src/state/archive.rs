@@ -1,6 +1,6 @@
 //! Archiving methods
 
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 
 use crate::{

@@ -2,7 +2,7 @@
 
 use std::any::type_name;
 
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 use rand::{RngCore, SeedableRng};
 use serde::Serialize;
 

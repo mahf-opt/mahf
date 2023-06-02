@@ -9,7 +9,7 @@ use crate::{
         CustomState, State,
     },
 };
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
