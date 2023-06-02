@@ -1,6 +1,6 @@
 use std::any::type_name;
 
-use better_any::Tid;
+use better_any::{Tid, TidAble};
 use erased_serde::Serialize as DynSerialize;
 use serde::Serialize;
 
