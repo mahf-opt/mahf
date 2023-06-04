@@ -1,19 +1,21 @@
 use crate::{
-    components::{self, Block, Branch, Component, Loop, Scope},
+    component::ExecResult,
+    components::{evaluation, misc::debug::Debug, Block, Branch, Component, Loop, Scope},
     conditions::Condition,
-    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state::{self, Random},
-    tracking,
+    logging,
+    problems::{Evaluator, MultiObjectiveProblem, SingleObjectiveProblem},
+    state::{common, random::Random},
+    Problem, State,
 };
 
-/// A heuristic, constructed from a set of components.
+/// A heuristic configuration, constructed from a set of components.
 #[derive(Clone)]
 pub struct Configuration<P: Problem>(Box<dyn Component<P>>);
 
 impl<P: Problem> Configuration<P> {
     /// Wraps a heuristic into a `Configuration`.
     ///
-    /// Use `Configuration::builder` for a more convenient construction.
+    /// Use [`Configuration::builder`] for a more convenient construction.
     pub fn new(heuristic: Box<dyn Component<P>>) -> Self {
         Configuration(heuristic)
     }
@@ -33,7 +35,14 @@ impl<P: Problem> Configuration<P> {
     }
 
     pub fn into_builder(self) -> ConfigurationBuilder<P> {
-        ConfigurationBuilder::new().do_(self.0)
+        todo!()
+    }
+
+    pub fn run(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        self.0.init(problem, state)?;
+        self.0.require(problem, &state.requirements())?;
+        self.0.execute(problem, state)?;
+        Ok(())
     }
 
     /// Runs the heuristic on the given problem, returning the final state of the heuristic.
@@ -44,18 +53,16 @@ impl<P: Problem> Configuration<P> {
     ///
     /// For initializing the state with custom state,
     /// see [optimize_with][Configuration::optimize_with].
-    pub fn optimize(&self, problem: &P) -> state::State<P> {
-        let heuristic = self.heuristic();
-        let mut state = state::State::new();
+    pub fn optimize(&self, problem: &P) -> ExecResult<State<P>> {
+        let mut state = State::new();
 
-        state.insert(tracking::Log::new());
+        state.insert(logging::Log::new());
         state.insert(Random::default());
-        state.insert(state::common::Populations::<P>::new());
+        state.insert(common::Populations::<P>::new());
 
-        heuristic.initialize(problem, &mut state);
-        heuristic.execute(problem, &mut state);
+        self.run(problem, &mut state)?;
 
-        state
+        Ok(state)
     }
 
     /// Runs the heuristic on the given problem, initializing the state with a custom function,
@@ -68,30 +75,28 @@ impl<P: Problem> Configuration<P> {
     pub fn optimize_with<'a>(
         &self,
         problem: &P,
-        init_state: impl FnOnce(&mut state::State<'a, P>),
-    ) -> state::State<'a, P> {
-        let heuristic = self.heuristic();
-        let mut state = state::State::new();
+        init_state: impl FnOnce(&mut State<'a, P>) -> ExecResult<()>,
+    ) -> ExecResult<State<'a, P>> {
+        let mut state = State::new();
 
-        state.insert(tracking::Log::new());
-        state.insert(state::common::Populations::<P>::new());
+        state.insert(logging::Log::new());
+        state.insert(common::Populations::<P>::new());
 
-        init_state(&mut state);
+        init_state(&mut state)?;
 
         if !state.has::<Random>() {
             state.insert(Random::default());
         }
 
-        heuristic.initialize(problem, &mut state);
-        heuristic.execute(problem, &mut state);
+        self.run(problem, &mut state)?;
 
-        state
+        Ok(state)
     }
 }
 
-impl<P: Problem> From<Configuration<P>> for Box<dyn Component<P>> {
-    fn from(config: Configuration<P>) -> Self {
-        config.0
+impl<P: Problem> From<Box<dyn Component<P>>> for Configuration<P> {
+    fn from(heuristic: Box<dyn Component<P>>) -> Self {
+        Self::new(heuristic)
     }
 }
 
@@ -100,7 +105,6 @@ pub struct ConfigurationBuilder<P: Problem> {
     components: Vec<Box<dyn Component<P>>>,
 }
 
-// Basic functionality
 impl<P: Problem> ConfigurationBuilder<P> {
     fn new() -> Self {
         Self {
@@ -192,7 +196,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     #[track_caller]
     pub fn assert(
         self,
-        assert: impl Fn(&state::State<P>) -> bool + Send + Sync + Clone + 'static,
+        assert: impl Fn(&State<P>) -> bool + Send + Sync + Clone + 'static,
     ) -> Self {
         self.debug(move |_problem, state| assert!(assert(state)))
     }
@@ -200,33 +204,24 @@ impl<P: Problem> ConfigurationBuilder<P> {
     /// Constructs a [Debug][components::misc::Debug] component with the given behaviour.
     pub fn debug(
         self,
-        behaviour: impl Fn(&P, &mut state::State<P>) + Send + Sync + Clone + 'static,
+        behaviour: impl Fn(&P, &mut State<P>) + Send + Sync + Clone + 'static,
     ) -> Self {
-        self.do_(components::misc::Debug::new(behaviour))
+        self.do_(Debug::new(behaviour))
     }
 
-    pub fn evaluate(self) -> Self {
-        self.do_(components::evaluation::Evaluator::new())
+    pub fn evaluate<T: Evaluator<Problem = P>>(self) -> Self {
+        self.do_(evaluation::PopulationEvaluator::<T>::new())
     }
 }
 
 impl<P: SingleObjectiveProblem> ConfigurationBuilder<P> {
     pub fn update_best_individual(self) -> Self {
-        self.do_(components::evaluation::UpdateBestIndividual::new())
-    }
-}
-
-impl<P: SingleObjectiveProblem> ConfigurationBuilder<P>
-where
-    P::Encoding: std::fmt::Debug,
-{
-    pub fn single_objective_summary(self) -> Self {
-        self.do_(components::misc::PrintSingleObjectiveSummary::new())
+        self.do_(evaluation::BestIndividualUpdate::new())
     }
 }
 
 impl<P: MultiObjectiveProblem> ConfigurationBuilder<P> {
     pub fn update_pareto_front(self) -> Self {
-        self.do_(components::evaluation::UpdateParetoFront::new())
+        self.do_(evaluation::ParetoFrontUpdate::new())
     }
 }

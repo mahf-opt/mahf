@@ -1,116 +1,124 @@
-//! Evaluation methods
+use std::marker::PhantomData;
 
+use derivative::Derivative;
 use serde::Serialize;
 
 use crate::{
+    component::ExecResult,
     components::Component,
-    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state::{common, State},
+    population::BestIndividual,
+    problems::{Evaluator, MultiObjectiveProblem, SingleObjectiveProblem},
+    state::{common, StateReq},
+    Problem, State,
 };
 
-/// Evaluates all individuals in the current population.
-///
-/// This component should be inserted after every generating component.
-///
-/// Only the head of the [common::Populations] will be evaluated.
-/// Requires either [common::EvaluatorInstance] to be present
-/// in the [State] or [Problem::default_evaluator] to be implemented.
-///
-/// By inserting a custom [common::EvaluatorInstance] the evaluation
-/// behavior can be customized.
-#[derive(Serialize, Clone)]
-pub struct Evaluator;
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
+pub struct PopulationEvaluator<T: Evaluator>(PhantomData<fn() -> T>);
 
-impl Evaluator {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
-        Box::new(Self)
+impl<T: Evaluator> PopulationEvaluator<T> {
+    pub fn from_params() -> Self {
+        Self(PhantomData)
+    }
+
+    pub fn new() -> Box<dyn Component<T::Problem>> {
+        Box::new(Self::from_params())
     }
 }
 
-impl<P: Problem> Component<P> for Evaluator {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
+impl<P, T> Component<P> for PopulationEvaluator<T>
+where
+    P: Problem,
+    T: Evaluator<Problem = P>,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(common::Evaluations(0));
 
-        if !state.has::<common::EvaluatorInstance<P>>() {
-            state.insert(problem.default_evaluator());
+        if !state.has::<T>() {
+            state.insert(T::default());
         }
+        Ok(())
     }
 
-    fn require(&self, _problem: &P, state: &State<P>) {
-        state.require::<Self, common::Populations<P>>();
+    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+        state_req.require::<Self, common::Populations<P>>()?;
+        state_req.require::<Self, T>()?;
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        if let Some(mut population) = state.populations_mut().try_pop() {
-            state.holding::<common::EvaluatorInstance<P>>(|evaluator_state, state| {
-                evaluator_state
-                    .evaluator
-                    .evaluate(problem, state, &mut population);
-            });
-
-            *state.get_value_mut::<common::Evaluations>() += population.len() as u32;
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let population = state.populations_mut().try_pop();
+        if let Some(mut population) = population {
+            state.holding::<T>(|evaluator: &mut T, state| {
+                evaluator.evaluate(problem, state, &mut population);
+                Ok(())
+            })?;
+            *state.borrow_value_mut::<common::Evaluations>() += population.len() as u32;
             state.populations_mut().push(population);
         }
+        Ok(())
     }
 }
 
-/// Inserts and updates the [common::BestIndividual] state.
-///
-/// Should be inserted right after [Evaluator].
-/// For [MultiObjectiveProblem]s see [UpdateParetoFront].
-#[derive(Serialize, Clone)]
-pub struct UpdateBestIndividual;
+#[derive(Clone, Serialize)]
+pub struct BestIndividualUpdate;
 
-impl UpdateBestIndividual {
+impl BestIndividualUpdate {
+    pub fn from_params() -> Self {
+        Self
+    }
+
     pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
-    fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.insert(common::BestIndividual::<P>(None));
+impl<P: SingleObjectiveProblem> Component<P> for BestIndividualUpdate {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(common::BestIndividual::<P>::default());
+        Ok(())
     }
 
-    fn execute(&self, _problem: &P, state: &mut State<P>) {
-        let mut mut_state = state.get_states_mut();
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let populations = state.populations();
+        let population = populations.current();
+        let best = population.best_individual();
 
-        let best_individual = mut_state
-            .populations()
-            .current()
-            .iter()
-            .min_by_key(|i| i.objective());
-
-        if let Some(best_individual) = best_individual {
-            mut_state
-                .get_mut::<common::BestIndividual<P>>()
-                .replace_if_better(best_individual);
+        if let Some(best) = best {
+            state.borrow_mut::<common::BestIndividual<P>>().update(best);
         }
+        Ok(())
     }
 }
 
-/// Inserts and updates the [common::ParetoFront] state.
-///
-/// Should be inserted right after [Evaluator].
-/// For [SingleObjectiveProblem]s see [UpdateBestIndividual].
-#[derive(Serialize, Clone)]
-pub struct UpdateParetoFront;
+#[derive(Clone, Serialize)]
+pub struct ParetoFrontUpdate;
 
-impl UpdateParetoFront {
+impl ParetoFrontUpdate {
+    pub fn from_params() -> Self {
+        Self
+    }
+
     pub fn new<P: MultiObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: MultiObjectiveProblem> Component<P> for UpdateParetoFront {
-    fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.insert(common::ParetoFront::<P>::new());
+impl<P: MultiObjectiveProblem> Component<P> for ParetoFrontUpdate {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(common::ParetoFront::<P>::default());
+        Ok(())
     }
 
-    fn execute(&self, _problem: &P, state: &mut State<P>) {
-        let mut mut_state = state.get_states_mut();
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let populations = state.populations();
+        let mut front = state.pareto_front_mut();
 
-        let front = mut_state.pareto_front_mut();
-        front.update_multiple(mut_state.populations().current());
+        for individual in populations.current() {
+            front.update(individual);
+        }
+
+        Ok(())
     }
 }

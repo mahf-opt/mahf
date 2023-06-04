@@ -2,14 +2,13 @@ use derivative::Derivative;
 use serde::Serialize;
 
 use crate::{
+    component::ExecResult,
     components::Component,
     conditions::Condition,
     problems::Problem,
-    state::{common, State},
+    state::{common, State, StateReq},
 };
 
-/// A sequential block of components.
-/// The child components are initialized and executed sequentially.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[serde(transparent)]
@@ -21,21 +20,30 @@ impl<P: Problem> Block<P> {
     pub fn new(
         components: impl IntoIterator<Item = Box<dyn Component<P>>>,
     ) -> Box<dyn Component<P>> {
-        Box::new(Block(components.into_iter().collect()))
+        Box::new(Self(components.into_iter().collect()))
     }
 }
 
 impl<P: Problem> Component<P> for Block<P> {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         for component in &self.0 {
-            component.initialize(problem, state);
+            component.init(problem, state)?;
         }
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
+    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
         for component in &self.0 {
-            component.execute(problem, state);
+            component.require(problem, state_req)?;
         }
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        for component in &self.0 {
+            component.execute(problem, state)?;
+        }
+        Ok(())
     }
 }
 
@@ -45,9 +53,6 @@ impl<I: IntoIterator<Item = Box<dyn Component<P>>>, P: Problem> From<I> for Box<
     }
 }
 
-/// Executes the child component as long as the condition is true.
-///
-/// This corresponds to a `while` loop.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -59,9 +64,6 @@ pub struct Loop<P: Problem> {
 }
 
 impl<P: Problem> Loop<P> {
-    /// Creates a new [Loop].
-    ///
-    /// Accepts a single or multiple components through the [Into] implementation of multiple components.
     pub fn new(
         condition: Box<dyn Condition<P>>,
         body: impl Into<Box<dyn Component<P>>>,
@@ -74,25 +76,31 @@ impl<P: Problem> Loop<P> {
 }
 
 impl<P: Problem> Component<P> for Loop<P> {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(common::Iterations(0));
 
-        self.condition.initialize(problem, state);
-        self.body.initialize(problem, state);
+        self.condition.init(problem, state)?;
+        self.body.init(problem, state)?;
+
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        self.condition.initialize(problem, state);
-        while self.condition.evaluate(problem, state) {
-            self.body.execute(problem, state);
-            *state.get_value_mut::<common::Iterations>() += 1;
+    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+        self.condition.require(problem, state_req)?;
+        self.body.require(problem, state_req)?;
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        self.condition.init(problem, state)?;
+        while self.condition.evaluate(problem, state)? {
+            self.body.execute(problem, state)?;
+            *state.try_borrow_value_mut::<common::Iterations>()? += 1;
         }
+        Ok(())
     }
 }
 
-/// Executes either the `if` or `else` branch depending on a condition.
-///
-/// Both `if` and `if`-`else` constructs are possible.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -103,12 +111,6 @@ pub struct Branch<P: Problem> {
 }
 
 impl<P: Problem> Branch<P> {
-    /// Creates a new [Branch] component.
-    ///
-    /// This corresponds to an `if` construct:
-    /// ```text
-    /// if(condition) { body }
-    /// ```
     pub fn new(
         condition: Box<dyn Condition<P>>,
         body: impl Into<Box<dyn Component<P>>>,
@@ -120,12 +122,6 @@ impl<P: Problem> Branch<P> {
         })
     }
 
-    /// Creates a new [Branch] component.
-    ///
-    /// This corresponds to an `if`-`else` construct:
-    /// ```text
-    /// if(condition) { if_body } else { else_body }
-    /// ```
     pub fn new_with_else(
         condition: Box<dyn Condition<P>>,
         if_body: impl Into<Box<dyn Component<P>>>,
@@ -140,52 +136,51 @@ impl<P: Problem> Branch<P> {
 }
 
 impl<P: Problem> Component<P> for Branch<P> {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
-        self.condition.initialize(problem, state);
-        self.if_body.initialize(problem, state);
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        self.condition.init(problem, state)?;
+        self.if_body.init(problem, state)?;
         if let Some(else_body) = &self.else_body {
-            else_body.initialize(problem, state);
+            else_body.init(problem, state)?;
         }
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        if self.condition.evaluate(problem, state) {
-            self.if_body.execute(problem, state);
-        } else if let Some(else_body) = &self.else_body {
-            else_body.execute(problem, state);
+    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+        self.condition.require(problem, state_req)?;
+        self.if_body.require(problem, state_req)?;
+        if let Some(else_body) = &self.else_body {
+            else_body.require(problem, state_req)?;
         }
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        if self.condition.evaluate(problem, state)? {
+            self.if_body.execute(problem, state)?;
+        } else if let Some(else_body) = &self.else_body {
+            else_body.execute(problem, state)?;
+        }
+        Ok(())
     }
 }
 
-/// Encapsulates state of child components.
-///
-/// When child components add new state,
-/// that state will be lost after the execution
-/// of this components.
-///
-/// All children will be re-initialized on every call
-/// of the `execute` function.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
 pub struct Scope<P: Problem> {
     body: Box<dyn Component<P>>,
     #[serde(skip)]
-    init: fn(&mut State<P>),
+    init: fn(&mut State<P>) -> ExecResult<()>,
 }
 
 impl<P: Problem> Scope<P> {
-    /// Creates a new [Scope].
-    ///
-    /// If you want to override some state,
-    /// you can use [Scope::new_with].
     pub fn new(body: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
-        Self::new_with(|_| {}, body)
+        Self::new_with(|_| Ok(()), body)
     }
 
     /// Creates a new [Scope] while overriding some state.
     pub fn new_with(
-        init: fn(&mut State<P>),
+        init: fn(&mut State<P>) -> ExecResult<()>,
         body: impl Into<Box<dyn Component<P>>>,
     ) -> Box<dyn Component<P>> {
         Box::new(Scope {
@@ -196,11 +191,13 @@ impl<P: Problem> Scope<P> {
 }
 
 impl<P: Problem> Component<P> for Scope<P> {
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        state.with_substate(|state| {
-            (self.init)(state);
-            self.body.initialize(problem, state);
-            self.body.execute(problem, state);
-        });
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.with_inner_state(|state| {
+            (self.init)(state)?;
+            self.body.init(problem, state)?;
+            self.body.execute(problem, state)?;
+            Ok(())
+        })?;
+        Ok(())
     }
 }

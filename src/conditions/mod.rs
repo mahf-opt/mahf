@@ -1,26 +1,42 @@
-//! Collection of common conditions.
-//!
-//! Conditions are implementors of the [Condition] trait.
+//! TODO
 
-use crate::{framework::AnyComponent, problems::Problem, state::State};
+#![allow(clippy::new_ret_no_self)]
 
-pub mod branching;
+use crate::{
+    component::{AnyComponent, ExecResult},
+    state::StateReq,
+    Problem, State,
+};
 
-pub mod logic;
-pub use logic::{And, Not, Or};
+pub mod bound;
+pub mod common;
+pub mod logical;
 
-pub mod termination;
+pub use common::{DistanceToOptimumGreaterThan, EveryN, LessThan, OptimumReached, RandomChance};
+pub use logical::{And, Not, Or};
 
 /// A condition for loops or branches.
 ///
-/// Similar to [Component](crate::Component),
-/// but `evaluate` replaces `execute` and returns a `bool`.
+/// Similar to [Component](crate::Component), but the `evaluate` method replaces `execute` and returns a `bool`.
 ///
-/// These can be combined using binary AND and OR, and NOT (`|`, `&`, and `!`).
+/// These can be combined using [`BitAnd`], [`BitOr`], and [`Not`] (`|`, `&`, and `!` operators).
+///
+/// [`BitAnd`]: std::ops::BitAnd
+/// [`BitOr`]: std::ops::BitOr
+/// [`Not`]: std::ops::Not
 pub trait Condition<P: Problem>: AnyComponent {
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State<P>) {}
-    fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool;
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+        Ok(())
+    }
+
+    /// Evaluates the condition.
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool>;
 }
 
 erased_serde::serialize_trait_object!(<P: Problem> Condition<P>);

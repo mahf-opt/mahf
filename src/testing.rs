@@ -1,70 +1,72 @@
-//! Testing utilities.
+#![allow(dead_code)]
+
+use std::{any::type_name, marker::PhantomData};
+
+use float_eq::assert_float_eq;
 
 use crate::{
-    framework::{Individual, SingleObjective},
-    problems::{Evaluator, HasKnownOptimum, Problem, SingleObjectiveProblem},
-    state::{common::EvaluatorInstance, State},
+    individual::Individual,
+    objective::{MultiObjective, Objective, SingleObjective},
+    Problem,
 };
-use std::borrow::Borrow;
 
-/// Helper problem for test purposes.
-pub struct TestProblem;
+pub struct TestProblem<O: Objective>(PhantomData<O>);
 
-impl Problem for TestProblem {
+impl<O> TestProblem<O>
+where
+    O: Objective,
+{
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<O> Problem for TestProblem<O>
+where
+    O: Objective + 'static,
+{
     type Encoding = ();
-    type Objective = SingleObjective;
+    type Objective = O;
 
     fn name(&self) -> &str {
-        "TestProblem"
-    }
-
-    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
-        EvaluatorInstance::new(TestEvaluator)
+        type_name::<Self>()
     }
 }
 
-impl HasKnownOptimum for TestProblem {
-    fn known_optimum(&self) -> SingleObjective {
-        0.0.try_into().unwrap()
-    }
-}
+pub type SingleObjectiveTestProblem = TestProblem<SingleObjective>;
+pub type MultiObjectiveTestProblem = TestProblem<MultiObjective>;
 
-pub struct TestEvaluator;
-
-impl Evaluator for TestEvaluator {
-    type Problem = TestProblem;
-
-    fn evaluate(
-        &mut self,
-        _problem: &Self::Problem,
-        _state: &mut State<Self::Problem>,
-        individuals: &mut [Individual<Self::Problem>],
-    ) {
-        for individual in individuals {
-            individual.evaluate(0.0.try_into().unwrap());
-        }
-    }
-}
-
-pub fn new_test_individual(objective: f64) -> Individual<TestProblem> {
+pub fn single_test_individual(objective: f64) -> Individual<SingleObjectiveTestProblem> {
     Individual::new_test_unit(objective.try_into().unwrap())
 }
 
-pub fn new_test_population(objective_values: &[f64]) -> Vec<Individual<TestProblem>> {
+pub fn single_test_population(
+    objective_values: &[f64],
+) -> Vec<Individual<SingleObjectiveTestProblem>> {
     objective_values
         .iter()
         .cloned()
-        .map(new_test_individual)
+        .map(single_test_individual)
         .collect()
 }
 
-pub fn collect_population_objective_values<P: SingleObjectiveProblem, I: Borrow<Individual<P>>>(
-    population: &[I],
-) -> Vec<f64> {
-    population
+pub fn multi_test_individual(objective: &[f64]) -> Individual<MultiObjectiveTestProblem> {
+    Individual::new_test_unit(objective.try_into().unwrap())
+}
+
+pub fn multi_test_population(
+    objective_values: &[&[f64]],
+) -> Vec<Individual<MultiObjectiveTestProblem>> {
+    objective_values
         .iter()
-        .map(I::borrow)
-        .map(Individual::objective)
-        .map(SingleObjective::value)
+        .cloned()
+        .map(multi_test_individual)
         .collect()
+}
+
+pub fn assert_floats_eq(expected: &[f64], actual: &[f64]) {
+    assert_eq!(expected.len(), actual.len());
+    for (expected, actual) in expected.iter().zip(actual) {
+        assert_float_eq!(expected, actual, ulps <= 6);
+    }
 }

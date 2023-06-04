@@ -1,20 +1,30 @@
-//! Definition and collection of components.
-//!
-//! Components are implementors of the [Component] trait.
+//! TODO
 
 #![allow(clippy::new_ret_no_self)]
 
-use crate::{framework::AnyComponent, problems::Problem, state::State};
+use crate::{
+    component::{AnyComponent, ExecResult},
+    state::StateReq,
+    Problem, State,
+};
 
-pub mod constraints;
+pub mod archive;
+pub mod bound;
+pub mod boundary;
 pub mod control_flow;
-pub use control_flow::{Block, Branch, Loop, Scope};
+pub mod diversity;
 pub mod evaluation;
-pub mod generation;
+pub mod generative;
 pub mod initialization;
+pub mod mapping;
 pub mod misc;
+pub mod mutation;
+pub mod recombination;
 pub mod replacement;
 pub mod selection;
+pub mod swarm;
+
+pub use control_flow::{Block, Branch, Loop, Scope};
 
 /// Trait to represent a *component*, a (small) functionality with a common interface.
 ///
@@ -23,12 +33,18 @@ pub mod selection;
 pub trait Component<P: Problem>: AnyComponent {
     /// Can be used to initialize custom state required by the component.
     #[allow(unused_variables)]
-    fn initialize(&self, problem: &P, state: &mut State<P>) {}
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        Ok(())
+    }
+
     /// Can be used to specify custom state requirements.
     #[allow(unused_variables)]
-    fn require(&self, problem: &P, state: &State<P>) {}
+    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+        Ok(())
+    }
+
     /// Executes the component, performing the actual logic.
-    fn execute(&self, problem: &P, state: &mut State<P>);
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()>;
 }
 
 erased_serde::serialize_trait_object!(<P: Problem> Component<P>);
