@@ -1,56 +1,74 @@
-//! Collection of common test problems.
-//!
-//! Every problem implements the [Problem] trait.
-//!
-//! If a given problem has certain properties, then those will be expressed as traits as well.
-//! Those traits are quite specific and when writing a component they'll allow you to only require those you really need.
+use std::{marker::PhantomData, ops::Range};
+
+use better_any::{Tid, TidAble};
+use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
+use trait_set::trait_set;
 
 use crate::{
-    framework::{Individual, MultiObjective, Objective, SingleObjective},
-    state::{common::EvaluatorInstance, State},
+    encoding::AnyEncoding,
+    individual::Individual,
+    objective::{MultiObjective, Objective, SingleObjective},
+    CustomState, State,
 };
-use std::{any::Any, ops::Range};
 
-pub mod bmf;
-pub mod coco_bound;
-pub mod tsp;
-
-#[cfg(never)]
-pub mod coco;
-
-/// Base trait for all problems.
+/// Metadata of an optimization problem.
+/// This trait is the base trait for all problems, and itself only defines
+/// - solution encoding ([`Self::Encoding`]),
+/// - objective type ([`Self::Objective`]), and
+/// - the name of the problem ([`Self::name`]).
 ///
-/// Defines the problems encoding and objective.
+/// # Example
+///
+/// A simple implementation of the one-dimensional real-valued sphere function `f(x) = x^2`:
+///
+/// ```
+/// use mahf::objective::SingleObjective;
+/// use mahf::Problem;
+///
+/// pub struct Sphere1D;
+///
+/// impl Problem for Sphere1D {
+///     type Encoding = Vec<f64>; // real-valued vector
+///     type Objective = SingleObjective;
+///
+///     fn name(&self) -> &str { "Sphere1D" }
+/// }
+/// ```
 pub trait Problem: 'static {
-    /// The datatype representing the problem.
-    type Encoding: Any + Clone + PartialEq + Send;
+    /// The encoding of a solution to the optimization problem.
+    type Encoding: AnyEncoding;
 
-    /// The objective.
-    ///
-    /// See [SingleObjective] and [MultiObjective].
+    /// The objective type.
+    /// See [`SingleObjective`] and [`MultiObjective`].
     type Objective: Objective;
 
     /// The name of the problem.
     fn name(&self) -> &str;
-
-    /// Returns the default evaluator for the problem.
-    ///
-    /// Can be set to [unimplemented] when the evaluator
-    /// requires additional setup by the user.
-    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self>;
 }
 
-/// Defines how a population should be evaluated.
-pub trait Evaluator: Send {
+trait_set! {
+    /// An optimization problem with a single objective.
+    ///
+    /// This trait should be used in favor over specifying the objective type
+    /// of [`Problem`] directly, and is automatically implemented for all problems
+    /// with [`SingleObjective`] as [`Problem::Objective`].
+    pub trait SingleObjectiveProblem = Problem<Objective = SingleObjective>;
+
+    /// An optimization problem with multiple objectives.
+    ///
+    /// This trait should be used in favor over specifying the objective type
+    /// of [`Problem`] directly, and is automatically implemented for all problems
+    /// with [`MultiObjective`] as [`Problem::Objective`].
+    pub trait MultiObjectiveProblem = Problem<Objective = MultiObjective>;
+}
+
+pub trait ObjectiveFunction: Problem + Send {
+    fn objective(solution: &Self::Encoding) -> Self::Objective;
+}
+
+pub trait Evaluate: Send + Default {
     type Problem: Problem;
 
-    /// Evaluates all individuals.
-    ///
-    /// After calling this function, [Individual::is_evaluated]
-    /// should be true for all individuals.
-    ///
-    /// Individuals might already be evaluated prior to calling this function,
-    /// in which case they can be skipped.
     fn evaluate(
         &mut self,
         problem: &Self::Problem,
@@ -59,42 +77,109 @@ pub trait Evaluator: Send {
     );
 }
 
-/// A single objective problem.
-pub trait SingleObjectiveProblem: Problem<Objective = SingleObjective> {}
+trait_set! {
+    pub trait Evaluator = Evaluate + for<'a> CustomState<'a> + for<'a> TidAble<'a>;
+}
 
-impl<P: Problem<Objective = SingleObjective>> SingleObjectiveProblem for P {}
+#[derive(Tid)]
+pub struct Sequential<P: ObjectiveFunction + 'static>(PhantomData<P>);
 
-/// A multi objective problem.
-pub trait MultiObjectiveProblem: Problem<Objective = MultiObjective> {}
+impl<P: ObjectiveFunction> Sequential<P> {
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
 
-impl<P: Problem<Objective = MultiObjective>> MultiObjectiveProblem for P {}
+impl<P: ObjectiveFunction> Default for Sequential<P> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
-/// A problem with fixed length array like encoding.
-pub trait VectorProblem: Problem {
-    /// Type of the vectors elements.
-    type T: Any + Clone;
+impl<P> Evaluate for Sequential<P>
+where
+    P: ObjectiveFunction,
+{
+    type Problem = P;
 
-    /// Returns the dimension of the vector.
+    fn evaluate(
+        &mut self,
+        _problem: &Self::Problem,
+        _state: &mut State<Self::Problem>,
+        individuals: &mut [Individual<Self::Problem>],
+    ) {
+        for individual in individuals {
+            individual.evaluate_with(P::objective);
+        }
+    }
+}
+
+impl<P: ObjectiveFunction> CustomState<'_> for Sequential<P> {}
+
+#[derive(Tid)]
+pub struct Parallel<P: ObjectiveFunction + 'static>(PhantomData<P>);
+
+impl<P: ObjectiveFunction> Parallel<P> {
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<P: ObjectiveFunction> Default for Parallel<P> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<P> Evaluate for Parallel<P>
+where
+    P: ObjectiveFunction + Problem,
+{
+    type Problem = P;
+
+    fn evaluate(
+        &mut self,
+        _problem: &Self::Problem,
+        _state: &mut State<Self::Problem>,
+        individuals: &mut [Individual<Self::Problem>],
+    ) {
+        individuals
+            .par_iter_mut()
+            .for_each(|individual| individual.evaluate_with(P::objective));
+    }
+}
+
+impl<P: ObjectiveFunction> CustomState<'_> for Parallel<P> {}
+
+pub trait VectorProblem: Problem<Encoding = Vec<Self::Element>> {
+    type Element: Clone;
+
     fn dimension(&self) -> usize;
 }
 
-/// A [VectorProblem] where each dimension has a limited range.
 pub trait LimitedVectorProblem: VectorProblem {
-    /// Returns the range of the given dimension.
-    fn range(&self, dimension: usize) -> Range<Self::T>;
+    fn domain(&self) -> Vec<Range<Self::Element>>;
 }
 
-/// A [Problem] where one can check for the target.
-pub trait HasKnownTarget {
-    /// Returns whether the target has been reached.
-    fn target_hit(&self, target: SingleObjective) -> bool;
+pub trait OptimumReachedProblem: SingleObjectiveProblem {
+    fn optimum_reached(&self, objective: SingleObjective) -> bool;
 }
 
-/// A [Problem] with known target value.
-///
-/// This is a stricter requirement than [HasKnownTarget].
-/// - When writing a component, prefer [HasKnownTarget] when possible.
-/// When implementing this for a problem, always implement [HasKnownTarget] as well.
-pub trait HasKnownOptimum {
+pub trait KnownOptimumProblem: SingleObjectiveProblem {
     fn known_optimum(&self) -> SingleObjective;
+}
+
+impl<P: KnownOptimumProblem> OptimumReachedProblem for P {
+    fn optimum_reached(&self, objective: SingleObjective) -> bool {
+        let provided = objective.value();
+        let known = self.known_optimum().value();
+
+        (provided - known) < 1e-8
+    }
+}
+
+pub trait TravellingSalespersonProblem:
+    SingleObjectiveProblem + VectorProblem<Element = usize>
+{
+    fn distance(&self, edge: (usize, usize)) -> f64;
 }
