@@ -1,34 +1,31 @@
-#![allow(
-    clippy::too_many_arguments,
-    clippy::type_complexity,
-    clippy::new_ret_no_self
-)]
-#![doc = include_str!("../docs/overview.md")]
+//! A framework for the modular construction and evaluation of metaheuristics.
 
+pub mod component;
 pub mod components;
-pub use components::Component;
-
 pub mod conditions;
-pub use conditions::Condition;
-
-pub mod framework;
-pub use framework::{Configuration, Individual};
-
+pub mod configuration;
+pub mod encoding;
+pub mod experiments;
 pub mod heuristics;
+pub mod identifier;
+pub mod individual;
+pub mod logging;
+pub mod objective;
+pub mod population;
 pub mod prelude;
 pub mod problems;
 pub mod state;
-pub use state::{CustomState, Random, State};
+pub(crate) mod testing;
+pub(crate) mod utils;
 
-pub mod tracking;
-pub mod utils;
-
-#[cfg(test)]
-pub mod testing;
-
-// re-exports
-pub use derive_more;
-pub use float_eq;
-pub use rand;
-pub use rand_distr;
-pub use serde;
+pub use component::ExecResult;
+pub use components::Component;
+pub use conditions::Condition;
+pub use configuration::Configuration;
+pub use individual::Individual;
+pub use objective::{MultiObjective, SingleObjective};
+pub use problems::Problem;
+pub use state::{
+    extract::{IdFn, ValueOf},
+    CustomState, State, StateError,
+};
