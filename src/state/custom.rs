@@ -25,6 +25,7 @@
 ///
 /// Custom state wrapping a reference with a lifetime:
 /// ```
+/// use better_any::{Tid, TidAble};
 /// use mahf::CustomState;
 ///
 /// #[derive(Tid)]
