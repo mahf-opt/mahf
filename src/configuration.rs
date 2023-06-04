@@ -35,7 +35,7 @@ impl<P: Problem> Configuration<P> {
     }
 
     pub fn into_builder(self) -> ConfigurationBuilder<P> {
-        todo!()
+        Self::builder().do_(self.0)
     }
 
     pub fn run(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {

@@ -1,70 +1,73 @@
 //! Random Walk
 
+use eyre::WrapErr;
+
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    configuration::Configuration,
+    logging::Logger,
+    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
-/// Parameters for [real_random_walk].
+/// Parameters for [real_rw].
 pub struct RealProblemParameters {
     pub deviation: f64,
 }
 
 /// An example single-objective Random Walk operating on a real search space.
-/// Uses the [random_walk] component internally.
-pub fn real_random_walk<P>(
+/// Uses the [rw] component internally.
+pub fn real_rw<P, O>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters { deviation } = params;
 
-    Configuration::builder()
-        .do_(generation::RandomSpread::new_init(1))
-        .do_(random_walk(
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(1))
+        .do_(rw::<P, O>(
             Parameters {
-                neighbor: generation::mutation::FixedDeviationDelta::new(deviation),
-                constraints: constraints::Saturation::new(),
+                neighbor: <mutation::NormalMutation>::new_dev(deviation),
+                constraints: boundary::Saturation::new(),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Parameters for [permutation_random_walk].
 pub struct PermutationProblemParameters {
-    pub n_swap: usize,
+    pub num_swap: u32,
 }
 
 /// An example single-objective Random Walk operating on a permutation search space.
-/// Uses the [random_walk] component internally.
-pub fn permutation_random_walk<P>(
+/// Uses the [rw] component internally.
+pub fn permutation_random_walk<P, O>(
     params: PermutationProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: SingleObjectiveProblem + VectorProblem<Element = usize>,
+    O: Evaluator<Problem = P>,
 {
-    let PermutationProblemParameters { n_swap } = params;
+    let PermutationProblemParameters { num_swap } = params;
 
-    Configuration::builder()
-        .do_(generation::RandomPermutation::new_init(1))
-        .do_(random_walk(
+    Ok(Configuration::builder()
+        .do_(initialization::RandomPermutation::new(1))
+        .do_(rw::<P, O>(
             Parameters {
-                neighbor: generation::mutation::SwapMutation::new(n_swap),
+                neighbor: <mutation::SwapMutation>::new(num_swap)
+                    .wrap_err("failed to construct swap mutation")?,
                 constraints: misc::Noop::new(),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 pub struct Parameters<P> {
@@ -73,13 +76,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Random Search template.
-pub fn random_walk<P>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>>
+pub fn rw<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
+    O: Evaluator<Problem = P>,
 {
     let Parameters {
         neighbor,
@@ -87,15 +87,15 @@ where
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
                 .do_(selection::All::new())
                 .do_(neighbor)
                 .do_(constraints)
-                .evaluate()
+                .evaluate::<O>()
                 .update_best_individual()
                 .do_(replacement::Generational::new(1))
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

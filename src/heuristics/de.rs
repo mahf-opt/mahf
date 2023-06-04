@@ -1,16 +1,20 @@
 //! Differential Evolution
 
+use eyre::WrapErr;
+
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    configuration::Configuration,
+    logging::Logger,
+    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
 };
 
 /// Parameters for [real_de].
 pub struct RealProblemParameters {
     pub population_size: u32,
-    pub y: usize,
+    pub y: u32,
     pub f: f64,
     pub pc: f64,
 }
@@ -20,13 +24,13 @@ pub struct RealProblemParameters {
 ///
 /// # References
 /// [doi.org/10.1016/j.ins.2021.09.058](https://doi.org/10.1016/j.ins.2021.09.058)
-pub fn real_de<P>(
+pub fn real_de<P, O>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         population_size,
@@ -35,22 +39,23 @@ where
         pc,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(population_size))
-        .evaluate()
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(population_size))
+        .evaluate::<O>()
         .update_best_individual()
-        .do_(de(
+        .do_(de::<P, O>(
             Parameters {
-                selection: selection::DEBest::new(y),
-                mutation: generation::mutation::DEMutation::new(y, f),
-                crossover: generation::recombination::DEBinomialCrossover::new(pc),
-                constraints: constraints::Saturation::new(),
-                replacement: replacement::IndividualPlus::new(),
+                selection: selection::de::DEBest::new(y)
+                    .wrap_err("failed to construct DE selection")?,
+                mutation: mutation::de::DEMutation::new(y, f)
+                    .wrap_err("failed to construct DE mutation")?,
+                crossover: recombination::de::DEBinomialCrossover::new(pc),
+                constraints: boundary::Saturation::new(),
+                replacement: replacement::KeepBetterAtIndex::new(),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of Differential Evolution.
@@ -63,11 +68,11 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Differential Evolution template.
-pub fn de<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>> {
+pub fn de<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    O: Evaluator<Problem = P>,
+{
     let Parameters {
         selection,
         mutation,
@@ -77,16 +82,16 @@ pub fn de<P: SingleObjectiveProblem>(
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
                 .do_(selection)
                 .do_(mutation)
                 .do_(crossover)
                 .do_(constraints)
-                .evaluate()
+                .evaluate::<O>()
                 .update_best_individual()
                 .do_(replacement)
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

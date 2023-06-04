@@ -1,110 +1,112 @@
 //! Iterated Local Search
 
+use eyre::WrapErr;
+
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
+    configuration::Configuration,
     heuristics::ls,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    tracking::Logger,
+    logging::Logger,
+    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
-/// Parameters for [real_iterated_local_search].
+/// Parameters for [real_ils].
 pub struct RealProblemParameters<P> {
-    pub local_search_params: ls::RealProblemParameters,
-    pub local_search_termination: Box<dyn Condition<P>>,
+    pub ls_params: ls::RealProblemParameters,
+    pub ls_condition: Box<dyn Condition<P>>,
 }
 
 /// An example single-objective Iterated Local Search operating on a real search space.
-/// Uses the [iterated_local_search] component internally.
-pub fn real_iterated_local_search<P>(
+/// Uses the [ils] component internally.
+pub fn real_ils<P, O>(
     params: RealProblemParameters<P>,
-    termination: Box<dyn Condition<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
-        local_search_params,
-        local_search_termination,
+        ls_params,
+        ls_condition,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(1))
-        .evaluate()
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(1))
+        .evaluate::<O>()
         .update_best_individual()
-        .do_(iterated_local_search(
+        .do_(ils::<P, O>(
             Parameters {
-                perturbation: generation::RandomSpread::new_gen(),
-                local_search: ls::real_local_search(local_search_params, local_search_termination)
+                perturbation: <mutation::PartialRandomSpread>::new_full(),
+                ls: ls::real_ls::<P, O>(ls_params, ls_condition)
+                    .wrap_err("failed to construct local search")?
                     .into_inner(),
             },
-            termination,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Parameters for [iterated_local_permutation_search].
 pub struct PermutationProblemParameters<P> {
-    pub local_search_params: ls::PermutationProblemParameters,
-    pub local_search_termination: Box<dyn Condition<P>>,
+    pub ls_params: ls::PermutationProblemParameters,
+    pub ls_condition: Box<dyn Condition<P>>,
 }
 
 /// An example single-objective Iterated Local Search operating on a permutation search space.
-/// Uses the [iterated_local_search] component internally.
-pub fn permutation_iterated_local_search<P>(
+/// Uses the [ils] component internally.
+pub fn permutation_ils<P, O>(
     params: PermutationProblemParameters<P>,
-    termination: Box<dyn Condition<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: SingleObjectiveProblem + VectorProblem<Element = usize>,
+    O: Evaluator<Problem = P>,
 {
     let PermutationProblemParameters {
-        local_search_params,
-        local_search_termination,
+        ls_params,
+        ls_condition,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomPermutation::new_init(1))
-        .evaluate()
+    Ok(Configuration::builder()
+        .do_(initialization::RandomPermutation::new(1))
+        .evaluate::<O>()
         .update_best_individual()
-        .do_(iterated_local_search(
+        .do_(ils::<P, O>(
             Parameters {
-                perturbation: generation::RandomPermutation::new_gen(),
-                local_search: ls::permutation_local_search(
-                    local_search_params,
-                    local_search_termination,
-                )
-                .into_inner(),
+                perturbation: <mutation::ScrambleMutation>::new_full(),
+                ls: ls::permutation_ls::<P, O>(ls_params, ls_condition)
+                    .wrap_err("failed to construct local search")?
+                    .into_inner(),
             },
-            termination,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of an Iterated Local Search.
 pub struct Parameters<P> {
     pub perturbation: Box<dyn Component<P>>,
-    pub local_search: Box<dyn Component<P>>,
+    pub ls: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Iterated Local Search template.
-pub fn iterated_local_search<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-) -> Box<dyn Component<P>> {
-    let Parameters {
-        perturbation,
-        local_search,
-    } = params;
+pub fn ils<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    O: Evaluator<Problem = P>,
+{
+    let Parameters { perturbation, ls } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
                 .do_(perturbation)
-                .evaluate()
+                .evaluate::<O>()
                 .do_(selection::All::new())
-                .scope_(|builder| builder.do_(local_search))
+                .scope_(|builder| builder.do_(ls))
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(Logger::new())

@@ -1,11 +1,15 @@
 //! Invasive Weed Optimization
 
+use eyre::{ensure, WrapErr};
+
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    tracking::Logger,
+    configuration::Configuration,
+    logging::Logger,
+    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
+    state::{common, extract::ValueOf},
 };
 
 #[derive(Clone, Debug)]
@@ -29,12 +33,13 @@ pub struct RealProblemParameters {
 ///
 /// # References
 /// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
-pub fn real_iwo<P>(
+pub fn real_iwo<P, O>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         initial_population_size,
@@ -46,29 +51,27 @@ where
         modulation_index,
     } = params;
 
-    assert!(initial_population_size <= max_population_size);
+    ensure!(initial_population_size <= max_population_size, "it is not possible to select more individuals with MuPlusLambda selection than are present");
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(
-            params.initial_population_size,
-        ))
-        .evaluate()
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(initial_population_size))
+        .evaluate::<O>()
         .update_best_individual()
-        .do_(iwo(
+        .do_(iwo::<P, O>(
             Parameters {
                 max_population_size,
                 min_number_of_seeds,
                 max_number_of_seeds,
-                mutation: generation::mutation::IWOAdaptiveDeviationDelta::new(
-                    initial_deviation,
-                    final_deviation,
+                mutation: mutation::iwo::IWOAdaptiveDeviation::<ValueOf<common::Iterations>>::new(
+                    initial_deviation..final_deviation,
                     modulation_index,
-                ),
-                constraints: constraints::Saturation::new(),
+                )
+                .wrap_err("failed to construct IWO adaptive deviation component")?,
+                constraints: boundary::Saturation::new(),
             },
-            termination,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of Invasive Weed Optimization.
@@ -81,10 +84,11 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Invasive Weed Optimization template.
-pub fn iwo<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-) -> Box<dyn Component<P>> {
+pub fn iwo<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    O: Evaluator<Problem = P>,
+{
     let Parameters {
         max_population_size,
         min_number_of_seeds,
@@ -94,15 +98,15 @@ pub fn iwo<P: SingleObjectiveProblem>(
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
-                .do_(selection::DeterministicFitnessProportional::new(
+                .do_(selection::iwo::DeterministicFitnessProportional::new(
                     min_number_of_seeds,
                     max_number_of_seeds,
                 ))
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate()
+                .evaluate::<O>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
                 .do_(Logger::new())

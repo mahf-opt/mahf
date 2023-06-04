@@ -1,5 +1,3 @@
-//! Collection of common heuristics
-
 pub mod aco;
 pub mod cro;
 pub mod de;
@@ -11,3 +9,4 @@ pub mod ls;
 pub mod pso;
 pub mod rs;
 pub mod rw;
+pub mod sa;

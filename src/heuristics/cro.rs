@@ -1,18 +1,19 @@
-//! Chemical Reaction Optimization
-
 use crate::{
-    components::*,
-    conditions::*,
-    framework::{Configuration, ConfigurationBuilder},
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    state,
+    component::ExecResult,
+    components::{self, *},
+    conditions::{self, *},
+    configuration::{Configuration, ConfigurationBuilder},
+    identifier::{A, B},
+    logging::Logger,
+    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
+    state::extract::common::ExPopulationSize,
 };
 
 /// Parameters for [cro].
 pub struct RealProblemParameters {
     pub initial_population_size: u32,
     pub mole_coll: f64,
-    pub kinetic_energy_loss_rate: f64,
+    pub kinetic_energy_lr: f64,
     pub alpha: u32,
     pub beta: f64,
     pub initial_kinetic_energy: f64,
@@ -23,18 +24,18 @@ pub struct RealProblemParameters {
 
 /// An example single-objective Chemical Reaction Optimization operating on a real search space.
 /// Uses the [cro] component internally.
-pub fn real_cro<P>(
+pub fn real_cro<P, O>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         initial_population_size,
         mole_coll,
-        kinetic_energy_loss_rate,
+        kinetic_energy_lr,
         alpha,
         beta,
         initial_kinetic_energy,
@@ -43,48 +44,40 @@ where
         decomposition_deviation,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(
-            initial_population_size,
-        ))
-        .evaluate()
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(initial_population_size))
+        .evaluate::<O>()
         .update_best_individual()
-        .do_(cro(
+        .do_(cro::<P, O>(
             Parameters {
                 mole_coll,
-                kinetic_energy_loss_rate,
+                kinetic_energy_lr,
                 initial_kinetic_energy,
                 buffer,
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
-                decomposition_criterion: branching::DecompositionCriterion::new(alpha),
+                decomposition_criterion: conditions::bound::cro::DecompositionCriterion::new(alpha),
                 decomposition: Block::new([
-                    generation::DuplicatePopulation::new(),
-                    generation::mutation::UniformPartialMutation::new(
-                        0.5,
-                        generation::mutation::FixedDeviationDelta::new(decomposition_deviation),
-                    ),
+                    misc::populations::DuplicatePopulation::new(),
+                    mutation::NormalMutation::<A>::new(decomposition_deviation, 0.5),
                 ]),
-                on_wall_ineffective_collision: generation::mutation::FixedDeviationDelta::new(
+                on_wall_ineffective_collision: mutation::NormalMutation::<B>::new_dev(
                     on_wall_deviation,
                 ),
                 double_mole_selection: selection::RandomWithoutRepetition::new(2),
-                synthesis_criterion: branching::SynthesisCriterion::new(beta),
-                synthesis: generation::recombination::UniformCrossover::new_single(1.),
-                intermolecular_ineffective_collision: generation::mutation::UniformMutation::new(
-                    1.,
-                ),
-                constraints: constraints::Saturation::new(),
+                synthesis_criterion: conditions::bound::cro::SynthesisCriterion::new(beta),
+                synthesis: recombination::UniformCrossover::new_insert_single(1.),
+                intermolecular_ineffective_collision: <mutation::UniformMutation>::new_bound(1.),
+                constraints: boundary::Saturation::new(),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of an Chemical Reaction Optimization.
 pub struct Parameters<P> {
     pub mole_coll: f64,
-    pub kinetic_energy_loss_rate: f64,
+    pub kinetic_energy_lr: f64,
     pub initial_kinetic_energy: f64,
     pub buffer: f64,
     pub single_mole_selection: Box<dyn Component<P>>,
@@ -102,14 +95,14 @@ pub struct Parameters<P> {
 ///
 /// # References
 /// [doi.org/10.1007/s12293-012-0075-1](https://doi.org/10.1007/s12293-012-0075-1)
-pub fn cro<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>> {
+pub fn cro<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    O: Evaluator<Problem = P>,
+{
     let Parameters {
         mole_coll,
-        kinetic_energy_loss_rate,
+        kinetic_energy_lr,
         initial_kinetic_energy,
         buffer,
         single_mole_selection,
@@ -127,61 +120,68 @@ pub fn cro<P: SingleObjectiveProblem>(
         builder
             .do_(reaction)
             .do_(constraints.clone())
-            .evaluate()
+            .evaluate::<O>()
             .update_best_individual()
             .do_(update)
     };
 
     Configuration::builder()
-        .do_(state::CroState::initializer(initial_kinetic_energy, buffer))
-        .while_(termination, |builder| {
-            builder
-                .if_else_(branching::RandomChance::new(mole_coll) | branching::LessThanNIndividuals::new(2),
-                          |builder| {
-                              builder
-                                  .do_(single_mole_selection)
-                                  .do_(selection::All::new())
-                                  .if_else_(decomposition_criterion,
-                                            |builder| {
-                                                elementary_reaction(
-                                                    builder,
-                                                    decomposition,
-                                                    state::CroState::decomposition_update()
-                                                )
-                                            },
-                                            |builder| {
-                                                elementary_reaction(
-                                                    builder,
-                                                    on_wall_ineffective_collision,
-                                                    state::CroState::on_wall_ineffective_collision_update(
-                                                        kinetic_energy_loss_rate,
-                                                    ))
-                                            },
-                                  )
-                          },
-                          |builder| {
-                              builder
-                                  .do_(double_mole_selection)
-                                  .do_(selection::All::new())
-                                  .if_else_(synthesis_criterion,
-                                            |builder| {
-                                                elementary_reaction(
-                                                    builder,
-                                                    synthesis,
-                                                    state::CroState::synthesis_update()
-                                                )
-                                            },
-                                            |builder| {
-                                                elementary_reaction(
-                                                    builder,
-                                                    intermolecular_ineffective_collision,
-                                                    state::CroState::intermolecular_ineffective_collision_update()
-                                                )
-                                            },
-                                  )
-                          },
-                )
-                .do_(logger)
+        .do_(components::bound::cro::ChemicalReactionInit::new(
+            initial_kinetic_energy,
+            buffer,
+        ))
+        .while_(condition, |builder| {
+            builder.if_else_(
+                common::RandomChance::new(mole_coll)
+                    | LessThan::<ExPopulationSize<P>>::new(2),
+                |builder| {
+                    builder
+                        .do_(single_mole_selection)
+                        .do_(selection::All::new())
+                        .if_else_(
+                            decomposition_criterion,
+                            |builder| {
+                                elementary_reaction(
+                                    builder,
+                                    decomposition,
+                                    components::bound::cro::DecompositionUpdate::new(),
+                                )
+                            },
+                            |builder| {
+                                elementary_reaction(
+                                    builder,
+                                    on_wall_ineffective_collision,
+                                    components::bound::cro::OnWallIneffectiveCollisionUpdate::new(
+                                        kinetic_energy_lr,
+                                    ),
+                                )
+                            },
+                        )
+                },
+                |builder| {
+                    builder
+                        .do_(double_mole_selection)
+                        .do_(selection::All::new())
+                        .if_else_(
+                            synthesis_criterion,
+                            |builder| {
+                                elementary_reaction(
+                                    builder,
+                                    synthesis,
+                                    components::bound::cro::SynthesisUpdate::new(),
+                                )
+                            },
+                            |builder| {
+                                elementary_reaction(
+                                    builder,
+                                    intermolecular_ineffective_collision,
+                                    components::bound::cro::IntermolecularIneffectiveCollisionUpdate::new(),
+                                )
+                            },
+                        )
+                },
+            )
+                                .do_(Logger::new())
         })
         .build_component()
 }

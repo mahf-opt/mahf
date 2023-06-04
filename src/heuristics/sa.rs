@@ -9,17 +9,19 @@ use crate::{
     configuration::Configuration,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    state::extract::ValueOf,
 };
 
-/// Parameters for [real_ls].
+/// Parameters for [real_sa].
 pub struct RealProblemParameters {
-    pub n_neighbors: u32,
+    pub t_0: f64,
+    pub alpha: f64,
     pub deviation: f64,
 }
 
 /// An example single-objective Local Search operating on a real search space.
-/// Uses the [ls] component internally.
-pub fn real_ls<P, O>(
+/// Uses the [sa] component internally.
+pub fn real_sa<P, O>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
@@ -28,7 +30,8 @@ where
     O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
-        n_neighbors,
+        t_0,
+        alpha,
         deviation,
     } = params;
 
@@ -36,11 +39,14 @@ where
         .do_(initialization::RandomSpread::new(1))
         .evaluate::<O>()
         .update_best_individual()
-        .do_(evaluation::BestIndividualUpdate::new())
-        .do_(ls::<P, O>(
+        .do_(sa::<P, O>(
             Parameters {
-                num_neighbors: n_neighbors,
-                neighbors: <mutation::NormalMutation>::new_dev(deviation),
+                t_0,
+                generation: <mutation::NormalMutation>::new_dev(deviation),
+                cooling_schedule: mapping::sa::GeometricCooling::<
+                    ValueOf<replacement::sa::Temperature>,
+                >::new(alpha)
+                .wrap_err("failed to construct geometric cooling component")?,
                 constraints: boundary::Saturation::new(),
             },
             condition,
@@ -48,24 +54,26 @@ where
         .build())
 }
 
-/// Parameters for [permutation_ls].
+/// Parameters for [permutation_sa].
 pub struct PermutationProblemParameters {
-    pub num_neighbors: u32,
+    pub t_0: f64,
+    pub alpha: f64,
     pub num_swap: u32,
 }
 
-/// An example single-objective Local Search operating on a permutation search space.
-/// Uses the [ls] component internally.
-pub fn permutation_ls<P, O>(
+/// An example single-objective Simulated Annealing operating on a permutation search space.
+/// Uses the [sa] component internally.
+pub fn permutation_sa<P, O>(
     params: PermutationProblemParameters,
-    termination: Box<dyn Condition<P>>,
+    condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + VectorProblem<Element = usize>,
     O: Evaluator<Problem = P>,
 {
     let PermutationProblemParameters {
-        num_neighbors,
+        t_0,
+        alpha,
         num_swap,
     } = params;
 
@@ -73,46 +81,53 @@ where
         .do_(initialization::RandomPermutation::new(1))
         .evaluate::<O>()
         .update_best_individual()
-        .do_(ls::<P, O>(
+        .do_(sa::<P, O>(
             Parameters {
-                num_neighbors,
-                neighbors: mutation::SwapMutation::new(num_swap)
-                    .wrap_err("failed to construct the swap mutation")?,
+                t_0,
+                generation: <mutation::SwapMutation>::new(num_swap)
+                    .wrap_err("failed to construct swap mutation")?,
+                cooling_schedule: mapping::sa::GeometricCooling::<
+                    ValueOf<replacement::sa::Temperature>,
+                >::new(alpha)
+                .wrap_err("failed to construct geometric cooling component")?,
                 constraints: misc::Noop::new(),
             },
-            termination,
+            condition,
         ))
         .build())
 }
 
 /// Basic building blocks of a Local Search.
 pub struct Parameters<P> {
-    pub num_neighbors: u32,
-    pub neighbors: Box<dyn Component<P>>,
+    pub t_0: f64,
+    pub generation: Box<dyn Component<P>>,
+    pub cooling_schedule: Box<dyn Component<P>>,
     pub constraints: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Local Search template.
-pub fn ls<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+/// A generic single-objective Simulated Annealing template.
+pub fn sa<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
     O: Evaluator<Problem = P>,
 {
     let Parameters {
-        num_neighbors: n_neighbors,
-        neighbors,
+        t_0,
+        generation,
+        cooling_schedule,
         constraints,
     } = params;
 
     Configuration::builder()
         .while_(condition, |builder| {
             builder
-                .do_(selection::CloneSingle::new(n_neighbors))
-                .do_(neighbors)
+                .do_(selection::All::new())
+                .do_(generation)
                 .do_(constraints)
                 .evaluate::<O>()
                 .update_best_individual()
-                .do_(replacement::MuPlusLambda::new(1))
+                .do_(cooling_schedule)
+                .do_(replacement::sa::ExponentialAnnealingAcceptance::new(t_0))
                 .do_(Logger::new())
         })
         .build_component()
