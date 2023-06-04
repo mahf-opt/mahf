@@ -1,6 +1,9 @@
+use color_eyre::Section;
+use std::any::type_name;
 use std::marker::PhantomData;
 
 use derivative::Derivative;
+use eyre::eyre;
 use serde::Serialize;
 
 use crate::{
@@ -36,7 +39,16 @@ where
         state.insert(common::Evaluations(0));
 
         if !state.has::<T>() {
-            state.insert(T::default());
+            state.insert(
+                T::try_default()
+                    .map_err(|_| eyre!("no default evaluator for this problem available"))
+                    .with_suggestion(|| {
+                        format!(
+                            "either implement TryDefault for {} or insert the evaluator manually into the state beforehand",
+                            type_name::<P>()
+                        )
+                    })?,
+            );
         }
         Ok(())
     }

@@ -66,7 +66,21 @@ pub trait ObjectiveFunction: Problem + Send {
     fn objective(solution: &Self::Encoding) -> Self::Objective;
 }
 
-pub trait Evaluate: Send + Default {
+pub trait TryDefault: Sized {
+    type Error;
+
+    fn try_default() -> Result<Self, Self::Error>;
+}
+
+impl<T: Default> TryDefault for T {
+    type Error = ();
+
+    fn try_default() -> Result<Self, Self::Error> {
+        Ok(T::default())
+    }
+}
+
+pub trait Evaluate: TryDefault + Send {
     type Problem: Problem;
 
     fn evaluate(
