@@ -10,12 +10,13 @@ use crate::state::CustomState;
 
 /// A random number generator.
 ///
-/// This can only be backed by seedable rngs to allow reconstruction.
+/// This can only be backed by seedable [`RngCore`]s to allow reconstruction.
 #[derive(Tid)]
 pub struct Random {
     config: RandomConfig,
     inner: Box<dyn RngCore + Send>,
 }
+
 impl CustomState<'_> for Random {}
 
 /// Describes a [Random] generator.
