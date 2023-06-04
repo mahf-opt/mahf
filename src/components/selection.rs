@@ -270,7 +270,7 @@ mod random_without_repetition {
     }
 }
 
-/// Deterministically selects individuals proporional to their fitness.
+/// Deterministically selects individuals proportional to their fitness.
 ///
 /// Originally proposed for, and use as selection in the Invasive Weed Optimization.
 ///

@@ -1,4 +1,4 @@
-use std::{any::TypeId, collections::BTreeMap};
+use std::{any::TypeId, collections::btree_map::BTreeMap};
 
 use better_any::TidExt;
 
