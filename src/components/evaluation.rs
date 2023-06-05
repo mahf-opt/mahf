@@ -1,7 +1,6 @@
-use color_eyre::Section;
-use std::any::type_name;
-use std::marker::PhantomData;
+use std::{any::type_name, marker::PhantomData};
 
+use color_eyre::Section;
 use derivative::Derivative;
 use eyre::eyre;
 use serde::Serialize;
