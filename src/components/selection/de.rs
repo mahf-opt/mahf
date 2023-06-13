@@ -8,10 +8,9 @@ use crate::{
         selection::{functional as f, selection, Selection},
         Component,
     },
-    individual::Individual,
     problems::SingleObjectiveProblem,
     state::random::Random,
-    Problem, State,
+    Individual, Problem, State,
 };
 
 /// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.

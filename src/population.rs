@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{individual::Individual, problems::SingleObjectiveProblem, Problem};
+use crate::{problems::SingleObjectiveProblem, Individual, Problem};
 
 pub trait AsSolutions<'a, P: Problem> {
     fn as_solutions(&'a self) -> Vec<&'a P::Encoding>;

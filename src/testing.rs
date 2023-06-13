@@ -4,11 +4,7 @@ use std::{any::type_name, marker::PhantomData};
 
 use float_eq::assert_float_eq;
 
-use crate::{
-    individual::Individual,
-    objective::{MultiObjective, Objective, SingleObjective},
-    Problem,
-};
+use crate::{Individual, MultiObjective, Objective, Problem, SingleObjective};
 
 pub struct TestProblem<O: Objective>(PhantomData<O>);
 

@@ -11,12 +11,10 @@ use derive_more::{Deref, DerefMut};
 
 use crate::{
     component::ExecResult,
-    individual::Individual,
     logging::log::Log,
-    objective::SingleObjective,
     problems::{MultiObjectiveProblem, SingleObjectiveProblem},
     state::{entry::Entry, error::StateResult, multi::MultiStateTuple, random::Random},
-    Problem,
+    Individual, Problem, SingleObjective,
 };
 
 pub mod common;

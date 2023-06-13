@@ -26,11 +26,17 @@ impl<P: Problem + ?Sized> Individual<P> {
     }
 
     /// Evaluates the `Individual` with some objective value.
-    pub fn evaluate_with<F>(&mut self, objective: F)
+    pub fn evaluate_with<F>(&mut self, objective_fn: F)
     where
         F: Fn(&P::Encoding) -> P::Objective,
     {
-        self.objective = Some(objective(&self.solution));
+        self.objective = Some(objective_fn(&self.solution));
+    }
+
+    pub fn set_objective(&mut self, objective: P::Objective) -> bool {
+        let evaluated = self.objective.is_some();
+        self.objective = Some(objective);
+        evaluated
     }
 
     /// Returns the individuals solution.

@@ -8,10 +8,9 @@ use crate::{
         replacement::{replacement, Replacement},
         Component,
     },
-    individual::Individual,
     problems::SingleObjectiveProblem,
     state::random::Random,
-    Problem, State,
+    Individual, Problem, State,
 };
 
 #[derive(Clone, Serialize, Deserialize)]

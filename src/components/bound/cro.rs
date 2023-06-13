@@ -6,8 +6,8 @@ use rand_distr::Distribution;
 use serde::Serialize;
 
 use crate::{
-    component::ExecResult, components::Component, individual::Individual, population::IntoSingle,
-    problems::SingleObjectiveProblem, state::StateReq, CustomState, Problem, State,
+    component::ExecResult, components::Component, population::IntoSingle,
+    problems::SingleObjectiveProblem, state::StateReq, CustomState, Individual, Problem, State,
 };
 
 #[derive(Clone)]

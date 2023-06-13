@@ -1,6 +1,6 @@
 use itertools::multizip;
 
-use crate::encoding::valid_permutation;
+use crate::problems::encoding::valid_permutation;
 
 pub fn multi_point_crossover<D>(parent1: &[D], parent2: &[D], indices: &[usize]) -> [Vec<D>; 2]
 where

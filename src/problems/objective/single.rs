@@ -3,7 +3,7 @@ use std::{cmp::Ordering, fmt::Debug};
 use derive_more::{Add, Mul, Neg, Sub};
 use serde::Serialize;
 
-use crate::objective::{IllegalObjective, Objective};
+use crate::problems::objective::{IllegalObjective, Objective};
 
 /// Represents a single real-valued objective.
 ///

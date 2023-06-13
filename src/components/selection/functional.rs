@@ -1,8 +1,6 @@
 use rand::distributions::{Distribution, WeightedError, WeightedIndex};
 
-use crate::{
-    individual::Individual, problems::SingleObjectiveProblem, state::random::Random, Problem,
-};
+use crate::{problems::SingleObjectiveProblem, state::random::Random, Individual, Problem};
 
 pub fn objective_bounds<P: SingleObjectiveProblem>(
     population: &[Individual<P>],

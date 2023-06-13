@@ -3,8 +3,8 @@ use derive_more::{Deref, DerefMut};
 use serde::Serialize;
 
 use crate::{
-    component::ExecResult, components::Component, objective::SingleObjective,
-    problems::SingleObjectiveProblem, CustomState, State,
+    component::ExecResult, components::Component, problems::SingleObjectiveProblem, CustomState,
+    SingleObjective, State,
 };
 
 #[derive(Clone, Default, Deref, DerefMut, Serialize, Tid)]

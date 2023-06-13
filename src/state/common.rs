@@ -5,9 +5,8 @@ use derive_more::{Deref, DerefMut};
 use serde::{Serialize, Serializer};
 
 use crate::{
-    individual::Individual,
     problems::{MultiObjectiveProblem, SingleObjectiveProblem},
-    CustomState, Problem,
+    CustomState, Individual, Problem,
 };
 
 /// The number of evaluations.

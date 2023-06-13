@@ -2,8 +2,8 @@ use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    component::ExecResult, components::Component, individual::Individual,
-    problems::SingleObjectiveProblem, state::StateReq, CustomState, State,
+    component::ExecResult, components::Component, problems::SingleObjectiveProblem,
+    state::StateReq, CustomState, Individual, State,
 };
 
 #[derive(Default, Tid)]

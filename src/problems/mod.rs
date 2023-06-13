@@ -4,12 +4,15 @@ use better_any::{Tid, TidAble};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use trait_set::trait_set;
 
-use crate::{
-    encoding::AnyEncoding,
-    individual::Individual,
-    objective::{MultiObjective, Objective, SingleObjective},
-    CustomState, State,
-};
+use crate::{CustomState, State};
+
+pub mod encoding;
+pub mod individual;
+pub mod objective;
+
+pub use encoding::AnyEncoding;
+pub use individual::Individual;
+pub use objective::{MultiObjective, Objective, SingleObjective};
 
 /// Metadata of an optimization problem.
 /// This trait is the base trait for all problems, and itself only defines
@@ -22,8 +25,7 @@ use crate::{
 /// A simple implementation of the one-dimensional real-valued sphere function `f(x) = x^2`:
 ///
 /// ```
-/// use mahf::objective::SingleObjective;
-/// use mahf::Problem;
+/// use mahf::{Problem, SingleObjective};
 ///
 /// pub struct Sphere1D;
 ///

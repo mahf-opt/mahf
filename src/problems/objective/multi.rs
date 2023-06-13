@@ -2,7 +2,7 @@ use std::{cmp::Ordering, fmt::Debug};
 
 use serde::Serialize;
 
-use crate::objective::{IllegalObjective, Objective};
+use crate::problems::objective::{IllegalObjective, Objective};
 
 /// Represents multiple real-valued objectives and can be used to
 /// represent an objective vector in multi-objective optimization.
@@ -50,7 +50,7 @@ impl PartialOrd for MultiObjective {
     /// Note that [Ordering::Less] means that `self` dominates `other`:
     /// ```
     /// use std::cmp::Ordering;
-    /// use mahf::objective::MultiObjective;
+    /// use mahf::MultiObjective;
     ///
     /// let a = MultiObjective::try_from(vec![0., 0.]).unwrap();
     /// let b = MultiObjective::try_from(vec![1., 1.]).unwrap();

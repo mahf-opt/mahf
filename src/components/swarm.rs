@@ -11,11 +11,10 @@ use crate::{
     component::{AnyComponent, ExecResult},
     components::Component,
     identifier::{Global, Identifier},
-    individual::Individual,
     population::{AsSolutions, AsSolutionsMut, BestIndividual},
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
     state::StateReq,
-    CustomState, Problem, State,
+    CustomState, Individual, Problem, State,
 };
 
 #[derive(Deref, DerefMut, Tid)]

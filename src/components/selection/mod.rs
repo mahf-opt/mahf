@@ -2,9 +2,8 @@ use eyre::WrapErr;
 
 use crate::{
     component::{AnyComponent, ExecResult},
-    individual::Individual,
     state::random::Random,
-    Problem, State,
+    Individual, Problem, State,
 };
 
 pub mod common;

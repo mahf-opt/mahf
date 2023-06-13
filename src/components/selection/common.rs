@@ -9,10 +9,9 @@ use crate::{
         selection::{functional as f, selection, Selection},
         Component,
     },
-    individual::Individual,
     problems::SingleObjectiveProblem,
     state::random::Random,
-    Problem, State,
+    Individual, Problem, State,
 };
 
 #[derive(Clone, Serialize, Deserialize)]

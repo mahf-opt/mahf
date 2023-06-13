@@ -7,10 +7,9 @@ use crate::{
         selection::{functional, selection, Selection},
         Component,
     },
-    individual::Individual,
     problems::SingleObjectiveProblem,
     state::random::Random,
-    State,
+    Individual, State,
 };
 
 #[derive(Clone, Serialize, Deserialize)]
