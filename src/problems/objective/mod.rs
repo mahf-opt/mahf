@@ -28,7 +28,21 @@ pub trait Objective: AnyObjective {}
 /// # Reasons
 ///
 /// - `NaN` is not comparable to other objective values, invalidating the required ordering.
-/// - `-Inf` would symbolize a infinitely good objective value (minimization), which is not sensible.
+/// - `-Inf` would symbolize a infinitely good objective value for minimization, which is not sensible to allow.
+///
+/// # Examples
+///
+/// Constructing objective values from invalid values fails:
+///
+/// ```
+/// use mahf::{MultiObjective, SingleObjective};
+///
+/// assert!(SingleObjective::try_from(f64::NAN).is_err());
+/// assert!(SingleObjective::try_from(f64::NEG_INFINITY).is_err());
+///
+/// assert!(MultiObjective::try_from(vec![f64::NAN, 0.0]).is_err());
+/// assert!(MultiObjective::try_from(vec![0.0, f64::NEG_INFINITY]).is_err());
+/// ```
 #[derive(Debug, Error)]
 pub enum IllegalObjective {
     #[error("NaN is not a valid objective value")]

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     component::ExecResult, components::bound::cro::ChemicalReaction, conditions::Condition,
-    population::IntoSingle, Problem, State,
+    population::IntoSingleRef, Problem, State,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -36,7 +36,7 @@ where
 
         let selected = populations
             .peek(0)
-            .into_single()
+            .into_single_ref()
             .wrap_err("expected a single individual")?;
         let population = populations.peek(1);
 

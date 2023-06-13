@@ -7,6 +7,7 @@ trait_set! {
     pub trait AnyEncoding = Clone + PartialEq + Send;
 }
 
+/// Validates whether the provided permutation is valid, i.e. if the elements are unique.
 pub fn valid_permutation<T>(iter: T) -> bool
 where
     T: IntoIterator,

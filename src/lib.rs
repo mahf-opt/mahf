@@ -13,7 +13,7 @@ pub mod prelude;
 pub mod problems;
 pub mod state;
 pub(crate) mod testing;
-pub(crate) mod utils;
+pub mod utils;
 
 pub use component::ExecResult;
 pub use components::Component;
@@ -22,7 +22,7 @@ pub use configuration::Configuration;
 pub use problems::{
     individual::Individual,
     objective::{MultiObjective, Objective, SingleObjective},
-    Problem,
+    MultiObjectiveProblem, Problem, SingleObjectiveProblem,
 };
 pub use state::{
     extract::{IdFn, ValueOf},

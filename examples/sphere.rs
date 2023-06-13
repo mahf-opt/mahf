@@ -65,7 +65,7 @@ fn main() -> ExecResult<()> {
     // Specify the problem: Sphere function with 10 dimensions.
     let problem = Sphere::new(30);
     // Specify the metaheuristic: Particle Swarm Optimization (pre-implemented in MAHF).
-    let config = pso::real_pso::<_, problems::Sequential<_>>(
+    let config = pso::real_pso::<_, problems::evaluate::Sequential<_>>(
         /*params: */
         pso::RealProblemParameters {
             num_particles: 120,
