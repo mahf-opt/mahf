@@ -1,3 +1,15 @@
+/// Allows enumeration for functions which normally don't support enumeration, e.g. [`Vec::retain`].
+///
+/// # Examples
+///
+/// ```
+/// use mahf::utils::with_index;
+///
+/// let mut v = vec![1, 2, 3, 4, 5];
+/// // Remove every second element.
+/// v.retain(with_index(|index, _value| index % 2 == 0));
+/// assert_eq!(v, vec![1, 3, 5]);
+/// ```
 pub fn with_index<T, F>(mut f: F) -> impl FnMut(&T) -> bool
 where
     F: FnMut(usize, &T) -> bool,
