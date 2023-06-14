@@ -3,7 +3,7 @@
 use crate::conditions::Condition;
 use crate::{
     framework::SingleObjective,
-    problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
+    problems::{KnownOptimumProblem, OptimumReachedProblem, Problem, SingleObjectiveProblem},
     state::{
         common::{Evaluations, Iterations, Progress},
         CustomState, State,
@@ -18,7 +18,7 @@ pub struct TargetHit;
 impl TargetHit {
     pub fn new<P>() -> Box<dyn Condition<P>>
     where
-        P: SingleObjectiveProblem + HasKnownTarget,
+        P: SingleObjectiveProblem + OptimumReachedProblem,
     {
         Box::new(Self)
     }
@@ -26,11 +26,11 @@ impl TargetHit {
 
 impl<P> Condition<P> for TargetHit
 where
-    P: SingleObjectiveProblem + HasKnownTarget,
+    P: SingleObjectiveProblem + OptimumReachedProblem,
 {
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
         if let Some(fitness) = state.best_objective_value() {
-            !problem.target_hit(*fitness)
+            !problem.optimum_reached(*fitness)
         } else {
             false
         }
@@ -193,7 +193,7 @@ pub struct DistanceToOpt {
 }
 
 impl DistanceToOpt {
-    pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
+    pub fn new<P: KnownOptimumProblem>(distance: f64) -> Box<dyn Condition<P>>
     where
         P: SingleObjectiveProblem,
     {
@@ -201,7 +201,7 @@ impl DistanceToOpt {
     }
 }
 
-impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
+impl<P: KnownOptimumProblem + SingleObjectiveProblem> Condition<P> for DistanceToOpt
 where
     P: Problem,
 {

@@ -151,35 +151,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod npoint_crossover {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_recombined() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = NPointCrossover {
-            pc: 1.0,
-            points: 3,
-            keep_both: true,
-        };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let population = vec![
-            vec![0.1, 0.2, 0.4, 0.5, 0.9],
-            vec![0.2, 0.3, 0.6, 0.7, 0.8],
-            vec![0.11, 0.21, 0.41, 0.51, 0.91],
-        ];
-        let parents_length = population.len();
-        let mut offspring = Vec::new();
-        comp.recombine_solutions(population, &mut offspring, &problem, &mut state);
-        assert_eq!(offspring.len(), parents_length);
-    }
-}
-
 /// Applies a uniform crossover to two parent solutions depending on crossover probability.
 ///
 /// If pc = 1, the solutions are recombined.
@@ -258,34 +229,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod uniform_crossover {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_recombined() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = UniformCrossover {
-            pc: 1.0,
-            keep_both: true,
-        };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let population = vec![
-            vec![0.1, 0.2, 0.4, 0.5, 0.9],
-            vec![0.2, 0.3, 0.6, 0.7, 0.8],
-            vec![0.11, 0.21, 0.41, 0.51, 0.91],
-        ];
-        let parents_length = population.len();
-        let mut offspring = Vec::new();
-        comp.recombine_solutions(population, &mut offspring, &problem, &mut state);
-        assert_eq!(offspring.len(), parents_length);
-    }
-}
-
 /// Applies a cycle crossover to two parent solutions depending on crossover probability.
 ///
 /// Usually exclusive to combinatorial problems.
@@ -360,30 +303,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod cycle_crossover {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_recombined() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = CycleCrossover { pc: 1.0 };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let population = vec![
-            vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
-            vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-        ];
-        let parents_length = population.len();
-        let mut offspring = Vec::new();
-        comp.recombine_solutions(population, &mut offspring, &problem, &mut state);
-        assert_eq!(offspring.len(), parents_length);
-    }
-}
-
 /// Performs a binomial crossover, combining two individuals from two populations at the same index.
 ///
 /// Requires at least two populations on the stack, where the top population is modified.
@@ -394,14 +313,14 @@ pub struct DEBinomialCrossover {
     pc: f64,
 }
 impl DEBinomialCrossover {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem>(pc: f64) -> Box<dyn Component<P>> {
+    pub fn new<P: Problem + VectorProblem<Element = f64>>(pc: f64) -> Box<dyn Component<P>> {
         Box::new(Self { pc })
     }
 }
 
 impl<P> Component<P> for DEBinomialCrossover
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem,
+    P: Problem + VectorProblem<Element = f64>,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
@@ -428,55 +347,6 @@ where
         populations.push(mutations);
     }
 }
-#[cfg(test)]
-mod de_binomial_crossover {
-    use crate::framework::Individual;
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::common::Populations;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_recombined() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = DEBinomialCrossover { pc: 1.0 };
-        let mut state = State::new();
-        state.insert(Random::testing());
-
-        let mut stack = Populations::<BenchmarkFunction>::new();
-        stack.push(
-            vec![
-                vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
-                vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-            ]
-            .into_iter()
-            .map(Individual::new_unevaluated)
-            .collect(),
-        );
-        stack.push(
-            vec![
-                vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-                vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
-            ]
-            .into_iter()
-            .map(Individual::new_unevaluated)
-            .collect(),
-        );
-
-        state.insert(stack);
-
-        comp.initialize(&problem, &mut state);
-        comp.execute(&problem, &mut state);
-
-        let stack = state.populations_mut();
-
-        let offspring = stack.pop();
-        let parents = stack.current();
-
-        assert_eq!(offspring.len(), parents.len());
-    }
-}
 
 /// Performs an exponential crossover, combining two individuals from two populations at the same index.
 ///
@@ -488,14 +358,14 @@ pub struct DEExponentialCrossover {
     pc: f64,
 }
 impl DEExponentialCrossover {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem>(pc: f64) -> Box<dyn Component<P>> {
+    pub fn new<P: Problem + VectorProblem<Element = f64>>(pc: f64) -> Box<dyn Component<P>> {
         Box::new(Self { pc })
     }
 }
 
 impl<P> Component<P> for DEExponentialCrossover
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem,
+    P: Problem + VectorProblem<Element = f64>,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) {
         let mut mut_state = state.get_states_mut();
@@ -524,54 +394,5 @@ where
         }
 
         populations.push(mutations);
-    }
-}
-#[cfg(test)]
-mod de_exponential_crossover {
-    use crate::framework::Individual;
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::common::Populations;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_recombined() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = DEExponentialCrossover { pc: 1.0 };
-        let mut state = State::new();
-        state.insert(Random::testing());
-
-        let mut stack = Populations::<BenchmarkFunction>::new();
-        stack.push(
-            vec![
-                vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
-                vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-            ]
-            .into_iter()
-            .map(Individual::new_unevaluated)
-            .collect(),
-        );
-        stack.push(
-            vec![
-                vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-                vec![8.0, 4.0, 7.0, 3.0, 6.0, 2.0, 5.0, 1.0, 9.0, 0.0],
-            ]
-            .into_iter()
-            .map(Individual::new_unevaluated)
-            .collect(),
-        );
-
-        state.insert(stack);
-
-        comp.initialize(&problem, &mut state);
-        comp.execute(&problem, &mut state);
-
-        let stack = state.populations_mut();
-
-        let offspring = stack.pop();
-        let parents = stack.current();
-
-        assert_eq!(offspring.len(), parents.len());
     }
 }

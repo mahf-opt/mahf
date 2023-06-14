@@ -5,10 +5,10 @@ use trait_set::trait_set;
 mod configuration;
 pub use configuration::{Configuration, ConfigurationBuilder};
 
-mod objective;
+pub use crate::problems::objective;
 pub use objective::{IllegalObjective, MultiObjective, Objective, SingleObjective};
 
-mod individual;
+pub use crate::problems::individual;
 pub use individual::Individual;
 
 trait_set! {

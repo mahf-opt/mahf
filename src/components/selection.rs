@@ -155,10 +155,7 @@ impl<P: Problem> Selection<P> for DuplicateSingle {
     ) -> Vec<&'p Individual<P>> {
         assert_eq!(population.len(), 1);
         let single_solution = population.first().unwrap();
-        (0..self.offspring)
-            .into_iter()
-            .map(|_| single_solution)
-            .collect()
+        (0..self.offspring).map(|_| single_solution).collect()
     }
 }
 

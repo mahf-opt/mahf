@@ -25,7 +25,9 @@ pub fn real_mu_plus_lambda<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>>
+        + VectorProblem<Element = f64>
+        + LimitedVectorProblem,
 {
     let RealProblemParameters {
         population_size,

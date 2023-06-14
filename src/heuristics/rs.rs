@@ -14,7 +14,9 @@ pub fn real_random_search<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>>
+        + VectorProblem<Element = f64>
+        + LimitedVectorProblem,
 {
     Configuration::builder()
         .do_(generation::RandomSpread::new_init(1))
@@ -37,7 +39,7 @@ pub fn permutation_random_search<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
 {
     Configuration::builder()
         .do_(generation::RandomPermutation::new_init(1))

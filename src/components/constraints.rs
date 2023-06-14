@@ -39,18 +39,18 @@ where
 pub struct Saturation;
 
 impl Saturation {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
-    ) -> Box<dyn Component<P>> {
+    pub fn new<
+        P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem,
+    >() -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
 
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Saturation
 {
     fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State<P>) {
-        for (d, x) in solution.iter_mut().enumerate() {
-            let range = problem.range(d);
+        for (x, range) in solution.iter_mut().zip(problem.domain()) {
             *x = x.clamp(range.start, range.end);
         }
     }
@@ -62,18 +62,18 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorPro
 pub struct Toroidal;
 
 impl Toroidal {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
-    ) -> Box<dyn Component<P>> {
+    pub fn new<
+        P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem,
+    >() -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
 
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Toroidal
 {
     fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State<P>) {
-        for (d, x) in solution.iter_mut().enumerate() {
-            let range = problem.range(d);
+        for (x, range) in solution.iter_mut().zip(problem.domain()) {
             let a = range.start;
             let b = range.end;
             let d = b - a;
@@ -93,18 +93,18 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorPro
 pub struct Mirror;
 
 impl Mirror {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
-    ) -> Box<dyn Component<P>> {
+    pub fn new<
+        P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem,
+    >() -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
 
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for Mirror
 {
     fn constrain(&self, solution: &mut Vec<f64>, problem: &P, _state: &mut State<P>) {
-        for (d, x) in solution.iter_mut().enumerate() {
-            let range = problem.range(d);
+        for (x, range) in solution.iter_mut().zip(problem.domain()) {
             let a = range.start;
             let b = range.end;
 
@@ -131,18 +131,18 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorPro
 pub struct CompleteOneTailedNormalCorrection;
 
 impl CompleteOneTailedNormalCorrection {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>(
-    ) -> Box<dyn Component<P>> {
+    pub fn new<
+        P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem,
+    >() -> Box<dyn Component<P>> {
         Box::new(BoundaryConstrainer(Self))
     }
 }
 
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64> + LimitedVectorProblem>
     BoundaryConstraint<P> for CompleteOneTailedNormalCorrection
 {
     fn constrain(&self, solution: &mut Vec<f64>, problem: &P, state: &mut State<P>) {
-        for (d, x) in solution.iter_mut().enumerate() {
-            let range = problem.range(d);
+        for (x, range) in solution.iter_mut().zip(problem.domain()) {
             let a = range.start;
             let b = range.end;
 

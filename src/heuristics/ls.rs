@@ -21,7 +21,9 @@ pub fn real_local_search<P>(
     termination: Box<dyn Condition<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>>
+        + VectorProblem<Element = f64>
+        + LimitedVectorProblem,
 {
     let RealProblemParameters {
         n_neighbors,
@@ -57,7 +59,7 @@ pub fn permutation_local_search<P>(
     termination: Box<dyn Condition<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
 {
     let PermutationProblemParameters {
         n_neighbors,

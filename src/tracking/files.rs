@@ -5,8 +5,8 @@ use std::{
     path::Path,
 };
 
-use anyhow::Context;
 use erased_serde::Serialize as DynSerialize;
+use eyre::WrapErr;
 use serde::Serialize;
 
 use crate::tracking::Log;
@@ -58,8 +58,8 @@ pub fn write_log(
 }
 
 /// Write the [Log] to a file.
-pub fn write_log_file(output: impl AsRef<Path>, log: &Log) -> anyhow::Result<()> {
-    let file = File::create(output.as_ref()).context("failed to create log file")?;
+pub fn write_log_file(output: impl AsRef<Path>, log: &Log) -> eyre::Result<()> {
+    let file = File::create(output.as_ref()).wrap_err("failed to create log file")?;
     let writer = &mut BufWriter::new(file);
     write_log(writer, log).context("failed to serialize log")
 }

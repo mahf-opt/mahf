@@ -25,7 +25,7 @@ pub fn real_pso<P>(
     termination: Box<dyn Condition<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64> + 'static,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64> + 'static,
 {
     let RealProblemParameters {
         num_particles,

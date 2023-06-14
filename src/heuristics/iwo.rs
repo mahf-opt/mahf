@@ -34,7 +34,9 @@ pub fn real_iwo<P>(
     termination: Box<dyn Condition<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + VectorProblem<T = f64> + LimitedVectorProblem,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>>
+        + VectorProblem<Element = f64>
+        + LimitedVectorProblem,
 {
     let RealProblemParameters {
         initial_population_size,

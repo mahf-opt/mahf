@@ -4,7 +4,7 @@ use crate::{
     components::*,
     conditions::Condition,
     framework::Configuration,
-    problems::{tsp, SingleObjectiveProblem},
+    problems::{SingleObjectiveProblem, TravellingSalespersonProblem},
 };
 
 /// Parameters for [ant_system].
@@ -22,11 +22,11 @@ pub struct ASParameters {
 ///
 /// # References
 /// [doi.org/10.1109/MCI.2006.329691](https://doi.org/10.1109/MCI.2006.329691)
-pub fn ant_system(
+pub fn ant_system<P: TravellingSalespersonProblem>(
     params: ASParameters,
-    termination: Box<dyn Condition<tsp::SymmetricTsp>>,
-    logger: Box<dyn Component<tsp::SymmetricTsp>>,
-) -> Configuration<tsp::SymmetricTsp> {
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Configuration<P> {
     let ASParameters {
         number_of_ants,
         alpha,
@@ -70,11 +70,11 @@ pub struct MMASParameters {
 ///
 /// # References
 /// [doi.org/10.1109/MCI.2006.329691](https://doi.org/10.1109/MCI.2006.329691)
-pub fn max_min_ant_system(
+pub fn max_min_ant_system<P: TravellingSalespersonProblem>(
     params: MMASParameters,
-    termination: Box<dyn Condition<tsp::SymmetricTsp>>,
-    logger: Box<dyn Component<tsp::SymmetricTsp>>,
-) -> Configuration<tsp::SymmetricTsp> {
+    termination: Box<dyn Condition<P>>,
+    logger: Box<dyn Component<P>>,
+) -> Configuration<P> {
     let MMASParameters {
         number_of_ants,
         alpha,
@@ -142,7 +142,7 @@ pub mod ant_ops {
     use crate::{
         components::*,
         framework::{Individual, SingleObjective},
-        problems::tsp::SymmetricTsp,
+        problems::TravellingSalespersonProblem,
         state::{PheromoneMatrix, Random, State},
     };
 
@@ -154,12 +154,12 @@ pub mod ant_ops {
         pub default_pheromones: f64,
     }
     impl AcoGeneration {
-        pub fn new(
+        pub fn new<P: TravellingSalespersonProblem>(
             number_of_ants: usize,
             alpha: f64,
             beta: f64,
             default_pheromones: f64,
-        ) -> Box<dyn Component<SymmetricTsp>> {
+        ) -> Box<dyn Component<P>> {
             Box::new(Self {
                 number_of_ants,
                 alpha,
@@ -168,22 +168,22 @@ pub mod ant_ops {
             })
         }
     }
-    impl Component<SymmetricTsp> for AcoGeneration {
-        fn initialize(&self, problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+    impl<P: TravellingSalespersonProblem> Component<P> for AcoGeneration {
+        fn initialize(&self, problem: &P, state: &mut State<P>) {
             state.insert(PheromoneMatrix::new(
-                problem.dimension,
+                problem.dimension(),
                 self.default_pheromones,
             ));
         }
 
-        fn execute(&self, problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+        fn execute(&self, problem: &P, state: &mut State<P>) {
             let (pm, rng) = state.get_multiple_mut::<(PheromoneMatrix, Random)>();
             let mut routes = Vec::new();
 
             // Greedy route
             {
-                let mut remaining = (1..problem.dimension).into_iter().collect::<Vec<usize>>();
-                let mut route = Vec::with_capacity(problem.dimension);
+                let mut remaining = (1..problem.dimension()).collect::<Vec<usize>>();
+                let mut route = Vec::with_capacity(problem.dimension());
                 route.push(0);
                 while !remaining.is_empty() {
                     let last = *route.last().unwrap();
@@ -201,8 +201,8 @@ pub mod ant_ops {
 
             // Probabilistic routes
             for _ in 0..self.number_of_ants {
-                let mut remaining = (1..problem.dimension).into_iter().collect::<Vec<usize>>();
-                let mut route = Vec::with_capacity(problem.dimension);
+                let mut remaining = (1..problem.dimension()).collect::<Vec<usize>>();
+                let mut route = Vec::with_capacity(problem.dimension());
                 route.push(0);
                 while !remaining.is_empty() {
                     let last = *route.last().unwrap();
@@ -222,7 +222,7 @@ pub mod ant_ops {
 
             let population = routes
                 .into_iter()
-                .map(Individual::<SymmetricTsp>::new_unevaluated)
+                .map(Individual::<P>::new_unevaluated)
                 .collect();
             *state.populations_mut().current_mut() = population;
         }
@@ -234,19 +234,22 @@ pub mod ant_ops {
         pub decay_coefficient: f64,
     }
     impl AsPheromoneUpdate {
-        pub fn new(evaporation: f64, decay_coefficient: f64) -> Box<dyn Component<SymmetricTsp>> {
+        pub fn new<P: TravellingSalespersonProblem>(
+            evaporation: f64,
+            decay_coefficient: f64,
+        ) -> Box<dyn Component<P>> {
             Box::new(Self {
                 evaporation,
                 decay_coefficient,
             })
         }
     }
-    impl Component<SymmetricTsp> for AsPheromoneUpdate {
-        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+    impl<P: TravellingSalespersonProblem> Component<P> for AsPheromoneUpdate {
+        fn initialize(&self, _problem: &P, state: &mut State<P>) {
             state.require::<Self, PheromoneMatrix>();
         }
 
-        fn execute(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+        fn execute(&self, _problem: &P, state: &mut State<P>) {
             let mut mut_state = state.get_states_mut();
             let pm = mut_state.get_mut::<PheromoneMatrix>();
             let population = mut_state.populations().current();
@@ -274,11 +277,11 @@ pub mod ant_ops {
         pub min_pheromones: f64,
     }
     impl MinMaxPheromoneUpdate {
-        pub fn new(
+        pub fn new<P: TravellingSalespersonProblem>(
             evaporation: f64,
             max_pheromones: f64,
             min_pheromones: f64,
-        ) -> Box<dyn Component<SymmetricTsp>> {
+        ) -> Box<dyn Component<P>> {
             assert!(
                 min_pheromones < max_pheromones,
                 "min_pheromones must be less than max_pheromones"
@@ -290,12 +293,12 @@ pub mod ant_ops {
             })
         }
     }
-    impl Component<SymmetricTsp> for MinMaxPheromoneUpdate {
-        fn initialize(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+    impl<P: TravellingSalespersonProblem> Component<P> for MinMaxPheromoneUpdate {
+        fn initialize(&self, _problem: &P, state: &mut State<P>) {
             state.require::<Self, PheromoneMatrix>();
         }
 
-        fn execute(&self, _problem: &SymmetricTsp, state: &mut State<SymmetricTsp>) {
+        fn execute(&self, _problem: &P, state: &mut State<P>) {
             let mut mut_state = state.get_states_mut();
             let pm = mut_state.get_mut::<PheromoneMatrix>();
             let population = mut_state.populations().current();
