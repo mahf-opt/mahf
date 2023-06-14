@@ -1,3 +1,49 @@
+//! Optimization problems.
+//!
+//! The `problems` module provides traits and structures for defining and working with
+//! optimization problems. An optimization problem involves finding the best solution
+//! from a set of possible solutions, where the quality of a solution is determined by
+//! an objective function.
+//!
+//! ## Minimization
+//!
+//! In MAHF, "optimizing" is currently equivalent to "minimizing", i.e. finding the solution
+//! that minimizes some objective function.
+//!
+//! # Key Concepts
+//!
+//! - `Problem`: The [`Problem`] trait (hierarchy) provides information about the problem
+//! to components. Traits built upon [`Problem`] (e.g. [`VectorProblem`]) allow making
+//! *any* information accessible to components, while being as generic as possible.
+//! - `Individual`: An [`Individual`] is an encoded solution to the problem along with an associated
+//! (optional) objective value, which qualifies how "good" of a solution it is to the problem.
+//! In single-objective optimization, this objective value is also referred to as "fitness".
+//! - `Evaluate`: The [`Evaluate`] trait allows evaluating [`Individual`]s according to some
+//! objective function.
+//!
+//! # Usage
+//!
+//! ## Pre-implemented problems
+//! There exist several pre-implemented problems in the MAHF ecosystem, which provide a good
+//! starting point.
+//!
+//! TODO: Reference mahf-problems repo(s) here.
+//!
+//! ## Implement custom problems
+//!
+//! To define your own optimization problem, the minimum requirement is to implement
+//! [`Problem`] and some sort of [`Evaluator`] for it, i.e. implement [`Evaluate`] for
+//! some struct.
+//!
+//! Note that for most problems with a *static* objective function,
+//! the [`ObjectiveFunction`] trait should be preferred over [`Evaluate`].
+//! See [`ObjectiveFunction`] for more information.
+//!
+//! Then implement the traits built on top of [`Problem`] found in this module where sensible,
+//! e.g. [`VectorProblem`] for an optimization problem with a vector-based solution encoding.
+//! You can similarly define own traits based on [`Problem`] to allow your custom components
+//! to access any problem-specific information.
+
 use std::ops::Range;
 
 use trait_set::trait_set;
@@ -18,6 +64,14 @@ pub use objective::{MultiObjective, Objective, SingleObjective};
 /// - a encoding to solutions to the problem ([`Problem::Encoding`]),
 /// - the type of objective to minimize ([`Problem::Objective`]), and
 /// - the name of the problem ([`Problem::name`]).
+///
+/// # Problem-specific information
+///
+/// `Problem` (along with traits that build upon it, e.g. [`VectorProblem`]) make problem-specific
+/// information accessible to components, and should only provide exactly as much information
+/// as the components need to function.
+///
+/// TODO: Reference component (module) documentation here.
 ///
 /// # Examples
 ///

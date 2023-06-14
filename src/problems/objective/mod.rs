@@ -1,3 +1,5 @@
+//! Objective types.
+
 use std::fmt::Debug;
 
 use thiserror::Error;

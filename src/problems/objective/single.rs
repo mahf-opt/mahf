@@ -1,3 +1,5 @@
+//! Objective value for a single objective (also called fitness).
+
 use std::{cmp::Ordering, fmt::Debug};
 
 use derive_more::{Add, Mul, Neg, Sub};
@@ -5,7 +7,7 @@ use serde::Serialize;
 
 use crate::problems::objective::{IllegalObjective, Objective};
 
-/// Represents a single real-valued objective.
+/// Represents a single real-valued objective (fitness).
 ///
 /// Can be used to represent a single objective in single-objective optimization
 /// or a combined objective in multi-objective optimization.

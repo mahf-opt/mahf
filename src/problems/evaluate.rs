@@ -1,3 +1,5 @@
+//! Evaluate [`Individual`]s according to some objective function.
+
 use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};
@@ -6,7 +8,7 @@ use trait_set::trait_set;
 
 use crate::{utils::TryDefault, CustomState, Individual, Problem, State};
 
-/// Trait for evaluating individuals, i.e. their solutions to an optimization problem.
+/// Trait for evaluating individuals, i.e. evaluate their solutions to an optimization problem.
 ///
 /// Implement [`ObjectiveFunction`] instead if the objective function is static,
 /// i.e. does not depend on `&self` or `&mut self` to automatically implement this trait
@@ -78,7 +80,8 @@ pub trait Evaluate: TryDefault + Send {
 }
 
 trait_set! {
-    /// Collection of traits to allow storing an evaluator in the [`State`].
+    /// Collection of traits to allow storing an evaluator, i.e.
+    /// a struct implementing [`Evaluate`], in the [`State`].
     pub trait Evaluator = Evaluate + for<'a> CustomState<'a> + for<'a> TidAble<'a>;
 }
 

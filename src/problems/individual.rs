@@ -1,3 +1,6 @@
+//! Encoded solution to an optimization problem with an associated
+//! (optional) objective value.
+
 use std::fmt::{Debug, Formatter};
 
 use crate::problems::Problem;

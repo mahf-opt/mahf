@@ -1,3 +1,5 @@
+//! A collection of utilities.
+
 /// Allows enumeration for functions which normally don't support enumeration, e.g. [`Vec::retain`].
 ///
 /// # Examples
@@ -24,8 +26,13 @@ where
 /// This is useful for handling types with a default implementation the same way like types that don't.
 ///
 /// This trait is automatically implemented for types that implement [Default].
+/// A failing implementation can be generated using the [`impl_try_default_err!()`] macro.
+///
+/// [`impl_try_default_err!()`]: impl_try_default_err
 ///
 /// # Examples
+///
+/// Manual implementation:
 ///
 /// ```
 /// use mahf::utils::TryDefault;
@@ -39,6 +46,17 @@ where
 ///         Err(())
 ///     }
 /// }
+///
+/// ```
+///
+/// Using the [`impl_try_default_err!()`] macro generates the same code:
+///
+/// ```
+/// use mahf::utils::{TryDefault, impl_try_default_err};
+///
+/// pub struct TypeThatNeedsManualInitialization;
+///
+/// impl_try_default_err!(TypeThatNeedsManualInitialization);
 ///
 /// ```
 pub trait TryDefault: Sized {
@@ -64,3 +82,23 @@ impl<T: Default> TryDefault for T {
         Ok(T::default())
     }
 }
+
+mod macros {
+    /// Default implementation for returning `Err` for [`TryDefault`].
+    #[macro_export]
+    macro_rules! impl_try_default_err {
+        ($ty:ty) => {
+            impl TryDefault for $ty {
+                type Error = ();
+
+                fn try_default() -> Result<Self, Self::Error> {
+                    Err(())
+                }
+            }
+        };
+    }
+
+    pub use impl_try_default_err;
+}
+
+pub use macros::impl_try_default_err;

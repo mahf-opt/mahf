@@ -1,3 +1,5 @@
+//! Objective vector with multiple objectives.
+
 use std::{cmp::Ordering, fmt::Debug};
 
 use serde::Serialize;

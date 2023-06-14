@@ -1,3 +1,5 @@
+//! Solution encodings.
+
 use std::collections::btree_set::BTreeSet;
 
 use trait_set::trait_set;
