@@ -15,16 +15,23 @@ pub mod state;
 pub(crate) mod testing;
 pub mod utils;
 
+// Re-exports from modules
 pub use component::ExecResult;
 pub use components::Component;
 pub use conditions::Condition;
 pub use configuration::Configuration;
+// Crate re-exports
+pub use derive_more;
+pub use float_eq;
 pub use problems::{
     individual::Individual,
     objective::{MultiObjective, Objective, SingleObjective},
     MultiObjectiveProblem, Problem, SingleObjectiveProblem,
 };
+pub use rand;
+pub use rand_distr;
+pub use serde;
 pub use state::{
     extract::{IdFn, ValueOf},
-    CustomState, State, StateError,
+    CustomState, Random, State, StateError,
 };

@@ -13,7 +13,7 @@ use crate::{
     component::ExecResult,
     logging::log::Log,
     problems::{MultiObjectiveProblem, SingleObjectiveProblem},
-    state::{entry::Entry, error::StateResult, multi::MultiStateTuple, random::Random},
+    state::{entry::Entry, error::StateResult, multi::MultiStateTuple},
     Individual, Problem, SingleObjective,
 };
 
@@ -28,6 +28,7 @@ mod require;
 
 pub use custom::CustomState;
 pub use error::StateError;
+pub use random::Random;
 pub use require::StateReq;
 
 pub type StateMap<'a> = HashMap<TypeId, RefCell<Box<dyn CustomState<'a>>>>;

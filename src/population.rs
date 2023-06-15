@@ -200,7 +200,7 @@ where
 /// For unwrapping a collection of [`Individual`]s into its single [`Individual`], see [`IntoSingle`].
 ///
 /// Note that this functionality cannot be merged with [`IntoSingle`], as the trait bounds necessary
-/// for two blanket implementation for `Individual` and `&'a Individual` are not expressible yet.
+/// for two blanket implementation for `Individual` and `&Individual` are not expressible yet.
 ///
 /// # Examples
 ///
