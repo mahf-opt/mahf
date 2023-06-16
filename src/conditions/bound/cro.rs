@@ -1,4 +1,4 @@
-use eyre::{eyre, ContextCompat};
+use eyre::{eyre, WrapErr};
 use serde::{Deserialize, Serialize};
 
 use crate::{

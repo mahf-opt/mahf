@@ -46,7 +46,7 @@ where
         .map(|run| {
             for problem in problems {
                 let state = config.optimize_with(problem, |state| {
-                    state.insert(Random::seeded(run));
+                    state.insert(Random::new(run));
                     setup(state)
                 })?;
                 if log {

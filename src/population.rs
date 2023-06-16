@@ -6,6 +6,8 @@
 
 use std::ops::{Deref, DerefMut};
 
+use thiserror::Error;
+
 use crate::{problems::SingleObjectiveProblem, Individual, Problem};
 
 /// Trait for obtaining solution references from a collection of [`Individual`]s.
@@ -163,67 +165,126 @@ where
     }
 }
 
+/// An error returned by [`IntoSingle::into_single`] and [`IntoSingleRef::into_single_ref`].
+#[derive(Debug, PartialEq, Error)]
+pub enum SingleIndividualError {
+    #[error("expected a single individual, but found none")]
+    EmptyPopulation,
+    #[error("`expected a single individual, but found {0}")]
+    TooManyIndividuals(usize),
+}
+
 /// Trait for converting a collection of [`Individual`]s into its single [`Individual`].
 ///
-/// For unwrapping a collection of `&`[`Individual`]s into its single `&`[`Individual`], see [`IntoSingleRef`].
-///
-/// Note that this functionality cannot be merged with [`IntoSingleRef`], as the trait bounds necessary
-/// for two blanket implementation for `Individual` and `&Individual` are not expressible yet.
+/// For converting a collection of `&`[`Individual`]s into its single `&`[`Individual`], see [`IntoSingleRef`].
 ///
 /// # Examples
 ///
-/// ```
-/// use mahf::{Individual, Problem};
-/// use mahf::population::IntoSingle;
+/// `Ok` is only returned for collections with exactly **one** individual:
 ///
-/// pub fn example<P: Problem>(population: Vec<Individual<P>>) {
-///     let single: Option<Individual<P>> = population.into_single();
-/// }
 /// ```
+/// # use mahf::problems::VectorProblem;
+/// use mahf::Individual;
+/// use mahf::population::{IntoSingle, SingleIndividualError};
+///
+/// # pub fn make_individual<P: VectorProblem<Element = usize>>() -> Individual<P> {
+/// #     Individual::new_unevaluated(vec![1, 2, 3])
+/// # }
+/// # pub fn example<P: VectorProblem<Element = usize>>() {
+/// let population: Vec<Individual<P>> = vec![];
+/// // `into_single` returns `Err` for empty populations.
+/// assert_eq!(population.into_single(), Err(SingleIndividualError::EmptyPopulation));
+///
+/// let population: Vec<Individual<P>> = vec![make_individual()];
+/// // `into_single` returns `Ok` for populations with exactly a single individual.
+/// assert_eq!(population.into_single(), Ok(make_individual()));
+///
+/// let population: Vec<Individual<P>> = vec![make_individual(), make_individual()];
+/// // `into_single` returns `Err` for populations with more than one individual.
+/// assert_eq!(population.into_single(), Err(SingleIndividualError::TooManyIndividuals(2)));
+/// # }
+/// ```
+///
+/// # Difference to [`IntoSingleRef`]
+///
+/// Note that this functionality cannot be merged with [`IntoSingleRef`], as the trait bounds necessary
+/// for two blanket implementation for `Individual` and `&Individual` are not expressible yet.
 pub trait IntoSingle<P: Problem> {
-    /// Converts a collection of [`Individual`]s into its single [`Individual`].
-    fn into_single(self) -> Option<Individual<P>>;
+    /// Tries to convert a collection of [`Individual`]s into its single [`Individual`].
+    fn into_single(self) -> Result<Individual<P>, SingleIndividualError>;
 }
 
 impl<P, T> IntoSingle<P> for T
 where
     P: Problem,
     T: IntoIterator<Item = Individual<P>>,
+    T::IntoIter: ExactSizeIterator,
 {
-    fn into_single(self) -> Option<Individual<P>> {
-        self.into_iter().next()
+    fn into_single(self) -> Result<Individual<P>, SingleIndividualError> {
+        let mut iter = self.into_iter();
+        let n = iter.len();
+        match n {
+            0 => Err(SingleIndividualError::EmptyPopulation),
+            1 => iter.next().ok_or_else(|| unreachable!()),
+            _ => Err(SingleIndividualError::TooManyIndividuals(n)),
+        }
     }
 }
 
 /// Trait for converting a collection of `&`[`Individual`]s into its single `&`[`Individual`].
 ///
-/// For unwrapping a collection of [`Individual`]s into its single [`Individual`], see [`IntoSingle`].
-///
-/// Note that this functionality cannot be merged with [`IntoSingle`], as the trait bounds necessary
-/// for two blanket implementation for `Individual` and `&Individual` are not expressible yet.
+/// For converting a collection of [`Individual`]s into its single [`Individual`], see [`IntoSingle`].
 ///
 /// # Examples
 ///
-/// ```
-/// use mahf::{Individual, Problem};
-/// use mahf::population::IntoSingleRef;
+/// `Ok` is only returned for collections with exactly **one** individual:
 ///
-/// pub fn example<P: Problem>(population: &[Individual<P>]) {
-///     let single: Option<&Individual<P>> = population.into_single_ref();
-/// }
 /// ```
+/// # use mahf::problems::VectorProblem;
+/// use mahf::Individual;
+/// use mahf::population::{IntoSingleRef, SingleIndividualError};
+///
+/// # pub fn make_individual<P: VectorProblem<Element = usize>>() -> Individual<P> {
+/// #     Individual::new_unevaluated(vec![1, 2, 3])
+/// # }
+/// # pub fn example<P: VectorProblem<Element = usize>>() {
+/// let population: Vec<Individual<P>> = vec![];
+/// // `into_single_ref` returns `Err` for empty populations.
+/// assert_eq!(population.into_single_ref(), Err(SingleIndividualError::EmptyPopulation));
+///
+/// let population: Vec<Individual<P>> = vec![make_individual()];
+/// // `into_single_ref` returns `Ok` for populations with exactly a single individual.
+/// assert_eq!(population.into_single_ref(), Ok(&make_individual()));
+///
+/// let population: Vec<Individual<P>> = vec![make_individual(), make_individual()];
+/// // `into_single_ref` returns `Err` for populations with more than one individual.
+/// assert_eq!(population.into_single_ref(), Err(SingleIndividualError::TooManyIndividuals(2)));
+/// # }
+/// ```
+///
+/// # Difference to [`IntoSingle`]
+///
+/// Note that this functionality cannot be merged with [`IntoSingle`], as the trait bounds necessary
+/// for two blanket implementation for `Individual` and `&Individual` are not expressible yet.
 pub trait IntoSingleRef<'a, P: Problem> {
-    /// Converts a collection of `&`[`Individual`]s into its single `&`[`Individual`].
-    fn into_single_ref(self) -> Option<&'a Individual<P>>;
+    /// Tries to convert a collection of `&`[`Individual`]s into its single `&`[`Individual`].
+    fn into_single_ref(self) -> Result<&'a Individual<P>, SingleIndividualError>;
 }
 
 impl<'a, P, T> IntoSingleRef<'a, P> for T
 where
     P: Problem,
     T: IntoIterator<Item = &'a Individual<P>> + 'a,
+    T::IntoIter: ExactSizeIterator,
 {
-    fn into_single_ref(self) -> Option<&'a Individual<P>> {
-        self.into_iter().next()
+    fn into_single_ref(self) -> Result<&'a Individual<P>, SingleIndividualError> {
+        let mut iter = self.into_iter();
+        let n = iter.len();
+        match n {
+            0 => Err(SingleIndividualError::EmptyPopulation),
+            1 => iter.next().ok_or_else(|| unreachable!()),
+            _ => Err(SingleIndividualError::TooManyIndividuals(n)),
+        }
     }
 }
 

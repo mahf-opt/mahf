@@ -1,6 +1,6 @@
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
-use eyre::{ensure, eyre, ContextCompat};
+use eyre::{ensure, eyre, ContextCompat, WrapErr};
 use rand::{distributions::Uniform, Rng};
 use rand_distr::Distribution;
 use serde::Serialize;

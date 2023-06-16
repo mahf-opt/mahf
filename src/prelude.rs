@@ -5,7 +5,10 @@ pub use crate::{
     conditions,
     heuristics::*,
     logging,
-    population::*,
+    population::{
+        AsSolutions, AsSolutionsMut, BestIndividual, IntoIndividuals, IntoSingle, IntoSingleRef,
+        IntoSolutions,
+    },
     problems,
     state::{self, common},
     ExecResult, MultiObjective, SingleObjective, ValueOf,

@@ -1,5 +1,7 @@
 //! A framework for the modular construction and evaluation of metaheuristics.
 
+// TODO: #![deny(missing_docs)]
+
 pub mod component;
 pub mod components;
 pub mod conditions;

@@ -13,7 +13,7 @@ use trait_set::trait_set;
 use crate::{
     component::ExecResult,
     conditions::Condition,
-    problems::{KnownOptimumProblem, OptimumReachedProblem},
+    problems::KnownOptimumProblem,
     state::{
         common::Progress,
         extract::{Extract, ExtractRef},
@@ -260,28 +260,38 @@ where
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct OptimumReached;
+pub struct OptimumReached {
+    delta: f64,
+}
 
 impl OptimumReached {
-    pub fn from_params() -> Self {
-        Self
+    pub fn from_params(delta: f64) -> Self {
+        Self { delta }
     }
 
-    pub fn new<P>() -> Box<dyn Condition<P>>
+    pub fn new<P>(delta: f64) -> Box<dyn Condition<P>>
     where
-        P: OptimumReachedProblem,
+        P: KnownOptimumProblem,
     {
-        Box::new(Self::from_params())
+        Box::new(Self::from_params(delta))
     }
 }
 
 impl<P> Condition<P> for OptimumReached
 where
-    P: OptimumReachedProblem,
+    P: KnownOptimumProblem,
 {
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
         let value = if let Some(objective) = state.best_objective_value() {
-            !problem.optimum_reached(objective)
+            let provided = objective.value();
+            let known = problem.known_optimum().value();
+            debug_assert!(
+                provided >= known,
+                "the provided objective value is smaller than the known optimum: {} vs. {}",
+                provided,
+                known
+            );
+            (provided - known).abs() <= self.delta
         } else {
             false
         };

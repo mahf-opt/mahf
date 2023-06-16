@@ -1,3 +1,7 @@
+//! Error type for [`StateRegistry`] errors.
+//!
+//! [`StateRegistry`]: crate::state::StateRegistry
+
 use std::{
     any::type_name,
     cell::{BorrowError, BorrowMutError},
@@ -5,6 +9,10 @@ use std::{
 
 use thiserror::Error;
 
+/// An error returned by fallible [`StateRegistry`] methods like [`StateRegistry::try_borrow`].
+///
+/// [`StateRegistry`]: crate::state::StateRegistry
+/// [`StateRegistry::try_borrow`]: crate::state::StateRegistry::try_borrow
 #[derive(Debug, Error)]
 pub enum StateError {
     #[error("`{0}` does not exist in the state")]
@@ -47,4 +55,7 @@ impl StateError {
     }
 }
 
+/// A specialized result type for [`StateRegistry`] operations.
+///
+/// [`StateRegistry`]: crate::state::StateRegistry
 pub type StateResult<T> = Result<T, StateError>;
