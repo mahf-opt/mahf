@@ -226,52 +226,6 @@ pub trait LimitedVectorProblem: VectorProblem {
     fn domain(&self) -> Vec<Range<Self::Element>>;
 }
 
-/// A single-objective optimization problem with an indicator for reaching the optimum.
-///
-/// If the objective value of the optimum is known directly, implement [`KnownOptimumProblem`]
-/// instead, which provides a blanket implementation for this trait.
-///
-/// # Examples
-///
-/// A simple implementation of the real-valued sphere function `f(x) = x^2`, where
-/// the optimum is known to be 0.
-///
-/// Note that a implementation of [`KnownOptimumProblem`] is more sensible in this case because
-/// the value is known directly.
-///
-/// ```
-/// use std::ops::Range;
-/// use mahf::{Problem, SingleObjective, problems::OptimumReachedProblem};
-///
-/// pub struct Sphere {
-///     pub dim: usize,
-/// }
-///
-/// impl Problem for Sphere {
-///     type Encoding = Vec<f64>;
-///     type Objective = SingleObjective;
-///
-///     fn name(&self) -> &str {
-///         "Sphere"
-///     }
-/// }
-///
-/// impl OptimumReachedProblem for Sphere {
-///     fn optimum_reached(&self, objective: SingleObjective) -> bool {
-///         // Approximately 0 is accepted as optimum.
-///         objective.value() < 1e-8
-///     }
-/// }
-///
-/// // A value smaller as 1e-8 counts as optimum.
-/// let sphere = Sphere { dim: 1 };
-/// assert!(sphere.optimum_reached(1e-9.try_into().unwrap()));
-/// ```
-pub trait OptimumReachedProblem: SingleObjectiveProblem {
-    /// Checks whether the objective value has reached the optimum.
-    fn optimum_reached(&self, objective: SingleObjective) -> bool;
-}
-
 /// A single-objective optimization problem with a known optimum value.
 ///
 /// # Examples
@@ -281,7 +235,7 @@ pub trait OptimumReachedProblem: SingleObjectiveProblem {
 ///
 /// ```
 /// use std::ops::Range;
-/// use mahf::{Problem, SingleObjective, problems::{KnownOptimumProblem, OptimumReachedProblem}};
+/// use mahf::{Problem, SingleObjective, problems::KnownOptimumProblem};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -297,38 +251,14 @@ pub trait OptimumReachedProblem: SingleObjectiveProblem {
 /// }
 ///
 /// impl KnownOptimumProblem for Sphere {
-///     const DELTA: f64 = 1e-10;
-///
 ///     fn known_optimum(&self) -> SingleObjective {
 ///         0.0.try_into().unwrap()
 ///     }
 /// }
-///
-/// // A value greater than 1e-10 does not counts as optimum.
-/// let sphere = Sphere { dim: 1 };
-/// assert!(!sphere.optimum_reached(1e-9.try_into().unwrap()));
 /// ```
 pub trait KnownOptimumProblem: SingleObjectiveProblem {
-    /// A constant representing the tolerance level for comparing objective values.
-    ///
-    /// This value is used as tolerance to automatically implement [`OptimumReachedProblem`].
-    const DELTA: f64 = 1e-8;
-
     /// Retrieves the known optimum objective value for the optimization problem.
     fn known_optimum(&self) -> SingleObjective;
-}
-
-impl<P: KnownOptimumProblem> OptimumReachedProblem for P {
-    fn optimum_reached(&self, objective: SingleObjective) -> bool {
-        let provided = objective.value();
-        let known = self.known_optimum().value();
-        debug_assert!(
-            provided >= known,
-            "the provided objective value is smaller than the known optimum"
-        );
-
-        (provided - known).abs() <= P::DELTA
-    }
 }
 
 /// The Travelling Salesperson Problem (TSP) optimization problem.
