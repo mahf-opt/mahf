@@ -9,7 +9,7 @@ use crate::{
     configuration::Configuration,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
-    state::{common, extract::ValueOf},
+    state::{common, lens::ValueOf},
 };
 
 /// Parameters for [real_pso].
@@ -61,10 +61,12 @@ where
                 )
                 .wrap_err("failed to construct particle velocities update")?,
                 constraints: boundary::Saturation::new(),
-                inertia_weight_update: Some(mapping::Linear::<
-                    ValueOf<common::Progress<ValueOf<common::Iterations>>>,
-                    ValueOf<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>,
-                >::new(start_weight, end_weight)),
+                inertia_weight_update: Some(mapping::Linear::new(
+                    start_weight,
+                    end_weight,
+                    ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
+                    ValueOf::<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>::new(),
+                )),
                 state_update: Block::new([
                     <swarm::PersonalBestParticlesUpdate>::new(),
                     <swarm::GlobalBestParticleUpdate>::new(),

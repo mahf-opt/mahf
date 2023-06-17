@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use derivative::Derivative;
 use eyre::ensure;
 use serde::Serialize;
@@ -10,56 +8,55 @@ use crate::{
         mapping::{mapping, Mapping},
         Component,
     },
-    state::{extract::ExtractAssign, random::Random},
+    state::{
+        lens::{AnyLens, ValueLens},
+        random::Random,
+    },
     Problem, State,
 };
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct GeometricCooling<T> {
+pub struct GeometricCooling<L: AnyLens> {
     pub alpha: f64,
-    marker: PhantomData<fn() -> T>,
+    pub lens: L,
 }
 
-impl<T> GeometricCooling<T>
-where
-    T: ExtractAssign<f64>,
-{
-    pub fn from_params(alpha: f64) -> ExecResult<Self> {
+impl<L: AnyLens> GeometricCooling<L> {
+    pub fn from_params(alpha: f64, lens: L) -> ExecResult<Self> {
         ensure!((0.0..1.0).contains(&alpha), "`alpha` must be in [0, 1)");
-        Ok(Self {
-            alpha,
-            marker: PhantomData,
-        })
+        Ok(Self { alpha, lens })
     }
 
-    pub fn new<P>(alpha: f64) -> ExecResult<Box<dyn Component<P>>>
+    pub fn new<P>(alpha: f64, lens: L) -> ExecResult<Box<dyn Component<P>>>
     where
         P: Problem,
+        L: ValueLens<P, f64>,
     {
-        Ok(Box::new(Self::from_params(alpha)?))
+        Ok(Box::new(Self::from_params(alpha, lens)?))
     }
 }
 
-impl<P, T> Mapping<P> for GeometricCooling<T>
+impl<P, L> Mapping<P> for GeometricCooling<L>
 where
     P: Problem,
-    T: ExtractAssign<f64>,
+    L: ValueLens<P, f64>,
 {
     type Input = f64;
     type Output = f64;
 
-    fn map(&self, value: &Self::Input, _rng: &mut Random) -> ExecResult<Self::Output> {
+    fn map(&self, value: Self::Input, _rng: &mut Random) -> ExecResult<Self::Output> {
         Ok(value * self.alpha)
     }
 }
 
-impl<P, T> Component<P> for GeometricCooling<T>
+impl<P, L> Component<P> for GeometricCooling<L>
 where
     P: Problem,
-    T: ExtractAssign<f64>,
+    L: ValueLens<P, f64>,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        mapping::<_, _, T, T>(self, problem, state)
+        mapping(self, &self.lens, &self.lens, problem, state)
     }
 }

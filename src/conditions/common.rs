@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Sub};
+use std::ops::Sub;
 
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
@@ -16,7 +16,7 @@ use crate::{
     problems::KnownOptimumProblem,
     state::{
         common::Progress,
-        extract::{Extract, ExtractRef},
+        lens::{AnyLens, Lens, LensRef},
     },
     CustomState, Problem, State,
 };
@@ -54,86 +54,84 @@ trait_set! {
 }
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct LessThan<T>
+pub struct LessThan<L>
 where
-    T: Extract,
-    T::Target: AnyFloatLike,
+    L: AnyLens,
+    L::Target: AnyFloatLike,
 {
-    pub n: T::Target,
-    marker: PhantomData<fn() -> T>,
+    pub n: L::Target,
+    pub lens: L,
 }
 
-impl<T> LessThan<T>
+impl<L> LessThan<L>
 where
-    T: Extract,
-    T::Target: AnyFloatLike,
+    L: AnyLens,
+    L::Target: AnyFloatLike,
 {
-    pub fn from_params(n: T::Target) -> Self
-where {
-        Self {
-            n,
-            marker: PhantomData,
-        }
+    pub fn from_params(n: L::Target, lens: L) -> Self {
+        Self { n, lens }
     }
 
-    pub fn new<P: Problem>(n: T::Target) -> Box<dyn Condition<P>>
-where {
-        Box::new(Self::from_params(n))
+    pub fn new<P>(n: L::Target, lens: L) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+        L: Lens<P>,
+    {
+        Box::new(Self::from_params(n, lens))
     }
 }
 
-impl<P, T> Condition<P> for LessThan<T>
+impl<P, L> Condition<P> for LessThan<L>
 where
     P: Problem,
-    T: Extract,
-    T::Target: AnyFloatLike,
+    L: Lens<P>,
+    L::Target: AnyFloatLike,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        state.insert(Progress::<T>::default());
+        state.insert(Progress::<L>::default());
         Ok(())
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State<P>) -> ExecResult<bool> {
-        let value = T::extract(state)?;
-        state.set_value::<Progress<T>>(value.into() / self.n.into());
+        let value = self.lens.get(state)?;
+        state.set_value::<Progress<L>>(value.into() / self.n.into());
 
         Ok(value < self.n)
     }
 }
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct EveryN<T: Extract<Target = u32>> {
+pub struct EveryN<L: AnyLens> {
     pub n: u32,
-    marker: PhantomData<fn() -> T>,
+    lens: L,
 }
 
-impl<T> EveryN<T>
-where
-    T: Extract<Target = u32>,
-{
-    pub fn from_params(n: u32) -> Self
+impl<L: AnyLens> EveryN<L> {
+    pub fn from_params(n: u32, lens: L) -> Self
 where {
-        Self {
-            n,
-            marker: PhantomData,
-        }
+        Self { n, lens }
     }
 
-    pub fn new<P: Problem>(n: u32) -> Box<dyn Condition<P>>
-where {
-        Box::new(Self::from_params(n))
+    pub fn new<P>(n: u32, lens: L) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+        L: Lens<P, Target = u32>,
+    {
+        Box::new(Self::from_params(n, lens))
     }
 }
 
-impl<P, T> Condition<P> for EveryN<T>
+impl<P, L> Condition<P> for EveryN<L>
 where
     P: Problem,
-    T: Extract<Target = u32>,
+    L: Lens<P, Target = u32>,
 {
     fn evaluate(&self, _problem: &P, state: &mut State<P>) -> ExecResult<bool> {
-        let value = T::extract(state)?;
+        let value = self.lens.get(state)?;
         Ok(value % self.n == 0)
     }
 }
@@ -205,45 +203,50 @@ where
 }
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct ChangeOf<T: ExtractRef> {
-    checker: Box<dyn EqualityChecker<T::Target>>,
-    marker: PhantomData<fn() -> T>,
-}
-
-impl<T> ChangeOf<T>
+pub struct ChangeOf<L>
 where
-    T: ExtractRef,
-    T::Target: Clone + Send,
+    L: AnyLens,
 {
-    pub fn from_params(checker: Box<dyn EqualityChecker<T::Target>>) -> Self
+    checker: Box<dyn EqualityChecker<L::Target>>,
+    lens: L,
+}
+
+impl<L> ChangeOf<L>
+where
+    L: AnyLens,
+    L::Target: Clone + Send,
+{
+    pub fn from_params(checker: Box<dyn EqualityChecker<L::Target>>, lens: L) -> Self
 where {
-        Self {
-            checker,
-            marker: PhantomData,
-        }
+        Self { checker, lens }
     }
 
-    pub fn new<P: Problem>(checker: Box<dyn EqualityChecker<T::Target>>) -> Box<dyn Condition<P>>
-where {
-        Box::new(Self::from_params(checker))
+    pub fn new<P>(checker: Box<dyn EqualityChecker<L::Target>>, lens: L) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+        L: LensRef<P>,
+        L::Target: Clone + Send,
+    {
+        Box::new(Self::from_params(checker, lens))
     }
 }
 
-impl<P, T> Condition<P> for ChangeOf<T>
+impl<P, L> Condition<P> for ChangeOf<L>
 where
     P: Problem,
-    T: ExtractRef,
-    T::Target: Clone + Send,
+    L: LensRef<P>,
+    L::Target: Clone + Send,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        state.insert(Previous::<T::Target>::default());
+        state.insert(Previous::<L::Target>::default());
         Ok(())
     }
 
     fn evaluate(&self, _problem: &P, state: &mut State<P>) -> ExecResult<bool> {
-        let current = T::extract_ref(state)?;
-        let mut previous = state.try_borrow_value_mut::<Previous<T::Target>>()?;
+        let current = self.lens.get_ref(state)?;
+        let mut previous = state.try_borrow_value_mut::<Previous<L::Target>>()?;
 
         let changed = if let Some(previous) = &*previous {
             self.checker.eq(&*current, previous)

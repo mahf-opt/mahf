@@ -10,7 +10,7 @@ use crate::{
     logging::extractor::{EntryExtractor, EntryName},
     population::AsSolutions,
     problems::VectorProblem,
-    state::extract::{Extract, ExtractMap},
+    state::lens::{AnyLens, Lens, LensMap},
     CustomState, Problem, State,
 };
 
@@ -71,30 +71,35 @@ impl<I: AnyComponent> Default for Diversity<I> {
 impl<I: AnyComponent + 'static> CustomState<'_> for Diversity<I> {}
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Default(bound = ""), Clone(bound = ""))]
-pub struct ExNormalizedDiversity<I>(PhantomData<fn() -> I>);
+pub struct NormalizedDiversityLens<I>(PhantomData<fn() -> I>);
 
-impl<I> EntryName for ExNormalizedDiversity<I> {
+impl<I: AnyComponent + 'static> AnyLens for NormalizedDiversityLens<I> {
+    type Target = f64;
+}
+
+impl<I> EntryName for NormalizedDiversityLens<I> {
     fn entry_name() -> &'static str {
         "NormalizedDiversity"
     }
 }
 
-impl<I> ExNormalizedDiversity<I>
-where
-    Self: Extract,
-    <Self as Extract>::Target: Serialize + Send,
-{
-    pub fn entry<P: VectorProblem<Element = f64>>() -> Box<dyn EntryExtractor<P>> {
+impl<I> NormalizedDiversityLens<I> {
+    pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
+    where
+        P: VectorProblem<Element = f64>,
+        Self: Lens<P>,
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
         Box::<Self>::default()
     }
 }
 
-impl<I: AnyComponent + 'static> ExtractMap for ExNormalizedDiversity<I> {
+impl<I: AnyComponent + 'static> LensMap for NormalizedDiversityLens<I> {
     type Source = Diversity<I>;
-    type Target = f64;
 
-    fn map(source: &Self::Source) -> Self::Target {
+    fn map(&self, source: &Self::Source) -> Self::Target {
         source.diversity
     }
 }

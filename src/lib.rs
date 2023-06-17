@@ -34,6 +34,6 @@ pub use rand;
 pub use rand_distr;
 pub use serde;
 pub use state::{
-    extract::{IdFn, ValueOf},
-    CustomState, Random, State, StateError,
+    lens::{IdLens, ValueOf},
+    CustomState, Random, State, StateError, StateRegistry,
 };

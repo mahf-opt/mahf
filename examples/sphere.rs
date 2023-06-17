@@ -5,7 +5,7 @@ use mahf::{
     experiments::par_experiment,
     logging::config::LogConfig,
     prelude::*,
-    state::extract::common::{ExBestObjectiveValue, ExBestSolution},
+    state::lens::common::{BestObjectiveValueLens, BestSolutionLens},
     State,
 };
 
@@ -76,23 +76,27 @@ fn main() -> ExecResult<()> {
             v_max: 1.0,
         },
         /*termination: */
-        conditions::LessThan::<ValueOf<common::Iterations>>::new(/*n: */ 10_000)
+        conditions::LessThan::new(10_000, ValueOf::<common::Iterations>::new())
             & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
     )?;
 
     let setup = |state: &mut State<Sphere>| -> ExecResult<()> {
         state.insert(
             LogConfig::<Sphere>::new()
-                .with_common(conditions::EveryN::<ValueOf<common::Iterations>>::new(50))
+                .with_common(conditions::EveryN::new(
+                    50,
+                    ValueOf::<common::Iterations>::new(),
+                ))
                 .with(
-                    ChangeOf::<ExBestObjectiveValue<Sphere>>::new(DeltaEqChecker::new(
-                        0.001.try_into().unwrap(),
-                    )) & !conditions::DistanceToOptimumGreaterThan::new(0.05)?,
-                    ExBestObjectiveValue::entry(),
+                    ChangeOf::new(
+                        DeltaEqChecker::new(0.001.try_into().unwrap()),
+                        BestObjectiveValueLens::new(),
+                    ) & !conditions::DistanceToOptimumGreaterThan::new(0.05)?,
+                    BestObjectiveValueLens::entry(),
                 )
                 .with(
-                    conditions::EveryN::<ValueOf<common::Iterations>>::new(1_000),
-                    ExBestSolution::entry(),
+                    conditions::EveryN::new(1_000, ValueOf::<common::Iterations>::new()),
+                    BestSolutionLens::entry(),
                 ),
         );
         Ok(())

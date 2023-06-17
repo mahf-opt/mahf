@@ -63,3 +63,38 @@ impl_multi_state_tuple!((T1, T2, T3, T4, T5, T6, T7, T8));
 // impl_multi_state_tuple!((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10));
 // impl_multi_state_tuple!((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11));
 // impl_multi_state_tuple!((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12));
+
+#[cfg(test)]
+mod tests {
+    use better_any::{Tid, TidAble};
+
+    use crate::{state::multi::MultiStateTuple, CustomState};
+
+    macro_rules! make_type {
+        ($ty:ident) => {
+            #[derive(Tid)]
+            struct $ty;
+            impl CustomState<'_> for $ty {}
+        };
+    }
+
+    make_type!(T1);
+    make_type!(T2);
+    make_type!(T3);
+    make_type!(T4);
+
+    #[test]
+    fn distinct_returns_true_for_distinct() {
+        assert!(<(T1, T2) as MultiStateTuple>::distinct());
+        assert!(<(T1, T2, T3) as MultiStateTuple>::distinct());
+        assert!(<(T1, T2, T3, T4) as MultiStateTuple>::distinct());
+    }
+
+    #[test]
+    fn distinct_returns_false_for_non_distinct() {
+        assert!(!<(T1, T1) as MultiStateTuple>::distinct());
+        assert!(!<(T1, T2, T1) as MultiStateTuple>::distinct());
+        assert!(!<(T1, T2, T3, T4, T1) as MultiStateTuple>::distinct());
+        assert!(!<(T1, T2, T2, T1) as MultiStateTuple>::distinct());
+    }
+}

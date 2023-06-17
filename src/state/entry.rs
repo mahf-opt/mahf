@@ -1,4 +1,8 @@
-//! Reimplementation of the [`Entry`][std::collections::hash::map::Entry] API.
+//! A reimplementation of the [`Entry`] API of [`HashMap`], but for [`StateRegistry`].
+//!
+//! [`Entry`]: std::collections::hash::map::Entry
+//! [`HashMap`]: std::collections::HashMap
+//! [`StateRegistry`]: crate::StateRegistry
 
 use std::{
     any::TypeId,
@@ -15,15 +19,20 @@ pub type HashMapEntry<'a, 'b> = hash_map::Entry<'a, TypeId, RefCell<Box<dyn Cust
 
 /// A view into a single entry in a map, which may either be vacant or occupied.
 ///
-/// This `enum` is constructed from the [`entry`] method on [`State`].
+/// This `enum` is constructed from the [`entry`] method on [`StateRegistry`].
 ///
-/// [`entry`]: crate::State::entry
-/// [`State`]: crate::State
+/// [`entry`]: crate::StateRegistry::entry
+/// [`StateRegistry`]: crate::StateRegistry
 pub enum Entry<'a, 'b, T> {
     Occupied(OccupiedEntry<'a, 'b, T>),
     Vacant(VacantEntry<'a, 'b, T>),
 }
 
+/// A view into an occupied entry in a [`StateRegistry`].
+///
+/// It is part of the [`Entry`] enum.
+///
+/// [`StateRegistry`]: crate::StateRegistry
 pub struct OccupiedEntry<'a, 'b, T> {
     base: hash_map::OccupiedEntry<'a, TypeId, RefCell<Box<dyn CustomState<'b>>>>,
     marker: PhantomData<T>,
@@ -88,6 +97,11 @@ where
     }
 }
 
+/// A view into an vacant entry in a [`StateRegistry`].
+///
+/// It is part of the [`Entry`] enum.
+///
+/// [`StateRegistry`]: crate::StateRegistry
 pub struct VacantEntry<'a, 'b, T> {
     base: hash_map::VacantEntry<'a, TypeId, RefCell<Box<dyn CustomState<'b>>>>,
     marker: PhantomData<T>,
@@ -111,7 +125,7 @@ impl<'a, 'b, T> Entry<'a, 'b, T>
 where
     T: CustomState<'b>,
 {
-    pub fn new(entry: HashMapEntry<'a, 'b>) -> Self {
+    pub(crate) fn new(entry: HashMapEntry<'a, 'b>) -> Self {
         match entry {
             HashMapEntry::Occupied(entry) => Self::Occupied(OccupiedEntry {
                 base: entry,
@@ -137,6 +151,27 @@ where
         }
     }
 
+    /// Ensures a value is in the entry by inserting the default if empty, and returns
+    /// a mutable reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use better_any::{Tid, TidAble};
+    /// use mahf::{CustomState, StateRegistry};
+    /// # #[derive(PartialEq, Tid)]
+    /// # pub struct A(usize);
+    /// # impl CustomState<'_> for A {}
+    ///
+    /// let mut registry = StateRegistry::new();
+    ///
+    /// registry.entry::<A>().or_insert(A(3));
+    /// assert_eq!(registry.borrow::<A>(), A(3));
+    ///
+    /// *map.entry::<A>().or_insert(A(10)).0 *= 2;
+    /// assert_eq!(registry.borrow::<A>(), A(3));
+    /// ```
+    #[inline]
     pub fn or_insert(self, default: T) -> RefMut<'a, T> {
         match self {
             Self::Occupied(entry) => entry.into_mut(),

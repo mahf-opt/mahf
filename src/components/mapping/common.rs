@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use derivative::Derivative;
 use rand::{distributions::uniform::SampleRange, Rng};
 use serde::Serialize;
@@ -12,49 +10,52 @@ use crate::{
         Component,
     },
     state::{
-        extract::{Assign, Extract},
+        lens::{AnyLens, Lens, LensAssign},
         random::Random,
     },
     Problem, State,
 };
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct Linear<I, O> {
+pub struct Linear<I: AnyLens, O: AnyLens> {
     pub start: f64,
     pub end: f64,
-    marker: PhantomData<fn() -> (I, O)>,
+    pub input_lens: I,
+    pub output_lens: O,
 }
 
-impl<I, O> Linear<I, O>
-where
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
-{
-    pub fn from_params(start: f64, end: f64) -> Self {
+impl<I: AnyLens, O: AnyLens> Linear<I, O> {
+    pub fn from_params(start: f64, end: f64, input_lens: I, output_lens: O) -> Self {
         Self {
             start,
             end,
-            marker: PhantomData,
+            input_lens,
+            output_lens,
         }
     }
 
-    pub fn new<P>(start: f64, end: f64) -> Box<dyn Component<P>>
+    pub fn new<P>(start: f64, end: f64, input_lens: I, output_lens: O) -> Box<dyn Component<P>>
     where
         P: Problem,
+        I: Lens<P, Target = f64>,
+        O: LensAssign<P, Target = f64>,
     {
-        Box::new(Self::from_params(start, end))
+        Box::new(Self::from_params(start, end, input_lens, output_lens))
     }
 }
 
 impl<P, I, O> Mapping<P> for Linear<I, O>
 where
     P: Problem,
+    I: Lens<P, Target = f64>,
+    O: LensAssign<P, Target = f64>,
 {
     type Input = f64;
     type Output = f64;
 
-    fn map(&self, value: &Self::Input, _rng: &mut Random) -> ExecResult<Self::Output> {
+    fn map(&self, value: Self::Input, _rng: &mut Random) -> ExecResult<Self::Output> {
         Ok((self.end - self.start) * value + self.start)
     }
 }
@@ -62,53 +63,62 @@ where
 impl<P, I, O> Component<P> for Linear<I, O>
 where
     P: Problem,
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
+    I: Lens<P, Target = f64>,
+    O: LensAssign<P, Target = f64>,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        mapping::<P, Self, I, O>(self, problem, state)
+        mapping(self, &self.input_lens, &self.output_lens, problem, state)
     }
 }
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct Polynomial<I, O> {
+pub struct Polynomial<I: AnyLens, O: AnyLens> {
     pub start: f64,
     pub end: f64,
     pub n: f64,
-    marker: PhantomData<fn() -> (I, O)>,
+    pub input_lens: I,
+    pub output_lens: O,
 }
 
-impl<I, O> Polynomial<I, O>
-where
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
-{
-    pub fn from_params(start: f64, end: f64, n: f64) -> Self {
+impl<I: AnyLens, O: AnyLens> Polynomial<I, O> {
+    pub fn from_params(start: f64, end: f64, n: f64, input_lens: I, output_lens: O) -> Self {
         Self {
             start,
             end,
             n,
-            marker: PhantomData,
+            input_lens,
+            output_lens,
         }
     }
 
-    pub fn new<P>(start: f64, end: f64, n: f64) -> Box<dyn Component<P>>
+    pub fn new<P>(
+        start: f64,
+        end: f64,
+        n: f64,
+        input_lens: I,
+        output_lens: O,
+    ) -> Box<dyn Component<P>>
     where
         P: Problem,
+        I: Lens<P, Target = f64>,
+        O: LensAssign<P, Target = f64>,
     {
-        Box::new(Self::from_params(start, end, n))
+        Box::new(Self::from_params(start, end, n, input_lens, output_lens))
     }
 }
 
 impl<P, I, O> Mapping<P> for Polynomial<I, O>
 where
     P: Problem,
+    I: Lens<P, Target = f64>,
+    O: LensAssign<P, Target = f64>,
 {
     type Input = f64;
     type Output = f64;
 
-    fn map(&self, value: &Self::Input, _rng: &mut Random) -> ExecResult<Self::Output> {
+    fn map(&self, value: Self::Input, _rng: &mut Random) -> ExecResult<Self::Output> {
         Ok((self.end - self.start) * value.powf(self.n) + self.start)
     }
 }
@@ -116,11 +126,11 @@ where
 impl<P, I, O> Component<P> for Polynomial<I, O>
 where
     P: Problem,
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
+    I: Lens<P, Target = f64>,
+    O: LensAssign<P, Target = f64>,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        mapping::<P, Self, I, O>(self, problem, state)
+        mapping(self, &self.input_lens, &self.output_lens, problem, state)
     }
 }
 
@@ -129,56 +139,37 @@ trait_set! {
 }
 
 #[derive(Serialize, Derivative)]
+#[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct RandomRange<R: AnySampleRange, I, O> {
+pub struct RandomRange<R: AnySampleRange, O: AnyLens> {
     pub range: R,
-    marker: PhantomData<fn() -> (I, O)>,
+    pub output_lens: O,
 }
 
-impl<R, I, O> RandomRange<R, I, O>
-where
-    R: AnySampleRange,
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
-{
-    pub fn from_params(range: R) -> Self {
-        Self {
-            range,
-            marker: PhantomData,
-        }
+impl<R: AnySampleRange, O: AnyLens> RandomRange<R, O> {
+    pub fn from_params(range: R, output_lens: O) -> Self {
+        Self { range, output_lens }
     }
 
-    pub fn new<P>(range: R) -> Box<dyn Component<P>>
+    pub fn new<P>(range: R, output_lens: O) -> Box<dyn Component<P>>
     where
         P: Problem,
+        R: AnySampleRange,
+        O: LensAssign<P, Target = f64>,
     {
-        Box::new(Self::from_params(range))
+        Box::new(Self::from_params(range, output_lens))
     }
 }
 
-impl<P, R, I, O> Mapping<P> for RandomRange<R, I, O>
+impl<P, R, O> Component<P> for RandomRange<R, O>
 where
     P: Problem,
     R: AnySampleRange,
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
+    O: LensAssign<P, Target = f64>,
 {
-    type Input = f64;
-    type Output = f64;
-
-    fn map(&self, _value: &Self::Input, rng: &mut Random) -> ExecResult<Self::Output> {
-        Ok(rng.gen_range(self.range.clone()))
-    }
-}
-
-impl<P, R, I, O> Component<P> for RandomRange<R, I, O>
-where
-    P: Problem,
-    R: AnySampleRange,
-    I: Extract<Target = f64>,
-    O: Assign<Target = f64>,
-{
-    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        mapping::<_, _, I, O>(self, problem, state)
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let rand = state.random_mut().gen_range(self.range.clone());
+        self.output_lens.assign(rand, state)?;
+        Ok(())
     }
 }

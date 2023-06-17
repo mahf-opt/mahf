@@ -7,7 +7,7 @@ use crate::{
     logging::{extractor::EntryExtractor, log::Step},
     state::{
         common,
-        extract::common::{IdFn, ValueOf},
+        lens::common::{IdLens, ValueOf},
     },
     Condition, CustomState, Problem, State,
 };
@@ -66,7 +66,7 @@ impl<P: Problem> LogConfig<P> {
     where
         T: for<'a> CustomState<'a> + Clone + Serialize + 'static,
     {
-        self.push(trigger, Box::<IdFn<T>>::default());
+        self.push(trigger, Box::<IdLens<T>>::default());
         self
     }
 

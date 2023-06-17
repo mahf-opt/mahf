@@ -1,6 +1,6 @@
 //! Invasive Weed Optimization
 
-use eyre::{ensure, WrapErr};
+use eyre::{ensure};
 
 use crate::{
     component::ExecResult,
@@ -9,7 +9,7 @@ use crate::{
     configuration::Configuration,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
-    state::{common, extract::ValueOf},
+    state::{common, lens::ValueOf},
 };
 
 #[derive(Clone, Debug)]
@@ -52,6 +52,10 @@ where
     } = params;
 
     ensure!(initial_population_size <= max_population_size, "it is not possible to select more individuals with MuPlusLambda selection than are present");
+    ensure!(
+        !(initial_deviation..final_deviation).is_empty(),
+        "the std_dev range must not be empty for this operator"
+    );
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(initial_population_size))
@@ -62,11 +66,16 @@ where
                 max_population_size,
                 min_number_of_seeds,
                 max_number_of_seeds,
-                mutation: mutation::iwo::IWOAdaptiveDeviation::<ValueOf<common::Iterations>>::new(
-                    initial_deviation..final_deviation,
-                    modulation_index,
-                )
-                .wrap_err("failed to construct IWO adaptive deviation component")?,
+                mutation: Block::new([
+                    <mutation::NormalMutation>::new(initial_deviation, 1.),
+                    mapping::Polynomial::new(
+                        initial_deviation,
+                        final_deviation,
+                        modulation_index as f64,
+                        ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
+                        ValueOf::<mutation::MutationStrength<mutation::NormalMutation>>::new(),
+                    ),
+                ]),
                 constraints: boundary::Saturation::new(),
             },
             condition,

@@ -7,11 +7,11 @@ use crate::{
 pub mod common;
 pub mod de;
 pub mod functional;
-pub mod iwo;
 
 pub use common::{
-    BitFlipMutation, InversionMutation, NormalMutation, PartialRandomBitstring,
-    PartialRandomSpread, ScrambleMutation, SwapMutation, TranslocationMutation, UniformMutation,
+    BitFlipMutation, InversionMutation, MutationRate, MutationStrength, NormalMutation,
+    PartialRandomBitstring, PartialRandomSpread, ScrambleMutation, SwapMutation,
+    TranslocationMutation, UniformMutation,
 };
 
 pub trait Mutation<P: Problem>: AnyComponent {

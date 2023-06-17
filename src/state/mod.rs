@@ -21,7 +21,7 @@ pub mod common;
 mod custom;
 pub mod entry;
 pub mod error;
-pub mod extract;
+pub mod lens;
 pub mod multi;
 pub mod random;
 mod require;
@@ -53,6 +53,17 @@ impl<'a> StateRegistry<'a> {
 
     pub fn parent_mut(&mut self) -> Option<&mut Self> {
         self.parent.as_deref_mut()
+    }
+
+    fn into_child(self) -> Self {
+        Self {
+            parent: Some(Box::new(self)),
+            map: HashMap::new(),
+        }
+    }
+
+    fn into_parent(self) -> (Option<Self>, StateMap<'a>) {
+        (self.parent.map(|parent| *parent), self.map)
     }
 
     fn find<T>(&self) -> StateResult<&Self>
@@ -218,8 +229,7 @@ impl<'a> StateRegistry<'a> {
         T: CustomState<'a> + Deref,
         T::Target: Sized + Clone,
     {
-        let r = self.try_borrow::<T>()?;
-        Ok(r.clone())
+        self.try_borrow::<T>().map(|t| t.clone())
     }
 
     #[track_caller]
@@ -314,13 +324,11 @@ impl<'a, P> State<'a, P> {
     where
         F: FnOnce(&mut Self) -> ExecResult<()>,
     {
-        let child = StateRegistry {
-            parent: Some(Box::new(std::mem::take(&mut self.registry))),
-            map: HashMap::new(),
-        };
-        let mut state = Self::from(child);
+        let registry = std::mem::take(&mut self.registry);
+        let mut state = registry.into_child().into();
         f(&mut state)?;
-        self.registry = *StateRegistry::from(state).parent.unwrap();
+        let (registry, _) = StateRegistry::from(state).into_parent();
+        self.registry = registry.unwrap();
         Ok(())
     }
 

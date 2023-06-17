@@ -6,7 +6,7 @@ use crate::{
     identifier::{A, B},
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
-    state::extract::common::ExPopulationSize,
+    state::lens::common::PopulationSizeLens,
 };
 
 /// Parameters for [cro].
@@ -133,7 +133,7 @@ where
         .while_(condition, |builder| {
             builder.if_else_(
                 common::RandomChance::new(mole_coll)
-                    | LessThan::<ExPopulationSize<P>>::new(2),
+                    | LessThan::new(2, PopulationSizeLens::<P>::new()),
                 |builder| {
                     builder
                         .do_(single_mole_selection)

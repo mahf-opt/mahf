@@ -9,7 +9,7 @@ use crate::{
     configuration::Configuration,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    state::extract::ValueOf,
+    state::lens::ValueOf,
 };
 
 /// Parameters for [real_sa].
@@ -43,9 +43,7 @@ where
             Parameters {
                 t_0,
                 generation: <mutation::NormalMutation>::new_dev(deviation),
-                cooling_schedule: mapping::sa::GeometricCooling::<
-                    ValueOf<replacement::sa::Temperature>,
-                >::new(alpha)
+                cooling_schedule: mapping::sa::GeometricCooling::new(alpha, ValueOf::<replacement::sa::Temperature>::new())
                 .wrap_err("failed to construct geometric cooling component")?,
                 constraints: boundary::Saturation::new(),
             },
@@ -86,9 +84,7 @@ where
                 t_0,
                 generation: <mutation::SwapMutation>::new(num_swap)
                     .wrap_err("failed to construct swap mutation")?,
-                cooling_schedule: mapping::sa::GeometricCooling::<
-                    ValueOf<replacement::sa::Temperature>,
-                >::new(alpha)
+                cooling_schedule: mapping::sa::GeometricCooling::new(alpha,ValueOf::<replacement::sa::Temperature>::new())
                 .wrap_err("failed to construct geometric cooling component")?,
                 constraints: misc::Noop::new(),
             },
