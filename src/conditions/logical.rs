@@ -26,7 +26,7 @@ impl<P: Problem> Condition<P> for And<P> {
         Ok(())
     }
 
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         for condition in &self.0 {
             condition.require(problem, state_req)?;
         }
@@ -72,7 +72,7 @@ impl<P: Problem> Condition<P> for Or<P> {
         Ok(())
     }
 
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         for condition in &self.0 {
             condition.require(problem, state_req)?;
         }
@@ -114,7 +114,7 @@ impl<P: Problem> Condition<P> for Not<P> {
         Ok(())
     }
 
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         self.0.require(problem, state_req)?;
         Ok(())
     }

@@ -166,7 +166,7 @@ impl AsPheromoneUpdate {
 }
 
 impl<P: TravellingSalespersonProblem> Component<P> for AsPheromoneUpdate {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, PheromoneMatrix>()?;
         Ok(())
     }
@@ -231,7 +231,7 @@ impl MinMaxPheromoneUpdate {
 }
 
 impl<P: TravellingSalespersonProblem> Component<P> for MinMaxPheromoneUpdate {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, PheromoneMatrix>()?;
         Ok(())
     }

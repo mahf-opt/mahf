@@ -62,7 +62,7 @@ impl<P> Component<P> for ElitistArchiveIntoPopulation
 where
     P: SingleObjectiveProblem,
 {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, ElitistArchive<P>>()?;
         Ok(())
     }

@@ -52,7 +52,7 @@ where
         Ok(())
     }
 
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, common::Populations<P>>()?;
         state_req.require::<Self, T>()?;
         Ok(())

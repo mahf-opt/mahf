@@ -1,6 +1,6 @@
 //! Invasive Weed Optimization
 
-use eyre::{ensure};
+use eyre::ensure;
 
 use crate::{
     component::ExecResult,

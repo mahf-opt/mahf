@@ -108,10 +108,6 @@ impl<'a> StateRegistry<'a> {
         }
     }
 
-    pub fn requirements(&self) -> StateReq<'_, 'a> {
-        StateReq::new(self)
-    }
-
     pub fn insert<T>(&mut self, t: T) -> Option<T>
     where
         T: CustomState<'a>,
@@ -318,6 +314,10 @@ pub struct State<'a, P> {
 impl<'a, P> State<'a, P> {
     pub fn new() -> Self {
         Self::from(StateRegistry::new())
+    }
+
+    pub fn requirements(&self) -> StateReq<'_, 'a, P> {
+        StateReq::new(self)
     }
 
     pub fn with_inner_state<F>(&mut self, f: F) -> ExecResult<()>

@@ -32,7 +32,7 @@ impl<P: Problem> Component<P> for Block<P> {
         Ok(())
     }
 
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         for component in &self.0 {
             component.require(problem, state_req)?;
         }
@@ -85,7 +85,7 @@ impl<P: Problem> Component<P> for Loop<P> {
         Ok(())
     }
 
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         self.condition.require(problem, state_req)?;
         self.body.require(problem, state_req)?;
         Ok(())
@@ -145,7 +145,7 @@ impl<P: Problem> Component<P> for Branch<P> {
         Ok(())
     }
 
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         self.condition.require(problem, state_req)?;
         self.if_body.require(problem, state_req)?;
         if let Some(else_body) = &self.else_body {

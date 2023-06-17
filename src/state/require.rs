@@ -1,12 +1,9 @@
-use crate::{
-    state::{error::StateResult, StateRegistry},
-    CustomState, StateError,
-};
+use crate::{state::error::StateResult, CustomState, State, StateError};
 
-pub struct StateReq<'a, 'b>(&'a StateRegistry<'b>);
+pub struct StateReq<'a, 'b, P>(&'a State<'b, P>);
 
-impl<'a, 'b> StateReq<'a, 'b> {
-    pub fn new(state: &'a StateRegistry<'b>) -> Self {
+impl<'a, 'b, P> StateReq<'a, 'b, P> {
+    pub fn new(state: &'a State<'b, P>) -> Self {
         Self(state)
     }
 

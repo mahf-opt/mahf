@@ -39,7 +39,7 @@ pub trait Component<P: Problem>: AnyComponent {
 
     /// Can be used to specify custom state requirements.
     #[allow(unused_variables)]
-    fn require(&self, problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         Ok(())
     }
 

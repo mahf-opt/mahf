@@ -130,7 +130,7 @@ impl<P> Component<P> for OnWallIneffectiveCollisionUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, ChemicalReaction<P>>()?;
         state_req.require::<Self, EnergyBuffer>()?;
         Ok(())
@@ -212,7 +212,7 @@ impl<P> Component<P> for DecompositionUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, ChemicalReaction<P>>()?;
         state_req.require::<Self, EnergyBuffer>()?;
         Ok(())
@@ -307,7 +307,7 @@ impl<P> Component<P> for IntermolecularIneffectiveCollisionUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, ChemicalReaction<P>>()?;
         state_req.require::<Self, EnergyBuffer>()?;
         Ok(())
@@ -401,7 +401,7 @@ impl<P> Component<P> for SynthesisUpdate
 where
     P: SingleObjectiveProblem,
 {
-    fn require(&self, _problem: &P, state_req: &StateReq) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, ChemicalReaction<P>>()?;
         state_req.require::<Self, EnergyBuffer>()?;
         Ok(())
