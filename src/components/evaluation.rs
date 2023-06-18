@@ -32,6 +32,7 @@ impl<P: Problem> Component<P> for Evaluator {
         state.insert(common::Evaluations(0));
 
         if !state.has::<common::EvaluatorInstance<P>>() {
+            #[allow(deprecated)]
             state.insert(problem.default_evaluator());
         }
     }

@@ -64,7 +64,7 @@ impl RandomSpread {
     pub fn new_init<P, D>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
-        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<Element = D>,
     {
         Box::new(Initializer(Self {
             initial_population_size: Some(initial_population_size),
@@ -79,13 +79,15 @@ impl RandomSpread {
     ) -> Vec<P::Encoding>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
-        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<Element = D>,
     {
         let mut population = Vec::new();
 
         for _ in 0..population_size {
-            let solution = (0..problem.dimension())
-                .map(|d| rng.gen_range(problem.range(d)))
+            let solution = problem
+                .domain()
+                .into_iter()
+                .map(|range| rng.gen_range(range))
                 .collect::<Vec<D>>();
 
             population.push(solution);
@@ -97,7 +99,7 @@ impl RandomSpread {
 impl<P, D> Initialization<P> for RandomSpread
 where
     D: SampleUniform + Clone + PartialOrd + 'static,
-    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<Element = D>,
 {
     fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
@@ -119,7 +121,7 @@ impl RandomPermutation {
     /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+        P: Problem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
     {
         Box::new(Initializer(Self {
             initial_population_size: Some(initial_population_size),
@@ -133,7 +135,7 @@ impl RandomPermutation {
         population_size: u32,
     ) -> Vec<P::Encoding>
     where
-        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+        P: Problem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
     {
         let mut population = Vec::new();
         for _ in 0..population_size {
@@ -147,7 +149,7 @@ impl RandomPermutation {
 
 impl<P> Initialization<P> for RandomPermutation
 where
-    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
 {
     fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();
@@ -173,7 +175,7 @@ impl RandomBitstring {
     /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_init<P>(initial_population_size: u32, p: f64) -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
     {
         Box::new(Initializer(Self {
             initial_population_size: Some(initial_population_size),
@@ -186,7 +188,7 @@ impl RandomBitstring {
     /// Creates this component as an initializer, pushing a new population on the stack.
     pub fn new_uniform_init<P>(initial_population_size: u32) -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
     {
         Box::new(Initializer(Self {
             initial_population_size: Some(initial_population_size),
@@ -201,7 +203,7 @@ impl RandomBitstring {
         population_size: u32,
     ) -> Vec<P::Encoding>
     where
-        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
     {
         let mut population = Vec::new();
         for _ in 0..population_size {
@@ -216,7 +218,7 @@ impl RandomBitstring {
 
 impl<P> Initialization<P> for RandomBitstring
 where
-    P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
 {
     fn initialize_population(&self, problem: &P, state: &mut State<P>) -> Vec<Individual<P>> {
         let population_size = self.initial_population_size.unwrap();

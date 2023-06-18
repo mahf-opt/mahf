@@ -22,7 +22,7 @@ impl<P: Problem> CustomState<'_> for PsoState<P> {}
 
 impl<P: Problem> PsoState<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64>,
 {
     /// State initialization for PSO.
     ///
@@ -35,7 +35,7 @@ where
 
         impl<P> Component<P> for PsoStateInitialization
         where
-            P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+            P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64>,
         {
             fn initialize(&self, _problem: &P, state: &mut State<P>) {
                 // Initialize with empty state to satisfy `state.require()` statements
@@ -88,7 +88,7 @@ where
 
         impl<P> Component<P> for PsoStateUpdate
         where
-            P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+            P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64>,
         {
             fn initialize(&self, _problem: &P, state: &mut State<P>) {
                 state.require::<Self, PsoState<P>>();

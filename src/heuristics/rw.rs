@@ -20,7 +20,7 @@ pub fn real_random_walk<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: SingleObjectiveProblem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64>,
 {
     let RealProblemParameters { deviation } = params;
 
@@ -50,7 +50,7 @@ pub fn permutation_random_walk<P>(
     logger: Box<dyn Component<P>>,
 ) -> Configuration<P>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
 {
     let PermutationProblemParameters { n_swap } = params;
 

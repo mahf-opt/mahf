@@ -61,12 +61,12 @@ where
 #[derive(serde::Serialize, Clone, Default)]
 pub struct DimensionWiseDiversity;
 impl DimensionWiseDiversity {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>>() -> Box<dyn Component<P>>
-    {
+    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
         Box::new(DiversityMeasurement(Self))
     }
 }
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<P>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>> DiversityMeasure<P>
     for DimensionWiseDiversity
 {
     fn measure(&self, problem: &P, solutions: &[&Vec<f64>]) -> f64 {
@@ -86,12 +86,12 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 #[derive(serde::Serialize, Clone, Default)]
 pub struct PairwiseDistanceDiversity;
 impl PairwiseDistanceDiversity {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>>() -> Box<dyn Component<P>>
-    {
+    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
         Box::new(DiversityMeasurement(Self))
     }
 }
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<P>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>> DiversityMeasure<P>
     for PairwiseDistanceDiversity
 {
     fn measure(&self, problem: &P, solutions: &[&Vec<f64>]) -> f64 {
@@ -104,7 +104,6 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
         for i in 1..n as usize {
             for j in 0..=i - 1 {
                 sum += (0..d)
-                    .into_iter()
                     .map(|k| (solutions[i][k] - solutions[j][k]).powi(2))
                     .sum::<f64>();
                 diversity += sum.sqrt();
@@ -119,12 +118,12 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 #[derive(serde::Serialize, Clone, Default)]
 pub struct TrueDiversity;
 impl TrueDiversity {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>>() -> Box<dyn Component<P>>
-    {
+    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
         Box::new(DiversityMeasurement(Self))
     }
 }
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<P>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>> DiversityMeasure<P>
     for TrueDiversity
 {
     fn measure(&self, problem: &P, solutions: &[&Vec<f64>]) -> f64 {
@@ -146,12 +145,12 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 #[derive(serde::Serialize, Clone, Default)]
 pub struct DistanceToAveragePointDiversity;
 impl DistanceToAveragePointDiversity {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>>() -> Box<dyn Component<P>>
-    {
+    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
         Box::new(DiversityMeasurement(Self))
     }
 }
-impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<P>
+impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<Element = f64>> DiversityMeasure<P>
     for DistanceToAveragePointDiversity
 {
     fn measure(&self, problem: &P, solutions: &[&Vec<f64>]) -> f64 {
@@ -162,7 +161,6 @@ impl<P: Problem<Encoding = Vec<f64>> + VectorProblem<T = f64>> DiversityMeasure<
 
         for i in solutions {
             sum += (0..d)
-                .into_iter()
                 .map(|k| {
                     let xk = solutions.iter().map(|s| s[k]).sum::<f64>() / n;
                     (i[k] - xk).powi(2)

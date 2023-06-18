@@ -23,7 +23,7 @@ impl RandomPermutation {
     /// Creates this component as an generator, modifying the current population.
     pub fn new_gen<P>() -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+        P: Problem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
     {
         Box::new(Generator(Self {
             initial_population_size: None,
@@ -32,7 +32,7 @@ impl RandomPermutation {
 }
 impl<P> Generation<P> for RandomPermutation
 where
-    P: Problem<Encoding = Vec<usize>> + VectorProblem<T = usize>,
+    P: Problem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
 {
     fn generate_population(
         &self,
@@ -51,7 +51,7 @@ impl RandomSpread {
     pub fn new_gen<P, D>() -> Box<dyn Component<P>>
     where
         D: SampleUniform + Clone + PartialOrd + 'static,
-        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+        P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<Element = D>,
     {
         Box::new(Generator(Self {
             initial_population_size: None,
@@ -61,7 +61,7 @@ impl RandomSpread {
 impl<P, D> Generation<P> for RandomSpread
 where
     D: SampleUniform + Clone + PartialOrd + 'static,
-    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<T = D>,
+    P: Problem<Encoding = Vec<D>> + LimitedVectorProblem<Element = D>,
 {
     fn generate_population(
         &self,
@@ -81,7 +81,7 @@ impl RandomBitstring {
     /// Creates this component as an generator, modifying the current population.
     pub fn new_gen<P>(p: f64) -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
     {
         Box::new(Generator(Self {
             initial_population_size: None,
@@ -94,7 +94,7 @@ impl RandomBitstring {
     /// Creates this component as an generator, modifying the current population.
     pub fn new_uniform_gen<P>() -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+        P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
     {
         Box::new(Generator(Self {
             initial_population_size: None,
@@ -104,7 +104,7 @@ impl RandomBitstring {
 }
 impl<P> Generation<P> for RandomBitstring
 where
-    P: Problem<Encoding = Vec<bool>> + VectorProblem<T = bool>,
+    P: Problem<Encoding = Vec<bool>> + VectorProblem<Element = bool>,
 {
     fn generate_population(
         &self,

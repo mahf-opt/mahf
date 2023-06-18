@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::{
     framework::Individual,
-    problems::{Evaluator, MultiObjectiveProblem, Problem, SingleObjectiveProblem},
+    problems::{Evaluate, MultiObjectiveProblem, Problem, SingleObjectiveProblem},
     state::{CustomState, State},
 };
 
@@ -15,16 +15,16 @@ use crate::{
 /// Can be inserted manually to customize evaluation behavior.
 #[derive(Tid)]
 pub struct EvaluatorInstance<'a, P: ?Sized + 'static> {
-    pub(crate) evaluator: Box<dyn Evaluator<Problem = P> + 'a>,
+    pub(crate) evaluator: Box<dyn Evaluate<Problem = P> + 'a>,
 }
 impl<'a, P: 'static> CustomState<'a> for EvaluatorInstance<'a, P> {}
-impl<'a, P: 'static> From<Box<dyn Evaluator<Problem = P> + 'a>> for EvaluatorInstance<'a, P> {
-    fn from(evaluator: Box<dyn Evaluator<Problem = P> + 'a>) -> Self {
+impl<'a, P: 'static> From<Box<dyn Evaluate<Problem = P> + 'a>> for EvaluatorInstance<'a, P> {
+    fn from(evaluator: Box<dyn Evaluate<Problem = P> + 'a>) -> Self {
         EvaluatorInstance { evaluator }
     }
 }
 impl<'a, P: Problem> EvaluatorInstance<'a, P> {
-    pub fn new(evaluator: impl Evaluator<Problem = P> + 'a) -> Self {
+    pub fn new(evaluator: impl Evaluate<Problem = P> + 'a) -> Self {
         EvaluatorInstance {
             evaluator: Box::new(evaluator),
         }
@@ -36,7 +36,7 @@ impl<'a, P: Problem> EvaluatorInstance<'a, P> {
     pub fn functional(evaluation: fn(&P, &mut State<P>, &mut [Individual<P>])) -> Self {
         struct FunctionalEvaluator<P: Problem>(fn(&P, &mut State<P>, &mut [Individual<P>]));
 
-        impl<P: Problem> Evaluator for FunctionalEvaluator<P> {
+        impl<P: Problem> Evaluate for FunctionalEvaluator<P> {
             type Problem = P;
 
             fn evaluate(

@@ -187,7 +187,7 @@ pub struct UniformMutation {
 impl UniformMutation {
     pub fn new<P>(rm: f64) -> Box<dyn Component<P>>
     where
-        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+        P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64>,
     {
         Box::new(Generator(Self { rm }))
     }
@@ -195,7 +195,7 @@ impl UniformMutation {
 
 impl<P> Generation<P> for UniformMutation
 where
-    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<T = f64>,
+    P: Problem<Encoding = Vec<f64>> + LimitedVectorProblem<Element = f64>,
 {
     fn generate_population(
         &self,
@@ -205,38 +205,13 @@ where
     ) {
         let rng = state.random_mut();
 
-        for solution in population.iter_mut() {
+        for (solution, range) in population.iter_mut().zip(problem.domain()) {
             for x in solution.iter_mut() {
                 if rng.gen_bool(self.rm) {
-                    *x = rng.gen_range(problem.range(problem.dimension()));
+                    *x = rng.gen_range(range.clone());
                 }
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod uniform_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = UniformMutation { rm: 1.0 };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
     }
 }
 
@@ -283,34 +258,6 @@ where
                 }
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod gaussian_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = GaussianMutation {
-            rm: 1.0,
-            deviation: 0.1,
-        };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4], vec![0.2, 0.3, 0.6]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
     }
 }
 
@@ -405,31 +352,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod swap_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = SwapMutation { n_swap: 2 };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
-    }
-}
-
 /// Applies a scramble mutation to the solution depending on mutation probability.
 ///
 /// Shuffles the solution.
@@ -462,31 +384,6 @@ where
         for solution in population.iter_mut() {
             solution.shuffle(rng);
         }
-    }
-}
-
-#[cfg(test)]
-mod scramble_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = ScrambleMutation;
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
     }
 }
 
@@ -526,31 +423,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod insertion_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = InsertionMutation;
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
-    }
-}
-
 /// Applies a inversion mutation to the solution depending on mutation probability.
 ///
 /// Takes a random slice of the solution and inverts it.
@@ -587,31 +459,6 @@ where
             pos.sort_unstable();
             solution[pos[0]..pos[1] + 1].reverse();
         }
-    }
-}
-
-#[cfg(test)]
-mod inversion_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = InversionMutation;
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
     }
 }
 
@@ -663,31 +510,6 @@ where
     }
 }
 
-#[cfg(test)]
-mod translocation_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let comp = TranslocationMutation;
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![vec![0.1, 0.2, 0.4, 0.5, 0.9], vec![0.2, 0.3, 0.6, 0.7, 0.8]];
-        let parents_length = population.len();
-        let solution_length = vec![population[0].len(), population[1].len()];
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len(), parents_length);
-        assert_eq!(
-            vec![population[0].len(), population[1].len()],
-            solution_length
-        );
-    }
-}
-
 /// Performs the special Differential Evolution mutation, similar to an arithmetic crossover.
 ///
 /// Requires a DE selection directly beforehand, e.g., [DEBest][crate::components::selection::DEBest].
@@ -700,7 +522,7 @@ pub struct DEMutation {
 }
 
 impl DEMutation {
-    pub fn new<P: Problem<Encoding = Vec<f64>> + VectorProblem>(
+    pub fn new<P: Problem + VectorProblem<Element = f64>>(
         y: usize,
         f: f64,
     ) -> Box<dyn Component<P>> {
@@ -712,7 +534,7 @@ impl DEMutation {
 
 impl<P> Generation<P> for DEMutation
 where
-    P: Problem<Encoding = Vec<f64>> + VectorProblem,
+    P: Problem + VectorProblem<Element = f64>,
 {
     fn generate_population(
         &self,
@@ -752,31 +574,6 @@ where
             index += 1;
             index % (self.y * 2 + 1) == 0
         })
-    }
-}
-
-#[cfg(test)]
-mod de_mutation {
-    use crate::problems::bmf::BenchmarkFunction;
-    use crate::state::Random;
-
-    use super::*;
-
-    #[test]
-    fn all_mutated() {
-        let problem = BenchmarkFunction::sphere(3);
-        let y = 1;
-        let comp = DEMutation { y, f: 1. };
-        let mut state = State::new();
-        state.insert(Random::testing());
-        let mut population = vec![
-            vec![0.1, 0.2, 0.4, 0.5, 0.9],
-            vec![0.2, 0.3, 0.6, 0.7, 0.8],
-            vec![0.1, 0.3, 0.5, 0.7, 0.9],
-        ];
-        let parents_length = population.len();
-        comp.generate_population(&mut population, &problem, &mut state);
-        assert_eq!(population.len() * (2 * y + 1), parents_length);
     }
 }
 

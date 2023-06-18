@@ -3,7 +3,7 @@
 use crate::conditions::Condition;
 use crate::{
     framework::SingleObjective,
-    problems::{HasKnownOptimum, HasKnownTarget, Problem, SingleObjectiveProblem},
+    problems::{KnownOptimumProblem, Problem, SingleObjectiveProblem},
     state::{
         common::{Evaluations, Iterations, Progress},
         CustomState, State,
@@ -13,24 +13,34 @@ use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct TargetHit;
+pub struct TargetHit {
+    delta: f64,
+}
 
 impl TargetHit {
-    pub fn new<P>() -> Box<dyn Condition<P>>
+    pub fn new<P>(delta: f64) -> Box<dyn Condition<P>>
     where
-        P: SingleObjectiveProblem + HasKnownTarget,
+        P: SingleObjectiveProblem + KnownOptimumProblem,
     {
-        Box::new(Self)
+        Box::new(Self { delta })
     }
 }
 
 impl<P> Condition<P> for TargetHit
 where
-    P: SingleObjectiveProblem + HasKnownTarget,
+    P: SingleObjectiveProblem + KnownOptimumProblem,
 {
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> bool {
-        if let Some(fitness) = state.best_objective_value() {
-            !problem.target_hit(*fitness)
+        if let Some(objective) = state.best_objective_value() {
+            let provided = objective.value();
+            let known = problem.known_optimum().value();
+            debug_assert!(
+                provided >= known,
+                "the provided objective value is smaller than the known optimum: {} vs. {}",
+                provided,
+                known
+            );
+            (provided - known).abs() <= self.delta
         } else {
             false
         }
@@ -193,7 +203,7 @@ pub struct DistanceToOpt {
 }
 
 impl DistanceToOpt {
-    pub fn new<P: HasKnownOptimum>(distance: f64) -> Box<dyn Condition<P>>
+    pub fn new<P: KnownOptimumProblem>(distance: f64) -> Box<dyn Condition<P>>
     where
         P: SingleObjectiveProblem,
     {
@@ -201,7 +211,7 @@ impl DistanceToOpt {
     }
 }
 
-impl<P: HasKnownOptimum + SingleObjectiveProblem> Condition<P> for DistanceToOpt
+impl<P: KnownOptimumProblem + SingleObjectiveProblem> Condition<P> for DistanceToOpt
 where
     P: Problem,
 {

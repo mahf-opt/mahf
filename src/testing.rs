@@ -1,9 +1,11 @@
 //! Testing utilities.
 
+#![allow(dead_code)]
+
 use crate::{
     framework::{Individual, SingleObjective},
-    problems::{Evaluator, HasKnownOptimum, Problem, SingleObjectiveProblem},
-    state::{common::EvaluatorInstance, State},
+    problems::{Evaluate, KnownOptimumProblem, Problem, SingleObjectiveProblem},
+    state::State,
 };
 use std::borrow::Borrow;
 
@@ -17,21 +19,18 @@ impl Problem for TestProblem {
     fn name(&self) -> &str {
         "TestProblem"
     }
-
-    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
-        EvaluatorInstance::new(TestEvaluator)
-    }
 }
 
-impl HasKnownOptimum for TestProblem {
+impl KnownOptimumProblem for TestProblem {
     fn known_optimum(&self) -> SingleObjective {
         0.0.try_into().unwrap()
     }
 }
 
+#[derive(Default)]
 pub struct TestEvaluator;
 
-impl Evaluator for TestEvaluator {
+impl Evaluate for TestEvaluator {
     type Problem = TestProblem;
 
     fn evaluate(
@@ -41,7 +40,7 @@ impl Evaluator for TestEvaluator {
         individuals: &mut [Individual<Self::Problem>],
     ) {
         for individual in individuals {
-            individual.evaluate(0.0.try_into().unwrap());
+            individual.set_objective(0.0.try_into().unwrap());
         }
     }
 }
