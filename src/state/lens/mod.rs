@@ -71,8 +71,7 @@ where
     E: LensMut<P>,
 {
     fn assign(&self, value: Self::Target, state: &State<P>) -> ExecResult<()> {
-        let mut t = self.get_mut(state)?;
-        *t = value;
+        *self.get_mut(state)? = value;
         Ok(())
     }
 }

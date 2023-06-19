@@ -349,12 +349,13 @@ impl<P: Problem> Populations<P> {
 
     /// Returns a reference to the top-most population on the stack.
     ///
+    /// For a non-panicking version, see [`get_current`].
+    ///
+    /// [`get_current`]: Populations::get_current
+    ///
     /// # Panics
     ///
     /// Panics when no populations are on the stack.
-    /// For a non-failing version, see [`get_current`].
-    ///
-    /// [`get_current`]: Populations::get_current
     ///
     /// # Examples
     ///
@@ -397,12 +398,13 @@ impl<P: Problem> Populations<P> {
 
     /// Returns a mutable reference to the top-most population on the stack.
     ///
+    /// For a non-panicking version, see [`get_current_mut`].
+    ///
+    /// [`get_current_mut`]: Populations::get_current_mut
+    ///
     /// # Panics
     ///
     /// Panics when no populations are on the stack.
-    /// For a non-failing version, see [`get_current_mut`].
-    ///
-    /// [`get_current_mut`]: Populations::get_current_mut
     ///
     /// # Examples
     ///
@@ -466,12 +468,13 @@ impl<P: Problem> Populations<P> {
 
     /// Pops the top-most population from the stack.
     ///
+    /// For a non-panicking version, see [`try_pop`].
+    ///
+    /// [`try_pop`]: Populations::try_pop
+    ///
     /// # Panics
     ///
     /// Panics when no populations are on the stack.
-    /// For a non-failing version, see [`try_pop`].
-    ///
-    /// [`try_pop`]: Populations::try_pop
     ///
     /// # Examples
     ///
@@ -519,14 +522,13 @@ impl<P: Problem> Populations<P> {
 
     /// Peeks the population at `depth` from the top of the stack.
     ///
+    /// For a non-panicking version, see [`try_peek`].
+    ///
+    /// [`try_peek`]: Populations::try_peek
     ///
     /// # Panics
     ///
     /// Panics when there are less than `depth + 1` populations on the stack.
-    ///
-    /// For a non-failing version, see [`try_peek`].
-    ///
-    /// [`try_peek`]: Populations::try_peek
     ///
     /// # Examples
     ///
@@ -581,7 +583,7 @@ impl<P: Problem> Populations<P> {
         i.and_then(|i| self.stack.get(i)).map(|p| p.deref())
     }
 
-    /// Shifts the first `n` populations circularly.
+    /// Shifts the first `n` populations circularly by one, i.e. rotates them to the right.
     ///
     /// This is useful for applying different operations to different populations on the stack
     /// without explicitly popping and pushing them.
@@ -611,23 +613,23 @@ impl<P: Problem> Populations<P> {
     ///
     /// // Applying op1 to pop1.
     /// op1(populations.current());
-    /// populations.shift(3);
+    /// populations.rotate(3);
     /// // [..., `pop1`, `pop3`, `pop2`]
     ///
     /// // Applying op2 to pop2.
     /// op2(populations.current());
-    /// populations.shift(3);
+    /// populations.rotate(3);
     /// // [..., `pop2`, `pop1`, `pop3`]
     ///
     /// // Applying op3 to pop3.
     /// op3(populations.current());
-    /// populations.shift(3);
+    /// populations.rotate(3);
     /// // [..., `pop3`, `pop2`, `pop1`]
     ///
     /// // Populations are ordered like before.
     /// # }
     /// ```
-    pub fn shift(&mut self, n: usize) {
+    pub fn rotate(&mut self, n: usize) {
         let len = self.stack.len();
         self.stack[len - 1 - n..len].rotate_right(1);
     }

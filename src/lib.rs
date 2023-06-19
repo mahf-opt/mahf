@@ -35,5 +35,6 @@ pub use rand_distr;
 pub use serde;
 pub use state::{
     lens::{IdLens, ValueOf},
-    CustomState, Random, State, StateError, StateRegistry,
+    registry::StateRegistry,
+    CustomState, Random, State, StateError,
 };

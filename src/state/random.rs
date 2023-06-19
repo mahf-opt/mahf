@@ -110,7 +110,7 @@ impl Random {
 
     /// Create a random generator for testing.
     ///
-    /// This always uses the seed `0`.
+    /// This always uses the default random generator with seed `0`.
     ///
     /// # Examples
     ///
@@ -158,7 +158,7 @@ impl Random {
     /// ```
     ///
     /// Sending the child generators to threads with a deterministic workload
-    /// enables reproducible pseudo-random numbers across threads.
+    /// enables reproducible pseudo-random numbers even across threads.
     ///
     /// ```
     /// use rand::Rng;

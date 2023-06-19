@@ -1,4 +1,4 @@
-use crate::{state::error::StateResult, CustomState, State, StateError};
+use crate::{state::StateResult, CustomState, State, StateError};
 
 pub struct StateReq<'a, 'b, P>(&'a State<'b, P>);
 

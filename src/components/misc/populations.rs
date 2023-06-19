@@ -1,3 +1,4 @@
+use eyre::ensure;
 use itertools::{interleave, Itertools};
 use serde::{Deserialize, Serialize};
 
@@ -26,29 +27,28 @@ impl<P: Problem> Component<P> for ClearPopulation {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct SwapPopulations;
+pub struct RotatePopulations {
+    n: usize,
+}
 
-impl SwapPopulations {
-    pub fn from_params() -> Self {
-        Self
+impl RotatePopulations {
+    pub fn from_params(n: usize) -> Self {
+        Self { n }
     }
 
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
-        Box::new(Self::from_params())
+    pub fn new<P: Problem>(n: usize) -> Box<dyn Component<P>> {
+        Box::new(Self::from_params(n))
     }
 }
 
-impl<P: Problem> Component<P> for SwapPopulations {
-    #[contracts::requires(state.populations().len() >= 2)]
+impl<P: Problem> Component<P> for RotatePopulations {
+    #[contracts::requires()]
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let mut populations = state.populations_mut();
-
-        let pop1 = populations.pop();
-        let pop2 = populations.pop();
-
-        populations.push(pop1);
-        populations.push(pop2);
-
+        ensure!(
+            state.populations().len() >= self.n,
+            "not enough populations to rotate"
+        );
+        state.populations_mut().rotate(self.n);
         Ok(())
     }
 }
@@ -131,8 +131,7 @@ impl<P: Problem> Component<P> for DuplicatePopulation {
         let mut populations = state.populations_mut();
         let population = populations.pop();
         let duplicates = population.clone();
-        let population = population.into_iter().interleave(duplicates).collect();
-        populations.push(population);
+        populations.push(interleave(population, duplicates).collect());
         Ok(())
     }
 }

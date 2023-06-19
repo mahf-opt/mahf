@@ -4,10 +4,10 @@
 ///
 /// This trait is **not** automatically implemented for arbitrary types.
 ///
-/// Custom state is stored in the [`State`] and can be accessed according to
+/// Custom state is stored in the [`StateRegistry`] and can be accessed according to
 /// the typical borrowing model (one writer xor multiple readers).
 ///
-/// [`State`]: crate::State
+/// [`State`]: crate::state::StateRegistry
 ///
 /// # Requires
 ///

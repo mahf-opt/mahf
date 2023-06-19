@@ -8,8 +8,8 @@ use crate::{
     Problem, State,
 };
 
-pub mod bound;
 pub mod common;
+pub mod cro;
 pub mod logical;
 
 pub use common::{DistanceToOptimumGreaterThan, EveryN, LessThan, OptimumReached, RandomChance};

@@ -1,29 +1,68 @@
 use std::collections::HashSet;
 
-use crate::{state::StateRegistry, CustomState, StateError};
+use crate::{state::registry::StateRegistry, CustomState, StateError};
 
-/// Allows borrowing up to eight `&mut T: `[`CustomState`] from [State] at the same time.
+/// Allows borrowing up to eight `&mut T: `[`CustomState`] from a [`StateRegistry`] at the same time.
+///
+/// # Usage
+///
+/// This trait should only used indirectly through [`StateRegistry::get_multiple_mut`] and
+/// [`StateRegistry::try_get_multiple_mut`].
 ///
 /// Note that this makes it possible to retrieve mutable references `&mut T` directly,
 /// while [`StateRegistry::borrow`] and similar return a [`RefMut<T>`].
 ///
+/// A single `&mut T` can be retrieved using [`StateRegistry::get_mut`].
+///
 /// [`RefMut<T>`]: std::cell::RefMut
 ///
+/// # Implementation
+///
 /// This trait is implemented for type tuples with size up to eight.
-///
-/// # Panics
-///
-/// Panics on type duplicates in the tuple.
+/// Own implementation is usually not necessary.
 ///
 /// # Examples
 ///
-/// TODO
+/// ```
+/// # use better_any::{Tid, TidAble};
+/// # use derive_more::{Deref, DerefMut};
+/// # use mahf::CustomState;
+/// use mahf::StateRegistry;
+/// # #[derive(Debug, Deref, DerefMut, Tid)]
+/// # pub struct A(usize);
+/// # impl CustomState<'_> for A {}
+/// # #[derive(Debug, Deref, DerefMut, Tid)]
+/// # pub struct B(usize);
+/// # impl CustomState<'_> for B {}
+///
+/// let mut registry = StateRegistry::new();
+/// registry.insert(A(10));
+/// registry.insert(B(20));
+///
+/// // References are borrow-checked at compile time.
+/// let (a, b): (&mut A, &mut B) = registry.get_multiple_mut::<(A, B)>();
+/// a.0 += 1;
+/// b.0 += 1;
+///
+/// assert_eq!(registry.get_value::<A>(), 11);
+/// assert_eq!(registry.get_value::<B>(), 21);
+///
+/// // Borrowing the same type multiple times at the same time is not possible.
+/// assert!(registry.try_get_multiple_mut::<(A, A)>().is_err());
+/// ```
 pub trait MultiStateTuple<'a, 'b>: 'a {
+    /// A collection of types to borrow mutable at the same time.
     type References: 'a;
 
+    /// Checks if the types within `References` are distinct.
     fn distinct() -> bool;
 
-    fn try_fetch(state: &'a mut StateRegistry<'b>) -> Result<Self::References, StateError>;
+    /// Tries to borrow all types contained within `References` mutably.
+    ///
+    /// The soundness if `References` should be checked with [`distinct`] before any borrow occurs.
+    ///
+    /// [`distinct`]: Self::distinct
+    fn try_get_mut(state: &'a mut StateRegistry<'b>) -> Result<Self::References, StateError>;
 }
 
 macro_rules! impl_multi_state_tuple {
@@ -39,13 +78,15 @@ macro_rules! impl_multi_state_tuple {
                 $(set.insert($item::id()))&&*
             }
 
-            fn try_fetch(state: &'a mut StateRegistry<'b>) -> Result<Self::References, StateError> {
+            fn try_get_mut(state: &'a mut StateRegistry<'b>) -> Result<Self::References, StateError> {
                 if !Self::distinct() {
                     return Err(StateError::multiple_borrow_conflict::<Self::References>())
                 }
 
                 let state = state as *mut StateRegistry;
-                // SAFETY: TODO
+                // SAFETY: All type ids were checked to be distinct beforehand.
+                // The registry is mutably borrowed, so no new mutable references
+                // to already borrowed types are possible until all references are dropped.
                 unsafe { Ok(($((*state).get_mut::<$item>().ok_or_else(StateError::not_found::<$item>)?),*)) }
             }
         }
@@ -68,7 +109,7 @@ impl_multi_state_tuple!((T1, T2, T3, T4, T5, T6, T7, T8));
 mod tests {
     use better_any::{Tid, TidAble};
 
-    use crate::{state::multi::MultiStateTuple, CustomState};
+    use crate::{state::registry::MultiStateTuple, CustomState};
 
     macro_rules! make_type {
         ($ty:ident) => {

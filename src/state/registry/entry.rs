@@ -1,7 +1,6 @@
-//! A reimplementation of the [`Entry`] API of [`HashMap`], but for [`StateRegistry`].
+//! A reimplementation of the entry API of [`HashMap::entry`], but for [`StateRegistry`].
 //!
-//! [`Entry`]: std::collections::hash::map::Entry
-//! [`HashMap`]: std::collections::HashMap
+//! [`HashMap::entry`]: std::collections::HashMap::entry
 //! [`StateRegistry`]: crate::StateRegistry
 
 use std::{
@@ -242,8 +241,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// use mahf::state::entry::Entry;
+    /// use mahf::{StateRegistry, state::registry::Entry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -278,8 +276,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// use mahf::state::entry::Entry;
+    /// use mahf::{StateRegistry, state::registry::Entry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -322,8 +319,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// use mahf::state::entry::Entry;
+    /// use mahf::{StateRegistry, state::registry::Entry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -356,8 +352,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// use mahf::state::entry::Entry;
+    /// use mahf::{StateRegistry, state::registry::Entry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -392,8 +387,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// use mahf::state::entry::Entry;
+    /// use mahf::{StateRegistry, state::registry::Entry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -439,8 +433,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// use mahf::state::entry::Entry;
+    /// use mahf::{StateRegistry, state::registry::Entry};
     /// # #[derive(Default, Debug, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}

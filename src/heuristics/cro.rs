@@ -55,7 +55,7 @@ where
                 initial_kinetic_energy,
                 buffer,
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
-                decomposition_criterion: conditions::bound::cro::DecompositionCriterion::new(alpha),
+                decomposition_criterion: conditions::cro::DecompositionCriterion::new(alpha),
                 decomposition: Block::new([
                     misc::populations::DuplicatePopulation::new(),
                     mutation::NormalMutation::<A>::new(decomposition_deviation, 0.5),
@@ -64,7 +64,7 @@ where
                     on_wall_deviation,
                 ),
                 double_mole_selection: selection::RandomWithoutRepetition::new(2),
-                synthesis_criterion: conditions::bound::cro::SynthesisCriterion::new(beta),
+                synthesis_criterion: conditions::cro::SynthesisCriterion::new(beta),
                 synthesis: recombination::UniformCrossover::new_insert_single(1.),
                 intermolecular_ineffective_collision: <mutation::UniformMutation>::new_bound(1.),
                 constraints: boundary::Saturation::new(),
@@ -126,7 +126,7 @@ where
     };
 
     Configuration::builder()
-        .do_(components::bound::cro::ChemicalReactionInit::new(
+        .do_(components::cro::ChemicalReactionInit::new(
             initial_kinetic_energy,
             buffer,
         ))
@@ -144,14 +144,14 @@ where
                                 elementary_reaction(
                                     builder,
                                     decomposition,
-                                    components::bound::cro::DecompositionUpdate::new(),
+                                    components::cro::DecompositionUpdate::new(),
                                 )
                             },
                             |builder| {
                                 elementary_reaction(
                                     builder,
                                     on_wall_ineffective_collision,
-                                    components::bound::cro::OnWallIneffectiveCollisionUpdate::new(
+                                    components::cro::OnWallIneffectiveCollisionUpdate::new(
                                         kinetic_energy_lr,
                                     ),
                                 )
@@ -168,14 +168,14 @@ where
                                 elementary_reaction(
                                     builder,
                                     synthesis,
-                                    components::bound::cro::SynthesisUpdate::new(),
+                                    components::cro::SynthesisUpdate::new(),
                                 )
                             },
                             |builder| {
                                 elementary_reaction(
                                     builder,
                                     intermolecular_ineffective_collision,
-                                    components::bound::cro::IntermolecularIneffectiveCollisionUpdate::new(),
+                                    components::cro::IntermolecularIneffectiveCollisionUpdate::new(),
                                 )
                             },
                         )
