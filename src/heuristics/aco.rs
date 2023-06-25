@@ -138,7 +138,7 @@ where
         .while_(condition, |builder| {
             builder
                 .do_(generation)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_(pheromone_update)
                 .do_(Logger::new())

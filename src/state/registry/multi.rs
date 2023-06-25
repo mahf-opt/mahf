@@ -1,3 +1,5 @@
+//! Utilities for multiple borrowing of state.
+
 use std::collections::HashSet;
 
 use crate::{state::registry::StateRegistry, CustomState, StateError};

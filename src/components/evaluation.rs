@@ -10,14 +10,14 @@ use crate::{
     components::Component,
     population::BestIndividual,
     problems::{Evaluator, MultiObjectiveProblem, SingleObjectiveProblem},
-    state::{common, StateReq},
+    state::{common, common::ParetoFront, StateReq},
     Problem, State,
 };
 
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct PopulationEvaluator<T: Evaluator>(PhantomData<fn() -> T>);
+pub struct PopulationEvaluator<T: Evaluator>(#[serde(skip)] PhantomData<fn() -> T>);
 
 impl<T: Evaluator> PopulationEvaluator<T> {
     pub fn from_params() -> Self {
@@ -124,7 +124,7 @@ impl<P: MultiObjectiveProblem> Component<P> for ParetoFrontUpdate {
 
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let populations = state.populations();
-        let mut front = state.pareto_front_mut();
+        let mut front = state.borrow_mut::<ParetoFront<P>>();
 
         for individual in populations.current() {
             front.update(individual);

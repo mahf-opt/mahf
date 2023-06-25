@@ -5,12 +5,12 @@ use derive_more::{Deref, DerefMut};
 use eyre::{ensure, ContextCompat};
 use itertools::multizip;
 use rand::Rng;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::{
     component::{AnyComponent, ExecResult},
     components::Component,
-    identifier::{Global, Identifier},
+    identifier::{Global, Identifier, PhantomId},
     population::{AsSolutions, AsSolutionsMut, BestIndividual},
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
     state::StateReq,
@@ -33,10 +33,10 @@ impl<I: Identifier> ParticleVelocities<I> {
 
 impl<I: Identifier> CustomState<'_> for ParticleVelocities<I> {}
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize)]
 pub struct ParticleVelocitiesInit<I: Identifier = Global> {
     pub v_max: f64,
-    phantom: PhantomData<I>,
+    id: PhantomId<I>,
 }
 
 impl<I: Identifier> ParticleVelocitiesInit<I> {
@@ -44,7 +44,7 @@ impl<I: Identifier> ParticleVelocitiesInit<I> {
         ensure!(v_max > 0., "`v_max` must be > 0, but was {}", v_max);
         Ok(Self {
             v_max,
-            phantom: PhantomData,
+            id: PhantomId::default(),
         })
     }
 
@@ -97,13 +97,13 @@ impl<T: AnyComponent> InertiaWeight<T> {
 
 impl<T: AnyComponent> CustomState<'_> for InertiaWeight<T> {}
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize)]
 pub struct ParticleVelocitiesUpdate<I: Identifier = Global> {
     pub weight: f64,
     pub c_1: f64,
     pub c_2: f64,
     pub v_max: f64,
-    phantom: PhantomData<I>,
+    id: PhantomId<I>,
 }
 
 impl<I: Identifier> ParticleVelocitiesUpdate<I> {
@@ -117,7 +117,7 @@ impl<I: Identifier> ParticleVelocitiesUpdate<I> {
             c_1,
             c_2,
             v_max,
-            phantom: PhantomData,
+            id: PhantomId::default(),
         })
     }
 
@@ -207,16 +207,12 @@ impl<P: Problem, I: Identifier> BestParticles<P, I> {
 
 impl<P: Problem, I: Identifier> CustomState<'_> for BestParticles<P, I> {}
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct PersonalBestParticlesInit<I: Identifier = Global> {
-    phantom: PhantomData<I>,
-}
+#[derive(Clone, Serialize)]
+pub struct PersonalBestParticlesInit<I: Identifier = Global>(PhantomId<I>);
 
 impl<I: Identifier> PersonalBestParticlesInit<I> {
     pub fn from_params() -> Self {
-        Self {
-            phantom: PhantomData,
-        }
+        Self(PhantomId::default())
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
@@ -243,16 +239,12 @@ where
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct PersonalBestParticlesUpdate<I: Identifier = Global> {
-    phantom: PhantomData<I>,
-}
+#[derive(Clone, Serialize)]
+pub struct PersonalBestParticlesUpdate<I: Identifier = Global>(PhantomId<I>);
 
 impl<I: Identifier> PersonalBestParticlesUpdate<I> {
     pub fn from_params() -> Self {
-        Self {
-            phantom: PhantomData,
-        }
+        Self(PhantomId::default())
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
@@ -298,16 +290,12 @@ impl<P: Problem, I: Identifier> BestParticle<P, I> {
 
 impl<P: Problem, I: Identifier> CustomState<'_> for BestParticle<P, I> {}
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct GlobalBestParticleUpdate<I: Identifier = Global> {
-    phantom: PhantomData<I>,
-}
+#[derive(Clone, Serialize)]
+pub struct GlobalBestParticleUpdate<I: Identifier = Global>(PhantomId<I>);
 
 impl<I: Identifier> GlobalBestParticleUpdate<I> {
     pub fn from_params() -> Self {
-        Self {
-            phantom: PhantomData,
-        }
+        Self(PhantomId::default())
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>

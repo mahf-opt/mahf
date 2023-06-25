@@ -1,9 +1,7 @@
 use crate::{
     component::ExecResult,
-    state::{
-        lens::{Lens, LensAssign},
-        random::Random,
-    },
+    lens::{Lens, LensAssign},
+    state::random::Random,
     Problem, State,
 };
 
@@ -23,7 +21,7 @@ pub fn mapping<P, T, I, O>(
     component: &T,
     input_lens: &I,
     output_lens: &O,
-    _problem: &P,
+    problem: &P,
     state: &mut State<P>,
 ) -> ExecResult<()>
 where
@@ -32,8 +30,8 @@ where
     I: Lens<P, Target = T::Input>,
     O: LensAssign<P, Target = T::Output>,
 {
-    let input = input_lens.get(state)?;
+    let input = input_lens.get(problem, state)?;
     let result = component.map(input, &mut state.random_mut())?;
-    output_lens.assign(result, state)?;
+    output_lens.assign(result, problem, state)?;
     Ok(())
 }

@@ -34,7 +34,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(evaluation::BestIndividualUpdate::new())
         .do_(ls::<P, O>(
@@ -71,7 +71,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(ls::<P, O>(
             Parameters {
@@ -110,7 +110,7 @@ where
                 .do_(selection::CloneSingle::new(n_neighbors))
                 .do_(neighbors)
                 .do_(constraints)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(Logger::new())

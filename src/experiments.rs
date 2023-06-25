@@ -1,3 +1,5 @@
+//! Utilities for performing experiments.
+
 use std::{fmt::Debug, fs, fs::File, path::Path, sync::Arc};
 
 use eyre::WrapErr;

@@ -7,9 +7,10 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    lens::ValueOf,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
-    state::{common, lens::ValueOf},
+    state::common,
 };
 
 #[derive(Clone, Debug)]
@@ -59,7 +60,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(initial_population_size))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(iwo::<P, O>(
             Parameters {
@@ -115,7 +116,7 @@ where
                 ))
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
                 .do_(Logger::new())

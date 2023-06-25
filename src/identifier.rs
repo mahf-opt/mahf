@@ -1,4 +1,8 @@
-use serde::Serialize;
+//! Identifiers to distinguish between different components of the same type.
+
+use std::{any::type_name, marker::PhantomData};
+
+use serde::{ser::SerializeTupleStruct, Serialize, Serializer};
 use trait_set::trait_set;
 
 trait_set! {
@@ -11,6 +15,20 @@ macro_rules! identifier {
         #[derive(Default, Copy, Clone, Serialize)]
         pub struct $name;
     };
+}
+
+#[derive(Default, Copy, Clone)]
+pub struct PhantomId<I: Identifier>(PhantomData<fn() -> I>);
+
+impl<I: Identifier> Serialize for PhantomId<I> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut id = serializer.serialize_tuple_struct("Id", 1)?;
+        id.serialize_field(type_name::<I>())?;
+        id.end()
+    }
 }
 
 identifier!(Global);

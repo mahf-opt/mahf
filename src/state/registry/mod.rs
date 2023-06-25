@@ -1,3 +1,5 @@
+//! A registry for arbitrary state.
+
 use std::{
     any::TypeId,
     cell::{Ref, RefCell, RefMut},
@@ -22,17 +24,19 @@ pub type StateMap<'a> = HashMap<TypeId, RefCell<Box<dyn CustomState<'a>>>>;
 /// A [`CustomState`] container, which provides methods to insert, access and manage the
 /// contained custom state.
 ///
+/// It is essentially a set of types, where distinct types can be accessed simultaneously using
+/// the usual borrowing rules of Rust (multiple reads xor one write).
+///
 /// Note that multiple mutable borrows of distinct state is possible through interior mutability.
+///
 ///
 /// # Stack
 ///
-/// The registry allows shadowing state though the use of a linked stack of state registries.
+/// The registry allows shadowing state though the use of an internal owned stack of state registries.
 ///
-/// # State
+/// See [`insert`] for more information.
 ///
-/// This is the backend of [`State`].
-///
-/// [`State`]: crate::State
+/// [`insert`]: Self::insert
 #[derive(Default)]
 pub struct StateRegistry<'a> {
     parent: Option<Box<StateRegistry<'a>>>,

@@ -3,15 +3,16 @@
 pub use crate::{
     components::{
         self, evaluation, initialization, mapping, mutation, recombination, replacement, selection,
+        Component,
     },
-    conditions,
+    conditions::{self, Condition},
     heuristics::*,
     logging,
     population::{
         AsSolutions, AsSolutionsMut, BestIndividual, IntoIndividuals, IntoSingle, IntoSingleRef,
         IntoSolutions,
     },
-    problems,
-    state::{self, common},
-    ExecResult, MultiObjective, SingleObjective, ValueOf,
+    problems::{self, Problem},
+    state::{self, common, CustomState, State, StateReq},
+    Configuration, ExecResult, MultiObjective, SingleObjective, ValueOf,
 };

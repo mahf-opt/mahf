@@ -1,5 +1,9 @@
 //! A collection of utilities.
 
+use std::marker::PhantomData;
+
+use derivative::Derivative;
+
 /// Allows enumeration for functions which normally don't support enumeration, e.g. [`Vec::retain`].
 ///
 /// # Examples
@@ -102,3 +106,19 @@ mod macros {
 }
 
 pub use macros::impl_try_default_err;
+
+/// Wrapper around [`PhantomData`] that serializes the type name of `T`.
+///
+/// It additionally implements `Send` + `Sync` even if `T` doesn't.
+#[derive(Derivative)]
+#[derivative(Default(bound = ""), Copy(bound = ""), Clone(bound = ""))]
+pub struct SerializablePhantom<L>(PhantomData<fn() -> L>);
+
+impl<L> serde::Serialize for SerializablePhantom<L> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_unit_struct(std::any::type_name::<L>())
+    }
+}

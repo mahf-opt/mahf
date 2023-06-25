@@ -37,7 +37,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(population_size))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(es::<P, O>(
             Parameters {
@@ -81,7 +81,7 @@ where
                 .do_(selection)
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)

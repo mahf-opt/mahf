@@ -1,3 +1,5 @@
+//! Helpers for testing.
+
 #![allow(dead_code)]
 
 use std::{any::type_name, marker::PhantomData};

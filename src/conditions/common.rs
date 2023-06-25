@@ -13,11 +13,9 @@ use trait_set::trait_set;
 use crate::{
     component::ExecResult,
     conditions::Condition,
+    lens::{AnyLens, Lens, LensRef},
     problems::KnownOptimumProblem,
-    state::{
-        common::Progress,
-        lens::{AnyLens, Lens, LensRef},
-    },
+    state::common::Progress,
     CustomState, Problem, State,
 };
 
@@ -56,7 +54,7 @@ trait_set! {
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct LessThan<L>
+pub struct LessThanN<L>
 where
     L: AnyLens,
     L::Target: AnyFloatLike,
@@ -65,7 +63,7 @@ where
     pub lens: L,
 }
 
-impl<L> LessThan<L>
+impl<L> LessThanN<L>
 where
     L: AnyLens,
     L::Target: AnyFloatLike,
@@ -83,7 +81,7 @@ where
     }
 }
 
-impl<P, L> Condition<P> for LessThan<L>
+impl<P, L> Condition<P> for LessThanN<L>
 where
     P: Problem,
     L: Lens<P>,
@@ -94,8 +92,8 @@ where
         Ok(())
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> ExecResult<bool> {
-        let value = self.lens.get(state)?;
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
+        let value = self.lens.get(problem, state)?;
         state.set_value::<Progress<L>>(value.into() / self.n.into());
 
         Ok(value < self.n)
@@ -130,8 +128,8 @@ where
     P: Problem,
     L: Lens<P, Target = u32>,
 {
-    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> ExecResult<bool> {
-        let value = self.lens.get(state)?;
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
+        let value = self.lens.get(problem, state)?;
         Ok(value % self.n == 0)
     }
 }
@@ -244,8 +242,8 @@ where
         Ok(())
     }
 
-    fn evaluate(&self, _problem: &P, state: &mut State<P>) -> ExecResult<bool> {
-        let current = self.lens.get_ref(state)?;
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
+        let current = self.lens.get_ref(problem, state)?;
         let mut previous = state.try_borrow_value_mut::<Previous<L::Target>>()?;
 
         let changed = if let Some(previous) = &*previous {

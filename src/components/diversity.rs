@@ -7,10 +7,10 @@ use serde::Serialize;
 use crate::{
     component::{AnyComponent, ExecResult},
     components::Component,
+    lens::{AnyLens, Lens, LensMap},
     logging::extractor::{EntryExtractor, EntryName},
     population::AsSolutions,
     problems::VectorProblem,
-    state::lens::{AnyLens, Lens, LensMap},
     CustomState, Problem, State,
 };
 
@@ -73,7 +73,7 @@ impl<I: AnyComponent + 'static> CustomState<'_> for Diversity<I> {}
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Default(bound = ""), Clone(bound = ""))]
-pub struct NormalizedDiversityLens<I>(PhantomData<fn() -> I>);
+pub struct NormalizedDiversityLens<I>(#[serde(skip)] PhantomData<fn() -> I>);
 
 impl<I: AnyComponent + 'static> AnyLens for NormalizedDiversityLens<I> {
     type Target = f64;

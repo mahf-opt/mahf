@@ -1,9 +1,13 @@
+//! TODO
+
 use crate::{
     component::ExecResult,
     components::{evaluation, misc::debug::Debug, Block, Branch, Component, Loop, Scope},
     conditions::Condition,
     logging,
-    problems::{Evaluator, MultiObjectiveProblem, SingleObjectiveProblem},
+    problems::{
+        evaluate, Evaluator, MultiObjectiveProblem, ObjectiveFunction, SingleObjectiveProblem,
+    },
     state::{common, random::Random},
     Problem, State,
 };
@@ -188,7 +192,6 @@ impl<P: Problem> ConfigurationBuilder<P> {
     }
 }
 
-// Convenience methods
 impl<P: Problem> ConfigurationBuilder<P> {
     /// Asserts the condition on [State][state::State].
     ///
@@ -209,8 +212,18 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(Debug::new(behaviour))
     }
 
-    pub fn evaluate<T: Evaluator<Problem = P>>(self) -> Self {
+    pub fn evaluate_with<T: Evaluator<Problem = P>>(self) -> Self {
         self.do_(evaluation::PopulationEvaluator::<T>::new())
+    }
+}
+
+impl<P: ObjectiveFunction> ConfigurationBuilder<P> {
+    pub fn evaluate(self) -> Self {
+        self.do_(evaluation::PopulationEvaluator::<evaluate::Sequential<P>>::new())
+    }
+
+    pub fn evaluate_parallel(self) -> Self {
+        self.do_(evaluation::PopulationEvaluator::<evaluate::Parallel<P>>::new())
     }
 }
 

@@ -4,9 +4,9 @@ use crate::{
     conditions::{self, *},
     configuration::{Configuration, ConfigurationBuilder},
     identifier::{A, B},
+    lens::common::PopulationSizeLens,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
-    state::lens::common::PopulationSizeLens,
 };
 
 /// Parameters for [cro].
@@ -46,7 +46,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(initial_population_size))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(cro::<P, O>(
             Parameters {
@@ -120,7 +120,7 @@ where
         builder
             .do_(reaction)
             .do_(constraints.clone())
-            .evaluate::<O>()
+            .evaluate_with::<O>()
             .update_best_individual()
             .do_(update)
     };
@@ -133,7 +133,7 @@ where
         .while_(condition, |builder| {
             builder.if_else_(
                 common::RandomChance::new(mole_coll)
-                    | LessThan::new(2, PopulationSizeLens::<P>::new()),
+                    | LessThanN::new(2, PopulationSizeLens::<P>::new()),
                 |builder| {
                     builder
                         .do_(single_mole_selection)

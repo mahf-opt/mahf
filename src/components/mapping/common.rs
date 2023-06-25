@@ -9,10 +9,8 @@ use crate::{
         mapping::{mapping, Mapping},
         Component,
     },
-    state::{
-        lens::{AnyLens, Lens, LensAssign},
-        random::Random,
-    },
+    lens::{AnyLens, Lens, LensAssign},
+    state::random::Random,
     Problem, State,
 };
 
@@ -167,9 +165,9 @@ where
     R: AnySampleRange,
     O: LensAssign<P, Target = f64>,
 {
-    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let rand = state.random_mut().gen_range(self.range.clone());
-        self.output_lens.assign(rand, state)?;
+        self.output_lens.assign(rand, problem, state)?;
         Ok(())
     }
 }

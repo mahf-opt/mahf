@@ -4,65 +4,63 @@ use serde::Serialize;
 
 use crate::{
     component::ExecResult,
+    lens::common::{IdLens, ValueOf},
     logging::{extractor::EntryExtractor, log::Step},
-    state::{
-        common,
-        lens::common::{IdLens, ValueOf},
-    },
+    state::common,
     Condition, CustomState, Problem, State,
 };
+
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""))]
+pub struct ExtractionRule<P: Problem> {
+    pub trigger: Box<dyn Condition<P>>,
+    pub extractor: Box<dyn EntryExtractor<P>>,
+}
 
 #[derive(Tid, Derivative)]
 #[derivative(Default(bound = ""), Clone(bound = ""))]
 pub struct LogConfig<P: Problem + 'static> {
-    triggers: Vec<Box<dyn Condition<P>>>,
-    extractors: Vec<Box<dyn EntryExtractor<P>>>,
+    rules: Vec<ExtractionRule<P>>,
 }
 
 impl<P: Problem> CustomState<'_> for LogConfig<P> {}
 
 impl<P: Problem> LogConfig<P> {
     pub fn new() -> Self {
-        Self {
-            triggers: Vec::new(),
-            extractors: Vec::new(),
-        }
+        Self { rules: Vec::new() }
     }
 
     fn push(&mut self, trigger: Box<dyn Condition<P>>, extractor: Box<dyn EntryExtractor<P>>) {
-        self.triggers.push(trigger);
-        self.extractors.push(extractor);
+        self.rules.push(ExtractionRule { trigger, extractor })
     }
 
-    pub fn triggers(&self) -> &[Box<dyn Condition<P>>] {
-        &self.triggers
-    }
-
-    pub fn extractors(&self) -> &[Box<dyn EntryExtractor<P>>] {
-        &self.extractors
+    pub fn triggers(&self) -> impl Iterator<Item = &Box<dyn Condition<P>>> {
+        self.rules
+            .iter()
+            .map(|ExtractionRule { trigger, .. }| trigger)
     }
 
     pub fn with(
-        mut self,
+        &mut self,
         trigger: Box<dyn Condition<P>>,
         extractor: Box<dyn EntryExtractor<P>>,
-    ) -> Self {
+    ) -> &mut Self {
         self.push(trigger, extractor);
         self
     }
 
     pub fn with_many(
-        mut self,
+        &mut self,
         trigger: Box<dyn Condition<P>>,
         extractors: impl IntoIterator<Item = Box<dyn EntryExtractor<P>>>,
-    ) -> Self {
+    ) -> &mut Self {
         for extractor in extractors {
             self.push(trigger.clone(), extractor);
         }
         self
     }
 
-    pub fn with_auto<T>(mut self, trigger: Box<dyn Condition<P>>) -> Self
+    pub fn with_auto<T>(&mut self, trigger: Box<dyn Condition<P>>) -> &mut Self
     where
         T: for<'a> CustomState<'a> + Clone + Serialize + 'static,
     {
@@ -70,7 +68,7 @@ impl<P: Problem> LogConfig<P> {
         self
     }
 
-    pub fn with_common(self, trigger: Box<dyn Condition<P>>) -> Self {
+    pub fn with_common(&mut self, trigger: Box<dyn Condition<P>>) -> &mut Self {
         self.with_auto::<common::Evaluations>(trigger.clone())
             .with_auto::<common::Progress<ValueOf<common::Iterations>>>(trigger)
     }
@@ -81,9 +79,9 @@ impl<P: Problem> LogConfig<P> {
         state: &mut State<P>,
         step: &mut Step,
     ) -> ExecResult<()> {
-        for (trigger, extractor) in self.triggers().iter().zip(self.extractors()) {
+        for ExtractionRule { trigger, extractor } in self.rules.iter() {
             if trigger.evaluate(problem, state)? {
-                step.push(extractor.extract_entry(state))
+                step.push(extractor.extract_entry(problem, state))
             }
         }
 

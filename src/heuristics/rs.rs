@@ -18,7 +18,7 @@ where
 {
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(rs::<P, O>(
             Parameters {
@@ -38,7 +38,7 @@ where
 {
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(rs::<P, O>(
             Parameters {
@@ -67,7 +67,7 @@ where
             builder
                 .do_(selection::All::new())
                 .do_(randomizer)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(Logger::new())

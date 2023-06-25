@@ -3,10 +3,8 @@ use std::ops::Range;
 use mahf::{
     conditions::common::{ChangeOf, DeltaEqChecker},
     experiments::par_experiment,
-    logging::config::LogConfig,
+    lens::common::{BestObjectiveValueLens, BestSolutionLens},
     prelude::*,
-    state::lens::common::{BestObjectiveValueLens, BestSolutionLens},
-    State,
 };
 
 pub struct Sphere {
@@ -19,7 +17,7 @@ impl Sphere {
     }
 }
 
-impl problems::Problem for Sphere {
+impl Problem for Sphere {
     type Encoding = Vec<f64>;
     type Objective = SingleObjective;
 
@@ -76,13 +74,13 @@ fn main() -> ExecResult<()> {
             v_max: 1.0,
         },
         /*termination: */
-        conditions::LessThan::new(10_000, ValueOf::<common::Iterations>::new())
+        conditions::LessThanN::new(10_000, ValueOf::<common::Iterations>::new())
             & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
     )?;
 
     let setup = |state: &mut State<Sphere>| -> ExecResult<()> {
-        state.insert(
-            LogConfig::<Sphere>::new()
+        state.configure_log(|config| {
+            config
                 .with_common(conditions::EveryN::new(
                     50,
                     ValueOf::<common::Iterations>::new(),
@@ -97,9 +95,9 @@ fn main() -> ExecResult<()> {
                 .with(
                     conditions::EveryN::new(1_000, ValueOf::<common::Iterations>::new()),
                     BestSolutionLens::entry(),
-                ),
-        );
-        Ok(())
+                );
+            Ok(())
+        })
     };
 
     par_experiment(&config, setup, &[problem], 4096, "data/bmf/PSO", false)

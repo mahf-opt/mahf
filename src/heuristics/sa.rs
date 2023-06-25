@@ -7,9 +7,9 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    lens::ValueOf,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    state::lens::ValueOf,
 };
 
 /// Parameters for [real_sa].
@@ -37,7 +37,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(sa::<P, O>(
             Parameters {
@@ -80,7 +80,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(sa::<P, O>(
             Parameters {
@@ -126,7 +126,7 @@ where
                 .do_(selection::All::new())
                 .do_(generation)
                 .do_(constraints)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_(cooling_schedule)
                 .do_(replacement::sa::ExponentialAnnealingAcceptance::new(t_0))

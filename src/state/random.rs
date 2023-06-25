@@ -17,13 +17,13 @@ use crate::state::CustomState;
 ///
 /// This state is automatically inserted into the [`State`] by the [`Configuration`]
 /// using [`Random::default`], if no generator is inserted manually.
-/// Note that this means a random seed.
+/// Note that a random RNG seed is used in this case.
 ///
 /// [`Configuration`]: crate::Configuration
 ///
 /// # Reproducibility
 ///
-/// As reproducibility and deterministic experiments are a core goal of MAHF, only seedable
+/// As reproducibility and deterministic experiments are a core goal of MAHF, only [seedable][SeedableRng]
 /// [`RngCore`]s are allowed as backends.
 /// This ensures that all random processes depend on the single seed.
 ///

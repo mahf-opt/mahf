@@ -12,7 +12,7 @@ pub mod common;
 pub mod cro;
 pub mod logical;
 
-pub use common::{DistanceToOptimumGreaterThan, EveryN, LessThan, OptimumReached, RandomChance};
+pub use common::{DistanceToOptimumGreaterThan, EveryN, LessThanN, OptimumReached, RandomChance};
 pub use logical::{And, Not, Or};
 
 /// A condition for loops or branches.

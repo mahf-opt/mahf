@@ -7,9 +7,10 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    lens::ValueOf,
     logging::Logger,
     problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
-    state::{common, lens::ValueOf},
+    state::common,
 };
 
 /// Parameters for [real_pso].
@@ -43,7 +44,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(num_particles))
-        .evaluate::<O>()
+        .evaluate_with::<O>()
         .update_best_individual()
         .do_(pso::<P, O>(
             Parameters {
@@ -106,7 +107,7 @@ where
             builder
                 .do_(particle_update)
                 .do_(constraints)
-                .evaluate::<O>()
+                .evaluate_with::<O>()
                 .update_best_individual()
                 .do_if_some_(inertia_weight_update)
                 .do_(state_update)

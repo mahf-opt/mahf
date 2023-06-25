@@ -1,3 +1,5 @@
+//! Base utilities for `components`, `conditions`, and `lens`es.
+
 use trait_set::trait_set;
 
 trait_set! {

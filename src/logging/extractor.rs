@@ -1,7 +1,7 @@
 use dyn_clone::DynClone;
 use serde::Serialize;
 
-use crate::{logging::log::Entry, state::lens::Lens, Problem, State};
+use crate::{lens::Lens, logging::log::Entry, Problem, State};
 
 pub trait EntryName {
     fn entry_name() -> &'static str;
@@ -9,7 +9,7 @@ pub trait EntryName {
 
 /// Extracts some state and turns it into an [Entry].
 pub trait EntryExtractor<P>: DynClone + Send {
-    fn extract_entry(&self, state: &State<P>) -> Entry;
+    fn extract_entry(&self, problem: &P, state: &State<P>) -> Entry;
 }
 
 dyn_clone::clone_trait_object!(<P> EntryExtractor<P>);
@@ -20,10 +20,10 @@ where
     T: Lens<P> + EntryName + Clone + Send,
     T::Target: Serialize + Send + 'static,
 {
-    fn extract_entry(&self, state: &State<P>) -> Entry {
+    fn extract_entry(&self, problem: &P, state: &State<P>) -> Entry {
         Entry {
             name: T::entry_name(),
-            value: Box::new(self.get(state).ok()),
+            value: Box::new(self.get(problem, state).ok()),
         }
     }
 }

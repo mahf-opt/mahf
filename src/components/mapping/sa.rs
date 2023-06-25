@@ -8,10 +8,8 @@ use crate::{
         mapping::{mapping, Mapping},
         Component,
     },
-    state::{
-        lens::{AnyLens, ValueLens},
-        random::Random,
-    },
+    lens::{AnyLens, ValueLens},
+    state::random::Random,
     Problem, State,
 };
 
