@@ -76,9 +76,9 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// This method is usually only called in [`Evaluate`] implementations.
     ///
     /// [`Evaluate`]: crate::problems::Evaluate
-    pub fn evaluate_with<F>(&mut self, objective_fn: F)
+    pub fn evaluate_with<F>(&mut self, mut objective_fn: F)
     where
-        F: Fn(&P::Encoding) -> P::Objective,
+        F: FnMut(&P::Encoding) -> P::Objective,
     {
         self.objective = Some(objective_fn(&self.solution));
     }
