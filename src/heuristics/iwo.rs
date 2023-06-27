@@ -1,11 +1,17 @@
-//! Invasive Weed Optimization
+//! Invasive Weed Optimization (IWO).
+
+use eyre::ensure;
 
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    tracking::Logger,
+    configuration::Configuration,
+    identifier::{Global, Identifier},
+    lens::ValueOf,
+    logging::Logger,
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
+    state::common,
 };
 
 #[derive(Clone, Debug)]
@@ -31,12 +37,10 @@ pub struct RealProblemParameters {
 /// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
 pub fn real_iwo<P>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>>
-        + VectorProblem<Element = f64>
-        + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
     let RealProblemParameters {
         initial_population_size,
@@ -48,29 +52,36 @@ where
         modulation_index,
     } = params;
 
-    assert!(initial_population_size <= max_population_size);
+    ensure!(initial_population_size <= max_population_size, "it is not possible to select more individuals with MuPlusLambda selection than are present");
+    ensure!(
+        !(initial_deviation..final_deviation).is_empty(),
+        "the std_dev range must not be empty for this operator"
+    );
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(
-            params.initial_population_size,
-        ))
-        .evaluate()
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(initial_population_size))
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(iwo(
+        .do_(iwo::<P, Global>(
             Parameters {
                 max_population_size,
                 min_number_of_seeds,
                 max_number_of_seeds,
-                mutation: generation::mutation::IWOAdaptiveDeviationDelta::new(
-                    initial_deviation,
-                    final_deviation,
-                    modulation_index,
-                ),
-                constraints: constraints::Saturation::new(),
+                mutation: Block::new([
+                    <mutation::NormalMutation>::new(initial_deviation, 1.),
+                    mapping::Polynomial::new(
+                        initial_deviation,
+                        final_deviation,
+                        modulation_index as f64,
+                        ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
+                        ValueOf::<mutation::MutationStrength<mutation::NormalMutation>>::new(),
+                    ),
+                ]),
+                constraints: boundary::Saturation::new(),
             },
-            termination,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of Invasive Weed Optimization.
@@ -83,10 +94,11 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Invasive Weed Optimization template.
-pub fn iwo<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-) -> Box<dyn Component<P>> {
+pub fn iwo<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    I: Identifier,
+{
     let Parameters {
         max_population_size,
         min_number_of_seeds,
@@ -96,15 +108,15 @@ pub fn iwo<P: SingleObjectiveProblem>(
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
-                .do_(selection::DeterministicFitnessProportional::new(
+                .do_(selection::iwo::DeterministicFitnessProportional::new(
                     min_number_of_seeds,
                     max_number_of_seeds,
                 ))
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(max_population_size))
                 .do_(Logger::new())
