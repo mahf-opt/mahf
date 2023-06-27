@@ -1,15 +1,55 @@
+//! Meta-components for specifying control flow.
+
 use derivative::Derivative;
 use serde::Serialize;
 
 use crate::{
+    component::ExecResult,
     components::Component,
     conditions::Condition,
     problems::Problem,
-    state::{common, State},
+    state::{common, State, StateReq},
 };
 
-/// A sequential block of components.
-/// The child components are initialized and executed sequentially.
+/// A block of components executed sequentially.
+///
+/// This is equivalent to sequential statements:
+/// ```no_run
+/// # fn statement1() {}
+/// # fn statement2() {}
+/// # fn statement3() {}
+///
+/// statement1();
+/// statement2();
+/// statement3();
+/// ```
+///
+/// # Call propagation
+///
+/// Calling any of the `{init, require, execute}` methods on a block calls the specific
+/// method sequentially in order on the inner components.
+///
+/// # Examples
+///
+/// A `Block` is usually only created implicitly by calling the [`do_`] method on [`Configuration::builder`]:
+///
+/// [`do_`]: crate::configuration::ConfigurationBuilder::do_
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// ```no_run
+/// # use mahf::Problem;
+/// # fn component1<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// Configuration::builder()
+///     .do_(component1())
+///     .do_(component2())
+///     .do_(component3())
+///     .build()
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[serde(transparent)]
@@ -17,25 +57,34 @@ use crate::{
 pub struct Block<P: Problem>(Vec<Box<dyn Component<P>>>);
 
 impl<P: Problem> Block<P> {
-    /// Creates a new [Block] from a collection of [Component]s.
+    /// Creates a new `Block` from a collection of [`Component`]s.
     pub fn new(
         components: impl IntoIterator<Item = Box<dyn Component<P>>>,
     ) -> Box<dyn Component<P>> {
-        Box::new(Block(components.into_iter().collect()))
+        Box::new(Self(components.into_iter().collect()))
     }
 }
 
 impl<P: Problem> Component<P> for Block<P> {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         for component in &self.0 {
-            component.initialize(problem, state);
+            component.init(problem, state)?;
         }
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         for component in &self.0 {
-            component.execute(problem, state);
+            component.require(problem, state_req)?;
         }
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        for component in &self.0 {
+            component.execute(problem, state)?;
+        }
+        Ok(())
     }
 }
 
@@ -45,9 +94,59 @@ impl<I: IntoIterator<Item = Box<dyn Component<P>>>, P: Problem> From<I> for Box<
     }
 }
 
-/// Executes the child component as long as the condition is true.
+/// Loops the `body` while a `condition` is `true`.
 ///
-/// This corresponds to a `while` loop.
+/// This is equivalent to a `while` loop:
+/// ```no_run
+/// # fn condition() -> bool { true }
+/// # fn body() {}
+/// while condition() {
+///     body()
+/// }
+/// ```
+///
+/// # State
+///
+/// This component inserts and updates the current number of [`Iterations`].
+///
+/// Note that a [`Scope`] is needed for nested loops, so that the inner `Loop` doesn't overwrite
+/// the outer amount of [`Iterations`].
+///
+/// [`Iterations`]: common::Iterations
+///
+/// # Call propagation
+///
+/// Calling any of the `{init, require}` methods on a loop calls the specific
+/// method once on the inner component and condition.
+///
+/// On calling the `execute` method, the `condition` is re-initialized, after which the
+/// `body` is executed until the `condition` evaluates to `false`.
+///
+/// # Examples
+///
+/// A `Loop` is usually created by calling the [`while_`] method on [`Configuration::builder`]:
+///
+/// [`while_`]: crate::configuration::ConfigurationBuilder::while_
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// ```no_run
+/// # use mahf::Problem;
+/// # fn condition<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// # fn component1<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// Configuration::builder()
+///     .while_(condition(), |builder| {
+///         builder
+///             .do_(component1())
+///             .do_(component2())
+///             .do_(component3())
+///     })
+///     .build()
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -59,9 +158,7 @@ pub struct Loop<P: Problem> {
 }
 
 impl<P: Problem> Loop<P> {
-    /// Creates a new [Loop].
-    ///
-    /// Accepts a single or multiple components through the [Into] implementation of multiple components.
+    /// Creates a new `Loop` with some `condition` and a body.
     pub fn new(
         condition: Box<dyn Condition<P>>,
         body: impl Into<Box<dyn Component<P>>>,
@@ -74,25 +171,113 @@ impl<P: Problem> Loop<P> {
 }
 
 impl<P: Problem> Component<P> for Loop<P> {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(common::Iterations(0));
 
-        self.condition.initialize(problem, state);
-        self.body.initialize(problem, state);
+        self.condition.init(problem, state)?;
+        self.body.init(problem, state)?;
+
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        self.condition.initialize(problem, state);
-        while self.condition.evaluate(problem, state) {
-            self.body.execute(problem, state);
-            *state.get_value_mut::<common::Iterations>() += 1;
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+        self.condition.require(problem, state_req)?;
+        self.body.require(problem, state_req)?;
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        self.condition.init(problem, state)?;
+        while self.condition.evaluate(problem, state)? {
+            self.body.execute(problem, state)?;
+            *state.try_borrow_value_mut::<common::Iterations>()? += 1;
         }
+        Ok(())
     }
 }
 
-/// Executes either the `if` or `else` branch depending on a condition.
+/// Executes the `if` or `else` branch depending on the `condition`.
 ///
-/// Both `if` and `if`-`else` constructs are possible.
+/// This is equivalent to an `if` statement with an optional `else`:
+/// ```no_run
+/// # fn condition() -> bool { true }
+/// # fn if_body() {}
+/// # fn else_body() {}
+///
+/// if condition() {
+///     if_body();
+/// }
+///
+/// if condition() {
+///     if_body();
+/// } else {
+///     else_body();
+/// }
+/// ```
+///
+/// # Call propagation
+///
+/// Calling any of the `{init, require}` methods on a branch calls the specific
+/// method once on the inner components and condition.
+///
+/// On calling the `execute` method, the `if_body` is executed if the `condition`
+/// evaluates to `true`, and the optional `else_body` if executed if present, otherwise.
+///
+/// # Examples
+///
+/// A `Branch` is usually created by calling the [`if_`] method on [`Configuration::builder`]:
+///
+/// [`if_`]: crate::configuration::ConfigurationBuilder::if_
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// ```no_run
+/// # use mahf::Problem;
+/// # fn condition<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// # fn component1<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// Configuration::builder()
+///     .if_(condition(), |builder| {
+///         builder
+///             .do_(component1())
+///             .do_(component2())
+///             .do_(component3())
+///     })
+///     .build()
+/// # }
+/// ```
+///
+/// For also creating an `else` branch, use the [`if_else_`] method:
+///
+/// [`if_else_`]: crate::configuration::ConfigurationBuilder::if_else_
+///
+/// ```no_run
+/// # use mahf::Problem;
+/// # fn condition<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// # fn component1<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component4<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+///
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// Configuration::builder()
+///     .if_else_(condition(),
+///         |if_builder| {
+///             if_builder
+///                 .do_(component1())
+///                 .do_(component2())
+///         },
+///         |else_builder| {
+///             else_builder
+///                 .do_(component3())
+///                 .do_(component4())
+///     })
+///     .build()
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -103,9 +288,8 @@ pub struct Branch<P: Problem> {
 }
 
 impl<P: Problem> Branch<P> {
-    /// Creates a new [Branch] component.
+    /// Creates a new `Branch` with only an `if` branch:
     ///
-    /// This corresponds to an `if` construct:
     /// ```text
     /// if(condition) { body }
     /// ```
@@ -120,9 +304,8 @@ impl<P: Problem> Branch<P> {
         })
     }
 
-    /// Creates a new [Branch] component.
+    /// Creates a new `Branch` with an `if`-`else` branch:
     ///
-    /// This corresponds to an `if`-`else` construct:
     /// ```text
     /// if(condition) { if_body } else { else_body }
     /// ```
@@ -140,67 +323,131 @@ impl<P: Problem> Branch<P> {
 }
 
 impl<P: Problem> Component<P> for Branch<P> {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
-        self.condition.initialize(problem, state);
-        self.if_body.initialize(problem, state);
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        self.condition.init(problem, state)?;
+        self.if_body.init(problem, state)?;
         if let Some(else_body) = &self.else_body {
-            else_body.initialize(problem, state);
+            else_body.init(problem, state)?;
         }
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        if self.condition.evaluate(problem, state) {
-            self.if_body.execute(problem, state);
-        } else if let Some(else_body) = &self.else_body {
-            else_body.execute(problem, state);
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+        self.condition.require(problem, state_req)?;
+        self.if_body.require(problem, state_req)?;
+        if let Some(else_body) = &self.else_body {
+            else_body.require(problem, state_req)?;
         }
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        if self.condition.evaluate(problem, state)? {
+            self.if_body.execute(problem, state)?;
+        } else if let Some(else_body) = &self.else_body {
+            else_body.execute(problem, state)?;
+        }
+        Ok(())
     }
 }
 
-/// Encapsulates state of child components.
+/// Executes the `body` in a new scope, where shadowing custom state is possible.
 ///
-/// When child components add new state,
-/// that state will be lost after the execution
-/// of this components.
+/// This is especially useful for nested heuristics with an inner loop.
 ///
-/// All children will be re-initialized on every call
-/// of the `execute` function.
+/// It is equivalent to a scope:
+/// ```no_run
+/// # fn statement1() {}
+/// # fn statement2() {}
+/// # fn statement3() {}
+/// {
+///     statement1();
+///     statement2();
+///     statement3();
+/// }
+/// ```
+///
+/// # Call propagation
+///
+/// Calling any of the `{init, require}` methods on a scope **doesn't do anything**.
+///
+/// On calling the `execute` method, the `state` is first initialized using
+/// the provided `state_init` function.
+/// Afterwards, the `body` is executed as if it was an independent
+/// [`Configuration`], e.g. the `{init, require, execute}` methods are called in order
+/// in the body.
+/// Finally, the provided `states_merge` function is called to merge the original state with
+/// the newly created child state.
+///
+/// [`Configuration`]: crate::Configuration
+///
+/// # Examples
+///
+/// A `Scope` is usually only created implicitly by calling the [`scope_`] method on [`Configuration::builder`]:
+///
+/// [`scope_`]: crate::configuration::ConfigurationBuilder::do_
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// ```no_run
+/// # use mahf::Problem;
+/// # fn component1<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: Problem>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+///
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// Configuration::builder()
+///     .scope_(|builder| {
+///         builder
+///             .do_(component1())
+///             .do_(component2())
+///             .do_(component3())
+///     })
+///     .build()
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
 pub struct Scope<P: Problem> {
     body: Box<dyn Component<P>>,
     #[serde(skip)]
-    init: fn(&mut State<P>),
+    state_init: fn(&mut State<P>) -> ExecResult<()>,
+    #[serde(skip)]
+    states_merge: fn(&mut State<P>, State<P>) -> ExecResult<()>,
 }
 
 impl<P: Problem> Scope<P> {
-    /// Creates a new [Scope].
-    ///
-    /// If you want to override some state,
-    /// you can use [Scope::new_with].
+    /// Creates a new `Scope` with the `body`.
     pub fn new(body: Vec<Box<dyn Component<P>>>) -> Box<dyn Component<P>> {
-        Self::new_with(|_| {}, body)
+        Self::new_with(|_| Ok(()), body, |_, _| Ok(()))
     }
 
-    /// Creates a new [Scope] while overriding some state.
+    /// Creates a new `Scope` with the `body`, and methods for initializing the [`State`] beforehand
+    /// and merging the parent and child [`State`] afterwards.
     pub fn new_with(
-        init: fn(&mut State<P>),
+        state_init: fn(&mut State<P>) -> ExecResult<()>,
         body: impl Into<Box<dyn Component<P>>>,
+        states_merge: fn(&mut State<P>, State<P>) -> ExecResult<()>,
     ) -> Box<dyn Component<P>> {
         Box::new(Scope {
             body: body.into(),
-            init,
+            state_init,
+            states_merge,
         })
     }
 }
 
 impl<P: Problem> Component<P> for Scope<P> {
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        state.with_substate(|state| {
-            (self.init)(state);
-            self.body.initialize(problem, state);
-            self.body.execute(problem, state);
-        });
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let inner = state.with_inner_state(|state| {
+            (self.state_init)(state)?;
+            self.body.init(problem, state)?;
+            self.body.require(problem, &state.requirements())?;
+            self.body.execute(problem, state)?;
+            Ok(())
+        })?;
+        (self.states_merge)(state, inner)?;
+        Ok(())
     }
 }

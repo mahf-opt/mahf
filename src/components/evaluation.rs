@@ -1,117 +1,300 @@
-//! Evaluation methods
+//! Evaluate individuals, track best individuals and Pareto fronts.
 
+use std::any::type_name;
+
+use color_eyre::Section;
+use derivative::Derivative;
+use eyre::eyre;
 use serde::Serialize;
 
 use crate::{
+    component::ExecResult,
     components::Component,
-    problems::{MultiObjectiveProblem, Problem, SingleObjectiveProblem},
-    state::{common, State},
+    identifier::{Global, Identifier, PhantomId},
+    population::BestIndividual,
+    problems::{Evaluate, MultiObjectiveProblem, SingleObjectiveProblem},
+    state::{common, StateReq},
+    Problem, State,
 };
 
-/// Evaluates all individuals in the current population.
+/// Evaluates all [`Individual`]s in the [current population].
 ///
-/// This component should be inserted after every generating component.
+/// [`Individual`]: crate::Individual
+/// [current population]: common::Populations::current
 ///
-/// Only the head of the [common::Populations] will be evaluated.
-/// Requires either [common::EvaluatorInstance] to be present
-/// in the [State] or [Problem::default_evaluator] to be implemented.
+/// This component should be inserted before any component that requires an [objective value]
+/// on the individuals.
 ///
-/// By inserting a custom [common::EvaluatorInstance] the evaluation
-/// behavior can be customized.
-#[derive(Serialize, Clone)]
-pub struct Evaluator;
+/// [objective value]: crate::Individual::objective
+///
+/// # Evaluator
+///
+/// Fails with an `Err` if [`Evaluator`]`<P, I>` is not present in the [`State`], and
+/// no default evaluator was specified with [`new_with`].
+///
+/// [`Evaluator`]: common::Evaluator
+/// [`new_with`]: PopulationEvaluator::new_with
+///
+/// # Examples
+///
+/// An `PopulationEvaluator` is usually created by calling the
+/// `{`[`evaluate`], [`evaluate_with`]`}` method
+/// on [`Configuration::builder`].
+///
+/// [`evaluate`]: crate::configuration::ConfigurationBuilder::evaluate
+/// [`evaluate_with`]: crate::configuration::ConfigurationBuilder::evaluate_with
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// To allow for multiple evaluators, an [`identifier`] is used to distinguish them.
+/// The [`Global`] identifier acts as a default.
+///
+/// [`identifier`]: crate::identifier
+/// [`Global`]: Global
+///
+/// You also usually want to call [`update_best_individual`] or [`update_pareto_front`]
+/// directly afterwards:
+///
+/// [`update_best_individual`]: crate::configuration::ConfigurationBuilder::update_best_individual
+/// [`update_pareto_front`]: crate::configuration::ConfigurationBuilder::update_pareto_front
+///
+/// ```no_run
+/// # use mahf::{SingleObjectiveProblem, problems::ObjectiveFunction};
+/// # fn component1<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component_that_requires_evaluation<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+/// use mahf::identifier::Global;
+///
+/// # pub fn example<P: SingleObjectiveProblem + ObjectiveFunction>() -> Configuration<P> {
+/// Configuration::builder()
+///     .do_(component1())
+///     .do_(component2())
+///     .evaluate::<Global>()
+///     .update_best_individual()
+///     .do_(component_that_requires_evaluation())
+///     .build()
+/// # }
+/// ```
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
+pub struct PopulationEvaluator<P: Problem, I: Identifier = Global> {
+    #[serde(skip)]
+    constructor: Option<fn() -> common::Evaluator<'static, P, I>>,
+    id: PhantomId<I>,
+}
 
-impl Evaluator {
-    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
-        Box::new(Self)
+impl<P, I> PopulationEvaluator<P, I>
+where
+    P: Problem,
+    I: Identifier,
+{
+    /// Creates a new `PopulationEvaluator`.
+    pub fn from_params(constructor: Option<fn() -> common::Evaluator<'static, P, I>>) -> Self {
+        Self {
+            constructor,
+            id: PhantomId::default(),
+        }
+    }
+
+    /// Creates a new `PopulationEvaluator`.
+    ///
+    /// For specifying a `constructor`, see [`new_with`].
+    ///
+    /// [`new_with`]: Self::new_with
+    pub fn new() -> Box<dyn Component<P>> {
+        Box::new(Self::from_params(None))
+    }
+
+    /// Creates a `PopulationEvaluator`, constructing an [`Evaluator`] using `T` if none
+    /// with the identifier `I` is present in the [`State`].
+    ///
+    /// [`Evaluator`]: common::Evaluator
+    pub fn new_with<T>() -> Box<dyn Component<P>>
+    where
+        T: Evaluate<Problem = P> + Default + 'static,
+    {
+        Box::new(Self::from_params(Some(|| {
+            common::Evaluator::new(T::default())
+        })))
     }
 }
 
-impl<P: Problem> Component<P> for Evaluator {
-    fn initialize(&self, problem: &P, state: &mut State<P>) {
+impl<P, I: Identifier> Component<P> for PopulationEvaluator<P, I>
+where
+    P: Problem,
+    I: Identifier,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(common::Evaluations(0));
 
-        if !state.has::<common::EvaluatorInstance<P>>() {
-            #[allow(deprecated)]
-            state.insert(problem.default_evaluator());
+        if !state.has::<common::Evaluator<P, I>>() {
+            if let Some(constructor) = self.constructor {
+                state.insert(constructor());
+            } else {
+                return Err(eyre!("no evaluator found")).with_suggestion(|| {
+                    format!(
+                        "add an evaluator with identifier {} to the state",
+                        type_name::<I>()
+                    )
+                });
+            }
         }
+        Ok(())
     }
 
-    fn require(&self, _problem: &P, state: &State<P>) {
-        state.require::<Self, common::Populations<P>>();
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+        state_req.require::<Self, common::Populations<P>>()?;
+        state_req.require::<Self, common::Evaluator<P, I>>()?;
+        Ok(())
     }
 
-    fn execute(&self, problem: &P, state: &mut State<P>) {
-        if let Some(mut population) = state.populations_mut().try_pop() {
-            state.holding::<common::EvaluatorInstance<P>>(|evaluator_state, state| {
-                evaluator_state
-                    .evaluator
-                    .evaluate(problem, state, &mut population);
-            });
-
-            *state.get_value_mut::<common::Evaluations>() += population.len() as u32;
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let population = state.populations_mut().try_pop();
+        if let Some(mut population) = population {
+            state.holding::<common::Evaluator<P, I>>(
+                |evaluator: &mut common::Evaluator<P, I>, state| {
+                    evaluator
+                        .as_inner_mut()
+                        .evaluate(problem, state, &mut population);
+                    Ok(())
+                },
+            )?;
+            *state.borrow_value_mut::<common::Evaluations>() += population.len() as u32;
             state.populations_mut().push(population);
         }
+        Ok(())
     }
 }
 
-/// Inserts and updates the [common::BestIndividual] state.
+/// Updates the [`BestIndividual`] yet found.
 ///
-/// Should be inserted right after [Evaluator].
-/// For [MultiObjectiveProblem]s see [UpdateParetoFront].
-#[derive(Serialize, Clone)]
-pub struct UpdateBestIndividual;
+/// Note that this component only works on [`SingleObjectiveProblem`]s.
+///
+/// # Examples
+///
+/// The component is usually created by calling the [`update_best_individual`] method
+/// on [`Configuration::builder`].
+///
+/// You also usually want to evaluate the individuals beforehand:
+///
+/// [`update_best_individual`]: crate::configuration::ConfigurationBuilder::update_best_individual
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// ```no_run
+/// # use mahf::{SingleObjectiveProblem, problems::ObjectiveFunction};
+/// # fn component1<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+/// use mahf::identifier::Global;
+///
+/// # pub fn example<P: SingleObjectiveProblem + ObjectiveFunction>() -> Configuration<P> {
+/// Configuration::builder()
+///     .do_(component1())
+///     .do_(component2())
+///     .evaluate::<Global>()
+///     .update_best_individual()
+///     .do_(component3())
+///     .build()
+/// # }
+/// ```
+#[derive(Clone, Serialize)]
+pub struct BestIndividualUpdate;
 
-impl UpdateBestIndividual {
+impl BestIndividualUpdate {
+    /// Creates a new `BestIndividualUpdate`.
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    /// Creates a new `BestIndividualUpdate`.
     pub fn new<P: SingleObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: SingleObjectiveProblem> Component<P> for UpdateBestIndividual {
-    fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.insert(common::BestIndividual::<P>(None));
+impl<P: SingleObjectiveProblem> Component<P> for BestIndividualUpdate {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(common::BestIndividual::<P>::default());
+        Ok(())
     }
 
-    fn execute(&self, _problem: &P, state: &mut State<P>) {
-        let mut mut_state = state.get_states_mut();
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let populations = state.populations();
+        let population = populations.current();
+        let best = population.best_individual();
 
-        let best_individual = mut_state
-            .populations()
-            .current()
-            .iter()
-            .min_by_key(|i| i.objective());
-
-        if let Some(best_individual) = best_individual {
-            mut_state
-                .get_mut::<common::BestIndividual<P>>()
-                .replace_if_better(best_individual);
+        if let Some(best) = best {
+            state.borrow_mut::<common::BestIndividual<P>>().update(best);
         }
+        Ok(())
     }
 }
 
-/// Inserts and updates the [common::ParetoFront] state.
+/// Updates the current approximation of the [`ParetoFront`].
 ///
-/// Should be inserted right after [Evaluator].
-/// For [SingleObjectiveProblem]s see [UpdateBestIndividual].
-#[derive(Serialize, Clone)]
-pub struct UpdateParetoFront;
+/// Note that this component only works on [`MultiObjectiveProblem`]s.
+///
+/// [`ParetoFront`]: common::ParetoFront
+///
+/// # Examples
+///
+/// The component is usually created by calling the [`update_pareto_front`] method
+/// on [`Configuration::builder`].
+///
+/// You also usually want to evaluate the individuals beforehand.
+///
+/// [`update_pareto_front`]: crate::configuration::ConfigurationBuilder::update_pareto_front
+/// [`Configuration::builder`]: crate::Configuration::builder
+///
+/// ```no_run
+/// # use mahf::{MultiObjectiveProblem, problems::ObjectiveFunction};
+/// # fn component1<P: MultiObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component2<P: MultiObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// # fn component3<P: MultiObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
+/// use mahf::Configuration;
+/// use mahf::identifier::Global;
+///
+/// # pub fn example<P: MultiObjectiveProblem + ObjectiveFunction>() -> Configuration<P> {
+/// Configuration::builder()
+///     .do_(component1())
+///     .do_(component2())
+///     .evaluate::<Global>()
+///     .update_pareto_front()
+///     .do_(component3())
+///     .build()
+/// # }
+/// ```
+#[derive(Clone, Serialize)]
+pub struct ParetoFrontUpdate;
 
-impl UpdateParetoFront {
+impl ParetoFrontUpdate {
+    /// Creates a new `ParetoFrontUpdate`.
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    /// Creates a new `ParetoFrontUpdate`.
     pub fn new<P: MultiObjectiveProblem>() -> Box<dyn Component<P>> {
         Box::new(Self)
     }
 }
 
-impl<P: MultiObjectiveProblem> Component<P> for UpdateParetoFront {
-    fn initialize(&self, _problem: &P, state: &mut State<P>) {
-        state.insert(common::ParetoFront::<P>::new());
+impl<P: MultiObjectiveProblem> Component<P> for ParetoFrontUpdate {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(common::ParetoFront::<P>::default());
+        Ok(())
     }
 
-    fn execute(&self, _problem: &P, state: &mut State<P>) {
-        let mut mut_state = state.get_states_mut();
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let populations = state.populations();
+        let mut front = state.borrow_mut::<common::ParetoFront<P>>();
 
-        let front = mut_state.pareto_front_mut();
-        front.update_multiple(mut_state.populations().current());
+        for individual in populations.current() {
+            front.update(individual);
+        }
+
+        Ok(())
     }
 }
