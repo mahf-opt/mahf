@@ -1,26 +1,26 @@
-//! Random Search
+//! Random Search (RS).
 
 use crate::{
     component::ExecResult,
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
 /// An example single-objective Random Search operating on a real search space.
 /// Uses the [rs] component internally.
-pub fn real_rs<P, O>(condition: Box<dyn Condition<P>>) -> ExecResult<Configuration<P>>
+pub fn real_rs<P>(condition: Box<dyn Condition<P>>) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(rs::<P, O>(
+        .do_(rs::<P, Global>(
             Parameters {
                 randomizer: <mutation::PartialRandomSpread>::new_full(),
             },
@@ -31,16 +31,15 @@ where
 
 /// An example single-objective Random Search operating on a permutation search space.
 /// Uses the [rs] component internally.
-pub fn permutation_rs<P, O>(condition: Box<dyn Condition<P>>) -> ExecResult<Configuration<P>>
+pub fn permutation_rs<P>(condition: Box<dyn Condition<P>>) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + VectorProblem<Element = usize>,
-    O: Evaluator<Problem = P>,
 {
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(rs::<P, O>(
+        .do_(rs::<P, Global>(
             Parameters {
                 randomizer: <mutation::ScrambleMutation>::new_full(),
             },
@@ -55,10 +54,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Random Search template.
-pub fn rs<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn rs<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters { randomizer } = params;
 
@@ -67,7 +66,7 @@ where
             builder
                 .do_(selection::All::new())
                 .do_(randomizer)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(Logger::new())

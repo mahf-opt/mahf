@@ -30,14 +30,18 @@ use crate::{
 /// This is useful when restricting `T` to implement a certain trait:
 ///
 /// ```
+/// use better_any::{Tid, TidAble};
 /// use mahf::lens::LensRef;
-/// use mahf::{ExecResult, IdLens, Problem, State};
+/// use mahf::{CustomState, ExecResult, IdLens, Problem, State};
 ///
 /// pub trait SomeTrait {
 ///     fn do_something(&self);
 /// }
 ///
+/// #[derive(Tid)]
 /// pub struct SomeStruct;
+///
+/// impl CustomState<'_> for SomeStruct {}
 ///
 /// impl SomeTrait for SomeStruct {
 ///     fn do_something(&self) {
@@ -57,7 +61,7 @@ use crate::{
 /// }
 ///
 /// // `state` is assumed to contain `SomeStruct`.
-/// # pub fn wrapper<P, L>(lens: &L, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+/// # pub fn wrapper<P: Problem>(problem: &P, state: &mut State<P>) -> ExecResult<()> {
 /// call_do_something(&IdLens::<SomeStruct>::new(), problem, state)?;
 /// # Ok(())
 /// # }

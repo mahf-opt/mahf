@@ -1,3 +1,5 @@
+//! Meta-conditions for combining conditions using boolean operators.
+
 use std::ops;
 
 use derivative::Derivative;
@@ -5,6 +7,7 @@ use serde::Serialize;
 
 use crate::{component::ExecResult, conditions::Condition, state::StateReq, Problem, State};
 
+/// Boolean `AND` operator (`&`) for conditions.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -51,6 +54,7 @@ impl<P: Problem> ops::BitAnd for Box<dyn Condition<P>> {
     }
 }
 
+/// Boolean `OR` operator (`|`) for conditions.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -97,6 +101,7 @@ impl<P: Problem> ops::BitOr for Box<dyn Condition<P>> {
     }
 }
 
+/// Boolean `NOT` operator (`!`) for conditions.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]

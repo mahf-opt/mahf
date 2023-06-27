@@ -1,3 +1,5 @@
+//! Functional initialization of solutions.
+
 use std::{iter::repeat_with, ops::Range};
 
 use rand::{

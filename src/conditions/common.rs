@@ -1,3 +1,5 @@
+//! Common metaheuristic algorithm conditions, e.g. used as termination criteria.
+
 use std::ops::Sub;
 
 use better_any::{Tid, TidAble};

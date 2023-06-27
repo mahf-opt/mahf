@@ -1,4 +1,4 @@
-//! Particle Swarm Optimization
+//! Particle Swarm Optimization (PSO).
 
 use eyre::WrapErr;
 
@@ -7,9 +7,10 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     lens::ValueOf,
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
     state::common,
 };
 
@@ -25,13 +26,12 @@ pub struct RealProblemParameters {
 
 /// An example single-objective Particle Swarm Optimization operating on a real search space.
 /// Uses the [pso] component internally.
-pub fn real_pso<P, O>(
+pub fn real_pso<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         num_particles,
@@ -44,9 +44,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(num_particles))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(pso::<P, O>(
+        .do_(pso::<P, Global>(
             Parameters {
                 particle_init: Block::new([
                     <swarm::ParticleVelocitiesInit>::new(v_max)
@@ -88,10 +88,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Particle Swarm Optimization template.
-pub fn pso<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn pso<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         particle_init,
@@ -107,7 +107,7 @@ where
             builder
                 .do_(particle_update)
                 .do_(constraints)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_if_some_(inertia_weight_update)
                 .do_(state_update)

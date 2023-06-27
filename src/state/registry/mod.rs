@@ -19,6 +19,7 @@ pub use entry::{Entry, OccupiedEntry, VacantEntry};
 pub use error::{StateError, StateResult};
 pub use multi::MultiStateTuple;
 
+/// A set of types with dynamic borrowing.
 pub type StateMap<'a> = HashMap<TypeId, RefCell<Box<dyn CustomState<'a>>>>;
 
 /// A [`CustomState`] container, which provides methods to insert, access and manage the
@@ -81,8 +82,8 @@ impl<'a> StateRegistry<'a> {
     }
 
     /// Pops the current registry from the stack and returns it along with the parent registry.
-    pub fn into_parent(self) -> (Option<Self>, StateMap<'a>) {
-        (self.parent.map(|parent| *parent), self.map)
+    pub fn into_parent(self) -> (Option<Self>, Self) {
+        (self.parent.map(|parent| *parent), self.map.into())
     }
 
     /// Returns a reference to the first registry which contains `T`.
@@ -933,5 +934,14 @@ impl<'a> StateRegistry<'a> {
         &'b mut self,
     ) -> StateResult<T::References> {
         T::try_get_mut(self)
+    }
+}
+
+impl<'a> From<StateMap<'a>> for StateRegistry<'a> {
+    fn from(value: StateMap<'a>) -> Self {
+        Self {
+            parent: None,
+            map: value,
+        }
     }
 }

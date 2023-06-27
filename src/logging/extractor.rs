@@ -1,3 +1,5 @@
+//! Traits for extracting data from the [`State`] and logging it.
+
 use dyn_clone::DynClone;
 use serde::Serialize;
 

@@ -1,8 +1,7 @@
 //! Utilities for performing experiments.
 
-use std::{fmt::Debug, fs, fs::File, path::Path, sync::Arc};
+use std::{fmt::Debug, fs, path::Path, sync::Arc};
 
-use eyre::WrapErr;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -30,14 +29,7 @@ where
 
     // Write configuration RON file
     let config_log_file = data_dir.join("configuration.ron");
-    ron::ser::to_writer_pretty(
-        std::io::BufWriter::new(
-            File::create(config_log_file).context("failed to create configuration file")?,
-        ),
-        config.heuristic(),
-        ron::ser::PrettyConfig::default().struct_names(true),
-    )
-    .wrap_err("failed to serialize configuration")?;
+    config.to_ron(config_log_file)?;
 
     let bar = ProgressBar::new(runs).with_message("Performing Experiment.");
     bar.set_style(ProgressStyle::with_template("{percent}% |{bar:40.white/green}| {pos:>7}/{len:7} [{elapsed_precise}<{eta_precise}, {per_sec}] {msg}").unwrap());

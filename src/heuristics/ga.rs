@@ -1,4 +1,4 @@
-//! Genetic Algorithm
+//! Genetic Algorithm (GA).
 
 use crate::{
     component::ExecResult,
@@ -6,8 +6,9 @@ use crate::{
     conditions,
     conditions::*,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
 /// Parameters for [binary_ga].
@@ -22,13 +23,12 @@ pub struct BinaryProblemParameters {
 
 /// An example single-objective Genetic Algorithm operating on a binary search space.
 /// Uses the [ga] component internally.
-pub fn binary_ga<P, O>(
+pub fn binary_ga<P>(
     params: BinaryProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + VectorProblem<Element = bool>,
-    O: Evaluator<Problem = P>,
 {
     let BinaryProblemParameters {
         population_size,
@@ -42,9 +42,9 @@ where
         .do_(initialization::RandomBitstring::new_uniform(
             population_size,
         ))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(ga::<P, O>(
+        .do_(ga::<P, Global>(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
                 crossover: recombination::UniformCrossover::new_insert_both(pc),
@@ -71,13 +71,12 @@ pub struct RealProblemParameters {
 
 /// An example single-objective Genetic Algorithm operating on a real search space.
 /// Uses the [ga] component internally.
-pub fn real_ga<P, O>(
+pub fn real_ga<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         population_size,
@@ -89,9 +88,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(population_size))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(ga::<P, O>(
+        .do_(ga::<P, Global>(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
                 crossover: recombination::UniformCrossover::new_insert_both(pc),
@@ -121,10 +120,10 @@ pub struct Parameters<P> {
 ///
 /// # References
 /// [link.springer.com/10.1007/978-3-319-07153-4_28-1](http://link.springer.com/10.1007/978-3-319-07153-4_28-1)
-pub fn ga<P, O>(params: Parameters<P>, termination: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn ga<P, I>(params: Parameters<P>, termination: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         selection,
@@ -145,7 +144,7 @@ where
                     builder.do_(mutation)
                 })
                 .do_(constraints)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)

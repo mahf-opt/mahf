@@ -15,6 +15,9 @@ use better_any::TidExt;
 
 use crate::CustomState;
 
+/// Entry for [`StateMap`].
+///
+/// [`StateMap`]: crate::state::registry::StateMap
 pub type HashMapEntry<'a, 'b> = hash_map::Entry<'a, TypeId, RefCell<Box<dyn CustomState<'b>>>>;
 
 /// A view into a single entry in a state registry, which may either be vacant or occupied.

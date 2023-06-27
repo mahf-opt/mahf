@@ -13,9 +13,63 @@ use derive_more::{Deref, DerefMut};
 use serde::{Serialize, Serializer};
 
 use crate::{
-    problems::{MultiObjectiveProblem, SingleObjectiveProblem},
+    identifier::{Identifier, PhantomId},
+    problems::{Evaluate, MultiObjectiveProblem, SingleObjectiveProblem},
     CustomState, Individual, Problem,
 };
+
+/// A type erased [`Evaluate`] wrapper.
+///
+/// Different `Evaluators` are distinguished through the identifier `I`.
+///
+/// Note that the type implementing [`Evaluate`] cannot be used as identifier,
+/// as it may have a non-`'static` lifetime.
+///
+/// # Usages
+///
+/// This state is used by the [`PopulationEvaluator`] component, and can be inserted into the
+/// state using [`State::insert_evaluator`].
+///
+/// [`PopulationEvaluator`]: crate::components::evaluation::PopulationEvaluator
+/// [`State::insert_evaluator`]: crate::State::insert_evaluator
+#[derive(Tid)]
+pub struct Evaluator<'a, P: Problem + 'static, I: Identifier + 'static> {
+    inner: Box<dyn Evaluate<Problem = P> + 'a>,
+    #[allow(dead_code)] // Unclear why clippy complains here, otherwise `I` would be unused.
+    marker: PhantomId<I>,
+}
+
+impl<'a, P: Problem, I: Identifier> Evaluator<'a, P, I> {
+    /// Creates a new `Evaluator`, wrapping `inner`.
+    pub fn new<T>(inner: T) -> Self
+    where
+        T: Evaluate<Problem = P> + 'a,
+    {
+        Self {
+            inner: Box::new(inner),
+            marker: PhantomId::default(),
+        }
+    }
+
+    /// Returns a mutable reference to the inner evaluator.
+    pub fn as_inner_mut(&mut self) -> &mut (dyn Evaluate<Problem = P> + 'a) {
+        self.inner.as_mut()
+    }
+}
+
+impl<'a, P: Problem, I: Identifier> Default for Evaluator<'a, P, I>
+where
+    Box<dyn Evaluate<Problem = P>>: Default,
+{
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+            marker: PhantomId::default(),
+        }
+    }
+}
+
+impl<'a, P: Problem, I: Identifier> CustomState<'a> for Evaluator<'a, P, I> {}
 
 /// The number of evaluations of the objective function.
 ///
@@ -23,7 +77,7 @@ use crate::{
 ///
 /// This state is automatically managed by the [`PopulationEvaluator`] component.
 ///
-/// [`Evaluator`]: crate::components::evaluation::PopulationEvaluator
+/// [`PopulationEvaluator`]: crate::components::evaluation::PopulationEvaluator
 ///
 /// # Examples
 ///
@@ -55,6 +109,8 @@ impl CustomState<'_> for Evaluations {}
 ///
 /// This state is automatically managed by the [`Loop`] component.
 ///
+/// It is therefore **not** necessary to increase the counter manually.
+///
 /// [`Loop`]: crate::components::Loop
 ///
 /// # Examples
@@ -85,9 +141,9 @@ impl CustomState<'_> for Iterations {}
 ///
 /// # Usages
 ///
-/// The [`LessThan<T>`] condition automatically inserts and updates `Progress<T>`.
+/// The [`LessThanN<T>`] condition automatically inserts and updates `Progress<T>`.
 ///
-/// [`LessThan<T>`]: crate::conditions::LessThan
+/// [`LessThanN<T>`]: crate::conditions::LessThanN
 #[derive(Clone, Deref, DerefMut, Tid)]
 pub struct Progress<T: 'static>(
     #[deref]
@@ -125,6 +181,7 @@ impl<T> CustomState<'_> for Progress<T> {}
 /// Call [`ConfigurationBuilder::update_best_individual`] or insert the [`BestIndividualUpdate`]
 /// component manually to insert and update this state.
 ///
+/// [`ConfigurationBuilder::update_best_individual`]: crate::configuration::ConfigurationBuilder::update_best_individual
 /// [`BestIndividualUpdate`]: crate::components::evaluation::BestIndividualUpdate
 ///
 /// # Examples
@@ -193,7 +250,8 @@ impl<P: SingleObjectiveProblem> CustomState<'_> for BestIndividual<P> {}
 /// Call [`ConfigurationBuilder::update_pareto_front`] or insert the [`ParetoFrontUpdate`]
 /// component manually to insert and update this state.
 ///
-/// [`BestIndividualUpdate`]: crate::components::evaluation::ParetoFrontUpdate
+/// [`ConfigurationBuilder::update_pareto_front`]: crate::configuration::ConfigurationBuilder::update_pareto_front
+/// [`ParetoFrontUpdate`]: crate::components::evaluation::ParetoFrontUpdate
 ///
 /// # Examples
 ///
@@ -225,7 +283,7 @@ impl<P: MultiObjectiveProblem> ParetoFront<P> {
         Self(Vec::new())
     }
 
-    // Update the Pareto front with the new `individual`, returning whether the front was updated.
+    /// Update the Pareto front with the new `individual`, returning whether the front was updated.
     pub fn update(&mut self, _individual: &Individual<P>) -> bool {
         todo!("implement non-dominated sorting")
     }
@@ -265,6 +323,8 @@ impl<P: MultiObjectiveProblem> Default for ParetoFront<P> {
 ///
 /// Additionally, applying different components to different parts of a population is possible
 /// through splitting the single population into multiple on the stack, and rotating through them.
+///
+/// [`Component`]: crate::Component
 ///
 /// # Nesting heuristics
 ///
@@ -654,7 +714,7 @@ impl<P: Problem> Populations<P> {
         self.stack.is_empty()
     }
 
-    /// Returns the number of populations on the stack, also referred to as its 'height' or `depth`.
+    /// Returns the number of populations on the stack, also referred to as its `height` or `depth`.
     ///
     /// # Examples
     ///

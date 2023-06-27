@@ -6,6 +6,9 @@ use serde::{ser::SerializeTupleStruct, Serialize, Serializer};
 use trait_set::trait_set;
 
 trait_set! {
+    /// Collection of traits required by every identifier.
+    ///
+    /// In general, identifiers should be zero-sized.
     pub trait Identifier = Default + Copy + Clone + Serialize + Send + Sync + 'static;
 }
 
@@ -17,6 +20,11 @@ macro_rules! identifier {
     };
 }
 
+/// A [`PhantomData`] wrapper for [`Identifier`]s, which implements [`Serialize`] using the type name of `I`.
+///
+/// This makes it possible to infer which identifier was used in serialized [`Component`]s.
+///
+/// [`Component`]: crate::Component
 #[derive(Default, Copy, Clone)]
 pub struct PhantomId<I: Identifier>(PhantomData<fn() -> I>);
 
@@ -44,3 +52,6 @@ identifier!(I1);
 identifier!(I2);
 identifier!(I3);
 identifier!(I4);
+
+identifier!(Seq);
+identifier!(Par);

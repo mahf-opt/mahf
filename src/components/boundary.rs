@@ -1,3 +1,5 @@
+//! Repair solutions for violating boundary constraints.
+
 use itertools::izip;
 use rand::distributions::Distribution;
 use rand_distr::Normal;

@@ -1,15 +1,17 @@
+//! Chemical Reaction Optimization (CRO).
+
 use crate::{
     component::ExecResult,
     components::{self, *},
     conditions::{self, *},
     configuration::{Configuration, ConfigurationBuilder},
-    identifier::{A, B},
+    identifier::{Global, Identifier, A, B},
     lens::common::PopulationSizeLens,
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
 
-/// Parameters for [cro].
+/// Parameters for [real_cro].
 pub struct RealProblemParameters {
     pub initial_population_size: u32,
     pub mole_coll: f64,
@@ -23,14 +25,13 @@ pub struct RealProblemParameters {
 }
 
 /// An example single-objective Chemical Reaction Optimization operating on a real search space.
-/// Uses the [cro] component internally.
-pub fn real_cro<P, O>(
+/// Uses the [`cro()`] component internally.
+pub fn real_cro<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         initial_population_size,
@@ -46,9 +47,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(initial_population_size))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(cro::<P, O>(
+        .do_(cro::<P, Global>(
             Parameters {
                 mole_coll,
                 kinetic_energy_lr,
@@ -95,10 +96,10 @@ pub struct Parameters<P> {
 ///
 /// # References
 /// [doi.org/10.1007/s12293-012-0075-1](https://doi.org/10.1007/s12293-012-0075-1)
-pub fn cro<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn cro<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         mole_coll,
@@ -120,7 +121,7 @@ where
         builder
             .do_(reaction)
             .do_(constraints.clone())
-            .evaluate_with::<O>()
+            .evaluate::<I>()
             .update_best_individual()
             .do_(update)
     };

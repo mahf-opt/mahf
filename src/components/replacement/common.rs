@@ -1,3 +1,5 @@
+//! Common replacement components.
+
 use eyre::ensure;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};

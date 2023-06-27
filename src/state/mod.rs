@@ -1,4 +1,4 @@
-//! TODO
+//! Runtime state of a (meta)heuristic.
 
 use std::{
     cell::{Ref, RefMut},
@@ -11,9 +11,10 @@ use derive_more::{Deref, DerefMut};
 
 use crate::{
     component::ExecResult,
+    identifier::Identifier,
     logging,
     logging::log::Log,
-    problems::{MultiObjectiveProblem, SingleObjectiveProblem},
+    problems::{Evaluate, MultiObjectiveProblem, SingleObjectiveProblem},
     Individual, Problem, SingleObjective,
 };
 
@@ -55,28 +56,28 @@ impl<'a, P> State<'a, P> {
     }
 
     /// Enables checking if specific custom state is present in the state.
-    pub(crate) fn requirements(&self) -> StateReq<'_, 'a, P> {
+    pub fn requirements(&self) -> StateReq<'_, 'a, P> {
         StateReq::new(self)
     }
 
-    /// Calls `f` with a child state, which is discarded afterwards.
-    pub fn with_inner_state<F>(&mut self, f: F) -> ExecResult<()>
+    /// Calls `f` with a child state, which is split off and returned afterwards.
+    pub fn with_inner_state<F>(&mut self, f: F) -> ExecResult<Self>
     where
         F: FnOnce(&mut Self) -> ExecResult<()>,
     {
         let registry = std::mem::take(&mut self.registry);
         let mut state = registry.into_child().into();
         f(&mut state)?;
-        let (registry, _) = StateRegistry::from(state).into_parent();
+        let (registry, child) = StateRegistry::from(state).into_parent();
         self.registry = registry.unwrap();
-        Ok(())
+        Ok(child.into())
     }
 
     /// Borrows `T` and the remaining state mutably at the same time.
     ///
     /// To make this possible, `T` is removed temporarily.
     ///
-    /// This makes passing the state to another function while `T` is borrowed possible.
+    /// This makes it possible to pass the state to another function while `T` is borrowed.
     pub fn holding<T>(
         &mut self,
         f: impl FnOnce(&mut T, &mut Self) -> ExecResult<()>,
@@ -164,12 +165,27 @@ where
         self.borrow::<Log>()
     }
 
+    /// Enables modifying the [`LogConfig`] used by the [`Logger`].
+    ///
+    /// Note that repeated calls of this method access the same [`LogConfig`].
+    ///
+    /// [`LogConfig`]: logging::LogConfig
+    /// [`Logger`]: logging::Logger
     pub fn configure_log<F>(&mut self, f: F) -> ExecResult<()>
     where
         F: FnOnce(&mut logging::LogConfig<P>) -> ExecResult<()>,
     {
         let mut config = self.entry::<logging::LogConfig<P>>().or_default();
         f(&mut *config)
+    }
+}
+
+impl<'a, P: Problem> State<'a, P> {
+    /// Inserts the `evaluator` wrapped in an [`Evaluator`] using the identifier `I`.
+    ///
+    /// [`Evaluator`]: common::Evaluator
+    pub fn insert_evaluator<I: Identifier>(&mut self, evaluator: impl Evaluate<Problem = P> + 'a) {
+        self.insert(common::Evaluator::<P, I>::new(evaluator));
     }
 }
 

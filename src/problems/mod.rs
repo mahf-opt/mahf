@@ -32,10 +32,10 @@
 //! ## Implement custom problems
 //!
 //! To define your own optimization problem, the minimum requirement is to implement
-//! [`Problem`] and some sort of [`Evaluator`] for it, i.e. implement [`Evaluate`] for
+//! [`Problem`] and some sort of evaluator for it, i.e. implement [`Evaluate`] for
 //! some struct.
 //!
-//! Note that for most problems with a *static* objective function,
+//! Note that for most problems with a *non-mutable* objective function,
 //! the [`ObjectiveFunction`] trait should be preferred over [`Evaluate`].
 //! See [`ObjectiveFunction`] for more information.
 //!
@@ -54,7 +54,7 @@ pub mod individual;
 pub mod objective;
 
 pub use encoding::AnyEncoding;
-pub use evaluate::{Evaluate, Evaluator, ObjectiveFunction};
+pub use evaluate::{Evaluate, ObjectiveFunction, Parallel, Sequential};
 pub use individual::Individual;
 pub use objective::{MultiObjective, Objective, SingleObjective};
 

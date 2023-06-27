@@ -1,3 +1,5 @@
+//! Functional recombination of solutions.
+
 use itertools::multizip;
 
 use crate::problems::encoding::valid_permutation;

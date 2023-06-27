@@ -1,3 +1,5 @@
+//! Utility components.
+
 use serde::Serialize;
 
 use crate::{component::ExecResult, components::Component, Problem, State};

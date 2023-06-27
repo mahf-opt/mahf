@@ -1,3 +1,5 @@
+//! Ant Colony Optimization (ACO).
+
 use eyre::WrapErr;
 
 use crate::{
@@ -5,8 +7,9 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     logging::Logger,
-    problems::{Evaluator, SingleObjectiveProblem, TravellingSalespersonProblem},
+    problems::{SingleObjectiveProblem, TravellingSalespersonProblem},
 };
 
 /// Parameters for [ant_system].
@@ -24,13 +27,12 @@ pub struct ASParameters {
 ///
 /// # References
 /// [doi.org/10.1109/MCI.2006.329691](https://doi.org/10.1109/MCI.2006.329691)
-pub fn ant_system<P, O>(
+pub fn ant_system<P>(
     params: ASParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: TravellingSalespersonProblem,
-    O: Evaluator<Problem = P>,
 {
     let ASParameters {
         num_ants,
@@ -43,7 +45,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::Empty::new())
-        .do_(aco::<_, O>(
+        .do_(aco::<P, Global>(
             Parameters {
                 generation: generative::AcoGeneration::new(
                     num_ants,
@@ -77,13 +79,12 @@ pub struct MMASParameters {
 ///
 /// # References
 /// [doi.org/10.1109/MCI.2006.329691](https://doi.org/10.1109/MCI.2006.329691)
-pub fn max_min_ant_system<P, O>(
+pub fn max_min_ant_system<P>(
     params: MMASParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: TravellingSalespersonProblem,
-    O: Evaluator<Problem = P>,
 {
     let MMASParameters {
         num_ants,
@@ -97,7 +98,8 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::Empty::new())
-        .do_(aco::<_, O>(
+        .evaluate::<Global>()
+        .do_(aco::<P, Global>(
             Parameters {
                 generation: generative::AcoGeneration::new(
                     num_ants,
@@ -124,10 +126,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Ant Colony Optimization template.
-pub fn aco<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn aco<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         generation,
@@ -138,7 +140,7 @@ where
         .while_(condition, |builder| {
             builder
                 .do_(generation)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_(pheromone_update)
                 .do_(Logger::new())

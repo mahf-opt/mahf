@@ -1,3 +1,5 @@
+//! Selection components for Differential Evolution (DE).
+
 use eyre::{ensure, ContextCompat};
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -15,8 +17,10 @@ use crate::{
 
 /// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.
 ///
-/// This component is meant to be used together with [DEMutation], as it initializes the population
+/// This component is meant to be used together with [`DEMutation`], as it initializes the population
 /// in a representation necessary to perform this special mutation.
+///
+/// [`DEMutation`]: crate::components::mutation::de::DEMutation
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DERand {
     // Number of difference vectors ∈ {1, 2}.
@@ -60,8 +64,10 @@ impl<P: Problem> Component<P> for DERand {
 
 /// Selects individuals in the form [best, `y * 2` random] for every individual in the population, keeping the order.
 ///
-/// This component is meant to be used together with [DEMutation], as it initializes the population
+/// This component is meant to be used together with [`DEMutation`], as it initializes the population
 /// in a representation necessary to perform this special mutation.
+///
+/// [`DEMutation`]: crate::components::mutation::de::DEMutation
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DEBest {
     // Number of difference vectors ∈ {1, 2}.
@@ -110,8 +116,10 @@ impl<P: SingleObjectiveProblem> Component<P> for DEBest {
 
 /// Selects individuals in the form [current, best, `y * 2 - 1` random] for every individual in the population, keeping the order.
 ///
-/// This component is meant to be used together with [DEMutation], as it initializes the population
+/// This component is meant to be used together with [`DEMutation`], as it initializes the population
 /// in a representation necessary to perform this special mutation.
+///
+/// [`DEMutation`]: crate::components::mutation::de::DEMutation
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DECurrentToBest {
     // Number of difference vectors ∈ {1, 2}.

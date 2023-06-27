@@ -1,3 +1,5 @@
+//! Selecting a subset of a population, e.g. for recombination.
+
 use eyre::WrapErr;
 
 use crate::{

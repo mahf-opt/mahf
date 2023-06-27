@@ -1,3 +1,5 @@
+//! Logging arbitrary data during a (meta)heuristic run.
+
 use serde::Serialize;
 
 use crate::{

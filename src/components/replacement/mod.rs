@@ -1,3 +1,5 @@
+//! Replace a parent population with its child population.
+
 use eyre::WrapErr;
 
 use crate::{

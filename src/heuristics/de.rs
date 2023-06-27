@@ -1,4 +1,4 @@
-//! Differential Evolution
+//! Differential Evolution (DE).
 
 use eyre::WrapErr;
 
@@ -7,8 +7,9 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
 
 /// Parameters for [real_de].
@@ -24,13 +25,12 @@ pub struct RealProblemParameters {
 ///
 /// # References
 /// [doi.org/10.1016/j.ins.2021.09.058](https://doi.org/10.1016/j.ins.2021.09.058)
-pub fn real_de<P, O>(
+pub fn real_de<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         population_size,
@@ -41,9 +41,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(population_size))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(de::<P, O>(
+        .do_(de::<P, Global>(
             Parameters {
                 selection: selection::de::DEBest::new(y)
                     .wrap_err("failed to construct DE selection")?,
@@ -68,10 +68,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Differential Evolution template.
-pub fn de<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn de<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         selection,
@@ -88,7 +88,7 @@ where
                 .do_(mutation)
                 .do_(crossover)
                 .do_(constraints)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_(replacement)
                 .do_(Logger::new())

@@ -1,3 +1,5 @@
+//! State mappings for Simulated Annealing (SA).
+
 use derivative::Derivative;
 use eyre::ensure;
 use serde::Serialize;

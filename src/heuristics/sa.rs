@@ -1,4 +1,4 @@
-//! Local Search
+//! Simulated Annealing (SA).
 
 use eyre::WrapErr;
 
@@ -7,9 +7,10 @@ use crate::{
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     lens::ValueOf,
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
 /// Parameters for [real_sa].
@@ -21,13 +22,12 @@ pub struct RealProblemParameters {
 
 /// An example single-objective Local Search operating on a real search space.
 /// Uses the [sa] component internally.
-pub fn real_sa<P, O>(
+pub fn real_sa<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         t_0,
@@ -37,9 +37,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(sa::<P, O>(
+        .do_(sa::<P, Global>(
             Parameters {
                 t_0,
                 generation: <mutation::NormalMutation>::new_dev(deviation),
@@ -64,13 +64,12 @@ pub struct PermutationProblemParameters {
 
 /// An example single-objective Simulated Annealing operating on a permutation search space.
 /// Uses the [sa] component internally.
-pub fn permutation_sa<P, O>(
+pub fn permutation_sa<P>(
     params: PermutationProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + VectorProblem<Element = usize>,
-    O: Evaluator<Problem = P>,
 {
     let PermutationProblemParameters {
         t_0,
@@ -80,9 +79,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(sa::<P, O>(
+        .do_(sa::<P, Global>(
             Parameters {
                 t_0,
                 generation: <mutation::SwapMutation>::new(num_swap)
@@ -108,10 +107,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Simulated Annealing template.
-pub fn sa<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn sa<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         t_0,
@@ -126,7 +125,7 @@ where
                 .do_(selection::All::new())
                 .do_(generation)
                 .do_(constraints)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_(cooling_schedule)
                 .do_(replacement::sa::ExponentialAnnealingAcceptance::new(t_0))

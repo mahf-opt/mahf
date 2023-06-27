@@ -3,6 +3,7 @@ use std::ops::Range;
 use mahf::{
     conditions::common::{ChangeOf, DeltaEqChecker},
     experiments::par_experiment,
+    identifier,
     lens::common::{BestObjectiveValueLens, BestSolutionLens},
     prelude::*,
 };
@@ -41,7 +42,8 @@ impl problems::LimitedVectorProblem for Sphere {
 }
 
 impl problems::ObjectiveFunction for Sphere {
-    fn objective(solution: &Self::Encoding) -> Self::Objective {
+    fn objective(&self, solution: &Self::Encoding) -> Self::Objective {
+        debug_assert_eq!(solution.len(), self.dim);
         solution
             .iter()
             .map(|x| x.powi(2))
@@ -63,7 +65,7 @@ fn main() -> ExecResult<()> {
     // Specify the problem: Sphere function with 10 dimensions.
     let problem = Sphere::new(30);
     // Specify the metaheuristic: Particle Swarm Optimization (pre-implemented in MAHF).
-    let config = pso::real_pso::<_, problems::evaluate::Sequential<_>>(
+    let config = pso::real_pso(
         /*params: */
         pso::RealProblemParameters {
             num_particles: 120,
@@ -79,6 +81,7 @@ fn main() -> ExecResult<()> {
     )?;
 
     let setup = |state: &mut State<Sphere>| -> ExecResult<()> {
+        state.insert_evaluator::<identifier::Global>(evaluate::Sequential::new());
         state.configure_log(|config| {
             config
                 .with_common(conditions::EveryN::new(

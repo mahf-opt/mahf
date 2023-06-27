@@ -1,3 +1,5 @@
+//! Recombine multiple solutions (also called crossover).
+
 use crate::{
     component::{AnyComponent, ExecResult},
     population::{IntoIndividuals, IntoSolutions},

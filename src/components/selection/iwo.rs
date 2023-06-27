@@ -1,10 +1,12 @@
+//! Selection components for Invasive Weed Optimization (IWO).
+
 use eyre::{ensure, ContextCompat};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     component::ExecResult,
     components::{
-        selection::{functional, selection, Selection},
+        selection::{functional as f, selection, Selection},
         Component,
     },
     problems::SingleObjectiveProblem,
@@ -40,8 +42,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DeterministicFitnessProportiona
         population: &'a [Individual<P>],
         _rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
-        let (worst, best) =
-            functional::objective_bounds(population).wrap_err("population is empty")?;
+        let (worst, best) = f::objective_bounds(population).wrap_err("population is empty")?;
         ensure!(
             worst.is_finite(),
             "this selection operator does not work with Inf fitness values"

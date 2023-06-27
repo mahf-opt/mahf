@@ -7,7 +7,7 @@
 /// Custom state is stored in the [`StateRegistry`] and can be accessed according to
 /// the typical borrowing model (one writer xor multiple readers).
 ///
-/// [`State`]: crate::state::StateRegistry
+/// [`StateRegistry`]: crate::state::StateRegistry
 ///
 /// # Requires
 ///

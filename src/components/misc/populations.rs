@@ -1,3 +1,5 @@
+//! Utility components for manipulating populations.
+
 use eyre::ensure;
 use itertools::{interleave, Itertools};
 use serde::{Deserialize, Serialize};
@@ -42,7 +44,6 @@ impl RotatePopulations {
 }
 
 impl<P: Problem> Component<P> for RotatePopulations {
-    #[contracts::requires()]
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         ensure!(
             state.populations().len() >= self.n,

@@ -1,3 +1,7 @@
+//! Generate solutions from partial solutions.
+//!
+//! This module contains components for Ant Colony Optimization (ACO) or components that are ACO-like.
+
 use std::ops;
 
 use better_any::{Tid, TidAble};

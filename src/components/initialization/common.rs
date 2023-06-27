@@ -1,3 +1,5 @@
+//! Common initialization components.
+
 use rand::distributions::uniform::SampleUniform;
 use serde::{Deserialize, Serialize};
 

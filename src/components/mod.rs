@@ -1,4 +1,6 @@
-//! TODO
+//! Metaheuristic algorithm components.
+//!
+//! This module contains definition and implementation of [`Component`]s.
 
 #![allow(clippy::new_ret_no_self)]
 
@@ -26,10 +28,83 @@ pub mod swarm;
 
 pub use control_flow::{Block, Branch, Loop, Scope};
 
-/// Trait to represent a *component*, a (small) functionality with a common interface.
+/// Trait to represent a *component*, a (small) functionality with a uniform interface.
 ///
-/// `Component`s are immutable, their properties describe them and can not
-/// change during a run. All mutable state has to be stored in the [State].
+/// `Component`s encapsulate any functionality that may arise in the context of metaheuristics,
+/// which includes evolutionary operators, any metaheuristic-specific operator,
+/// logging during the execution, calculation of metrics, and even control flow itself.
+///
+/// # Phases
+///
+/// `Component`s define three phases:
+/// - `initialize` (optional): Used to initialize custom state, and is only called once per optimization.
+/// - `require` (optional): Used to check if the custom state was properly initialized in the
+/// `initialize` phase, and is only called once per optimization.
+/// Specifically used to check if necessary custom state initialized by other components is present.
+/// - `execute`: Executes the functionality the component constitutes.
+/// This phase is usually called in a loop during the optimization process.
+///
+/// # State
+///
+/// The interface of `Component`s can be this generic because the [`State`] erases the
+/// types of the state contained within.
+/// It therefore can be interpreted as an interface checked at runtime, as it
+/// internally relies on boxed [`CustomState`] objects.
+///
+/// `Component`s are immutable and fully described by their parameters.
+///
+/// Therefore, all mutable state has to be stored in the [`State`].
+///
+/// [`CustomState`]: crate::CustomState
+///
+/// # Panic versus error
+///
+/// All methods on this trait return an [`ExecResult`], and therefore may fail.
+/// In general, they should fail when the interface of the component was violated
+/// (by other components), not because of an internal implementation error.
+///
+/// It is advised to add an error description before propagating the error using the
+/// [`wrap_err`] method or similar.
+///
+/// [`wrap_err`]: eyre::WrapErr::wrap_err
+///
+/// # Construction
+///
+/// Contrary to [Rust convention], the `new` method of component structs should return a
+/// `Box<dyn Component<P>>`, not `Self`, as components are usually used only in their boxed form.
+/// The `from_params` method is used to construct `Self` directly, e.g. for testing.
+///
+/// [Rust convention]: https://rust-unofficial.github.io/patterns/idioms/ctor.html
+///
+/// # Examples
+///
+/// A simple component that prints the current population:
+///
+/// ```
+/// use std::fmt::Debug;
+/// use serde::Serialize;
+/// use mahf::{Component, ExecResult, Problem, State};
+///
+/// #[derive(Clone, Serialize)]
+/// pub struct PrintPopulation;
+///
+/// impl PrintPopulation {
+///     pub fn from_params() -> Self {
+///         Self
+///     }
+///
+///     pub fn new<P>() -> Box<dyn Component<P>> where P: Problem, P::Encoding: Debug {
+///         Box::new(Self::from_params())
+///     }
+/// }
+///
+/// impl<P> Component<P> for PrintPopulation where P: Problem, P::Encoding: Debug {
+///     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+///         println!("Current population: {:?}", state.populations().current());
+///         Ok(())
+///     }
+/// }
+/// ```
 pub trait Component<P: Problem>: AnyComponent {
     /// Can be used to initialize custom state required by the component.
     #[allow(unused_variables)]

@@ -10,6 +10,7 @@ use crate::{state::StateResult, CustomState, State, StateError};
 pub struct StateReq<'a, 'b, P>(&'a State<'b, P>);
 
 impl<'a, 'b, P> StateReq<'a, 'b, P> {
+    /// Creates a new `StateReq`.
     pub fn new(state: &'a State<'b, P>) -> Self {
         Self(state)
     }

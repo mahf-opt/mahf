@@ -1,12 +1,13 @@
-//! Evolution Strategy
+//! Evolution Strategy (ES).
 
 use crate::{
     component::ExecResult,
     components::*,
     conditions::Condition,
     configuration::Configuration,
+    identifier::{Global, Identifier},
     logging::Logger,
-    problems::{Evaluator, LimitedVectorProblem, SingleObjectiveProblem},
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
 
 /// Parameters for [real_mu_plus_lambda_es].
@@ -27,7 +28,6 @@ pub fn real_mu_plus_lambda_es<P, O>(
 ) -> ExecResult<Configuration<P>>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-    O: Evaluator<Problem = P>,
 {
     let RealProblemParameters {
         population_size,
@@ -37,9 +37,9 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(population_size))
-        .evaluate_with::<O>()
+        .evaluate::<Global>()
         .update_best_individual()
-        .do_(es::<P, O>(
+        .do_(es::<P, Global>(
             Parameters {
                 selection: selection::FullyRandom::new(lambda),
                 mutation: <mutation::NormalMutation>::new_dev(deviation),
@@ -62,10 +62,10 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Evolution Strategy template.
-pub fn es<P, O>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn es<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
-    O: Evaluator<Problem = P>,
+    I: Identifier,
 {
     let Parameters {
         selection,
@@ -81,7 +81,7 @@ where
                 .do_(selection)
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate_with::<O>()
+                .evaluate::<I>()
                 .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)

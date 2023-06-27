@@ -31,7 +31,7 @@ use crate::state::CustomState;
 ///
 /// Using the [`random_mut`] method on [`State`] to retrieve the value:
 ///
-/// [`evaluations`]: crate::State::random_mut
+/// [`random_mut`]: crate::State::random_mut
 /// [`State`]: crate::State
 ///
 /// ```
@@ -58,7 +58,9 @@ impl CustomState<'_> for Random {}
 /// Describes the [Random] instance by its seed and the name of the underlying RNG.
 #[derive(Debug, Clone, Serialize)]
 pub struct RandomConfig {
+    /// Type name of the inner RNG.
     pub name: &'static str,
+    /// Seed of the inner RNG.
     pub seed: u64,
 }
 

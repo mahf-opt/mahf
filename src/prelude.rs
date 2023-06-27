@@ -2,17 +2,17 @@
 
 pub use crate::{
     components::{
-        self, evaluation, initialization, mapping, mutation, recombination, replacement, selection,
-        Component,
+        self, evaluation, generative, initialization, mapping, mutation, recombination,
+        replacement, selection, swarm, Component,
     },
     conditions::{self, Condition},
     heuristics::*,
-    logging,
+    identifier, logging,
     population::{
         AsSolutions, AsSolutionsMut, BestIndividual, IntoIndividuals, IntoSingle, IntoSingleRef,
         IntoSolutions,
     },
-    problems::{self, Problem},
+    problems::{self, evaluate, ObjectiveFunction, Problem},
     state::{self, common, CustomState, State, StateReq},
     Configuration, ExecResult, MultiObjective, SingleObjective, ValueOf,
 };

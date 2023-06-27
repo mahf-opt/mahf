@@ -1,3 +1,5 @@
+//! Diversity measures for populations.
+
 use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};

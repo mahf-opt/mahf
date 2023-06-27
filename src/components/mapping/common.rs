@@ -1,3 +1,5 @@
+//! Common state mappings.
+
 use derivative::Derivative;
 use rand::{distributions::uniform::SampleRange, Rng};
 use serde::Serialize;

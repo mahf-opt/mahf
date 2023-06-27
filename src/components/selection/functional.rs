@@ -1,3 +1,5 @@
+//! Functional population subset selection.
+
 use rand::distributions::{Distribution, WeightedError, WeightedIndex};
 
 use crate::{problems::SingleObjectiveProblem, state::random::Random, Individual, Problem};

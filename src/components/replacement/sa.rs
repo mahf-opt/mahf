@@ -1,4 +1,7 @@
+//! Replacement components for Simulated Annealing (SA).
+
 use better_any::{Tid, TidAble};
+use contracts::ensures;
 use derive_more::{Deref, DerefMut};
 use eyre::ContextCompat;
 use rand::Rng;
@@ -31,9 +34,8 @@ impl<P: SingleObjectiveProblem> Component<P> for ExponentialAnnealingAcceptance 
         Ok(())
     }
 
-    #[contracts::invariant(state.populations().current().len() == 1, "population before and after should contain a single individual")]
-    #[contracts::requires(state.populations().peek(1).len() == 1, "parent population should contain a single individual")]
-    #[contracts::ensures(state.populations().len() == old(state.populations().len()) - 1)]
+    #[ensures(state.populations().current().len() == 1, "population after should contain a single individual")]
+    #[ensures(state.populations().len() == old(state.populations().len()) - 1)]
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
 

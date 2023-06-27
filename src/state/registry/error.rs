@@ -13,13 +13,14 @@ use thiserror::Error;
 ///
 /// [`StateRegistry`]: crate::StateRegistry
 /// [`StateRegistry::try_borrow`]: crate::StateRegistry::try_borrow
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum StateError {
     #[error("`{0}` does not exist in the state")]
     NotFound(&'static str),
     #[error("`{0}` can't be immutably borrowed: {1}")]
     BorrowConflictImm(BorrowError, &'static str),
-    #[error("`{1}` can't be mutably borrowed: {1}")]
+    #[error("`{0}` can't be mutably borrowed: {1}")]
     BorrowConflictMut(BorrowMutError, &'static str),
     #[error("`{0}` contains the same type multiple times")]
     MultipleBorrowConflict(&'static str),

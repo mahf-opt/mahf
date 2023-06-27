@@ -45,6 +45,7 @@ pub trait Objective: AnyObjective {}
 /// assert!(MultiObjective::try_from(vec![f64::NAN, 0.0]).is_err());
 /// assert!(MultiObjective::try_from(vec![0.0, f64::NEG_INFINITY]).is_err());
 /// ```
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum IllegalObjective {
     #[error("NaN is not a valid objective value")]

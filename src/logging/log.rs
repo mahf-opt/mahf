@@ -1,3 +1,5 @@
+//! A serializable log for arbitrary data.
+
 use std::{any::type_name, collections::HashMap, fs::File, io::BufWriter, path::Path};
 
 use better_any::{Tid, TidAble};

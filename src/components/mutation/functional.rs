@@ -1,3 +1,5 @@
+//! Functional mutation of solutions.
+
 use std::{cmp::Ordering, ops::Range};
 
 use itertools::Itertools;

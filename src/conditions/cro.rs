@@ -1,3 +1,5 @@
+//! Conditions for Chemical Reaction Optimization (CRO).
+
 use eyre::{eyre, WrapErr};
 use serde::{Deserialize, Serialize};
 

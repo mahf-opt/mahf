@@ -1,3 +1,5 @@
+//! (Meta)Heuristic templates.
+
 pub mod aco;
 pub mod cro;
 pub mod de;

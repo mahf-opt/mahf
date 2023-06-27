@@ -1,3 +1,5 @@
+//! Mutation components for Differential Evolution (DE).
+
 use color_eyre::Section;
 use eyre::{ensure, eyre};
 use itertools::{multizip, Itertools};

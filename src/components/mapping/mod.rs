@@ -1,3 +1,5 @@
+//! Map from some input state to an output state.
+
 use crate::{
     component::ExecResult,
     lens::{Lens, LensAssign},

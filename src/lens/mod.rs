@@ -110,7 +110,7 @@ pub trait LensRef<P: Problem>: AnyLens {
 ///
 /// TODO
 pub trait LensMapRef: AnyLens {
-    /// The source type to map to `Target` from.
+    /// The source type to map to `&Target` from.
     type Source;
 
     /// Maps from `&Source` to `&Target`.

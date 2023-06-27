@@ -1,3 +1,5 @@
+//! Initialize solutions in the search space.
+
 use crate::{
     component::{AnyComponent, ExecResult},
     state::random::Random,

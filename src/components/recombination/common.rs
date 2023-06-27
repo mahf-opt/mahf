@@ -1,3 +1,5 @@
+//! Common recombination components.
+
 use std::cmp::min;
 
 use rand::{

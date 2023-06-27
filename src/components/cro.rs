@@ -1,3 +1,5 @@
+//! Components for Chemical Reaction Optimization (CRO).
+
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
 use eyre::{ensure, eyre, ContextCompat, WrapErr};
@@ -102,14 +104,16 @@ where
 
 /// Updates state after an OnWallIneffectiveCollision.
 ///
-/// Updates the energy buffer and molecule data in [CroState].
+/// Updates the energy buffer and molecule data in [`ChemicalReaction`].
 ///
-/// It assumes the following [Population][crate::state::common::Population] structure:
+/// It assumes the following [`Populations`] structure:
 /// - One mutated individual i'
 /// - One selected individual i
 /// - Population
 ///
 /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
+///
+/// [`Populations`]: crate::state::common::Populations
 #[derive(Clone, Serialize)]
 pub struct OnWallIneffectiveCollisionUpdate {
     /// The kinetic energy loss rate.
@@ -187,14 +191,16 @@ where
 
 /// Updates state after a Decomposition.
 ///
-/// Updates the energy buffer and molecule data in [CroState].
+/// Updates the energy buffer and molecule data in [`ChemicalReaction`].
 ///
-/// It assumes the following [Population][crate::state::common::Population] structure:
+/// It assumes the following [`Populations`] structure:
 /// - Two mutated individuals i' and i''
 /// - One selected individual i
 /// - Population
 ///
 /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
+///
+/// [`Populations`]: crate::state::common::Populations
 #[derive(Clone, Serialize)]
 pub struct DecompositionUpdate;
 
@@ -282,14 +288,16 @@ where
 
 /// Updates state after an IntermolecularIneffectiveCollision.
 ///
-/// Updates the energy buffer and molecule data in [CroState].
+/// Updates the energy buffer and molecule data in [`ChemicalReaction`].
 ///
-/// It assumes the following [Population][crate::state::common::Population] structure:
+/// It assumes the following [`Populations`] structure:
 /// - Two mutated individuals i' and j'
 /// - Two selected individuals i and j
 /// - Population
 ///
 /// Note that this component does **NOT** perform the operation, but only updates state afterwards.
+///
+/// [`Populations`]: crate::state::common::Populations
 #[derive(Debug, serde::Serialize, Clone)]
 pub struct IntermolecularIneffectiveCollisionUpdate;
 

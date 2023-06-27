@@ -1,3 +1,5 @@
+//! Elitist archive.
+
 use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 

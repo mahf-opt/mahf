@@ -1,3 +1,7 @@
+//! Modify swarms of solutions.
+//!
+//! This module contains components for Particle Swarm Optimization (PSO) or components that are PSO-like.
+
 use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};

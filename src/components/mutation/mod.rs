@@ -1,3 +1,5 @@
+//! Mutate solutions.
+
 use crate::{
     component::{AnyComponent, ExecResult},
     population::AsSolutionsMut,

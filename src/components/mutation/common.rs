@@ -1,3 +1,5 @@
+//! Common mutation components.
+
 use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};

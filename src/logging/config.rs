@@ -1,3 +1,5 @@
+//! Logging configuration.
+
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
 use serde::Serialize;
@@ -86,5 +88,9 @@ impl<P: Problem> LogConfig<P> {
         }
 
         Ok(())
+    }
+
+    pub fn clear(&mut self) {
+        self.rules.clear()
     }
 }

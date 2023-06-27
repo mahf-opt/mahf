@@ -1,3 +1,5 @@
+//! Common selection components.
+
 use color_eyre::Section;
 use eyre::{ensure, eyre, ContextCompat, WrapErr};
 use rand::{seq::SliceRandom, Rng};

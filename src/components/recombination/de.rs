@@ -1,3 +1,5 @@
+//! Recombination components for Differential Evolution (DE).
+
 use itertools::multizip;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
