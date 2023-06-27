@@ -122,7 +122,7 @@ where
     {
         match self {
             Self::Occupied(mut entry) => {
-                f(&mut *entry.get_mut());
+                f(entry.get_mut().deref_mut());
                 Self::Occupied(entry)
             }
             Self::Vacant(entry) => Self::Vacant(entry),

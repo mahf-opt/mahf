@@ -22,6 +22,7 @@
 //! [`lenses`]: https://rust-unofficial.github.io/patterns/functional/lenses.html
 
 use std::cell::{Ref, RefMut};
+use std::ops::Deref;
 
 use serde::Serialize;
 use trait_set::trait_set;
@@ -79,7 +80,7 @@ where
     E::Source: for<'a> CustomState<'a>,
 {
     fn get(&self, _problem: &P, state: &State<P>) -> ExecResult<Self::Target> {
-        Ok(self.map(&*state.try_borrow::<E::Source>()?))
+        Ok(self.map(state.try_borrow::<E::Source>()?.deref()))
     }
 }
 
