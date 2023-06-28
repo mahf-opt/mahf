@@ -5,6 +5,7 @@ use rand::distributions::Distribution;
 use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
+use crate::population::AsSolutionsMut;
 use crate::{
     component::{AnyComponent, ExecResult},
     components::Component,
@@ -26,8 +27,8 @@ where
     T: BoundaryConstraint<P>,
 {
     let mut populations = state.populations_mut();
-    for individual in populations.current_mut() {
-        component.constrain(individual.solution_mut(), problem, &mut state.random_mut());
+    for solution in populations.current_mut().as_solutions_mut() {
+        component.constrain(solution, problem, &mut state.random_mut());
     }
     Ok(())
 }
