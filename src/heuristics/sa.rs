@@ -37,7 +37,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(sa::<P, Global>(
             Parameters {
@@ -79,7 +79,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(sa::<P, Global>(
             Parameters {
@@ -125,7 +125,7 @@ where
                 .do_(selection::All::new())
                 .do_(generation)
                 .do_(constraints)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(cooling_schedule)
                 .do_(replacement::sa::ExponentialAnnealingAcceptance::new(t_0))

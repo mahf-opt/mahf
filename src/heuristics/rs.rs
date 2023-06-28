@@ -18,7 +18,7 @@ where
 {
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(rs::<P, Global>(
             Parameters {
@@ -37,7 +37,7 @@ where
 {
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(rs::<P, Global>(
             Parameters {
@@ -66,7 +66,7 @@ where
             builder
                 .do_(selection::All::new())
                 .do_(randomizer)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(Logger::new())

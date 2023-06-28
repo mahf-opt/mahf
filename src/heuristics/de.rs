@@ -41,7 +41,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(population_size))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(de::<P, Global>(
             Parameters {
@@ -88,7 +88,7 @@ where
                 .do_(mutation)
                 .do_(crossover)
                 .do_(constraints)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(replacement)
                 .do_(Logger::new())

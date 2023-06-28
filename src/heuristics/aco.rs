@@ -98,7 +98,6 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::Empty::new())
-        .evaluate::<Global>()
         .do_(aco::<P, Global>(
             Parameters {
                 generation: generative::AcoGeneration::new(
@@ -140,7 +139,7 @@ where
         .while_(condition, |builder| {
             builder
                 .do_(generation)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(pheromone_update)
                 .do_(Logger::new())

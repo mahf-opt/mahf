@@ -44,7 +44,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(num_particles))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(pso::<P, Global>(
             Parameters {
@@ -107,7 +107,7 @@ where
             builder
                 .do_(particle_update)
                 .do_(constraints)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_if_some_(inertia_weight_update)
                 .do_(state_update)

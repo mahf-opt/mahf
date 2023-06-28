@@ -47,7 +47,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(initial_population_size))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(cro::<P, Global>(
             Parameters {
@@ -121,7 +121,7 @@ where
         builder
             .do_(reaction)
             .do_(constraints.clone())
-            .evaluate::<I>()
+            .evaluate_with::<I>()
             .update_best_individual()
             .do_(update)
     };

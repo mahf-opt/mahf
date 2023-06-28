@@ -35,7 +35,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(1))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(ils::<P, Global>(
             Parameters {
@@ -71,7 +71,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomPermutation::new(1))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(ils::<P, Global>(
             Parameters {
@@ -103,7 +103,7 @@ where
         .while_(condition, |builder| {
             builder
                 .do_(perturbation)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .do_(selection::All::new())
                 .scope_(|builder| builder.do_(ls))
                 .update_best_individual()

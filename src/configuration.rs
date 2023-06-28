@@ -91,14 +91,14 @@ impl<P: Problem> Configuration<P> {
     /// # let max_population_size = 30;
     /// let ga = Configuration::builder()
     ///     .do_(initialization::RandomSpread::new(population_size))
-    ///     .evaluate_with::<evaluate::Sequential<_>, identifier::Seq>()
+    ///     .evaluate_with_init::<evaluate::Sequential<_>, identifier::Seq>()
     ///     .update_best_individual()
     ///     .while_(conditions::LessThanN::new(n, ValueOf::<common::Iterations>::new()), |builder| {
     ///         builder
     ///             .do_(selection::Tournament::new(num_selected, size))
     ///             .do_(recombination::ArithmeticCrossover::new_insert_both(1.))
     ///             .do_(<mutation::NormalMutation>::new(std_dev, rm))
-    ///             .evaluate::<identifier::Seq>()
+    ///             .evaluate_with::<identifier::Seq>()
     ///             .update_best_individual()
     ///             .do_(replacement::MuPlusLambda::new(max_population_size))
     ///     })
@@ -585,6 +585,31 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(debug::Debug::new(behaviour))
     }
 
+    /// Evaluates all [`Individual`]s in the [current population] using the [`Evaluator`] with identifier [`identifier::Global`].
+    ///
+    /// Internally, the [`PopulationEvaluator`] component is created.
+    ///
+    /// [`Individual`]: crate::Individual
+    /// [current population]: common::Populations::current
+    /// [`Evaluator`]: common::Evaluator
+    /// [`PopulationEvaluator`]: evaluation::PopulationEvaluator
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use mahf::Problem;
+    /// use mahf::Configuration;
+    ///
+    /// pub fn example<P: Problem>() -> Configuration<P> {
+    /// Configuration::builder()
+    ///     .evaluate()
+    ///     .build()
+    /// # }
+    /// ```
+    pub fn evaluate(self) -> Self {
+        self.do_(evaluation::PopulationEvaluator::<P, identifier::Global>::new())
+    }
+
     /// Evaluates all [`Individual`]s in the [current population] using the [`Evaluator`] with identifier `I`.
     ///
     /// Internally, the [`PopulationEvaluator`] component is created with the given identifier.
@@ -607,11 +632,11 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// pub fn example<P: Problem>() -> Configuration<P> {
     /// Configuration::builder()
-    ///     .evaluate::<Global>()
+    ///     .evaluate_with::<Global>()
     ///     .build()
     /// # }
     /// ```
-    pub fn evaluate<I>(self) -> Self
+    pub fn evaluate_with<I>(self) -> Self
     where
         I: Identifier,
     {
@@ -632,7 +657,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// # Examples
     ///
-    /// Calling `evaluate_with` with the [`Parallel`] evaluator and the `Par` identifier:
+    /// Calling `evaluate_with_init` with the [`Parallel`] evaluator and the `Par` identifier:
     ///
     /// [`Parallel`]: crate::problems::Parallel
     ///
@@ -644,11 +669,11 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// pub fn example<P: ObjectiveFunction + Sync>() -> Configuration<P> {
     /// Configuration::builder()
-    ///     .evaluate_with::<Parallel<_>, Par>()
+    ///     .evaluate_with_init::<Parallel<_>, Par>()
     ///     .build()
     /// # }
     /// ```
-    pub fn evaluate_with<T, I>(self) -> Self
+    pub fn evaluate_with_init<T, I>(self) -> Self
     where
         T: Evaluate<Problem = P> + Default + 'static,
         I: Identifier,
@@ -672,11 +697,10 @@ impl<P: SingleObjectiveProblem> ConfigurationBuilder<P> {
     /// ```no_run
     /// # use mahf::SingleObjectiveProblem;
     /// use mahf::Configuration;
-    /// use mahf::identifier::Global;
     ///
     /// # pub fn example<P: SingleObjectiveProblem>() -> Configuration<P> {
     /// Configuration::builder()
-    ///     .evaluate::<Global>()
+    ///     .evaluate()
     ///     .update_best_individual()
     ///     .build()
     /// # }
@@ -701,11 +725,10 @@ impl<P: MultiObjectiveProblem> ConfigurationBuilder<P> {
     /// ```no_run
     /// # use mahf::MultiObjectiveProblem;
     /// use mahf::Configuration;
-    /// use mahf::identifier::Global;
     ///
     /// # pub fn example<P: MultiObjectiveProblem>() -> Configuration<P> {
     /// Configuration::builder()
-    ///     .evaluate::<Global>()
+    ///     .evaluate()
     ///     .update_pareto_front()
     ///     .build()
     /// # }

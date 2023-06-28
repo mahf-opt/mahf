@@ -38,11 +38,12 @@ use crate::{
 /// # Examples
 ///
 /// An `PopulationEvaluator` is usually created by calling the
-/// `{`[`evaluate`], [`evaluate_with`]`}` method
+/// `{`[`evaluate`], [`evaluate_with`], [`evaluate_with_init`]`}` method
 /// on [`Configuration::builder`].
 ///
 /// [`evaluate`]: crate::configuration::ConfigurationBuilder::evaluate
 /// [`evaluate_with`]: crate::configuration::ConfigurationBuilder::evaluate_with
+/// [`evaluate_with_init`]: crate::configuration::ConfigurationBuilder::evaluate_with_init
 /// [`Configuration::builder`]: crate::Configuration::builder
 ///
 /// To allow for multiple evaluators, an [`identifier`] is used to distinguish them.
@@ -63,13 +64,12 @@ use crate::{
 /// # fn component2<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
 /// # fn component_that_requires_evaluation<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
 /// use mahf::Configuration;
-/// use mahf::identifier::Global;
 ///
 /// # pub fn example<P: SingleObjectiveProblem + ObjectiveFunction>() -> Configuration<P> {
 /// Configuration::builder()
 ///     .do_(component1())
 ///     .do_(component2())
-///     .evaluate::<Global>()
+///     .evaluate()
 ///     .update_best_individual()
 ///     .do_(component_that_requires_evaluation())
 ///     .build()
@@ -187,13 +187,12 @@ where
 /// # fn component2<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
 /// # fn component3<P: SingleObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
 /// use mahf::Configuration;
-/// use mahf::identifier::Global;
 ///
 /// # pub fn example<P: SingleObjectiveProblem + ObjectiveFunction>() -> Configuration<P> {
 /// Configuration::builder()
 ///     .do_(component1())
 ///     .do_(component2())
-///     .evaluate::<Global>()
+///     .evaluate()
 ///     .update_best_individual()
 ///     .do_(component3())
 ///     .build()
@@ -254,13 +253,12 @@ impl<P: SingleObjectiveProblem> Component<P> for BestIndividualUpdate {
 /// # fn component2<P: MultiObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
 /// # fn component3<P: MultiObjectiveProblem + ObjectiveFunction>() -> Box<dyn mahf::Component<P>> { unimplemented!() }
 /// use mahf::Configuration;
-/// use mahf::identifier::Global;
 ///
 /// # pub fn example<P: MultiObjectiveProblem + ObjectiveFunction>() -> Configuration<P> {
 /// Configuration::builder()
 ///     .do_(component1())
 ///     .do_(component2())
-///     .evaluate::<Global>()
+///     .evaluate()
 ///     .update_pareto_front()
 ///     .do_(component3())
 ///     .build()

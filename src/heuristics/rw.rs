@@ -91,7 +91,7 @@ where
                 .do_(selection::All::new())
                 .do_(neighbor)
                 .do_(constraints)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(replacement::Generational::new(1))
                 .do_(Logger::new())

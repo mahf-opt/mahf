@@ -42,7 +42,7 @@ where
         .do_(initialization::RandomBitstring::new_uniform(
             population_size,
         ))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(ga::<P, Global>(
             Parameters {
@@ -88,7 +88,7 @@ where
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(population_size))
-        .evaluate::<Global>()
+        .evaluate()
         .update_best_individual()
         .do_(ga::<P, Global>(
             Parameters {
@@ -144,7 +144,7 @@ where
                     builder.do_(mutation)
                 })
                 .do_(constraints)
-                .evaluate::<I>()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)
