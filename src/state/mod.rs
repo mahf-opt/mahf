@@ -11,6 +11,7 @@ use derive_more::{Deref, DerefMut};
 
 use crate::{
     component::ExecResult,
+    identifier,
     identifier::Identifier,
     logging,
     logging::log::Log,
@@ -181,6 +182,14 @@ where
 }
 
 impl<'a, P: Problem> State<'a, P> {
+    /// Inserts the `evaluator` wrapped in an [`Evaluator`] using the [`Global`] identifier.
+    ///
+    /// [`Evaluator`]: common::Evaluator
+    /// [`Global`]: identifier::Global
+    pub fn insert_global_evaluator(&mut self, evaluator: impl Evaluate<Problem = P> + 'a) {
+        self.insert(common::Evaluator::<P, identifier::Global>::new(evaluator));
+    }
+
     /// Inserts the `evaluator` wrapped in an [`Evaluator`] using the identifier `I`.
     ///
     /// [`Evaluator`]: common::Evaluator

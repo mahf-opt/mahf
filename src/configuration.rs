@@ -170,7 +170,7 @@ impl<P: Problem> Configuration<P> {
     ///
     /// The random generator defaults to a randomly seeded RNG ([`Random::default`]).
     ///
-    /// The `evaluator` is inserted wrapped inside [`Evaluator`] using the [`Global`] identifier.
+    /// The `evaluator` is inserted wrapped inside an [`Evaluator`] with the [`Global`] identifier.
     ///
     /// For initializing the state with custom state, e.g. a fixed random seed,
     /// see [`optimize_with`].
@@ -224,7 +224,7 @@ impl<P: Problem> Configuration<P> {
     /// If no random generator is inserted in `init_state`, it will default
     /// to a randomly seeded RNG ([Random::default]).
     ///
-    /// Note that the evaluator has to be inserted **manually** into the [`State`], using e.g. [`State::insert_evaluator`].
+    /// Note that the evaluator has to be inserted **manually** into the [`State`], using e.g. `{`[`State::insert_global_evaluator`], [`State::insert_evaluator`]`}`.
     ///
     /// [`Populations`]: common::Populations
     /// [`Log`]: logging::Log
@@ -585,13 +585,14 @@ impl<P: Problem> ConfigurationBuilder<P> {
         self.do_(debug::Debug::new(behaviour))
     }
 
-    /// Evaluates all [`Individual`]s in the [current population] using the [`Evaluator`] with identifier [`identifier::Global`].
+    /// Evaluates all [`Individual`]s in the [current population] using the [`Evaluator`] with [`Global`] identifier.
     ///
     /// Internally, the [`PopulationEvaluator`] component is created.
     ///
     /// [`Individual`]: crate::Individual
     /// [current population]: common::Populations::current
     /// [`Evaluator`]: common::Evaluator
+    /// [`Global`]: identifier::Global
     /// [`PopulationEvaluator`]: evaluation::PopulationEvaluator
     ///
     /// # Examples
@@ -614,12 +615,13 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// Internally, the [`PopulationEvaluator`] component is created with the given identifier.
     ///
-    /// The default identifier is [`identifier::Global`].
+    /// The default identifier is [`Global`].
     ///
     /// [`Individual`]: crate::Individual
     /// [current population]: common::Populations::current
     /// [`Evaluator`]: common::Evaluator
     /// [`PopulationEvaluator`]: evaluation::PopulationEvaluator
+    /// [`Global`]: identifier::Global
     ///
     /// # Examples
     ///
@@ -648,12 +650,13 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// Internally, the [`PopulationEvaluator`] component is created with the given identifier.
     ///
-    /// The default identifier is [`identifier::Global`].
+    /// The default identifier is [`Global`].
     ///
     /// [`Individual`]: crate::Individual
     /// [current population]: common::Populations::current
     /// [`Evaluator`]: common::Evaluator
     /// [`PopulationEvaluator`]: evaluation::PopulationEvaluator
+    /// [`Global`]: identifier::Global
     ///
     /// # Examples
     ///
