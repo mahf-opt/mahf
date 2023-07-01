@@ -50,7 +50,7 @@ where
                 crossover: recombination::UniformCrossover::new_insert_both(pc),
                 pm,
                 mutation: <mutation::BitFlipMutation>::new(rm),
-                constraints: misc::Noop::new(),
+                constraints: utils::Noop::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
             },

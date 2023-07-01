@@ -13,7 +13,6 @@ use crate::{
 pub mod archive;
 pub mod boundary;
 pub mod control_flow;
-pub mod cro;
 pub mod diversity;
 pub mod evaluation;
 pub mod generative;
@@ -25,6 +24,7 @@ pub mod recombination;
 pub mod replacement;
 pub mod selection;
 pub mod swarm;
+pub mod utils;
 
 pub use control_flow::{Block, Branch, Loop, Scope};
 

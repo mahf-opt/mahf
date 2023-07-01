@@ -2,7 +2,7 @@
 
 use crate::{
     component::ExecResult,
-    components::{self, *},
+    components::*,
     conditions::{self, *},
     configuration::{Configuration, ConfigurationBuilder},
     identifier::{Global, Identifier, A, B},
@@ -58,7 +58,7 @@ where
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
                 decomposition_criterion: conditions::cro::DecompositionCriterion::new(alpha),
                 decomposition: Block::new([
-                    misc::populations::DuplicatePopulation::new(),
+                    utils::populations::DuplicatePopulation::new(),
                     mutation::NormalMutation::<A>::new(decomposition_deviation, 0.5),
                 ]),
                 on_wall_ineffective_collision: mutation::NormalMutation::<B>::new_dev(
@@ -127,62 +127,63 @@ where
     };
 
     Configuration::builder()
-        .do_(components::cro::ChemicalReactionInit::new(
+        .do_(misc::cro::ChemicalReactionInit::new(
             initial_kinetic_energy,
             buffer,
         ))
         .while_(condition, |builder| {
-            builder.if_else_(
-                common::RandomChance::new(mole_coll)
-                    | LessThanN::new(2, PopulationSizeLens::<P>::new()),
-                |builder| {
-                    builder
-                        .do_(single_mole_selection)
-                        .do_(selection::All::new())
-                        .if_else_(
-                            decomposition_criterion,
-                            |builder| {
-                                elementary_reaction(
-                                    builder,
-                                    decomposition,
-                                    components::cro::DecompositionUpdate::new(),
-                                )
-                            },
-                            |builder| {
-                                elementary_reaction(
-                                    builder,
-                                    on_wall_ineffective_collision,
-                                    components::cro::OnWallIneffectiveCollisionUpdate::new(
-                                        kinetic_energy_lr,
-                                    ),
-                                )
-                            },
-                        )
-                },
-                |builder| {
-                    builder
-                        .do_(double_mole_selection)
-                        .do_(selection::All::new())
-                        .if_else_(
-                            synthesis_criterion,
-                            |builder| {
-                                elementary_reaction(
-                                    builder,
-                                    synthesis,
-                                    components::cro::SynthesisUpdate::new(),
-                                )
-                            },
-                            |builder| {
-                                elementary_reaction(
-                                    builder,
-                                    intermolecular_ineffective_collision,
-                                    components::cro::IntermolecularIneffectiveCollisionUpdate::new(),
-                                )
-                            },
-                        )
-                },
-            )
-                                .do_(Logger::new())
+            builder
+                .if_else_(
+                    common::RandomChance::new(mole_coll)
+                        | LessThanN::new(2, PopulationSizeLens::<P>::new()),
+                    |builder| {
+                        builder
+                            .do_(single_mole_selection)
+                            .do_(selection::All::new())
+                            .if_else_(
+                                decomposition_criterion,
+                                |builder| {
+                                    elementary_reaction(
+                                        builder,
+                                        decomposition,
+                                        misc::cro::DecompositionUpdate::new(),
+                                    )
+                                },
+                                |builder| {
+                                    elementary_reaction(
+                                        builder,
+                                        on_wall_ineffective_collision,
+                                        misc::cro::OnWallIneffectiveCollisionUpdate::new(
+                                            kinetic_energy_lr,
+                                        ),
+                                    )
+                                },
+                            )
+                    },
+                    |builder| {
+                        builder
+                            .do_(double_mole_selection)
+                            .do_(selection::All::new())
+                            .if_else_(
+                                synthesis_criterion,
+                                |builder| {
+                                    elementary_reaction(
+                                        builder,
+                                        synthesis,
+                                        misc::cro::SynthesisUpdate::new(),
+                                    )
+                                },
+                                |builder| {
+                                    elementary_reaction(
+                                        builder,
+                                        intermolecular_ineffective_collision,
+                                        misc::cro::IntermolecularIneffectiveCollisionUpdate::new(),
+                                    )
+                                },
+                            )
+                    },
+                )
+                .do_(Logger::new())
         })
         .build_component()
 }

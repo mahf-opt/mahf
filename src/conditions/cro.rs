@@ -4,7 +4,7 @@ use eyre::{eyre, WrapErr};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    component::ExecResult, components::cro::ChemicalReaction, conditions::Condition,
+    component::ExecResult, components::misc::cro::ChemicalReaction, conditions::Condition,
     population::IntoSingleRef, Problem, State,
 };
 

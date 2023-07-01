@@ -6,7 +6,7 @@ use eyre::WrapErr;
 
 use crate::{
     component::ExecResult,
-    components::{evaluation, misc::debug, Block, Branch, Component, Loop, Scope},
+    components::{evaluation, utils::debug, Block, Branch, Component, Loop, Scope},
     conditions::Condition,
     identifier,
     identifier::Identifier,

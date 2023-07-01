@@ -91,7 +91,7 @@ where
                     ValueOf::<replacement::sa::Temperature>::new(),
                 )
                 .wrap_err("failed to construct geometric cooling component")?,
-                constraints: misc::Noop::new(),
+                constraints: utils::Noop::new(),
             },
             condition,
         ))

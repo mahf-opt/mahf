@@ -62,7 +62,7 @@ where
             Parameters {
                 neighbor: <mutation::SwapMutation>::new(num_swap)
                     .wrap_err("failed to construct swap mutation")?,
-                constraints: misc::Noop::new(),
+                constraints: utils::Noop::new(),
             },
             condition,
         ))
