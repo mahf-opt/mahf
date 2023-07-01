@@ -25,16 +25,16 @@ impl<'a, 'b, P> StateReq<'a, 'b, P> {
     /// # Examples
     ///
     /// Basic usage:
+    ///
     /// ```
-    /// use better_any::{Tid, TidAble};
-    /// use serde::Serialize;
+    /// # use better_any::{Tid, TidAble};
+    /// # use serde::Serialize;
     /// use mahf::prelude::*;
     /// # #[derive(Tid)]
     /// # struct RequiredCustomState;
     /// # impl CustomState<'_> for RequiredCustomState {}
-    ///
-    /// #[derive(Clone, Serialize)]
-    /// struct ExampleComponent;
+    /// # #[derive(Clone, Serialize)]
+    /// # struct ExampleComponent;
     ///
     /// impl<P: Problem> Component<P> for ExampleComponent {
     ///     fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {

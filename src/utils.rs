@@ -24,6 +24,7 @@ where
     move |item| (f(i, item), i += 1).0
 }
 
+/// Returns if all elements in `arr` are equal.
 pub fn all_eq<T: PartialEq>(arr: &[T]) -> bool {
     arr.windows(2).all(|w| w[0] == w[1])
 }
@@ -33,13 +34,13 @@ pub fn all_eq<T: PartialEq>(arr: &[T]) -> bool {
 /// It additionally implements `Send` + `Sync` even if `T` doesn't.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""), Copy(bound = ""), Clone(bound = ""))]
-pub struct SerializablePhantom<L>(PhantomData<fn() -> L>);
+pub struct SerializablePhantom<T>(PhantomData<fn() -> T>);
 
-impl<L> serde::Serialize for SerializablePhantom<L> {
+impl<T> serde::Serialize for SerializablePhantom<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        serializer.serialize_unit_struct(std::any::type_name::<L>())
+        serializer.serialize_unit_struct(std::any::type_name::<T>())
     }
 }

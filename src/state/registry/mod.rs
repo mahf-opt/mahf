@@ -37,7 +37,7 @@ pub type StateMap<'a> = HashMap<TypeId, RefCell<Box<dyn CustomState<'a>>>>;
 ///
 /// See [`insert`] for more information.
 ///
-/// [`insert`]: Self::insert
+/// [`insert`]: StateRegistry::insert
 #[derive(Default)]
 pub struct StateRegistry<'a> {
     parent: Option<Box<StateRegistry<'a>>>,

@@ -4,8 +4,8 @@
 //! The heart of MAHFs logging is the [`Logger`] component, which can be added to a (meta)heuristic
 //! main loop to track its state during the optimization process.
 //!
-//! A [`Logger`] is configured by the [`LogConfig`], which in turn consist of a [`Condition`]
-//! and an [`EntryExtractor`].
+//! A [`Logger`] is configured by the [`LogConfig`], which in turn consist of [`Condition`]s
+//! and [`EntryExtractor`]s.
 //! See their respective documentation pages for more information on how to use them.
 //!
 //! When calling [`Configuration::optimize`] or [`Configuration::optimize_with`], a [`Log`] will be

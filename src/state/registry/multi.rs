@@ -61,7 +61,7 @@ pub trait MultiStateTuple<'a, 'b>: 'a {
 
     /// Tries to borrow all types contained within `References` mutably.
     ///
-    /// The soundness if `References` should be checked with [`distinct`] before any borrow occurs.
+    /// The soundness of `References` should be checked with [`distinct`] before any borrow occurs.
     ///
     /// [`distinct`]: Self::distinct
     fn try_get_mut(state: &'a mut StateRegistry<'b>) -> Result<Self::References, StateError>;
