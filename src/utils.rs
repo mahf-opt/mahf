@@ -24,6 +24,10 @@ where
     move |item| (f(i, item), i += 1).0
 }
 
+pub fn all_eq<T: PartialEq>(arr: &[T]) -> bool {
+    arr.windows(2).all(|w| w[0] == w[1])
+}
+
 /// Wrapper around [`PhantomData`] that serializes the type name of `T`.
 ///
 /// It additionally implements `Send` + `Sync` even if `T` doesn't.

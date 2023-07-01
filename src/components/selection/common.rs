@@ -208,9 +208,9 @@ impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
         population: &'a [Individual<P>],
         rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
-        let weights = f::proportional_weights(population, self.offset)
+        let weights = f::proportional_weights(population, self.offset, false)
             .wrap_err("population contains invalid objective values")
-            .note("roulette wheel note does work with infinite or negative objective values")?;
+            .note("roulette wheel does work with infinite objective values")?;
         let selection = f::sample_population_weighted(population, &weights, self.num_selected, rng)
             .wrap_err("sampling from population failed")?;
         Ok(selection)
@@ -248,9 +248,9 @@ impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
         population: &'a [Individual<P>],
         rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
-        let weights = f::proportional_weights(population, self.offset)
+        let weights = f::proportional_weights(population, self.offset, false)
             .wrap_err("population contains invalid objective values")
-            .note("stochastic universal sampling note does work with infinite or negative objective values")?;
+            .note("stochastic universal sampling does work with infinite objective values")?;
 
         // Calculate the distance between selection points and the random start point
         let weights_total = weights.iter().sum();
@@ -382,10 +382,11 @@ impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
         rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
         let ranking = f::reverse_rank(population);
-        let factor = (self.base - 1.0) / (self.base.powi(population.len() as i32) - 1.0);
+        let max_rank = ranking.iter().max().cloned().unwrap_or(0);
+        let factor = (self.base - 1.0) / (self.base.powi(max_rank as i32) - 1.0);
         let weights: Vec<_> = ranking
             .iter()
-            .map(|i| factor * (self.base.powi((population.len() - i) as i32)))
+            .map(|i| factor * (self.base.powi((max_rank - i) as i32)))
             .collect();
         let selection = f::sample_population_weighted(population, &weights, self.num_selected, rng)
             .wrap_err("sampling from population failed")?;
