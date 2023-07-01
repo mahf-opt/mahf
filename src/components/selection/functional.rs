@@ -45,6 +45,7 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
         return None;
     }
 
+    assert!(offset >= 0.0);
     let weights: Vec<_> = population.iter().map(|i| i.objective().value()).collect();
 
     // Positive weights only need reversing.
@@ -69,7 +70,6 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
     // Shift all values to be `>= 0` using `o - min`, where `min` is guaranteed to be `<= 0`.
     // Subtract from the shifted best `(max - min)` to reverse weights for minimization.
     // Add an offset to allow the worst to have a weight of `offset`, and not zero.
-    assert!(offset >= 0.0);
     let shifted_weights: Vec<_> = weights
         .iter()
         .map(|o| (max - min) - (o - min) + offset)
