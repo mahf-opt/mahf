@@ -48,7 +48,7 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
     assert!(offset >= 0.0);
     let weights: Vec<_> = population.iter().map(|i| i.objective().value()).collect();
 
-    // Positive weights only need reversing.
+    // Positive objective values can be directly used as weights after reversing.
     if min > 0.0 {
         // Add an offset to allow the worst to have a weight of `offset`, and not zero.
         return Some(weights.iter().map(|o| max - o + offset).collect());
@@ -80,7 +80,7 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
     }
 
     // Normalize weights by dividing with the total.
-    // The total is guaranteed to be `>= 0`, because all weights are shifted to be positive
+    // The total is guaranteed to be `> 0`, because all weights are shifted to be positive
     // and weights all identical are already handled.
     let total: f64 = shifted_weights.iter().sum();
     let normalized_weights: Vec<f64> = shifted_weights.iter().map(|f| f / total).collect();

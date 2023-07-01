@@ -780,6 +780,9 @@ impl<'a> StateRegistry<'a> {
     /// Returns a mutable reference to the first state `T` in the registry, borrowing the
     /// registry mutably.
     ///
+    /// Since this method borrows the registry mutably, no dynamic borrowing checks are performed,
+    /// as soundness is statically guaranteed.
+    ///
     /// Note that method is only useful if only one state needs to be accessed at a time
     /// because of the mutable borrow.
     ///

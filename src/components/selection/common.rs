@@ -210,7 +210,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for RouletteWheel {
     ) -> ExecResult<Vec<&'a Individual<P>>> {
         let weights = f::proportional_weights(population, self.offset, false)
             .wrap_err("population contains invalid objective values")
-            .note("roulette wheel does work with infinite objective values")?;
+            .note("roulette wheel does not work with infinite objective values")?;
         let selection = f::sample_population_weighted(population, &weights, self.num_selected, rng)
             .wrap_err("sampling from population failed")?;
         Ok(selection)
@@ -250,7 +250,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for StochasticUniversalSampling {
     ) -> ExecResult<Vec<&'a Individual<P>>> {
         let weights = f::proportional_weights(population, self.offset, false)
             .wrap_err("population contains invalid objective values")
-            .note("stochastic universal sampling does work with infinite objective values")?;
+            .note("stochastic universal sampling does not work with infinite objective values")?;
 
         // Calculate the distance between selection points and the random start point
         let weights_total = weights.iter().sum();
