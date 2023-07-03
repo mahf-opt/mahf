@@ -40,7 +40,7 @@ where
         .do_(ls::<P, Global>(
             Parameters {
                 num_neighbors: n_neighbors,
-                neighbors: <mutation::NormalMutation>::new_dev(deviation),
+                neighbors: mutation::NormalMutation::new_dev(deviation),
                 constraints: boundary::Saturation::new(),
             },
             condition,

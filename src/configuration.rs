@@ -224,7 +224,7 @@ impl<P: Problem> Configuration<P> {
     /// If no random generator is inserted in `init_state`, it will default
     /// to a randomly seeded RNG ([Random::default]).
     ///
-    /// Note that the evaluator has to be inserted **manually** into the [`State`], using e.g. `{`[`State::insert_global_evaluator`], [`State::insert_evaluator`]`}`.
+    /// Note that the evaluator has to be inserted **manually** into the [`State`], using e.g. `{`[`State::insert_evaluator`], [`State::insert_evaluator_as`]`}`.
     ///
     /// [`Populations`]: common::Populations
     /// [`Log`]: logging::Log
@@ -242,7 +242,7 @@ impl<P: Problem> Configuration<P> {
     /// # fn example<P: ObjectiveFunction>(problem: P) {
     /// let config = Configuration::builder()/* ... */.build();
     /// let state = config.optimize_with(&problem, |state| {
-    ///     state.insert_evaluator::<Global>(Sequential::new());
+    ///     state.insert_evaluator_as::<Global>(Sequential::new());
     ///     state.insert(Random::new(42));
     ///     Ok(())
     /// });
@@ -260,7 +260,7 @@ impl<P: Problem> Configuration<P> {
 
         init_state(&mut state)?;
 
-        if !state.has::<Random>() {
+        if !state.contains::<Random>() {
             state.insert(Random::default());
         }
 

@@ -54,8 +54,8 @@ impl<T: AnyComponent> MutationRate<T> {
 
     pub fn value(&self) -> ExecResult<f64> {
         ensure!(
-            (0.0..1.0).contains(&self.0),
-            "mutation rate must be in [0, 1)"
+            (0.0..=1.0).contains(&self.0),
+            "mutation rate must be in [0, 1]"
         );
         Ok(self.0)
     }
@@ -79,6 +79,15 @@ impl<I: Identifier> NormalMutation<I> {
         }
     }
 
+    pub fn new_with_id<P>(std_dev: f64, rm: f64) -> Box<dyn Component<P>>
+    where
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params(std_dev, rm))
+    }
+}
+
+impl NormalMutation<Global> {
     pub fn new<P>(std_dev: f64, rm: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = f64>,
@@ -141,6 +150,15 @@ impl<I: Identifier> UniformMutation<I> {
         }
     }
 
+    pub fn new_with_id<P>(bound: f64, rm: f64) -> Box<dyn Component<P>>
+    where
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params(bound, rm))
+    }
+}
+
+impl UniformMutation<Global> {
     pub fn new<P>(bound: f64, rm: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = f64>,
@@ -203,6 +221,15 @@ impl<I: Identifier> BitFlipMutation<I> {
         }
     }
 
+    pub fn new_with_id<P>(rm: f64) -> Box<dyn Component<P>>
+    where
+        P: VectorProblem<Element = bool>,
+    {
+        Box::new(Self::from_params(rm))
+    }
+}
+
+impl BitFlipMutation<Global> {
     pub fn new<P>(rm: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = bool>,
@@ -252,6 +279,15 @@ impl<I: Identifier> PartialRandomSpread<I> {
         }
     }
 
+    pub fn new_with_id<P>(rm: f64) -> Box<dyn Component<P>>
+    where
+        P: LimitedVectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params(rm))
+    }
+}
+
+impl PartialRandomSpread<Global> {
     pub fn new<P>(rm: f64) -> Box<dyn Component<P>>
     where
         P: LimitedVectorProblem<Element = f64>,
@@ -308,6 +344,16 @@ impl<I: Identifier> ScrambleMutation<I> {
         }
     }
 
+    pub fn new_with_id<P>(rm: f64) -> Box<dyn Component<P>>
+    where
+        P: VectorProblem,
+        P::Element: 'static,
+    {
+        Box::new(Self::from_params(rm))
+    }
+}
+
+impl ScrambleMutation<Global> {
     pub fn new<P>(rm: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem,
@@ -367,6 +413,15 @@ impl<I: Identifier> PartialRandomBitstring<I> {
         }
     }
 
+    pub fn new_with_id<P>(p: f64, rm: f64) -> Box<dyn Component<P>>
+    where
+        P: VectorProblem<Element = bool>,
+    {
+        Box::new(Self::from_params(p, rm))
+    }
+}
+
+impl PartialRandomBitstring<Global> {
     pub fn new<P>(p: f64, rm: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = bool>,

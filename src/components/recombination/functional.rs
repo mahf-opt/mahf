@@ -4,14 +4,13 @@ use itertools::multizip;
 
 use crate::problems::encoding::valid_permutation;
 
+#[contracts::requires(!indices.is_empty())]
+#[contracts::requires(indices.len() < parent1.len())]
+#[contracts::requires(indices.len() < parent2.len())]
 pub fn multi_point_crossover<D>(parent1: &[D], parent2: &[D], indices: &[usize]) -> [Vec<D>; 2]
 where
     D: Clone,
 {
-    debug_assert!(!indices.is_empty());
-    debug_assert!(indices.len() < parent1.len());
-    debug_assert!(indices.len() < parent2.len());
-
     let mut child1 = parent1.to_owned();
     let mut child2 = parent2.to_owned();
 
@@ -33,13 +32,12 @@ where
     [child1, child2]
 }
 
+#[contracts::debug_requires(mask.len() >= parent1.len())]
+#[contracts::debug_requires(mask.len() >= parent2.len())]
 pub fn uniform_crossover<D>(parent1: &[D], parent2: &[D], mask: &[bool]) -> [Vec<D>; 2]
 where
     D: Clone,
 {
-    debug_assert!(mask.len() >= parent1.len());
-    debug_assert!(mask.len() >= parent2.len());
-
     let mut child1 = parent1.to_owned();
     let mut child2 = parent2.to_owned();
 
@@ -52,10 +50,9 @@ where
     [child1, child2]
 }
 
+#[contracts::requires(alphas.len() >= parent1.len())]
+#[contracts::requires(alphas.len() >= parent2.len())]
 pub fn arithmetic_crossover(parent1: &[f64], parent2: &[f64], alphas: &[f64]) -> [Vec<f64>; 2] {
-    debug_assert!(alphas.len() >= parent1.len());
-    debug_assert!(alphas.len() >= parent2.len());
-
     let mut child1 = parent1.to_owned();
     let mut child2 = parent2.to_owned();
 
@@ -67,11 +64,10 @@ pub fn arithmetic_crossover(parent1: &[f64], parent2: &[f64], alphas: &[f64]) ->
     [child1, child2]
 }
 
+#[contracts::requires(parent1.len() == parent2.len())]
+#[contracts::requires(valid_permutation(parent1))]
+#[contracts::requires(valid_permutation(parent2))]
 pub fn cycle_crossover<D: Clone + Ord + PartialEq>(parent1: &[D], parent2: &[D]) -> [Vec<D>; 2] {
-    debug_assert_eq!(parent1.len(), parent2.len());
-    debug_assert!(valid_permutation(parent1));
-    debug_assert!(valid_permutation(parent2));
-
     let mut child1 = Vec::new();
     let mut child2 = Vec::new();
 

@@ -166,11 +166,12 @@ where
 }
 
 /// An error returned by [`IntoSingle::into_single`] and [`IntoSingleRef::into_single_ref`].
-#[allow(missing_docs)]
 #[derive(Debug, PartialEq, Error)]
 pub enum SingleIndividualError {
+    /// Population is empty.
     #[error("expected a single individual, but found none")]
     EmptyPopulation,
+    /// Population contains too many individuals.
     #[error("`expected a single individual, but found {0}")]
     TooManyIndividuals(usize),
 }

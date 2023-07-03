@@ -186,14 +186,17 @@ impl<'a, P: Problem> State<'a, P> {
     ///
     /// [`Evaluator`]: common::Evaluator
     /// [`Global`]: identifier::Global
-    pub fn insert_global_evaluator(&mut self, evaluator: impl Evaluate<Problem = P> + 'a) {
+    pub fn insert_evaluator(&mut self, evaluator: impl Evaluate<Problem = P> + 'a) {
         self.insert(common::Evaluator::<P, identifier::Global>::new(evaluator));
     }
 
     /// Inserts the `evaluator` wrapped in an [`Evaluator`] using the identifier `I`.
     ///
     /// [`Evaluator`]: common::Evaluator
-    pub fn insert_evaluator<I: Identifier>(&mut self, evaluator: impl Evaluate<Problem = P> + 'a) {
+    pub fn insert_evaluator_as<I: Identifier>(
+        &mut self,
+        evaluator: impl Evaluate<Problem = P> + 'a,
+    ) {
         self.insert(common::Evaluator::<P, I>::new(evaluator));
     }
 }

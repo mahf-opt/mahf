@@ -42,7 +42,7 @@ where
         .do_(es::<P, Global>(
             Parameters {
                 selection: selection::FullyRandom::new(lambda),
-                mutation: <mutation::NormalMutation>::new_dev(deviation),
+                mutation: mutation::NormalMutation::new_dev(deviation),
                 constraints: boundary::Saturation::new(),
                 archive: None,
                 replacement: replacement::MuPlusLambda::new(population_size),

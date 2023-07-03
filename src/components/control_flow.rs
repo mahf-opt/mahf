@@ -105,6 +105,14 @@ impl<I: IntoIterator<Item = Box<dyn Component<P>>>, P: Problem> From<I> for Box<
 /// }
 /// ```
 ///
+/// Arbitrary conditions are possible, but common is terminating the loop when a certain
+/// number of [`Iterations`] or [`Evaluations`] are reached.
+///
+/// See the documentation of [`LessThanN`] for more details.
+///
+/// [`Evaluations`]: common::Evaluations
+/// [`LessThanN`]: crate::conditions::LessThanN
+///
 /// # State
 ///
 /// This component inserts and updates the current number of [`Iterations`].

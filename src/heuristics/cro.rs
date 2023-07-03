@@ -3,7 +3,7 @@
 use crate::{
     component::ExecResult,
     components::*,
-    conditions::{self, *},
+    conditions::*,
     configuration::{Configuration, ConfigurationBuilder},
     identifier::{Global, Identifier, A, B},
     lens::common::PopulationSizeLens,
@@ -56,18 +56,19 @@ where
                 initial_kinetic_energy,
                 buffer,
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
-                decomposition_criterion: conditions::cro::DecompositionCriterion::new(alpha),
+                decomposition_criterion: cro::DecompositionCriterion::new(alpha),
                 decomposition: Block::new([
                     utils::populations::DuplicatePopulation::new(),
-                    mutation::NormalMutation::<A>::new(decomposition_deviation, 0.5),
+                    mutation::NormalMutation::<A>::new_with_id(decomposition_deviation, 0.5),
                 ]),
-                on_wall_ineffective_collision: mutation::NormalMutation::<B>::new_dev(
+                on_wall_ineffective_collision: mutation::NormalMutation::<B>::new_with_id(
                     on_wall_deviation,
+                    1.0,
                 ),
                 double_mole_selection: selection::RandomWithoutRepetition::new(2),
-                synthesis_criterion: conditions::cro::SynthesisCriterion::new(beta),
+                synthesis_criterion: cro::SynthesisCriterion::new(beta),
                 synthesis: recombination::UniformCrossover::new_insert_single(1.),
-                intermolecular_ineffective_collision: <mutation::UniformMutation>::new_bound(1.),
+                intermolecular_ineffective_collision: mutation::UniformMutation::new_bound(1.),
                 constraints: boundary::Saturation::new(),
             },
             condition,

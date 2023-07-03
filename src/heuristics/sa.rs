@@ -42,7 +42,7 @@ where
         .do_(sa::<P, Global>(
             Parameters {
                 t_0,
-                generation: <mutation::NormalMutation>::new_dev(deviation),
+                generation: mutation::NormalMutation::new_dev(deviation),
                 cooling_schedule: mapping::sa::GeometricCooling::new(
                     alpha,
                     ValueOf::<replacement::sa::Temperature>::new(),

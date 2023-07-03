@@ -31,7 +31,7 @@ use crate::{
 /// state using [`State::insert_evaluator`].
 ///
 /// [`PopulationEvaluator`]: crate::components::evaluation::PopulationEvaluator
-/// [`State::insert_evaluator`]: crate::State::insert_evaluator
+/// [`State::insert_evaluator`]: crate::State::insert_evaluator_as
 #[derive(Tid)]
 pub struct Evaluator<'a, P: Problem + 'static, I: Identifier + 'static> {
     inner: Box<dyn Evaluate<Problem = P> + 'a>,

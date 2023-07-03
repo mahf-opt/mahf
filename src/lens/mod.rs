@@ -35,7 +35,7 @@ pub use common::{IdLens, ValueOf};
 
 /// Collection of traits required by every lens.
 pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
-    /// The target value of the lens.
+    /// The target type of the lens.
     type Target;
 }
 
@@ -45,13 +45,85 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 ///
 /// # Examples
 ///
-/// Using the trait as trait bound to extract an integer:
+/// Using the trait as trait bound to work with any integer in a component:
 ///
-/// TODO
+/// ```
+/// use serde::Serialize;
+/// use mahf::lens::{AnyLens, Lens};
+/// use mahf::prelude::*;
 ///
-/// Implementing your own lens:
+/// #[derive(Clone, Serialize)]
+/// struct SomeComponentInvolvingAnInteger<I: AnyLens> {
+///     pub lens: I,
+/// }
 ///
-/// TODO
+/// impl<I: AnyLens> SomeComponentInvolvingAnInteger<I> {
+///     pub fn from_params(lens: I) -> Self {
+///         Self { lens }
+///     }
+///
+///     pub fn new<P>(lens: I) -> Box<dyn Component<P>>
+///     where
+///         P: Problem,
+///         I: Lens<P, Target = u32>,
+///     {
+///         Box::new(Self::from_params(lens))
+///     }
+/// }
+///
+/// impl<P, I, > Component<P> for SomeComponentInvolvingAnInteger<I>
+/// where
+///     P: Problem,
+///     // Specify that you just want an `u32`, and the caller should specify where it comes from.
+///     I: Lens<P, Target = u32>,
+/// {
+///     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+///         let some_integer: u32 = self.lens.get(problem, state)?;
+///         // Do some calculation using the integer.
+///         Ok(())
+///     }
+/// }
+///
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// // `SomeComponentInvolvingAnInteger` can work with any lens that extracts an `u32`.
+/// Configuration::builder()
+///     // Uses the number of iterations as `some_integer`.
+///     .do_(SomeComponentInvolvingAnInteger::new(ValueOf::<common::Iterations>::new()))
+///     // Uses the number of evaluations as `some_integer`.
+///     .do_(SomeComponentInvolvingAnInteger::new(ValueOf::<common::Evaluations>::new()))
+///     .build()
+/// # }
+/// ```
+///
+/// Implementing your own lens on a field of some [`CustomState`] with multiple fields:
+///
+/// ```
+/// use better_any::{Tid, TidAble};
+/// use serde::Serialize;
+/// use mahf::{CustomState, ExecResult, Individual, Problem, State};
+/// use mahf::lens::{AnyLens, Lens};
+///
+/// #[derive(Tid)]
+/// pub struct StateWithManyFields<P: Problem + 'static> {
+///     pub integer: u32,
+///     pub float: f64,
+///     pub individual: Individual<P>,
+/// }
+/// impl<P: Problem> CustomState<'_> for StateWithManyFields<P> {}
+///
+/// #[derive(Clone, Serialize)]
+/// pub struct StateWithManyFieldsFloatLens;
+///
+/// impl AnyLens for StateWithManyFieldsFloatLens {
+///     type Target = f64;
+/// }
+///
+/// impl<P: Problem> Lens<P> for StateWithManyFieldsFloatLens {
+///     fn get(&self, problem: &P, state: &State<P>) -> ExecResult<Self::Target> {
+///         Ok(state.try_borrow::<StateWithManyFields<P>>()?.float)
+///     }
+/// }
+/// ```
 pub trait Lens<P: Problem>: AnyLens {
     /// Tries to extract an owned value from the `problem` and/or `state`.
     fn get(&self, problem: &P, state: &State<P>) -> ExecResult<Self::Target>;

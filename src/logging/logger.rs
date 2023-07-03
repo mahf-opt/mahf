@@ -24,7 +24,7 @@ impl Logger {
 
 impl<P: Problem> Component<P> for Logger {
     fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        if state.has::<LogConfig<P>>() {
+        if state.contains::<LogConfig<P>>() {
             state.holding::<LogConfig<P>>(|config, state| {
                 for trigger in config.triggers() {
                     trigger.init(problem, state)?;
@@ -36,7 +36,7 @@ impl<P: Problem> Component<P> for Logger {
     }
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        if state.has::<LogConfig<P>>() {
+        if state.contains::<LogConfig<P>>() {
             state.holding::<LogConfig<P>>(|config, state| {
                 let mut step = Step::default();
                 config.execute(problem, state, &mut step)?;

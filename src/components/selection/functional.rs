@@ -1,4 +1,6 @@
 //! Functional population subset selection.
+//!
+//! The functions in this module can be used to simplify implementation selection component behaviour.
 
 use itertools::Itertools;
 use rand::distributions::{Distribution, WeightedError, WeightedIndex};
@@ -27,12 +29,15 @@ pub fn objective_bounds<P: SingleObjectiveProblem>(
 
 /// Calculates proportional weights for all [`Individual`]s using the objective value.
 ///
-/// Note that greater weights are assigned to [`Individual`]s with lower objective value.
+/// Greater weights are assigned to [`Individual`]s with lower objective value.
 ///
 /// The returned weights are guaranteed to be `>= offset`.
-/// The `offset ` is required to be greater than zero.
+///
+/// The `offset` is required to be positive or zero.
 ///
 /// If `normalize` is true, the weights sum to `1`.
+/// Note that most sampling methods don't require normalized weights.
+#[contracts::debug_requires(offset >= 0.0, "the `offset` is required to be positive or zero")]
 pub fn proportional_weights<P: SingleObjectiveProblem>(
     population: &[Individual<P>],
     offset: f64,
@@ -45,7 +50,6 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
         return None;
     }
 
-    assert!(offset >= 0.0);
     let weights: Vec<_> = population.iter().map(|i| i.objective().value()).collect();
 
     // Positive objective values can be directly used as weights after reversing.
@@ -55,6 +59,9 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
     }
 
     // Explicitly handle uniform weights here to avoid having a sum of 0 later.
+    // When all weights are identical, subtracting the `min` otherwise produces
+    // weights all zero, which is not supported by most sampling methods, and dividing
+    // by the `total` for normalizing divides by zero.
     if all_eq(&weights) {
         return Some(
             std::iter::repeat(if normalize {
@@ -91,7 +98,7 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
 /// Returns the ranking of the population, giving the individual
 /// with lowest objective value a rank of `1`.
 ///
-/// Note that ties are assigned the same rank.
+/// Ties are assigned the same rank.
 pub fn reverse_rank<P: SingleObjectiveProblem>(population: &[Individual<P>]) -> Vec<usize> {
     population
         .iter()

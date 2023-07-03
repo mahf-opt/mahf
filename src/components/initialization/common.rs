@@ -36,11 +36,11 @@ impl<P: Problem> Component<P> for Empty {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomSpread {
-    pub population_size: Option<u32>,
+    pub population_size: u32,
 }
 
 impl RandomSpread {
-    pub fn from_params(population_size: Option<u32>) -> Self {
+    pub fn from_params(population_size: u32) -> Self {
         Self { population_size }
     }
 
@@ -49,7 +49,7 @@ impl RandomSpread {
         D: SampleUniform + Clone + PartialOrd + 'static,
         P: LimitedVectorProblem<Element = D>,
     {
-        Box::new(Self::from_params(Some(population_size)))
+        Box::new(Self::from_params(population_size))
     }
 }
 
@@ -59,11 +59,7 @@ where
     P: LimitedVectorProblem<Element = D>,
 {
     fn initialize(&self, problem: &P, rng: &mut Random) -> Vec<P::Encoding> {
-        f::random_spread(
-            &problem.domain(),
-            self.population_size.unwrap() as usize,
-            rng,
-        )
+        f::random_spread(&problem.domain(), self.population_size as usize, rng)
     }
 }
 
@@ -79,11 +75,11 @@ where
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomPermutation {
-    pub population_size: Option<u32>,
+    pub population_size: u32,
 }
 
 impl RandomPermutation {
-    pub fn from_params(population_size: Option<u32>) -> Self {
+    pub fn from_params(population_size: u32) -> Self {
         Self { population_size }
     }
 
@@ -91,7 +87,7 @@ impl RandomPermutation {
     where
         P: VectorProblem<Element = usize>,
     {
-        Box::new(Self::from_params(Some(population_size)))
+        Box::new(Self::from_params(population_size))
     }
 }
 
@@ -100,11 +96,7 @@ where
     P: VectorProblem<Element = usize>,
 {
     fn initialize(&self, problem: &P, rng: &mut Random) -> Vec<P::Encoding> {
-        f::random_permutation(
-            problem.dimension(),
-            self.population_size.unwrap() as usize,
-            rng,
-        )
+        f::random_permutation(problem.dimension(), self.population_size as usize, rng)
     }
 }
 
@@ -119,12 +111,12 @@ where
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomBitstring {
-    pub population_size: Option<u32>,
+    pub population_size: u32,
     pub p: f64,
 }
 
 impl RandomBitstring {
-    pub fn from_params(population_size: Option<u32>, p: f64) -> Self {
+    pub fn from_params(population_size: u32, p: f64) -> Self {
         Self { population_size, p }
     }
 
@@ -132,7 +124,7 @@ impl RandomBitstring {
     where
         P: Problem + VectorProblem<Element = bool>,
     {
-        Box::new(Self::from_params(Some(population_size), p))
+        Box::new(Self::from_params(population_size, p))
     }
 
     pub fn new_uniform<P>(population_size: u32) -> Box<dyn Component<P>>
@@ -151,7 +143,7 @@ where
         f::random_bitstring(
             problem.dimension(),
             self.p,
-            self.population_size.unwrap() as usize,
+            self.population_size as usize,
             rng,
         )
     }

@@ -4,8 +4,8 @@ use std::{cmp::Ordering, ops::Range};
 
 use itertools::Itertools;
 
+#[contracts::debug_requires(indices.len() > 1, "swapping less than two indices is not possible")]
 pub fn circular_swap<D: 'static>(permutation: &mut [D], indices: &[usize]) {
-    debug_assert!(indices.len() > 1);
     for (&i, &j) in indices
         .iter()
         .rev()
@@ -16,6 +16,7 @@ pub fn circular_swap<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     }
 }
 
+#[contracts::debug_requires(indices.len() > 1, "swapping less than two indices is not possible")]
 pub fn circular_swap2<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     let mut buffer = indices.to_owned();
     let n = buffer.len();
@@ -29,10 +30,10 @@ pub fn circular_swap2<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     }
 }
 
+#[contracts::debug_requires(index < permutation.len())]
+#[contracts::debug_requires(range.start < permutation.len())]
+#[contracts::debug_requires(range.end < permutation.len())]
 pub fn translocate_slice<D: 'static>(permutation: &mut [D], range: Range<usize>, index: usize) {
-    debug_assert!(index < permutation.len());
-    debug_assert!(range.start < permutation.len());
-    debug_assert!(range.end < permutation.len());
     let chunk_size = range.end - range.start;
     debug_assert!(
         index + chunk_size <= permutation.len(),
@@ -52,14 +53,14 @@ pub fn translocate_slice<D: 'static>(permutation: &mut [D], range: Range<usize>,
     }
 }
 
+#[contracts::debug_requires(index < permutation.len())]
+#[contracts::debug_requires(range.start < permutation.len())]
+#[contracts::debug_requires(range.end < permutation.len())]
 pub fn translocate_slice2<D: Clone + 'static>(
     permutation: &mut [D],
     range: Range<usize>,
     index: usize,
 ) {
-    debug_assert!(index < permutation.len());
-    debug_assert!(range.start < permutation.len());
-    debug_assert!(range.end < permutation.len());
     debug_assert!(
         index + range.end - range.start <= permutation.len(),
         "moving the slice {:?} to index {} results in out of bounds access",

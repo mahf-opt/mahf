@@ -27,7 +27,9 @@ pub type HashMapEntry<'a, 'b> = hash_map::Entry<'a, TypeId, RefCell<Box<dyn Cust
 /// [`entry`]: crate::StateRegistry::entry
 /// [`StateRegistry`]: crate::StateRegistry
 pub enum Entry<'a, 'b, T> {
+    /// An occupied entry.
     Occupied(OccupiedEntry<'a, 'b, T>),
+    /// A vacant entry.
     Vacant(VacantEntry<'a, 'b, T>),
 }
 
@@ -402,7 +404,7 @@ where
     ///     assert_eq!(o.remove(), A(12));
     /// }
     ///
-    /// assert_eq!(registry.contains::<A>(), false);
+    /// assert_eq!(registry.contains_at_top::<A>(), false);
     /// ```
     #[inline]
     pub fn remove(self) -> T {

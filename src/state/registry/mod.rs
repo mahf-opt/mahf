@@ -91,7 +91,7 @@ impl<'a> StateRegistry<'a> {
     where
         T: CustomState<'a>,
     {
-        if self.contains::<T>() {
+        if self.contains_at_top::<T>() {
             Ok(self)
         } else {
             self.parent()
@@ -105,7 +105,7 @@ impl<'a> StateRegistry<'a> {
     where
         T: CustomState<'a>,
     {
-        if self.contains::<T>() {
+        if self.contains_at_top::<T>() {
             Ok(self)
         } else {
             self.parent_mut()
@@ -143,7 +143,7 @@ impl<'a> StateRegistry<'a> {
     where
         T: CustomState<'a>,
     {
-        if self.has::<T>() {
+        if self.contains::<T>() {
             // This is necessary because `self` can't be borrowed mutably by both
             // `self.find_mut::<T>` and as default.
             // The nice solution `self.find_mut::<T>().unwrap_or(self)` is therefore not possible.
@@ -187,7 +187,7 @@ impl<'a> StateRegistry<'a> {
     ///
     /// let mut registry = StateRegistry::new();
     /// assert_eq!(registry.insert(A(10)), None);
-    /// assert!(registry.contains::<A>());
+    /// assert!(registry.contains_at_top::<A>());
     ///
     /// registry.insert(A(20));
     /// assert_eq!(registry.insert(A(30)), Some(A(20)));
@@ -296,9 +296,46 @@ impl<'a> StateRegistry<'a> {
     /// Returns `true` if the current registry contains state of type `T`.
     ///
     /// Note that this method only searches the top-most registry on the stack.
-    /// For searching the entire stack, see [`has`].
+    /// For searching the entire stack, see [`contains`].
     ///
-    /// [`has`]: Self::has
+    /// [`contains`]: Self::contains
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use better_any::{Tid, TidAble};
+    /// # use derive_more::{Deref, DerefMut};
+    /// # use mahf::CustomState;
+    /// use mahf::StateRegistry;
+    /// # #[derive(Debug, PartialEq, Deref, DerefMut, Tid)]
+    /// # pub struct A(usize);
+    /// # impl CustomState<'_> for A {}
+    ///
+    /// let mut registry = StateRegistry::new();
+    /// registry.insert(A(10));
+    /// assert!(registry.contains_at_top::<A>());
+    ///
+    /// let mut registry = registry.into_child();
+    /// // Only the parent registry contains `A`.
+    /// assert!(!registry.contains_at_top::<A>());
+    ///
+    /// let (parent, _) = registry.into_parent();
+    /// let registry = parent.unwrap();
+    /// assert!(registry.contains_at_top::<A>())
+    /// ```
+    pub fn contains_at_top<T>(&self) -> bool
+    where
+        T: CustomState<'a>,
+    {
+        self.map.contains_key(&T::id())
+    }
+
+    /// Returns `true` if any registry on the stack contains state of type `T`.
+    ///
+    /// Note that this method searches all registries on the stack.
+    /// For searching only the top-most registry, see [`contains_at_top`].
+    ///
+    /// [`contains_at_top`]: Self::contains_at_top
     ///
     /// # Examples
     ///
@@ -316,47 +353,10 @@ impl<'a> StateRegistry<'a> {
     /// assert!(registry.contains::<A>());
     ///
     /// let mut registry = registry.into_child();
-    /// // Only the parent registry contains `A`.
-    /// assert!(!registry.contains::<A>());
-    ///
-    /// let (parent, _) = registry.into_parent();
-    /// let registry = parent.unwrap();
-    /// assert!(registry.contains::<A>())
+    /// // `has` also checks any parent registries.
+    /// assert!(registry.contains::<A>());
     /// ```
     pub fn contains<T>(&self) -> bool
-    where
-        T: CustomState<'a>,
-    {
-        self.map.contains_key(&T::id())
-    }
-
-    /// Returns `true` if any registry on the stack contains state of type `T`.
-    ///
-    /// Note that this method searches all registries on the stack.
-    /// For searching only the top-most registry, see [`contains`].
-    ///
-    /// [`contains`]: Self::contains
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use better_any::{Tid, TidAble};
-    /// # use derive_more::{Deref, DerefMut};
-    /// # use mahf::CustomState;
-    /// use mahf::StateRegistry;
-    /// # #[derive(Debug, PartialEq, Deref, DerefMut, Tid)]
-    /// # pub struct A(usize);
-    /// # impl CustomState<'_> for A {}
-    ///
-    /// let mut registry = StateRegistry::new();
-    /// registry.insert(A(10));
-    /// assert!(registry.has::<A>());
-    ///
-    /// let mut registry = registry.into_child();
-    /// // `has` also checks any parent registries.
-    /// assert!(registry.has::<A>());
-    /// ```
-    pub fn has<T>(&self) -> bool
     where
         T: CustomState<'a>,
     {
@@ -758,7 +758,7 @@ impl<'a> StateRegistry<'a> {
     /// let mut registry = StateRegistry::new();
     /// assert_eq!(registry.set_value::<A>(20), None);
     /// // `A` is **not** inserted here.
-    /// assert!(!registry.contains::<A>());
+    /// assert!(!registry.contains_at_top::<A>());
     ///
     /// registry.insert(A(10));
     /// assert_eq!(registry.set_value::<A>(20), Some(10));

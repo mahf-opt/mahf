@@ -95,7 +95,7 @@ where
                 selection: selection::Tournament::new(population_size, tournament_size),
                 crossover: recombination::UniformCrossover::new_insert_both(pc),
                 pm,
-                mutation: <mutation::NormalMutation>::new_dev(deviation),
+                mutation: mutation::NormalMutation::new_dev(deviation),
                 constraints: boundary::Saturation::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),

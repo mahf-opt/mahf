@@ -52,7 +52,6 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 /// internally relies on boxed [`CustomState`] objects.
 ///
 /// `Component`s are immutable and fully described by their parameters.
-///
 /// Therefore, all mutable state has to be stored in the [`State`].
 ///
 /// [`CustomState`]: crate::CustomState
@@ -61,10 +60,13 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///
 /// All methods on this trait return an [`ExecResult`], and therefore may fail.
 /// In general, they should fail when the interface of the component was violated
-/// (by other components), not because of an internal implementation error.
+/// (by other components).
 ///
 /// It is advised to add an error description before propagating the error using the
 /// [`wrap_err`] method or similar.
+///
+/// If a `Component` panics, it is assumed to be because of an internal implementation error,
+/// not because its interface was violated.
 ///
 /// [`wrap_err`]: eyre::WrapErr::wrap_err
 ///
@@ -72,7 +74,7 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///
 /// Contrary to [Rust convention], the `new` method of component structs should return a
 /// `Box<dyn Component<P>>`, not `Self`, as components are usually used only in their boxed form.
-/// The `from_params` method is used to construct `Self` directly, e.g. for testing.
+/// `Component`s typically define a `from_params` method that is used to construct `Self` directly, e.g. for testing.
 ///
 /// [Rust convention]: https://rust-unofficial.github.io/patterns/idioms/ctor.html
 ///

@@ -12,15 +12,17 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use trait_set::trait_set;
 
+use crate::state::common::{Evaluations, Iterations};
 use crate::{
     component::ExecResult,
     conditions::Condition,
     lens::{AnyLens, Lens, LensRef},
     problems::KnownOptimumProblem,
     state::common::Progress,
-    CustomState, Problem, State,
+    CustomState, Problem, State, ValueOf,
 };
 
+/// Evaluates to `true` with a probability of `p`.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomChance {
     // Probability of the condition evaluating to `true`.
@@ -80,6 +82,24 @@ where
         L: Lens<P>,
     {
         Box::new(Self::from_params(n, lens))
+    }
+}
+
+impl LessThanN<ValueOf<Iterations>> {
+    pub fn iterations<P>(n: u32) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self::from_params(n, ValueOf::<Iterations>::new()))
+    }
+}
+
+impl LessThanN<ValueOf<Evaluations>> {
+    pub fn evaluations<P>(n: u32) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self::from_params(n, ValueOf::<Evaluations>::new()))
     }
 }
 

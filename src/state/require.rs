@@ -54,7 +54,7 @@ impl<'a, 'b, P> StateReq<'a, 'b, P> {
         T: CustomState<'b>,
     {
         self.0
-            .has::<T>()
+            .contains::<T>()
             .then_some(())
             .ok_or_else(StateError::required_missing::<Source, T>)
     }

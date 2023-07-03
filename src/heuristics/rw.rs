@@ -32,7 +32,7 @@ where
         .do_(initialization::RandomSpread::new(1))
         .do_(rw::<P, Global>(
             Parameters {
-                neighbor: <mutation::NormalMutation>::new_dev(deviation),
+                neighbor: mutation::NormalMutation::new_dev(deviation),
                 constraints: boundary::Saturation::new(),
             },
             condition,

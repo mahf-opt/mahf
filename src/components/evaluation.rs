@@ -128,7 +128,7 @@ where
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(common::Evaluations(0));
 
-        if !state.has::<common::Evaluator<P, I>>() {
+        if !state.contains::<common::Evaluator<P, I>>() {
             if let Some(constructor) = self.constructor {
                 state.insert(constructor());
             } else {

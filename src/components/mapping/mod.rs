@@ -1,4 +1,21 @@
 //! Map from some input state to an output state.
+//!
+//! You can think of a mapping as a function `f` that maps from input `X` to output `Y`
+//! ```math
+//! f: X -> Y ,
+//! ```
+//! where `X` and `Y` are the `T::Target` of some input lens `I` and output lens `O`, respectively.
+//!
+//! The input value `x: X` is retrieved using the input lens `I`, mapped using `f`, and then
+//! assigned to the location `y: Y` specified by the output lens `O`.
+//!
+//! A simple example of this is copying some value from `x` to `y`:
+//! ```math
+//! y = f(x), where f(x) = x
+//! ```
+//!
+//! Note that a mapping only defines `f` (and maybe specifies bounds on `X` and `Y`), but
+//! the caller decides what `x` and `y` actually are.
 
 use crate::{
     component::ExecResult,

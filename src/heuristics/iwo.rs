@@ -68,7 +68,7 @@ where
                 min_number_of_seeds,
                 max_number_of_seeds,
                 mutation: Block::new([
-                    <mutation::NormalMutation>::new(initial_deviation, 1.),
+                    mutation::NormalMutation::new(initial_deviation, 1.),
                     mapping::Polynomial::new(
                         initial_deviation,
                         final_deviation,
