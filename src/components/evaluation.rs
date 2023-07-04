@@ -4,7 +4,6 @@ use std::any::type_name;
 
 use color_eyre::Section;
 use derivative::Derivative;
-use eyre::eyre;
 use serde::Serialize;
 
 use crate::{
@@ -12,7 +11,7 @@ use crate::{
     components::Component,
     identifier::{Global, Identifier, PhantomId},
     population::BestIndividual,
-    problems::{Evaluate, MultiObjectiveProblem, SingleObjectiveProblem},
+    problems::{MultiObjectiveProblem, SingleObjectiveProblem},
     state::{common, StateReq},
     Problem, State,
 };
@@ -29,21 +28,18 @@ use crate::{
 ///
 /// # Evaluator
 ///
-/// Fails with an `Err` if [`Evaluator`]`<P, I>` is not present in the [`State`], and
-/// no default evaluator was specified with [`new_with`].
+/// Fails with an `Err` if [`Evaluator`]`<P, I>` is not present in the [`State`].
 ///
 /// [`Evaluator`]: common::Evaluator
-/// [`new_with`]: PopulationEvaluator::new_with
 ///
 /// # Examples
 ///
 /// An `PopulationEvaluator` is usually created by calling the
-/// `{`[`evaluate`], [`evaluate_with`], [`evaluate_with_init`]`}` method
+/// `{`[`evaluate`], [`evaluate_with`]`}` method
 /// on [`Configuration::builder`].
 ///
 /// [`evaluate`]: crate::configuration::ConfigurationBuilder::evaluate
 /// [`evaluate_with`]: crate::configuration::ConfigurationBuilder::evaluate_with
-/// [`evaluate_with_init`]: crate::configuration::ConfigurationBuilder::evaluate_with_init
 /// [`Configuration::builder`]: crate::Configuration::builder
 ///
 /// To allow for multiple evaluators, an [`identifier`] is used to distinguish them.
@@ -78,74 +74,50 @@ use crate::{
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct PopulationEvaluator<P: Problem, I: Identifier = Global> {
-    #[serde(skip)]
-    constructor: Option<fn() -> common::Evaluator<'static, P, I>>,
-    id: PhantomId<I>,
-}
+pub struct PopulationEvaluator<I: Identifier = Global>(PhantomId<I>);
 
-impl<P, I> PopulationEvaluator<P, I>
+impl<I> PopulationEvaluator<I>
 where
-    P: Problem,
     I: Identifier,
 {
     /// Creates a new `PopulationEvaluator`.
-    pub fn from_params(constructor: Option<fn() -> common::Evaluator<'static, P, I>>) -> Self {
-        Self {
-            constructor,
-            id: PhantomId::default(),
-        }
+    pub fn from_params() -> Self {
+        Self(PhantomId::default())
     }
 
     /// Creates a new `PopulationEvaluator`.
-    ///
-    /// For specifying a `constructor`, see [`new_with`].
-    ///
-    /// [`new_with`]: Self::new_with
-    pub fn new() -> Box<dyn Component<P>> {
-        Box::new(Self::from_params(None))
-    }
-
-    /// Creates a `PopulationEvaluator`, constructing an [`Evaluator`] using `T` if none
-    /// with the identifier `I` is present in the [`State`].
-    ///
-    /// [`Evaluator`]: common::Evaluator
-    pub fn new_with<T>() -> Box<dyn Component<P>>
-    where
-        T: Evaluate<Problem = P> + Default + 'static,
-    {
-        Box::new(Self::from_params(Some(|| {
-            common::Evaluator::new(T::default())
-        })))
+    pub fn new_with<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Self::from_params())
     }
 }
 
-impl<P, I: Identifier> Component<P> for PopulationEvaluator<P, I>
+impl PopulationEvaluator<Global> {
+    /// Creates a new `PopulationEvaluator` with the default identifier [`Global`].
+    pub fn new<P: Problem>() -> Box<dyn Component<P>> {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P, I: Identifier> Component<P> for PopulationEvaluator<I>
 where
     P: Problem,
     I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(common::Evaluations(0));
-
-        if !state.contains::<common::Evaluator<P, I>>() {
-            if let Some(constructor) = self.constructor {
-                state.insert(constructor());
-            } else {
-                return Err(eyre!("no evaluator found")).with_suggestion(|| {
-                    format!(
-                        "add an evaluator with identifier {} to the state",
-                        type_name::<I>()
-                    )
-                });
-            }
-        }
         Ok(())
     }
 
     fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, common::Populations<P>>()?;
-        state_req.require::<Self, common::Evaluator<P, I>>()?;
+        state_req
+            .require::<Self, common::Evaluator<P, I>>()
+            .with_suggestion(|| {
+                format!(
+                    "add an evaluator with identifier {} to the state",
+                    type_name::<I>()
+                )
+            })?;
         Ok(())
     }
 

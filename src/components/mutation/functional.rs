@@ -1,4 +1,6 @@
 //! Functional mutation of solutions.
+//!
+//! The functions in this module can be used to simplify implementation of mutation component behaviour.
 
 use std::{cmp::Ordering, ops::Range};
 

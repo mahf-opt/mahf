@@ -145,6 +145,24 @@ where {
     }
 }
 
+impl EveryN<ValueOf<Iterations>> {
+    pub fn iterations<P>(n: u32) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self::from_params(n, ValueOf::<Iterations>::new()))
+    }
+}
+
+impl EveryN<ValueOf<Evaluations>> {
+    pub fn evaluations<P>(n: u32) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+    {
+        Box::new(Self::from_params(n, ValueOf::<Evaluations>::new()))
+    }
+}
+
 impl<P, L> Condition<P> for EveryN<L>
 where
     P: Problem,

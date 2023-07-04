@@ -59,11 +59,13 @@ impl problems::KnownOptimumProblem for Sphere {
 }
 
 fn main() -> ExecResult<()> {
+    // Required for pretty error messages and stacktrace.
     color_eyre::install()?;
 
     // Specify the problem: Sphere function with 10 dimensions.
     let problem = Sphere::new(/* dim: */ 10);
-    // Specify the metaheuristic: Particle Swarm Optimization (pre-implemented in MAHF).
+
+    // Specify the metaheuristic: e.g. Particle Swarm Optimization ...
     let _: Configuration<Sphere> = pso::real_pso(
         /*params: */
         pso::RealProblemParameters {
@@ -75,10 +77,11 @@ fn main() -> ExecResult<()> {
             v_max: 1.0,
         },
         /*condition: */
-        conditions::LessThanN::new(10_000, ValueOf::<common::Iterations>::new())
+        conditions::LessThanN::iterations(10_000)
             & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
     )?;
 
+    // ... or a Genetic Algorithm.
     let config = ga::real_ga(
         /*params: */
         ga::RealProblemParameters {
@@ -97,10 +100,7 @@ fn main() -> ExecResult<()> {
         state.insert_evaluator(evaluate::Sequential::new());
         state.configure_log(|config| {
             config
-                .with_common(conditions::EveryN::new(
-                    50,
-                    ValueOf::<common::Iterations>::new(),
-                ))
+                .with_common(conditions::EveryN::iterations(50))
                 .with(
                     ChangeOf::new(
                         DeltaEqChecker::new(0.001.try_into().unwrap()),
@@ -109,12 +109,12 @@ fn main() -> ExecResult<()> {
                     BestObjectiveValueLens::entry(),
                 )
                 .with(
-                    conditions::EveryN::new(1_000, ValueOf::<common::Iterations>::new()),
+                    conditions::EveryN::iterations(1_000),
                     BestSolutionLens::entry(),
                 );
             Ok(())
         })
     };
 
-    par_experiment(&config, setup, &[problem], 4096, "data/bmf/PSO", false)
+    par_experiment(&config, setup, &[problem], 4096, "data/bmf/GA", false)
 }

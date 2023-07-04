@@ -62,6 +62,56 @@ use crate::{CustomState, Individual, Problem, State};
 ///     }
 /// }
 /// ```
+///
+/// The evaluator is specified when executing the configuration:
+///
+/// ```
+/// # use mahf::{Individual, Problem, SingleObjective, State, problems::Evaluate};
+/// use mahf::prelude::*;
+///
+/// # pub struct Sphere {
+/// #     pub dim: usize,
+/// # }
+/// #
+/// # impl Problem for Sphere {
+/// #     type Encoding = ();
+/// #     type Objective = SingleObjective;
+/// #
+/// #    fn name(&self) -> &str { unimplemented!() }
+/// # }
+/// #
+/// # pub struct SequentialSphereEvaluator;
+/// #
+/// # impl SequentialSphereEvaluator {
+/// #    pub fn new() -> Self {
+/// #        Self
+/// #    }
+/// # }
+/// #
+/// # impl Evaluate for SequentialSphereEvaluator {
+/// #    type Problem = Sphere;
+/// #
+/// #    fn evaluate(
+/// #        &mut self,
+/// #        _problem: &Self::Problem,
+/// #        _state: &mut State<Self::Problem>,
+/// #        individuals: &mut [Individual<Self::Problem>])
+/// #    {
+/// #        unimplemented!()
+/// #    }
+/// # }
+/// #
+/// # fn example(config: Configuration<Sphere>, problem: Sphere) -> ExecResult<()> {
+///  // Implicit ...
+///  let state = config.optimize(&problem, SequentialSphereEvaluator::new())?;
+///  // ... or explicit insertion into the state.
+///  let state = config.optimize_with(&problem, |state| {
+///     state.insert_evaluator(SequentialSphereEvaluator::new());
+///     Ok(())
+///  })?;
+/// # Ok(())
+/// # }
+/// ```
 pub trait Evaluate: Send {
     /// The type of optimization problem.
     type Problem: Problem;
@@ -119,6 +169,43 @@ pub trait Evaluate: Send {
 ///                 .unwrap()
 ///     }
 /// }
+/// ```
+///
+/// [`Sequential`] and [`Parallel`] can be used as evaluators:
+///
+/// ```
+/// # use mahf::{Individual, Problem, SingleObjective, State, problems::ObjectiveFunction};
+/// use mahf::prelude::*;
+/// #
+/// # pub struct Sphere {
+/// #     pub dim: usize,
+/// # }
+/// #
+/// # impl Problem for Sphere {
+/// #     type Encoding = Vec<f64>;
+/// #     type Objective = SingleObjective;
+/// #
+/// #    fn name(&self) -> &str {
+/// #        "Sphere"
+/// #    }
+/// # }
+/// #
+/// # impl ObjectiveFunction for Sphere {
+/// #    fn objective(&self, solution: &Self::Encoding) -> Self::Objective {
+/// #            unimplemented!()
+/// #    }
+/// # }
+///
+/// # fn example(config: Configuration<Sphere>, problem: Sphere) -> ExecResult<()> {
+///  // Implicit insertion into the state ...
+///  let state = config.optimize(&problem, evaluate::Sequential::new())?;
+///  // ... or explicit.
+///  let state = config.optimize_with(&problem, |state| {
+///     state.insert_evaluator(evaluate::Sequential::new());
+///     Ok(())
+///  })?;
+/// # Ok(())
+/// # }
 /// ```
 pub trait ObjectiveFunction: Problem {
     /// Calculates the objective value of the given `solution`.

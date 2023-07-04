@@ -9,11 +9,6 @@
 //! The input value `x: X` is retrieved using the input lens `I`, mapped using `f`, and then
 //! assigned to the location `y: Y` specified by the output lens `O`.
 //!
-//! A simple example of this is copying some value from `x` to `y`:
-//! ```math
-//! y = f(x), where f(x) = x
-//! ```
-//!
 //! Note that a mapping only defines `f` (and maybe specifies bounds on `X` and `Y`), but
 //! the caller decides what `x` and `y` actually are.
 

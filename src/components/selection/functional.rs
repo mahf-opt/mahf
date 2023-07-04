@@ -1,6 +1,6 @@
 //! Functional population subset selection.
 //!
-//! The functions in this module can be used to simplify implementation selection component behaviour.
+//! The functions in this module can be used to simplify implementation of selection component behaviour.
 
 use itertools::Itertools;
 use rand::distributions::{Distribution, WeightedError, WeightedIndex};

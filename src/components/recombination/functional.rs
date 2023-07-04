@@ -1,4 +1,6 @@
 //! Functional recombination of solutions.
+//!
+//! The functions in this module can be used to simplify implementation of recombination component behaviour.
 
 use itertools::multizip;
 

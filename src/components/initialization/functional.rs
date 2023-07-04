@@ -1,4 +1,6 @@
 //! Functional initialization of solutions.
+//!
+//! The functions in this module can be used to simplify implementation of initialization component behaviour.
 
 use std::{iter::repeat_with, ops::Range};
 

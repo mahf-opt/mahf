@@ -91,14 +91,14 @@ impl<P: Problem> Configuration<P> {
     /// # let max_population_size = 30;
     /// let ga = Configuration::builder()
     ///     .do_(initialization::RandomSpread::new(population_size))
-    ///     .evaluate_with_init::<evaluate::Sequential<_>, identifier::Seq>()
+    ///     .evaluate()
     ///     .update_best_individual()
     ///     .while_(conditions::LessThanN::new(n, ValueOf::<common::Iterations>::new()), |builder| {
     ///         builder
     ///             .do_(selection::Tournament::new(num_selected, size))
     ///             .do_(recombination::ArithmeticCrossover::new_insert_both(1.))
     ///             .do_(<mutation::NormalMutation>::new(std_dev, rm))
-    ///             .evaluate_with::<identifier::Seq>()
+    ///             .evaluate()
     ///             .update_best_individual()
     ///             .do_(replacement::MuPlusLambda::new(max_population_size))
     ///     })
@@ -608,7 +608,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     /// # }
     /// ```
     pub fn evaluate(self) -> Self {
-        self.do_(evaluation::PopulationEvaluator::<P, identifier::Global>::new())
+        self.do_(evaluation::PopulationEvaluator::new())
     }
 
     /// Evaluates all [`Individual`]s in the [current population] using the [`Evaluator`] with identifier `I`.
@@ -642,46 +642,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     where
         I: Identifier,
     {
-        self.do_(evaluation::PopulationEvaluator::<P, I>::new())
-    }
-
-    /// Evaluates all [`Individual`]s in the [current population] using the [`Evaluator`] with identifier `I`,
-    /// constructing an [`Evaluator`] using `T::default()` if none with the identifier `I` is present in the [`State`].
-    ///
-    /// Internally, the [`PopulationEvaluator`] component is created with the given identifier.
-    ///
-    /// The default identifier is [`Global`].
-    ///
-    /// [`Individual`]: crate::Individual
-    /// [current population]: common::Populations::current
-    /// [`Evaluator`]: common::Evaluator
-    /// [`PopulationEvaluator`]: evaluation::PopulationEvaluator
-    /// [`Global`]: identifier::Global
-    ///
-    /// # Examples
-    ///
-    /// Calling `evaluate_with_init` with the [`Parallel`] evaluator and the `Par` identifier:
-    ///
-    /// [`Parallel`]: crate::problems::Parallel
-    ///
-    /// ```no_run
-    /// # use mahf::problems::ObjectiveFunction;
-    /// use mahf::Configuration;
-    /// use mahf::problems::Parallel;
-    /// use mahf::identifier::Par;
-    ///
-    /// pub fn example<P: ObjectiveFunction + Sync>() -> Configuration<P> {
-    /// Configuration::builder()
-    ///     .evaluate_with_init::<Parallel<_>, Par>()
-    ///     .build()
-    /// # }
-    /// ```
-    pub fn evaluate_with_init<T, I>(self) -> Self
-    where
-        T: Evaluate<Problem = P> + Default + 'static,
-        I: Identifier,
-    {
-        self.do_(evaluation::PopulationEvaluator::<P, I>::new_with::<T>())
+        self.do_(evaluation::PopulationEvaluator::<I>::new_with())
     }
 }
 
