@@ -55,7 +55,8 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --workspace --all-features --all-targets --verbose
+          # --all-targets includes --benches, which we don't want.
+          args: --workspace --all-features --lib --bins --tests --examples --verbose
 
   rustfmt:
     name: Format
@@ -99,3 +100,10 @@ jobs:
         with:
           command: doc
           args: --no-deps --verbose
+
+      - name: Run cargo test --doc
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          # --all-targets includes --benches, which we don't want.
+          args: --workspace --all-features --doc --verbose
