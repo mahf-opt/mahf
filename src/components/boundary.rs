@@ -10,10 +10,10 @@ use rand::distributions::Distribution;
 use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
-use crate::population::AsSolutionsMut;
 use crate::{
     component::{AnyComponent, ExecResult},
     components::Component,
+    population::AsSolutionsMut,
     problems::LimitedVectorProblem,
     state::{random::Random, State},
     Problem,

@@ -12,13 +12,12 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use trait_set::trait_set;
 
-use crate::state::common::{Evaluations, Iterations};
 use crate::{
     component::ExecResult,
     conditions::Condition,
     lens::{AnyLens, Lens, LensRef},
     problems::KnownOptimumProblem,
-    state::common::Progress,
+    state::common::{Evaluations, Iterations, Progress},
     CustomState, Problem, State, ValueOf,
 };
 

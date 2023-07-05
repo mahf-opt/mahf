@@ -21,8 +21,10 @@
 //!
 //! [`lenses`]: https://rust-unofficial.github.io/patterns/functional/lenses.html
 
-use std::cell::{Ref, RefMut};
-use std::ops::Deref;
+use std::{
+    cell::{Ref, RefMut},
+    ops::Deref,
+};
 
 use serde::Serialize;
 use trait_set::trait_set;
