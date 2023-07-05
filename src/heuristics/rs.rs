@@ -1,58 +1,51 @@
-//! Random Search
+//! Random Search (RS).
 
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
+    configuration::Configuration,
+    identifier::{Global, Identifier},
+    logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
 /// An example single-objective Random Search operating on a real search space.
-/// Uses the [random_search] component internally.
-pub fn real_random_search<P>(
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+/// Uses the [rs] component internally.
+pub fn real_rs<P>(condition: Box<dyn Condition<P>>) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>>
-        + VectorProblem<Element = f64>
-        + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
-    Configuration::builder()
-        .do_(generation::RandomSpread::new_init(1))
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(1))
         .evaluate()
         .update_best_individual()
-        .do_(random_search(
+        .do_(rs::<P, Global>(
             Parameters {
-                randomizer: generation::RandomSpread::new_gen(),
+                randomizer: <mutation::PartialRandomSpread>::new_full(),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// An example single-objective Random Search operating on a permutation search space.
-/// Uses the [random_search] component internally.
-pub fn permutation_random_search<P>(
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+/// Uses the [rs] component internally.
+pub fn permutation_rs<P>(condition: Box<dyn Condition<P>>) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
+    P: SingleObjectiveProblem + VectorProblem<Element = usize>,
 {
-    Configuration::builder()
-        .do_(generation::RandomPermutation::new_init(1))
+    Ok(Configuration::builder()
+        .do_(initialization::RandomPermutation::new(1))
         .evaluate()
         .update_best_individual()
-        .do_(random_search(
+        .do_(rs::<P, Global>(
             Parameters {
-                randomizer: generation::RandomPermutation::new_gen(),
+                randomizer: <mutation::ScrambleMutation>::new_full(),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of an Random Search.
@@ -61,25 +54,22 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Random Search template.
-pub fn random_search<P>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>>
+pub fn rs<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
+    I: Identifier,
 {
     let Parameters { randomizer } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
                 .do_(selection::All::new())
                 .do_(randomizer)
-                .evaluate()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

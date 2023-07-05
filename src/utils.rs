@@ -1,5 +1,9 @@
 //! A collection of utilities.
 
+use std::marker::PhantomData;
+
+use derivative::Derivative;
+
 /// Allows enumeration for functions which normally don't support enumeration, e.g. [`Vec::retain`].
 ///
 /// # Examples
@@ -20,85 +24,23 @@ where
     move |item| (f(i, item), i += 1).0
 }
 
-/// A trait for giving a type a useful default value that may fail in a controlled
-/// way under some circumstances.
-///
-/// This is useful for handling types with a default implementation the same way like types that don't.
-///
-/// This trait is automatically implemented for types that implement [Default].
-/// A failing implementation can be generated using the [`impl_try_default_err!()`] macro.
-///
-/// [`impl_try_default_err!()`]: impl_try_default_err
-///
-/// # Examples
-///
-/// Manual implementation:
-///
-/// ```
-/// use mahf::utils::TryDefault;
-///
-/// pub struct TypeThatNeedsManualInitialization;
-///
-/// impl TryDefault for TypeThatNeedsManualInitialization {
-///     type Error = ();
-///
-///     fn try_default() -> Result<Self, Self::Error> {
-///         Err(())
-///     }
-/// }
-///
-/// ```
-///
-/// Using the [`impl_try_default_err!()`] macro generates the same code:
-///
-/// ```
-/// use mahf::utils::{TryDefault, impl_try_default_err};
-///
-/// pub struct TypeThatNeedsManualInitialization;
-///
-/// impl_try_default_err!(TypeThatNeedsManualInitialization);
-///
-/// ```
-pub trait TryDefault: Sized {
-    type Error;
-
-    /// Returns the "default value" for a type.
-    /// Default values are often some kind of initial value, identity value, or anything else that may make sense as a default.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use mahf::utils::TryDefault;
-    /// assert_eq!(Ok(0), i8::try_default());
-    /// assert_eq!(Ok(0.0), f64::try_default());
-    /// ```
-    fn try_default() -> Result<Self, Self::Error>;
+/// Returns if all elements in `arr` are equal.
+pub fn all_eq<T: PartialEq>(arr: &[T]) -> bool {
+    arr.windows(2).all(|w| w[0] == w[1])
 }
 
-impl<T: Default> TryDefault for T {
-    type Error = ();
+/// Wrapper around [`PhantomData`] that serializes the type name of `T`.
+///
+/// It additionally implements `Send` + `Sync` even if `T` doesn't.
+#[derive(Derivative)]
+#[derivative(Default(bound = ""), Copy(bound = ""), Clone(bound = ""))]
+pub struct SerializablePhantom<T>(PhantomData<fn() -> T>);
 
-    fn try_default() -> Result<Self, Self::Error> {
-        Ok(T::default())
+impl<T> serde::Serialize for SerializablePhantom<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_unit_struct(std::any::type_name::<T>())
     }
 }
-
-mod macros {
-    /// Default implementation for returning `Err` for [`TryDefault`].
-    #[macro_export]
-    macro_rules! impl_try_default_err {
-        ($ty:ty) => {
-            impl TryDefault for $ty {
-                type Error = ();
-
-                fn try_default() -> Result<Self, Self::Error> {
-                    Err(())
-                }
-            }
-        };
-    }
-
-    pub use impl_try_default_err;
-}
-
-pub use macros::impl_try_default_err;

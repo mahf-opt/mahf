@@ -1,7 +1,7 @@
 //! Helper traits for dealing with collections of individuals, i.e. populations, and obtaining
 //! `&`, `&mut` or owned solutions from them.
 //!
-//! Most traits have blanket implementations for types that implement `IntoIterator<Item={`&`, `&mut`, ` `}Individual>`,
+//! Most traits have blanket implementations for types that implement `IntoIterator<Item=`{`&`, `&mut`, ` `}`Individual>`,
 //! which means that manual implementation is not necessary.
 
 use std::ops::{Deref, DerefMut};
@@ -14,7 +14,7 @@ use crate::{problems::SingleObjectiveProblem, Individual, Problem};
 ///
 /// Internally, [`Individual::solution`] is called on every individual.
 ///
-/// The trait is automatically implemented for types which implement [`IntoIterator<Item=&Individual`].
+/// The trait is automatically implemented for types which implement [`IntoIterator<Item=&Individual>`].
 ///
 /// # Examples
 ///
@@ -49,7 +49,7 @@ where
 /// Internally, [`Individual::solution_mut`] is called on every individual, which means that
 /// all objective values are reset.
 ///
-/// The trait is automatically implemented for types which implement [`IntoIterator<Item=&mut Individual`].
+/// The trait is automatically implemented for types which implement [`IntoIterator<Item=&mut Individual>`].
 ///
 /// # Examples
 ///
@@ -86,7 +86,7 @@ where
 ///
 /// Internally, [`Individual::into_solution`] is called on every individual.
 ///
-/// The trait is automatically implemented for types which implement [`IntoIterator<Item=Individual`].
+/// The trait is automatically implemented for types which implement [`IntoIterator<Item=Individual>`].
 ///
 /// # Reverse conversion
 ///
@@ -128,7 +128,7 @@ where
 ///
 /// Internally, [`Individual::new_unevaluated`] is called on every solution.
 ///
-/// The trait is automatically implemented for types which implement [`IntoIterator<Item=Problem::Encoding`].
+/// The trait is automatically implemented for types which implement [`IntoIterator<Item=Problem::Encoding>`].
 ///
 /// # Reverse conversion
 ///
@@ -168,8 +168,10 @@ where
 /// An error returned by [`IntoSingle::into_single`] and [`IntoSingleRef::into_single_ref`].
 #[derive(Debug, PartialEq, Error)]
 pub enum SingleIndividualError {
+    /// Population is empty.
     #[error("expected a single individual, but found none")]
     EmptyPopulation,
+    /// Population contains too many individuals.
     #[error("`expected a single individual, but found {0}")]
     TooManyIndividuals(usize),
 }

@@ -5,7 +5,7 @@ A framework for modular construction and evaluation of metaheuristics.
 # Purpose and Features
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. In addition to
-construction it also provides utilities for tracking, evaluation and comparison of those heuristics.
+construction it also provides utilities for logging, evaluation and comparison of those heuristics.
 
 - Simple modular construction of metaheuristics
 - State management and state tracking

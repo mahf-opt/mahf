@@ -1,7 +1,11 @@
-use mahf::prelude::*;
-use mahf::problems::KnownOptimumProblem;
-use mahf::SingleObjective;
 use std::ops::Range;
+
+use mahf::{
+    conditions::common::{ChangeOf, DeltaEqChecker},
+    experiments::par_experiment,
+    lens::common::{BestObjectiveValueLens, BestSolutionLens},
+    prelude::*,
+};
 
 pub struct Sphere {
     pub dim: usize,
@@ -13,7 +17,7 @@ impl Sphere {
     }
 }
 
-impl problems::Problem for Sphere {
+impl Problem for Sphere {
     type Encoding = Vec<f64>;
     type Objective = SingleObjective;
 
@@ -36,8 +40,9 @@ impl problems::LimitedVectorProblem for Sphere {
     }
 }
 
-impl problems::ObjectiveFunction for Sphere {
-    fn objective(solution: &Self::Encoding) -> Self::Objective {
+impl ObjectiveFunction for Sphere {
+    fn objective(&self, solution: &Self::Encoding) -> Self::Objective {
+        debug_assert_eq!(solution.len(), self.dim);
         solution
             .iter()
             .map(|x| x.powi(2))
@@ -47,35 +52,69 @@ impl problems::ObjectiveFunction for Sphere {
     }
 }
 
-impl KnownOptimumProblem for Sphere {
+impl problems::KnownOptimumProblem for Sphere {
     fn known_optimum(&self) -> SingleObjective {
         0.0.try_into().unwrap()
     }
 }
 
-fn main() {
+fn main() -> ExecResult<()> {
+    // Required for pretty error messages and stacktrace.
+    color_eyre::install()?;
+
     // Specify the problem: Sphere function with 10 dimensions.
-    let problem: Sphere = Sphere::new(/*dim: */ 10);
-    // Specify the metaheuristic: Particle Swarm Optimization (pre-implemented in MAHF).
-    let config: Configuration<Sphere> = pso::real_pso(
+    let problem = Sphere::new(/* dim: */ 10);
+
+    // Specify the metaheuristic: e.g. Particle Swarm Optimization ...
+    let _: Configuration<Sphere> = pso::real_pso(
         /*params: */
         pso::RealProblemParameters {
-            num_particles: 20,
-            weight: 1.0,
-            c_one: 1.0,
-            c_two: 1.0,
+            num_particles: 120,
+            start_weight: 0.9,
+            end_weight: 0.4,
+            c_one: 1.7,
+            c_two: 1.7,
             v_max: 1.0,
         },
-        /*termination: */
-        termination::FixedIterations::new(/*max_iterations: */ 500)
-            & termination::DistanceToOpt::new(0.01),
-    );
+        /*condition: */
+        conditions::LessThanN::iterations(10_000)
+            & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
+    )?;
 
-    // Execute the metaheuristic on the problem with a random seed.
-    let state: State<Sphere> = config.optimize(&problem);
+    // ... or a Genetic Algorithm.
+    let config = ga::real_ga(
+        /*params: */
+        ga::RealProblemParameters {
+            population_size: 120,
+            tournament_size: 5,
+            pm: 1.0,
+            deviation: 0.1,
+            pc: 0.8,
+        },
+        /*condition: */
+        conditions::LessThanN::iterations(10_000)
+            & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
+    )?;
 
-    // Print the results.
-    println!("Found Individual: {:?}", state.best_individual().unwrap());
-    println!("This took {} iterations.", state.iterations());
-    println!("Global Optimum: {:?}", problem.known_optimum());
+    let setup = |state: &mut State<_>| -> ExecResult<()> {
+        state.insert_evaluator(evaluate::Sequential::new());
+        state.configure_log(|config| {
+            config
+                .with_common(conditions::EveryN::iterations(50))
+                .with(
+                    ChangeOf::new(
+                        DeltaEqChecker::new(0.001.try_into().unwrap()),
+                        BestObjectiveValueLens::new(),
+                    ) & !conditions::DistanceToOptimumGreaterThan::new(0.05)?,
+                    BestObjectiveValueLens::entry(),
+                )
+                .with(
+                    conditions::EveryN::iterations(1_000),
+                    BestSolutionLens::entry(),
+                );
+            Ok(())
+        })
+    };
+
+    par_experiment(&config, setup, &[problem], 4096, "data/bmf/GA", false)
 }

@@ -1,111 +1,115 @@
-//! Local Search
+//! Local Search (LS).
+
+use eyre::WrapErr;
 
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
+    configuration::Configuration,
+    identifier::{Global, Identifier},
+    logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
-    tracking::Logger,
 };
 
-/// Parameters for [real_local_search].
+/// Parameters for [real_ls].
 pub struct RealProblemParameters {
     pub n_neighbors: u32,
     pub deviation: f64,
 }
 
 /// An example single-objective Local Search operating on a real search space.
-/// Uses the [local_search] component internally.
-pub fn real_local_search<P>(
+/// Uses the [ls] component internally.
+pub fn real_ls<P>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>>
-        + VectorProblem<Element = f64>
-        + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
     let RealProblemParameters {
         n_neighbors,
         deviation,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(1))
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(1))
         .evaluate()
         .update_best_individual()
-        .do_(evaluation::UpdateBestIndividual::new())
-        .do_(local_search(
+        .do_(evaluation::BestIndividualUpdate::new())
+        .do_(ls::<P, Global>(
             Parameters {
-                n_neighbors,
-                neighbors: generation::mutation::FixedDeviationDelta::new(deviation),
-                constraints: constraints::Saturation::new(),
+                num_neighbors: n_neighbors,
+                neighbors: mutation::NormalMutation::new_dev(deviation),
+                constraints: boundary::Saturation::new(),
             },
-            termination,
+            condition,
         ))
-        .build()
+        .build())
 }
 
-/// Parameters for [permutation_local_search].
+/// Parameters for [permutation_ls].
 pub struct PermutationProblemParameters {
-    pub n_neighbors: u32,
-    pub n_swap: usize,
+    pub num_neighbors: u32,
+    pub num_swap: u32,
 }
 
 /// An example single-objective Local Search operating on a permutation search space.
-/// Uses the [local_search] component internally.
-pub fn permutation_local_search<P>(
+/// Uses the [ls] component internally.
+pub fn permutation_ls<P>(
     params: PermutationProblemParameters,
     termination: Box<dyn Condition<P>>,
-) -> Configuration<P>
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<usize>> + VectorProblem<Element = usize>,
+    P: SingleObjectiveProblem + VectorProblem<Element = usize>,
 {
     let PermutationProblemParameters {
-        n_neighbors,
-        n_swap,
+        num_neighbors,
+        num_swap,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomPermutation::new_init(1))
+    Ok(Configuration::builder()
+        .do_(initialization::RandomPermutation::new(1))
         .evaluate()
         .update_best_individual()
-        .do_(local_search(
+        .do_(ls::<P, Global>(
             Parameters {
-                n_neighbors,
-                neighbors: generation::mutation::SwapMutation::new(n_swap),
-                constraints: misc::Noop::new(),
+                num_neighbors,
+                neighbors: mutation::SwapMutation::new(num_swap)
+                    .wrap_err("failed to construct the swap mutation")?,
+                constraints: utils::Noop::new(),
             },
             termination,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of a Local Search.
 pub struct Parameters<P> {
-    pub n_neighbors: u32,
+    pub num_neighbors: u32,
     pub neighbors: Box<dyn Component<P>>,
     pub constraints: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Local Search template.
-pub fn local_search<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-) -> Box<dyn Component<P>> {
+pub fn ls<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    I: Identifier,
+{
     let Parameters {
-        n_neighbors,
+        num_neighbors: n_neighbors,
         neighbors,
         constraints,
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
-                .do_(selection::DuplicateSingle::new(n_neighbors))
+                .do_(selection::CloneSingle::new(n_neighbors))
                 .do_(neighbors)
                 .do_(constraints)
-                .evaluate()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(replacement::MuPlusLambda::new(1))
                 .do_(Logger::new())

@@ -1,9 +1,13 @@
-//! Genetic Algorithm
+//! Genetic Algorithm (GA).
 
 use crate::{
+    component::ExecResult,
     components::*,
+    conditions,
     conditions::*,
-    framework::Configuration,
+    configuration::Configuration,
+    identifier::{Global, Identifier},
+    logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
 };
 
@@ -21,13 +25,10 @@ pub struct BinaryProblemParameters {
 /// Uses the [ga] component internally.
 pub fn binary_ga<P>(
     params: BinaryProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<bool>>
-        + VectorProblem<Element = bool>
-        + LimitedVectorProblem,
+    P: SingleObjectiveProblem + VectorProblem<Element = bool>,
 {
     let BinaryProblemParameters {
         population_size,
@@ -37,26 +38,25 @@ where
         pm,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomBitstring::new_uniform_init(
+    Ok(Configuration::builder()
+        .do_(initialization::RandomBitstring::new_uniform(
             population_size,
         ))
         .evaluate()
         .update_best_individual()
-        .do_(ga(
+        .do_(ga::<P, Global>(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
-                crossover: generation::recombination::UniformCrossover::new_both(pc),
+                crossover: recombination::UniformCrossover::new_insert_both(pc),
                 pm,
-                mutation: generation::mutation::BitflipMutation::new(rm),
-                constraints: misc::Noop::new(),
+                mutation: <mutation::BitFlipMutation>::new(rm),
+                constraints: utils::Noop::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Parameters for [real_ga].
@@ -73,13 +73,10 @@ pub struct RealProblemParameters {
 /// Uses the [ga] component internally.
 pub fn real_ga<P>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>>
-        + VectorProblem<Element = f64>
-        + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
     let RealProblemParameters {
         population_size,
@@ -89,24 +86,23 @@ where
         pc,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(population_size))
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(population_size))
         .evaluate()
         .update_best_individual()
-        .do_(ga(
+        .do_(ga::<P, Global>(
             Parameters {
                 selection: selection::Tournament::new(population_size, tournament_size),
-                crossover: generation::recombination::UniformCrossover::new_both(pc),
+                crossover: recombination::UniformCrossover::new_insert_both(pc),
                 pm,
-                mutation: generation::mutation::FixedDeviationDelta::new(deviation),
-                constraints: constraints::Saturation::new(),
+                mutation: mutation::NormalMutation::new_dev(deviation),
+                constraints: boundary::Saturation::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of a Genetic Algorithm.
@@ -124,11 +120,11 @@ pub struct Parameters<P> {
 ///
 /// # References
 /// [link.springer.com/10.1007/978-3-319-07153-4_28-1](http://link.springer.com/10.1007/978-3-319-07153-4_28-1)
-pub fn ga<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>> {
+pub fn ga<P, I>(params: Parameters<P>, termination: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    I: Identifier,
+{
     let Parameters {
         selection,
         crossover,
@@ -144,15 +140,15 @@ pub fn ga<P: SingleObjectiveProblem>(
             builder
                 .do_(selection)
                 .do_(crossover)
-                .if_(branching::RandomChance::new(pm), |builder| {
+                .if_(conditions::RandomChance::new(pm), |builder| {
                     builder.do_(mutation)
                 })
                 .do_(constraints)
-                .evaluate()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

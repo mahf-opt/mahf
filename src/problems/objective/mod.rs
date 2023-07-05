@@ -47,8 +47,10 @@ pub trait Objective: AnyObjective {}
 /// ```
 #[derive(Debug, Error)]
 pub enum IllegalObjective {
+    /// `NaN` (Not A Number)
     #[error("NaN is not a valid objective value")]
     NaN,
+    /// `-Inf` (Negative Infinity)
     #[error("Negative infinity is not a valid objective value")]
     NegativeInfinity,
 }

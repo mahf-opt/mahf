@@ -1,13 +1,16 @@
-//! Evolution Strategy
+//! Evolution Strategy (ES).
 
 use crate::{
+    component::ExecResult,
     components::*,
     conditions::Condition,
-    framework::Configuration,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    configuration::Configuration,
+    identifier::{Global, Identifier},
+    logging::Logger,
+    problems::{LimitedVectorProblem, SingleObjectiveProblem},
 };
 
-/// Parameters for [real_mu_plus_lambda].
+/// Parameters for [real_mu_plus_lambda_es].
 pub struct RealProblemParameters {
     pub population_size: u32,
     pub lambda: u32,
@@ -19,15 +22,12 @@ pub struct RealProblemParameters {
 ///
 /// # References
 /// [doi.org/10.1023/A:1015059928466](https://doi.org/10.1023/A:1015059928466)
-pub fn real_mu_plus_lambda<P>(
+pub fn real_mu_plus_lambda_es<P, O>(
     params: RealProblemParameters,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Configuration<P>
+    condition: Box<dyn Condition<P>>,
+) -> ExecResult<Configuration<P>>
 where
-    P: SingleObjectiveProblem<Encoding = Vec<f64>>
-        + VectorProblem<Element = f64>
-        + LimitedVectorProblem,
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
     let RealProblemParameters {
         population_size,
@@ -35,22 +35,21 @@ where
         deviation,
     } = params;
 
-    Configuration::builder()
-        .do_(initialization::RandomSpread::new_init(population_size))
+    Ok(Configuration::builder()
+        .do_(initialization::RandomSpread::new(population_size))
         .evaluate()
         .update_best_individual()
-        .do_(es(
+        .do_(es::<P, Global>(
             Parameters {
                 selection: selection::FullyRandom::new(lambda),
-                mutation: generation::mutation::FixedDeviationDelta::new(deviation),
-                constraints: constraints::Saturation::new(),
+                mutation: mutation::NormalMutation::new_dev(deviation),
+                constraints: boundary::Saturation::new(),
                 archive: None,
                 replacement: replacement::MuPlusLambda::new(population_size),
             },
-            termination,
-            logger,
+            condition,
         ))
-        .build()
+        .build())
 }
 
 /// Basic building blocks of an Evolution Strategy.
@@ -63,11 +62,11 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Evolution Strategy template.
-pub fn es<P: SingleObjectiveProblem>(
-    params: Parameters<P>,
-    termination: Box<dyn Condition<P>>,
-    logger: Box<dyn Component<P>>,
-) -> Box<dyn Component<P>> {
+pub fn es<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+where
+    P: SingleObjectiveProblem,
+    I: Identifier,
+{
     let Parameters {
         selection,
         mutation,
@@ -77,16 +76,16 @@ pub fn es<P: SingleObjectiveProblem>(
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
                 .do_(selection)
                 .do_(mutation)
                 .do_(constraints)
-                .evaluate()
+                .evaluate_with::<I>()
                 .update_best_individual()
                 .do_if_some_(archive)
                 .do_(replacement)
-                .do_(logger)
+                .do_(Logger::new())
         })
         .build_component()
 }

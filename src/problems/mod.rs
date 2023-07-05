@@ -32,10 +32,10 @@
 //! ## Implement custom problems
 //!
 //! To define your own optimization problem, the minimum requirement is to implement
-//! [`Problem`] and some sort of [`Evaluator`] for it, i.e. implement [`Evaluate`] for
+//! [`Problem`] and some sort of evaluator for it, i.e. implement [`Evaluate`] for
 //! some struct.
 //!
-//! Note that for most problems with a *static* objective function,
+//! Note that for most problems with a *non-mutable* objective function,
 //! the [`ObjectiveFunction`] trait should be preferred over [`Evaluate`].
 //! See [`ObjectiveFunction`] for more information.
 //!
@@ -53,9 +53,8 @@ pub mod evaluate;
 pub mod individual;
 pub mod objective;
 
-use crate::state::common::EvaluatorInstance;
 pub use encoding::AnyEncoding;
-pub use evaluate::{Evaluate, Evaluator, ObjectiveFunction};
+pub use evaluate::{Evaluate, ObjectiveFunction, Parallel, Sequential};
 pub use individual::Individual;
 pub use objective::{MultiObjective, Objective, SingleObjective};
 
@@ -86,7 +85,7 @@ pub use objective::{MultiObjective, Objective, SingleObjective};
 /// }
 ///
 /// impl Problem for Sphere {
-///     type Encoding = Vec<f64>; // real-valued vector
+///     type Encoding = Vec<f64>; // Real-valued vector
 ///     type Objective = SingleObjective;
 ///
 ///     fn name(&self) -> &str {
@@ -105,16 +104,6 @@ pub trait Problem: 'static {
 
     /// The name of the optimization problem.
     fn name(&self) -> &str;
-
-    /// Returns the default evaluator for the problem.
-    ///
-    /// To be removed in the future in favor of a [`TryDefault`] bound on [`Evaluate`].
-    ///
-    /// [`TryDefault`]: crate::utils::TryDefault
-    #[deprecated]
-    fn default_evaluator<'a>(&self) -> EvaluatorInstance<'a, Self> {
-        unimplemented!()
-    }
 }
 
 trait_set! {
