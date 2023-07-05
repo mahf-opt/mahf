@@ -5,8 +5,9 @@
 use itertools::Itertools;
 use rand::distributions::{Distribution, WeightedError, WeightedIndex};
 
-use crate::utils::all_eq;
-use crate::{problems::SingleObjectiveProblem, state::random::Random, Individual, Problem};
+use crate::{
+    problems::SingleObjectiveProblem, state::random::Random, utils::all_eq, Individual, Problem,
+};
 
 /// Returns the `(max, min)` objective values of the population if it is non-empty, or `None` otherwise.
 pub fn objective_bounds<P: SingleObjectiveProblem>(
