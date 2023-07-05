@@ -12,7 +12,7 @@ The framework supports not only evolutionary algorithms, but also any other meta
 # Overview
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
-In addition to construction it also provides utilities for logging, evaluation and comparison of those heuristics.
+In addition to construction it also provides utilities for logging, evaluation and comparison of those heuristics:
 
 - Simple modular construction of metaheuristics
 - State management and state tracking
@@ -86,7 +86,7 @@ to build and open the documentation.
 # Related Projects
 
 - [mahf-coco](https://github.com/mahf-opt/mahf-coco): Bindings to the [COCO](https://github.com/numbbo/coco) benchmarking framework
-- [mahf-tsplib](https://github.com/mahf-opt/mahf-tsplib): Bindings to the [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) library.
+- [mahf-tsplib](https://github.com/mahf-opt/mahf-tsplib): Bindings to the [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) library
 
 # Contributing
 
