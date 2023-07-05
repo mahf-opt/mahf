@@ -93,11 +93,11 @@ impl<P: Problem> Configuration<P> {
     ///     .do_(initialization::RandomSpread::new(population_size))
     ///     .evaluate()
     ///     .update_best_individual()
-    ///     .while_(conditions::LessThanN::new(n, ValueOf::<common::Iterations>::new()), |builder| {
+    ///     .while_(conditions::LessThanN::iterations(n), |builder| {
     ///         builder
     ///             .do_(selection::Tournament::new(num_selected, size))
     ///             .do_(recombination::ArithmeticCrossover::new_insert_both(1.))
-    ///             .do_(<mutation::NormalMutation>::new(std_dev, rm))
+    ///             .do_(mutation::NormalMutation::new(std_dev, rm))
     ///             .evaluate()
     ///             .update_best_individual()
     ///             .do_(replacement::MuPlusLambda::new(max_population_size))
