@@ -38,7 +38,9 @@ mahf = { git = "https://github.com/mahf-opt/mahf" }
 
 ## Example
 
-A simple genetic algorithm for real-valued black box optimization:
+A simple genetic algorithm for real-valued black box optimization.
+
+The example uses the [common benchmark functions](https://github.com/mahf-opt/mahf-bmf) for MAHF.
 
 ```rust
 use mahf::prelude::*;
@@ -85,6 +87,7 @@ to build and open the documentation.
 
 # Related Projects
 
+- [mahf-bmf](https://github.com/mahf-opt/mahf-bmf): Common continuous benchmark functions
 - [mahf-coco](https://github.com/mahf-opt/mahf-coco): Bindings to the [COCO](https://github.com/numbbo/coco) benchmarking framework
 - [mahf-tsplib](https://github.com/mahf-opt/mahf-tsplib): Bindings to the [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) library
 
