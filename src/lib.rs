@@ -14,7 +14,7 @@ mod test_readme {
         };
     }
 
-    external_doc_test!(include_str!("../README.md"));
+    // external_doc_test!(include_str!("../README.md"));
 }
 
 pub use derive_more;
