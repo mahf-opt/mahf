@@ -22,17 +22,3 @@ Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 *.lnk
-
-## R
-.Rhistory
-
-## Python
-/evaluation/eval/__pycache__
-/evaluation/eval/.pytest_cache
-.pyc
-
-## Jupyter
-.ipynb_checkpoints
-
-## Examples
-/data
