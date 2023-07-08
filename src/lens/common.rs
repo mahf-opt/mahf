@@ -31,8 +31,8 @@ use crate::{
 ///
 /// ```
 /// use better_any::{Tid, TidAble};
-/// use mahf::lens::LensRef;
-/// use mahf::{CustomState, ExecResult, IdLens, Problem, State};
+/// use mahf::lens::{LensRef, IdLens};
+/// use mahf::{CustomState, ExecResult, Problem, State};
 ///
 /// pub trait SomeTrait {
 ///     fn do_something(&self);

@@ -250,11 +250,13 @@ pub trait KnownOptimumProblem: SingleObjectiveProblem {
     fn known_optimum(&self) -> SingleObjective;
 }
 
-/// The Travelling Salesperson Problem (TSP) optimization problem.
+/// The [Travelling Salesperson Problem (TSP)].
 ///
 /// TSP is a single-objective optimization problem that involves finding
 /// the shortest possible route that visits a given set of vertices and
 /// returns to the starting vertex.
+///
+/// [Travelling Salesperson Problem (TSP)]: https://en.wikipedia.org/wiki/Travelling_salesman_problem
 ///
 /// # Examples
 ///

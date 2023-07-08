@@ -6,14 +6,14 @@ use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
-use eyre::{ensure, ContextCompat};
+use eyre::{ensure, ContextCompat, WrapErr};
 use itertools::multizip;
 use rand::Rng;
 use serde::Serialize;
 
 use crate::{
     component::{AnyComponent, ExecResult},
-    components::Component,
+    components::{Block, Component},
     identifier::{Global, Identifier, PhantomId},
     population::{AsSolutions, AsSolutionsMut, BestIndividual},
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
@@ -125,11 +125,25 @@ impl<I: Identifier> ParticleVelocitiesUpdate<I> {
         })
     }
 
-    pub fn new<P>(weight: f64, c_1: f64, c_2: f64, v_max: f64) -> ExecResult<Box<dyn Component<P>>>
+    pub fn new_with_id<P>(
+        weight: f64,
+        c_1: f64,
+        c_2: f64,
+        v_max: f64,
+    ) -> ExecResult<Box<dyn Component<P>>>
     where
         P: LimitedVectorProblem<Element = f64>,
     {
         Ok(Box::new(Self::from_params(weight, c_1, c_2, v_max)?))
+    }
+}
+
+impl ParticleVelocitiesUpdate<Global> {
+    pub fn new<P>(weight: f64, c_1: f64, c_2: f64, v_max: f64) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: LimitedVectorProblem<Element = f64>,
+    {
+        Self::new_with_id(weight, c_1, c_2, v_max)
     }
 }
 
@@ -337,5 +351,47 @@ where
         }
 
         Ok(())
+    }
+}
+
+pub struct ParticleSwarmInit<I: Identifier = Global>(PhantomId<I>);
+
+impl<I: Identifier> ParticleSwarmInit<I> {
+    pub fn new_with_id<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+        v_max: f64,
+    ) -> ExecResult<Box<dyn Component<P>>> {
+        Ok(Block::new([
+            <ParticleVelocitiesInit>::new(v_max)
+                .wrap_err("failed to construct particle velocities init")?,
+            <PersonalBestParticlesInit>::new(),
+            <GlobalBestParticleUpdate>::new(),
+        ]))
+    }
+}
+
+impl ParticleSwarmInit<Global> {
+    pub fn new<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+        v_max: f64,
+    ) -> ExecResult<Box<dyn Component<P>>> {
+        Self::new_with_id(v_max)
+    }
+}
+
+pub struct ParticleSwarmUpdate<I: Identifier = Global>(PhantomId<I>);
+
+impl<I: Identifier> ParticleSwarmUpdate<I> {
+    pub fn new_with_id<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
+        Block::new([
+            <PersonalBestParticlesUpdate>::new(),
+            <GlobalBestParticleUpdate>::new(),
+        ])
+    }
+}
+
+impl ParticleSwarmUpdate<Global> {
+    pub fn new<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
+        Self::new_with_id()
     }
 }

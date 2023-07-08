@@ -1,4 +1,4 @@
-//! Selecting a subset of a population, e.g. for recombination.
+//! Select a subset of a population, e.g. for recombination.
 
 use eyre::WrapErr;
 

@@ -1,7 +1,7 @@
 //! Helper traits for dealing with collections of individuals, i.e. populations, and obtaining
 //! `&`, `&mut` or owned solutions from them.
 //!
-//! Most traits have blanket implementations for types that implement `IntoIterator<Item=`{`&`, `&mut`, ` `}`Individual>`,
+//! Most traits have blanket implementations for types that implement `IntoIterator<Item={&, &mut, }Individual>`,
 //! which means that manual implementation is not necessary.
 
 use std::ops::{Deref, DerefMut};

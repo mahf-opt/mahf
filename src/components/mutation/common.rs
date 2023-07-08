@@ -92,7 +92,7 @@ impl NormalMutation<Global> {
     where
         P: VectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(std_dev, rm))
+        Self::new_with_id(std_dev, rm)
     }
 
     pub fn new_dev<P>(std_dev: f64) -> Box<dyn Component<P>>
@@ -163,7 +163,7 @@ impl UniformMutation<Global> {
     where
         P: VectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(bound, rm))
+        Self::new_with_id(bound, rm)
     }
 
     pub fn new_bound<P>(bound: f64) -> Box<dyn Component<P>>
@@ -234,7 +234,7 @@ impl BitFlipMutation<Global> {
     where
         P: VectorProblem<Element = bool>,
     {
-        Box::new(Self::from_params(rm))
+        Self::new_with_id(rm)
     }
 }
 
@@ -292,7 +292,7 @@ impl PartialRandomSpread<Global> {
     where
         P: LimitedVectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(rm))
+        Self::new_with_id(rm)
     }
 
     pub fn new_full<P>() -> Box<dyn Component<P>>
@@ -359,7 +359,7 @@ impl ScrambleMutation<Global> {
         P: VectorProblem,
         P::Element: 'static,
     {
-        Box::new(Self::from_params(rm))
+        Self::new_with_id(rm)
     }
 
     pub fn new_full<P>() -> Box<dyn Component<P>>
@@ -426,7 +426,7 @@ impl PartialRandomBitstring<Global> {
     where
         P: VectorProblem<Element = bool>,
     {
-        Box::new(Self::from_params(p, rm))
+        Self::new_with_id(p, rm)
     }
 
     pub fn new_uniform<P>(rm: f64) -> Box<dyn Component<P>>

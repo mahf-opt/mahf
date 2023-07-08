@@ -1,4 +1,8 @@
 //! (Meta)Heuristic templates.
+//!
+//! The templates in this module allow customization of certain operators
+//! similar to other frameworks (e.g. a custom mutation operator) and are meant to
+//! provide a starting point for more specialized configurations.
 
 pub mod aco;
 pub mod cro;

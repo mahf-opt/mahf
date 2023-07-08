@@ -1,26 +1,42 @@
 //! Iterated Local Search (ILS).
+//!
+//! # References
+//!
+//! \[1\] Helena R. Lourenço, Olivier C. Martin, and Thomas Stützle. 2003.
+//! Iterated Local Search.
+//! In Handbook of Metaheuristics, Fred Glover and Gary A. Kochenberger (eds.).
+//! Springer US, Boston, MA, 320–353.
+//! DOI:<https://doi.org/10.1007/0-306-48056-5_11>
+//!
+//! \[2\] Helena Ramalhinho Lourenço, Olivier C. Martin, and Thomas Stützle. 2019.
+//! Iterated Local Search: Framework and Applications.
+//! In Handbook of Metaheuristics, Michel Gendreau and Jean-Yves Potvin (eds.).
+//! Springer International Publishing, Cham, 129–168.
+//! DOI:<https://doi.org/10.1007/978-3-319-91086-4_5>
 
 use eyre::WrapErr;
 
 use crate::{
     component::ExecResult,
-    components::*,
+    components::{initialization, mutation, replacement, selection},
     conditions::Condition,
     configuration::Configuration,
     heuristics::ls,
     identifier::{Global, Identifier},
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    Component,
 };
 
-/// Parameters for [real_ils].
+/// Parameters for [`real_ils`].
 pub struct RealProblemParameters<P> {
     pub ls_params: ls::RealProblemParameters,
     pub ls_condition: Box<dyn Condition<P>>,
 }
 
-/// An example single-objective Iterated Local Search operating on a real search space.
-/// Uses the [ils] component internally.
+/// An example single-objective ILS operating on a real search space.
+///
+/// Uses the [`ils`] component internally.
 pub fn real_ils<P>(
     params: RealProblemParameters<P>,
     condition: Box<dyn Condition<P>>,
@@ -39,7 +55,7 @@ where
         .update_best_individual()
         .do_(ils::<P, Global>(
             Parameters {
-                perturbation: <mutation::PartialRandomSpread>::new_full(),
+                perturbation: mutation::PartialRandomSpread::new_full(),
                 ls: ls::real_ls::<P>(ls_params, ls_condition)
                     .wrap_err("failed to construct local search")?
                     .into_inner(),
@@ -55,8 +71,9 @@ pub struct PermutationProblemParameters<P> {
     pub ls_condition: Box<dyn Condition<P>>,
 }
 
-/// An example single-objective Iterated Local Search operating on a permutation search space.
-/// Uses the [ils] component internally.
+/// An example single-objective ILS operating on a permutation search space.
+///
+/// Uses the [`ils`] component internally.
 pub fn permutation_ils<P>(
     params: PermutationProblemParameters<P>,
     condition: Box<dyn Condition<P>>,
@@ -85,13 +102,13 @@ where
         .build())
 }
 
-/// Basic building blocks of an Iterated Local Search.
+/// Basic building blocks of [`ils`].
 pub struct Parameters<P> {
     pub perturbation: Box<dyn Component<P>>,
     pub ls: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Iterated Local Search template.
+/// A generic single-objective Iterated Local Search (ILS) template.
 pub fn ils<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,

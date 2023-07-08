@@ -15,10 +15,10 @@ use trait_set::trait_set;
 use crate::{
     component::ExecResult,
     conditions::Condition,
-    lens::{AnyLens, Lens, LensRef},
+    lens::{AnyLens, Lens, LensRef, ValueOf},
     problems::KnownOptimumProblem,
     state::common::{Evaluations, Iterations, Progress},
-    CustomState, Problem, State, ValueOf,
+    CustomState, Problem, State,
 };
 
 /// Evaluates to `true` with a probability of `p`.

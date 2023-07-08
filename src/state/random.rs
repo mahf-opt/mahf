@@ -160,7 +160,7 @@ impl Random {
     /// ```
     ///
     /// Sending the child generators to threads with a deterministic workload
-    /// enables reproducible pseudo-random numbers even across threads.
+    /// enables reproducible pseudo-random numbers even across threads:
     ///
     /// ```
     /// use rand::Rng;

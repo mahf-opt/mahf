@@ -255,9 +255,9 @@ impl<P: TravellingSalespersonProblem> Component<P> for MinMaxPheromoneUpdate {
             .min_by_key(|i| i.objective())
             .unwrap();
 
-        let fitness = individual.objective().value();
+        let objective = individual.objective().value();
         let route = individual.solution();
-        let delta = 1.0 / fitness;
+        let delta = 1.0 / objective;
         for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
             pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);
             pm[b][a] = (pm[b][a] + delta).clamp(self.min_pheromones, self.max_pheromones);

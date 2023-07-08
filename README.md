@@ -12,7 +12,7 @@ The framework supports not only evolutionary algorithms, but also any other meta
 # Overview
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
-In addition to construction it also provides utilities for logging, evaluation and comparison of those heuristics:
+In addition to construction it also provides utilities for logging, evaluation, and comparison of those heuristics:
 
 - Simple modular construction of metaheuristics
 - State management and state tracking
@@ -38,7 +38,7 @@ mahf = { git = "https://github.com/mahf-opt/mahf" }
 
 ## Example
 
-A simple genetic algorithm for real-valued black box optimization.
+A simple genetic algorithm for real-valued black-box optimization.
 
 The example uses the [common benchmark functions](https://github.com/mahf-opt/mahf-bmf) for MAHF.
 

@@ -1,17 +1,36 @@
 //! Chemical Reaction Optimization (CRO).
+//!
+//! # References
+//!
+//! \[1\] Albert Y. S. Lam and Victor O. K. Li. 2010.
+//! Chemical-Reaction-Inspired Metaheuristic for Optimization.
+//! IEEE Transactions on Evolutionary Computation 14, 3 (June 2010), 381–399.
+//! DOI:<https://doi.org/10/bktgqf>
+//!
+//! \[2\] Albert Y. S. Lam and Victor O. K. Li. 2012.
+//! Chemical Reaction Optimization: a tutorial.
+//! Memetic Comp. 4, 1 (March 2012), 3–17.
+//! DOI:<https://doi.org/10/ggbmwk>
+//!
+//! \[3\] Albert Y. S. Lam, Victor O. K. Li, and James J. Q. Yu. 2012.
+//! Real-Coded Chemical Reaction Optimization.
+//! IEEE Transactions on Evolutionary Computation 16, 3 (June 2012), 339–353.
+//! DOI:<https://doi.org/10/fm8zqt>
 
 use crate::{
-    component::ExecResult,
-    components::*,
-    conditions::*,
-    configuration::{Configuration, ConfigurationBuilder},
+    components::{
+        boundary, initialization, misc, mutation, recombination, selection, utils, Block,
+    },
+    conditions::{self, LessThanN, RandomChance},
+    configuration::ConfigurationBuilder,
     identifier::{Global, Identifier, A, B},
     lens::common::PopulationSizeLens,
     logging::Logger,
-    problems::{LimitedVectorProblem, SingleObjectiveProblem},
+    problems::LimitedVectorProblem,
+    Component, Condition, Configuration, ExecResult, SingleObjectiveProblem,
 };
 
-/// Parameters for [real_cro].
+/// Parameters for [`real_cro`].
 pub struct RealProblemParameters {
     pub initial_population_size: u32,
     pub mole_coll: f64,
@@ -24,8 +43,9 @@ pub struct RealProblemParameters {
     pub decomposition_deviation: f64,
 }
 
-/// An example single-objective Chemical Reaction Optimization operating on a real search space.
-/// Uses the [`cro()`] component internally.
+/// An example single-objective CRO operating on a real search space.
+///
+/// Uses the [`cro`] component internally.
 pub fn real_cro<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -56,7 +76,7 @@ where
                 initial_kinetic_energy,
                 buffer,
                 single_mole_selection: selection::RandomWithoutRepetition::new(1),
-                decomposition_criterion: cro::DecompositionCriterion::new(alpha),
+                decomposition_criterion: conditions::cro::DecompositionCriterion::new(alpha),
                 decomposition: Block::new([
                     utils::populations::DuplicatePopulation::new(),
                     mutation::NormalMutation::<A>::new_with_id(decomposition_deviation, 0.5),
@@ -66,7 +86,7 @@ where
                     1.0,
                 ),
                 double_mole_selection: selection::RandomWithoutRepetition::new(2),
-                synthesis_criterion: cro::SynthesisCriterion::new(beta),
+                synthesis_criterion: conditions::cro::SynthesisCriterion::new(beta),
                 synthesis: recombination::UniformCrossover::new_insert_single(1.),
                 intermolecular_ineffective_collision: mutation::UniformMutation::new_bound(1.),
                 constraints: boundary::Saturation::new(),
@@ -76,7 +96,7 @@ where
         .build())
 }
 
-/// Basic building blocks of an Chemical Reaction Optimization.
+/// Basic building blocks of [`cro`].
 pub struct Parameters<P> {
     pub mole_coll: f64,
     pub kinetic_energy_lr: f64,
@@ -93,10 +113,7 @@ pub struct Parameters<P> {
     pub constraints: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Chemical Reaction Optimization template.
-///
-/// # References
-/// [doi.org/10.1007/s12293-012-0075-1](https://doi.org/10.1007/s12293-012-0075-1)
+/// A generic single-objective Chemical Reaction Optimization (CRO) template.
 pub fn cro<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
@@ -135,7 +152,7 @@ where
         .while_(condition, |builder| {
             builder
                 .if_else_(
-                    common::RandomChance::new(mole_coll)
+                    RandomChance::new(mole_coll)
                         | LessThanN::new(2, PopulationSizeLens::<P>::new()),
                     |builder| {
                         builder

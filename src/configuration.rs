@@ -187,7 +187,8 @@ impl<P: Problem> Configuration<P> {
     /// Optimizing some `problem` with a sequential evaluator:
     ///
     /// ```
-    /// # use mahf::problems::{ObjectiveFunction, Sequential};
+    /// # use mahf::problems::ObjectiveFunction;
+    /// use mahf::problems::Sequential;
     /// use mahf::Configuration;
     ///
     /// # fn example<P: ObjectiveFunction>(problem: P) {
@@ -242,7 +243,7 @@ impl<P: Problem> Configuration<P> {
     /// # fn example<P: ObjectiveFunction>(problem: P) {
     /// let config = Configuration::builder()/* ... */.build();
     /// let state = config.optimize_with(&problem, |state| {
-    ///     state.insert_evaluator_as::<Global>(Sequential::new());
+    ///     state.insert_evaluator(Sequential::new());
     ///     state.insert(Random::new(42));
     ///     Ok(())
     /// });

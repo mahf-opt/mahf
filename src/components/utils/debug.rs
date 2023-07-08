@@ -15,14 +15,14 @@ dyn_clone::clone_trait_object!(<P: Problem> DebugFn<P>);
 
 /// Enables arbitrary `behaviour` for debugging purposes.
 ///
-/// Note that this is for debugging purposes **ONLY**.
+/// Note that this is for debugging purposes **only**.
 ///
 /// The recommended way of implementing larger custom functionality is to implement
 /// [`Component`] for your struct.
 ///
 /// # Serialization
 ///
-/// The contents of the function passed to this component are **NOT** serialized.
+/// The contents of the function passed to this component are **not** serialized.
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
 pub struct Debug<P: Problem>(Box<dyn DebugFn<P, Output = ()>>);

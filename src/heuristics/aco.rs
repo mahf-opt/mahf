@@ -1,32 +1,49 @@
 //! Ant Colony Optimization (ACO).
+//!
+//! This module currently defines ACO only in its original domain, i.e. for [TSP].
+//!
+//! [TSP]: TravellingSalespersonProblem
+//!
+//! # References
+//!
+//! \[1\] Marco Dorigo, Mauro Birattari, and Thomas Stützle. 2006.
+//! Ant colony optimization. IEEE Computational Intelligence Magazine 1, 4 (November 2006), 28–39.
+//! DOI:<https://doi.org/10/dq339r>
+//!
+//! \[2\] Marco Dorigo and Gianni Di Caro. 1999.
+//! Ant colony optimization: a new meta-heuristic.
+//! In Proceedings of the 1999 Congress on Evolutionary Computation-CEC99 (Cat. No. 99TH8406), 1470-1477 Vol. 2.
+//! DOI:<https://doi.org/10/b5h9xz>
 
 use eyre::WrapErr;
 
 use crate::{
-    component::ExecResult,
-    components::*,
-    conditions::Condition,
-    configuration::Configuration,
+    components::{generative, initialization},
     identifier::{Global, Identifier},
     logging::Logger,
-    problems::{SingleObjectiveProblem, TravellingSalespersonProblem},
+    problems::TravellingSalespersonProblem,
+    Component, Condition, Configuration, ExecResult, SingleObjectiveProblem,
 };
 
-/// Parameters for [ant_system].
+/// Parameters for [`ant_system`].
 pub struct ASParameters {
+    /// The number of ants in the colony, i.e. how many individuals should be sampled.
     num_ants: usize,
+    /// Relative importance of pheromones (usually called τ).
     alpha: f64,
+    /// Relative importance of heuristic information (usually called η).
     beta: f64,
+    /// Initial pheromone values in the matrix.
     default_pheromones: f64,
+    /// Pheromone evaporation rate.
     evaporation: f64,
+    /// Constant for scaling the pheromone update.
     decay_coefficient: f64,
 }
 
-/// Ant Colony Optimization - Ant System
-/// Uses the [aco] component internally.
+/// Ant System (AS).
 ///
-/// # References
-/// [doi.org/10.1109/MCI.2006.329691](https://doi.org/10.1109/MCI.2006.329691)
+/// Uses the [`aco`] component internally.
 pub fn ant_system<P>(
     params: ASParameters,
     condition: Box<dyn Condition<P>>,
@@ -63,22 +80,27 @@ where
         .build())
 }
 
-/// Parameters for [max_min_ant_system].
+/// Parameters for [`max_min_ant_system`].
 pub struct MMASParameters {
+    /// The number of ants in the colony, i.e. how many individuals should be sampled.
     num_ants: usize,
+    /// Relative importance of pheromones (usually called τ).
     alpha: f64,
+    /// Relative importance of heuristic information (usually called η).
     beta: f64,
+    /// Initial pheromone values in the matrix.
     default_pheromones: f64,
+    /// Pheromone evaporation rate.
     evaporation: f64,
+    /// Maximal allowed pheromone value.
     max_pheromones: f64,
+    /// Minimal allowed pheromone value.
     min_pheromones: f64,
 }
 
-/// Ant Colony Optimization - MAX-MIN Ant System
-/// Uses the [aco] component internally.
+/// MAX-MIN Ant System (MMAS).
 ///
-/// # References
-/// [doi.org/10.1109/MCI.2006.329691](https://doi.org/10.1109/MCI.2006.329691)
+/// Uses the [`aco`] component internally.
 pub fn max_min_ant_system<P>(
     params: MMASParameters,
     condition: Box<dyn Condition<P>>,
@@ -118,13 +140,15 @@ where
         .build())
 }
 
-/// Basic building blocks of Ant Colony Optimization.
+/// Basic building blocks of [`aco`].
 pub struct Parameters<P> {
+    /// Generates a population using the pheromone matrix.
     generation: Box<dyn Component<P>>,
+    /// Updates the pheromone matrix using the objective values of the sampled population.
     pheromone_update: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Ant Colony Optimization template.
+/// A generic single-objective Ant Colony Optimization (ACO) template.
 pub fn aco<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,

@@ -1,27 +1,33 @@
 //! Evolution Strategy (ES).
+//!
+//! # References
+//!
+//! \[1\] Hans-Georg Beyer and Hans-Paul Schwefel. 2002.
+//! Evolution strategies – A comprehensive introduction.
+//! Natural Computing 1, 1 (March 2002), 3–52.
+//! DOI:<https://doi.org/10/djvqhd>
 
 use crate::{
     component::ExecResult,
-    components::*,
+    components::{boundary, initialization, mutation, replacement, selection},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
+    Component,
 };
 
-/// Parameters for [real_mu_plus_lambda_es].
+/// Parameters for [`real_mu_plus_lambda_es`].
 pub struct RealProblemParameters {
     pub population_size: u32,
     pub lambda: u32,
     pub deviation: f64,
 }
 
-/// An example single-objective (μ+λ)-Evolution-Strategy operating on a real search space.
-/// Uses the [es] component internally.
+/// An example single-objective (μ+λ)-ES operating on a real search space.
 ///
-/// # References
-/// [doi.org/10.1023/A:1015059928466](https://doi.org/10.1023/A:1015059928466)
+/// Uses the [`es`] component internally.
 pub fn real_mu_plus_lambda_es<P, O>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -52,7 +58,7 @@ where
         .build())
 }
 
-/// Basic building blocks of an Evolution Strategy.
+/// Basic building blocks of [`es`].
 pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub mutation: Box<dyn Component<P>>,
@@ -61,7 +67,7 @@ pub struct Parameters<P> {
     pub replacement: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Evolution Strategy template.
+/// A generic single-objective Evolution Strategy (ES) template.
 pub fn es<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,

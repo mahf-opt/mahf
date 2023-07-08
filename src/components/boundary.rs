@@ -3,7 +3,8 @@
 //! # References
 //!
 //! \[1\] Anna V. Kononova, Fabio Caraffini, and Thomas Bäck. 2021.
-//! Differential evolution outside the box. Information Sciences 581, (December 2021), 587–604. DOI:<https://doi.org/10/grsff3>
+//! Differential evolution outside the box. Information Sciences 581, (December 2021), 587–604.
+//! DOI:<https://doi.org/10/grsff3>
 
 use itertools::izip;
 use rand::distributions::Distribution;

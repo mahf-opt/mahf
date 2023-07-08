@@ -4,22 +4,24 @@ use eyre::WrapErr;
 
 use crate::{
     component::ExecResult,
-    components::*,
+    components::{boundary, evaluation, initialization, mutation, replacement, selection, utils},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    Component,
 };
 
-/// Parameters for [real_ls].
+/// Parameters for [`real_ls`].
 pub struct RealProblemParameters {
     pub n_neighbors: u32,
     pub deviation: f64,
 }
 
-/// An example single-objective Local Search operating on a real search space.
-/// Uses the [ls] component internally.
+/// An example single-objective local search operating on a real search space.
+///
+/// Uses the [`ls`] component internally.
 pub fn real_ls<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -48,14 +50,15 @@ where
         .build())
 }
 
-/// Parameters for [permutation_ls].
+/// Parameters for [`permutation_ls`].
 pub struct PermutationProblemParameters {
     pub num_neighbors: u32,
     pub num_swap: u32,
 }
 
-/// An example single-objective Local Search operating on a permutation search space.
-/// Uses the [ls] component internally.
+/// An example single-objective local search operating on a permutation search space.
+///
+/// Uses the [`ls`] component internally.
 pub fn permutation_ls<P>(
     params: PermutationProblemParameters,
     termination: Box<dyn Condition<P>>,
@@ -84,14 +87,14 @@ where
         .build())
 }
 
-/// Basic building blocks of a Local Search.
+/// Basic building blocks of [`ls`].
 pub struct Parameters<P> {
     pub num_neighbors: u32,
     pub neighbors: Box<dyn Component<P>>,
     pub constraints: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Local Search template.
+/// A generic single-objective Local Search (LS) template.
 pub fn ls<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
