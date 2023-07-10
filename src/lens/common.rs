@@ -25,47 +25,7 @@ use crate::{
 ///
 /// Tries to extract `T` from the [`State`] and returns a reference, a mutable reference, or the cloned value.
 ///
-/// # Examples
-///
-/// This is useful when restricting `T` to implement a certain trait:
-///
-/// ```
-/// use better_any::{Tid, TidAble};
-/// use mahf::lens::{LensRef, IdLens};
-/// use mahf::{CustomState, ExecResult, Problem, State};
-///
-/// pub trait SomeTrait {
-///     fn do_something(&self);
-/// }
-///
-/// #[derive(Tid)]
-/// pub struct SomeStruct;
-///
-/// impl CustomState<'_> for SomeStruct {}
-///
-/// impl SomeTrait for SomeStruct {
-///     fn do_something(&self) {
-///         /* ... */
-///     }
-/// }
-///
-/// pub fn call_do_something<P, L>(lens: &L, problem: &P, state: &mut State<P>) -> ExecResult<()>
-/// where
-///     P: Problem,
-///     L: LensRef<P>,
-///     L::Target: SomeTrait,
-/// {
-///     let target = lens.get_ref(problem, state)?;
-///     target.do_something();
-///     Ok(())
-/// }
-///
-/// // `state` is assumed to contain `SomeStruct`.
-/// # pub fn wrapper<P: Problem>(problem: &P, state: &mut State<P>) -> ExecResult<()> {
-/// call_do_something(&IdLens::<SomeStruct>::new(), problem, state)?;
-/// # Ok(())
-/// # }
-/// ```
+/// This is especially useful when restricting `T` to implement a certain trait.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Default(bound = ""), Clone(bound = ""))]
@@ -141,11 +101,9 @@ where
 ///
 /// Tries to extract `<T as Deref>::Target` from the [`State`] and returns a reference, a mutable reference, or the cloned value.
 ///
-/// # Examples
+/// This is especially useful for obtaining values from some wrapper type `T`, e.g. [`Iterations`].
 ///
-/// This is useful for obtaining values from some wrapper type `T`:
-///
-/// TODO
+/// [`Iterations`]: crate::state::common::Iterations
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Default(bound = ""), Clone(bound = ""))]

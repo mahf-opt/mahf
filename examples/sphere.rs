@@ -77,8 +77,7 @@ fn main() -> ExecResult<()> {
             v_max: 1.0,
         },
         /*condition: */
-        conditions::LessThanN::iterations(10_000)
-            & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
+        conditions::LessThanN::iterations(10_000) & !conditions::OptimumReached::new(0.01)?,
     )?;
 
     // ... or a Genetic Algorithm.
@@ -92,8 +91,7 @@ fn main() -> ExecResult<()> {
             pc: 0.8,
         },
         /*condition: */
-        conditions::LessThanN::iterations(10_000)
-            & conditions::DistanceToOptimumGreaterThan::new(0.01)?,
+        conditions::LessThanN::iterations(10_000) & !conditions::OptimumReached::new(0.01)?,
     )?;
 
     let setup = |state: &mut State<_>| -> ExecResult<()> {
@@ -105,7 +103,7 @@ fn main() -> ExecResult<()> {
                     ChangeOf::new(
                         DeltaEqChecker::new(0.001.try_into().unwrap()),
                         BestObjectiveValueLens::new(),
-                    ) & !conditions::DistanceToOptimumGreaterThan::new(0.05)?,
+                    ) & conditions::OptimumReached::new(0.05)?,
                     BestObjectiveValueLens::entry(),
                 )
                 .with(

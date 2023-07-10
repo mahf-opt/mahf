@@ -50,34 +50,36 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 /// Using the trait as trait bound to work with any integer in a component:
 ///
 /// ```
+/// use mahf::{
+///     lens::{AnyLens, Lens},
+///     prelude::*,
+/// };
 /// use serde::Serialize;
-/// use mahf::lens::{AnyLens, Lens};
-/// use mahf::prelude::*;
 ///
 /// #[derive(Clone, Serialize)]
-/// struct SomeComponentInvolvingAnInteger<I: AnyLens> {
-///     pub lens: I,
+/// struct SomeComponentInvolvingAnInteger<L: AnyLens> {
+///     pub lens: L,
 /// }
 ///
-/// impl<I: AnyLens> SomeComponentInvolvingAnInteger<I> {
-///     pub fn from_params(lens: I) -> Self {
+/// impl<L: AnyLens> SomeComponentInvolvingAnInteger<L> {
+///     pub fn from_params(lens: L) -> Self {
 ///         Self { lens }
 ///     }
 ///
-///     pub fn new<P>(lens: I) -> Box<dyn Component<P>>
+///     pub fn new<P>(lens: L) -> Box<dyn Component<P>>
 ///     where
 ///         P: Problem,
-///         I: Lens<P, Target = u32>,
+///         L: Lens<P, Target = u32>,
 ///     {
 ///         Box::new(Self::from_params(lens))
 ///     }
 /// }
 ///
-/// impl<P, I, > Component<P> for SomeComponentInvolvingAnInteger<I>
+/// impl<P, L> Component<P> for SomeComponentInvolvingAnInteger<L>
 /// where
 ///     P: Problem,
 ///     // Specify that you just want an `u32`, and the caller should specify where it comes from.
-///     I: Lens<P, Target = u32>,
+///     L: Lens<P, Target = u32>,
 /// {
 ///     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
 ///         let some_integer: u32 = self.lens.get(problem, state)?;
@@ -90,9 +92,13 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 /// // `SomeComponentInvolvingAnInteger` can work with any lens that extracts an `u32`.
 /// Configuration::builder()
 ///     // Uses the number of iterations as `some_integer`.
-///     .do_(SomeComponentInvolvingAnInteger::new(ValueOf::<common::Iterations>::new()))
+///     .do_(SomeComponentInvolvingAnInteger::new(ValueOf::<
+///         common::Iterations,
+///     >::new()))
 ///     // Uses the number of evaluations as `some_integer`.
-///     .do_(SomeComponentInvolvingAnInteger::new(ValueOf::<common::Evaluations>::new()))
+///     .do_(SomeComponentInvolvingAnInteger::new(ValueOf::<
+///         common::Evaluations,
+///     >::new()))
 ///     .build()
 /// # }
 /// ```
@@ -101,9 +107,11 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 ///
 /// ```
 /// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, Lens},
+///     CustomState, ExecResult, Individual, Problem, State,
+/// };
 /// use serde::Serialize;
-/// use mahf::{CustomState, ExecResult, Individual, Problem, State};
-/// use mahf::lens::{AnyLens, Lens};
 ///
 /// #[derive(Tid)]
 /// pub struct StateWithManyFields<P: Problem + 'static> {
@@ -136,9 +144,42 @@ pub trait Lens<P: Problem>: AnyLens {
 /// Implementing this trait automatically implements [`Lens`], where `Source` is extracted
 /// from the [`State`].
 ///
+/// This is useful to shorten [`Lens`] implementations.
+///
 /// # Examples
 ///
-/// TODO
+/// Implementing your own lens on a field of some [`CustomState`] with multiple fields:
+///
+/// ```
+/// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, Lens, LensMap},
+///     CustomState, ExecResult, Individual, Problem, State,
+/// };
+/// use serde::Serialize;
+///
+/// #[derive(Tid)]
+/// pub struct StateWithManyFields {
+///     pub integer: u32,
+///     pub float: f64,
+/// }
+/// impl CustomState<'_> for StateWithManyFields {}
+///
+/// #[derive(Clone, Serialize)]
+/// pub struct StateWithManyFieldsFloatLens;
+///
+/// impl AnyLens for StateWithManyFieldsFloatLens {
+///     type Target = f64;
+/// }
+///
+/// impl LensMap for StateWithManyFieldsFloatLens {
+///     type Source = StateWithManyFields;
+///
+///     fn map(&self, source: &Self::Source) -> Self::Target {
+///         source.float
+///     }
+/// }
+/// ```
 pub trait LensMap: AnyLens {
     /// The source type to map to `Target` from.
     type Source;
@@ -166,11 +207,117 @@ where
 ///
 /// Using the trait as trait bound to extract a reference to some type implementing a trait:
 ///
-/// TODO
+/// ```
+/// use std::cell::Ref;
+///
+/// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, IdLens, LensRef},
+///     prelude::*,
+/// };
+/// use serde::Serialize;
+///
+/// pub trait SomeTrait {
+///     fn do_something(&self);
+/// }
+///
+/// #[derive(Tid)]
+/// pub struct SomeStructThatImplementsSomeTrait;
+///
+/// impl CustomState<'_> for SomeStructThatImplementsSomeTrait {}
+///
+/// impl SomeTrait for SomeStructThatImplementsSomeTrait {
+///     fn do_something(&self) {
+///         /* ... */
+///     }
+/// }
+///
+/// #[derive(Clone, Serialize)]
+/// struct SomeComponentInvolvingSomeTrait<L: AnyLens> {
+///     pub lens: L,
+/// }
+///
+/// impl<L: AnyLens> SomeComponentInvolvingSomeTrait<L> {
+///     pub fn from_params(lens: L) -> Self {
+///         Self { lens }
+///     }
+///
+///     pub fn new<P>(lens: L) -> Box<dyn Component<P>>
+///     where
+///         P: Problem,
+///         L: LensRef<P>,
+///         L::Target: SomeTrait,
+///     {
+///         Box::new(Self::from_params(lens))
+///     }
+/// }
+///
+/// impl<P, L> Component<P> for SomeComponentInvolvingSomeTrait<L>
+/// where
+///     P: Problem,
+///     L: LensRef<P>,
+///     // Specify that you just want something that implements `SomeTrait`,
+///     // and the caller should specify where it comes from.
+///     L::Target: SomeTrait,
+/// {
+///     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+///         let something: Ref<L::Target> = self.lens.get_ref(problem, state)?;
+///         something.do_something();
+///         Ok(())
+///     }
+/// }
+///
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// // `SomeComponentInvolvingAnInteger` can work with any lens that extracts something
+/// // that implements `SomeTrait`.
+/// Configuration::builder()
+///     .do_(SomeComponentInvolvingSomeTrait::new(IdLens::<
+///         SomeStructThatImplementsSomeTrait,
+///     >::new()))
+///     .build()
+/// # }
+/// ```
 ///
 /// Implementing your own lens:
 ///
-/// TODO
+/// ```
+/// use std::cell::Ref;
+///
+/// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, LensRef},
+///     CustomState, ExecResult, Individual, Problem, State,
+/// };
+/// use serde::Serialize;
+///
+/// #[derive(Tid)]
+/// pub struct StateWithManyFields<P: Problem + 'static> {
+///     pub integer: u32,
+///     pub float: f64,
+///     pub individual: Individual<P>,
+/// }
+/// impl<P: Problem> CustomState<'_> for StateWithManyFields<P> {}
+///
+/// #[derive(Clone, Serialize)]
+/// pub struct StateWithManyFieldsFloatLens;
+///
+/// impl AnyLens for StateWithManyFieldsFloatLens {
+///     type Target = f64;
+/// }
+///
+/// impl<P: Problem> LensRef<P> for StateWithManyFieldsFloatLens {
+///     fn get_ref<'a>(
+///         &self,
+///         problem: &P,
+///         state: &'a State<P>,
+///     ) -> ExecResult<Ref<'a, Self::Target>> {
+///         Ok(Ref::map(
+///             state.try_borrow::<StateWithManyFields<P>>()?,
+///             |t| &t.float,
+///         ))
+///     }
+/// }
+/// ```
 pub trait LensRef<P: Problem>: AnyLens {
     /// Tries to extract a reference to a value from the `problem` and/or `state`.
     fn get_ref<'a>(&self, problem: &P, state: &'a State<P>) -> ExecResult<Ref<'a, Self::Target>>;
@@ -181,9 +328,42 @@ pub trait LensRef<P: Problem>: AnyLens {
 /// Implementing this trait automatically implements [`LensRef`], where `Ref<Source>` is extracted
 /// from the [`State`].
 ///
+/// This is useful to shorten [`Lens`] implementations.
+///
 /// # Examples
 ///
-/// TODO
+/// Implementing your own lens on a field of some [`CustomState`] with multiple fields:
+///
+/// ```
+/// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, Lens, LensMapRef},
+///     CustomState, ExecResult, Individual, Problem, State,
+/// };
+/// use serde::Serialize;
+///
+/// #[derive(Tid)]
+/// pub struct StateWithManyFields {
+///     pub integer: u32,
+///     pub float: f64,
+/// }
+/// impl CustomState<'_> for StateWithManyFields {}
+///
+/// #[derive(Clone, Serialize)]
+/// pub struct StateWithManyFieldsFloatLens;
+///
+/// impl AnyLens for StateWithManyFieldsFloatLens {
+///     type Target = f64;
+/// }
+///
+/// impl LensMapRef for StateWithManyFieldsFloatLens {
+///     type Source = StateWithManyFields;
+///
+///     fn map<'a>(&self, source: &'a Self::Source) -> &'a Self::Target {
+///         &source.float
+///     }
+/// }
+/// ```
 pub trait LensMapRef: AnyLens {
     /// The source type to map to `&Target` from.
     type Source;
@@ -213,11 +393,130 @@ where
 ///
 /// Using the trait as trait bound to extract a mutable reference to some type implementing a trait:
 ///
-/// TODO
+/// ```
+/// use std::cell::RefMut;
+///
+/// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, IdLens, LensMut},
+///     prelude::*,
+/// };
+/// use serde::Serialize;
+///
+/// pub trait SomeTrait {
+///     fn do_something_mut(&mut self);
+/// }
+///
+/// #[derive(Tid)]
+/// pub struct SomeStructThatImplementsSomeTrait;
+///
+/// impl CustomState<'_> for SomeStructThatImplementsSomeTrait {}
+///
+/// impl SomeTrait for SomeStructThatImplementsSomeTrait {
+///     fn do_something_mut(&mut self) {
+///         /* ... */
+///     }
+/// }
+///
+/// #[derive(Clone, Serialize)]
+/// struct SomeComponentInvolvingSomeTrait<L: AnyLens> {
+///     pub lens: L,
+/// }
+///
+/// impl<L: AnyLens> SomeComponentInvolvingSomeTrait<L> {
+///     pub fn from_params(lens: L) -> Self {
+///         Self { lens }
+///     }
+///
+///     pub fn new<P>(lens: L) -> Box<dyn Component<P>>
+///     where
+///         P: Problem,
+///         L: LensMut<P>,
+///         L::Target: SomeTrait,
+///     {
+///         Box::new(Self::from_params(lens))
+///     }
+/// }
+///
+/// impl<P, L> Component<P> for SomeComponentInvolvingSomeTrait<L>
+/// where
+///     P: Problem,
+///     L: LensMut<P>,
+///     // Specify that you just want something that implements `SomeTrait`,
+///     // and the caller should specify where it comes from.
+///     L::Target: SomeTrait,
+/// {
+///     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+///         let mut something: RefMut<L::Target> = self.lens.get_mut(problem, state)?;
+///         something.do_something_mut();
+///         Ok(())
+///     }
+/// }
+///
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// // `SomeComponentInvolvingAnInteger` can work with any lens that extracts something
+/// // that implements `SomeTrait`.
+/// Configuration::builder()
+///     .do_(SomeComponentInvolvingSomeTrait::new(IdLens::<
+///         SomeStructThatImplementsSomeTrait,
+///     >::new()))
+///     .build()
+/// # }
+/// ```
 ///
 /// Implementing your own lens:
 ///
-/// TODO
+/// ```
+/// use std::cell::{Ref, RefMut};
+///
+/// use better_any::{Tid, TidAble};
+/// use mahf::{
+///     lens::{AnyLens, LensMut, LensRef},
+///     CustomState, ExecResult, Individual, Problem, State,
+/// };
+/// use serde::Serialize;
+///
+/// #[derive(Tid)]
+/// pub struct StateWithManyFields<P: Problem + 'static> {
+///     pub integer: u32,
+///     pub float: f64,
+///     pub individual: Individual<P>,
+/// }
+/// impl<P: Problem> CustomState<'_> for StateWithManyFields<P> {}
+///
+/// #[derive(Clone, Serialize)]
+/// pub struct StateWithManyFieldsFloatLens;
+///
+/// impl AnyLens for StateWithManyFieldsFloatLens {
+///     type Target = f64;
+/// }
+///
+/// impl<P: Problem> LensRef<P> for StateWithManyFieldsFloatLens {
+///     fn get_ref<'a>(
+///         &self,
+///         problem: &P,
+///         state: &'a State<P>,
+///     ) -> ExecResult<Ref<'a, Self::Target>> {
+///         Ok(Ref::map(
+///             state.try_borrow::<StateWithManyFields<P>>()?,
+///             |t| &t.float,
+///         ))
+///     }
+/// }
+///
+/// impl<P: Problem> LensMut<P> for StateWithManyFieldsFloatLens {
+///     fn get_mut<'a>(
+///         &self,
+///         problem: &P,
+///         state: &'a State<P>,
+///     ) -> ExecResult<RefMut<'a, Self::Target>> {
+///         Ok(RefMut::map(
+///             state.try_borrow_mut::<StateWithManyFields<P>>()?,
+///             |t| &mut t.float,
+///         ))
+///     }
+/// }
+/// ```
 pub trait LensMut<P: Problem>: LensRef<P> {
     /// Tries to extract a mutable reference to a value from the `problem` and/or `state`.
     fn get_mut<'a>(&self, problem: &P, state: &'a State<P>)
@@ -232,10 +531,53 @@ pub trait LensMut<P: Problem>: LensRef<P> {
 ///
 /// # Examples
 ///
-/// Using the trait as trait bound to assign a value to some integer:
+/// Using the trait as trait bound to assign a value to some float state:
 ///
-/// TODO
+/// ```
+/// use serde::Serialize;
+/// use mahf::lens::{AnyLens, LensAssign};
+/// use mahf::prelude::*;
 ///
+/// #[derive(Clone, Serialize)]
+/// struct SomeComponent<L: AnyLens> {
+///     pub lens: L,
+/// }
+///
+/// impl<L: AnyLens> SomeComponent<L> {
+///     pub fn from_params(lens: L) -> Self {
+///         Self { lens }
+///     }
+///
+///     pub fn new<P>(lens: L) -> Box<dyn Component<P>>
+///     where
+///         P: Problem,
+///         L: LensAssign<P, Target = f64>,
+///     {
+///         Box::new(Self::from_params(lens))
+///     }
+/// }
+///
+/// impl<P, L> Component<P> for SomeComponent<L>
+/// where
+///     P: Problem,
+///     // Specify that you just want to overwrite any `f64`, and the caller should specify where it comes from.
+///     L: LensAssign<P, Target = f64>,
+/// {
+///     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+///         // Assign 1 to the float.
+///         self.lens.assign(1., problem, state)?;
+///         Ok(())
+///     }
+/// }
+///
+/// # pub fn example<P: Problem>() -> Configuration<P> {
+/// // `SomeComponent` can work with any lens that extracts an `f64`.
+/// Configuration::builder()
+///     // Overwriting the mutation rate of some `NormalMutation` with 1.
+///     .do_(SomeComponent::new(ValueOf::<mutation::MutationRate<mutation::NormalMutation>>::new()))
+///     .build()
+/// # }
+/// ```
 pub trait LensAssign<P: Problem>: LensMut<P> {
     /// Tries to assign `value` to the `state`.
     fn assign(&self, value: Self::Target, problem: &P, state: &State<P>) -> ExecResult<()>;

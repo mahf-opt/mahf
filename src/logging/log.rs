@@ -9,10 +9,38 @@ use serde::Serialize;
 
 use crate::{component::ExecResult, state::common, CustomState, Problem, State};
 
-/// A log tracking state throughout the run.
+/// A serializable log for arbitrary state throughout the execution of a [`Configuration`].
 ///
-/// [Log] implements [CustomState] and will be
-/// automatically inserted for every run.
+/// The `Log` is written to by the [`Logger`] component.
+///
+/// [`Logger`]: crate::logging::Logger
+///
+/// # Usages
+///
+/// This state is automatically inserted into the [`State`] by the [`Configuration`].
+///
+/// It can be retrieved from the [`State`] using the [`State::log`] method.
+///
+/// [`Configuration`]: crate::Configuration
+///
+/// # Serialization
+///
+/// The `Log` currently supports serialization into the `cbor` and `json` file formats using
+/// the [`ciborium::ser`] and [`serde_json`] crates, respectively.
+///
+/// Independent tools can then be used to analyze the collected runtime data.
+///
+/// # Examples
+///
+/// Serializing the log into a `json` file:
+///
+/// ```
+/// # use mahf::{ExecResult, Problem, State};
+/// # fn example<P: Problem>(state: &mut State<P>) -> ExecResult<()> {
+/// state.log().to_json("path/to/log.json")?;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Default, Serialize, Tid)]
 #[serde(transparent)]
 pub struct Log {
@@ -22,20 +50,20 @@ pub struct Log {
 impl CustomState<'_> for Log {}
 
 impl Log {
-    /// Creates a new, empty log.
+    /// Creates a new, empty `Log`.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Pushes a new [Step] to the log.
+    /// Pushes a new [`Step`] to the `Log`.
     ///
-    /// There should be at most one [Step] per iteration.
-    pub fn push(&mut self, entry: Step) {
+    /// There should be at most one [`Step`] per iteration.
+    pub(crate) fn push(&mut self, entry: Step) {
         self.steps.push(entry);
     }
 
     /// Returns the currently recorded steps.
-    pub fn steps(&self) -> &[Step] {
+    pub(crate) fn steps(&self) -> &[Step] {
         &self.steps
     }
 }
@@ -43,26 +71,28 @@ impl Log {
 /// A step (usually an interaction).
 #[derive(Default, Serialize)]
 #[serde(transparent)]
-pub struct Step {
+pub(crate) struct Step {
     entries: Vec<Entry>,
 }
 
 impl Step {
-    /// Checks whether an entry with the given name already exists.
-    pub fn contains(&self, name: &str) -> bool {
+    /// Checks whether an [`Entry`] with the given name already exists.
+    pub(crate) fn contains(&self, name: &str) -> bool {
         self.entries.iter().any(|entry| entry.name == name)
     }
 
-    /// Logs a new [Entry] at this [Step].
-    pub fn push(&mut self, entry: Entry) {
+    /// Logs a new [`Entry`] at this [`Step`].
+    pub(crate) fn push(&mut self, entry: Entry) {
         if !self.contains(entry.name) {
             self.entries.push(entry);
         }
     }
 
-    /// Pushes the current iteration if it has not been logged yet.
+    /// Pushes the current number of [`Iterations`] if it has not been logged yet.
     ///
-    /// Will also ensure that the iteration is at index 0.
+    /// Will also ensure that the key for [`Iterations`] is at index 0.
+    ///
+    /// [`Iterations`]: common::Iterations
     pub(crate) fn push_iteration<P: Problem>(&mut self, state: &State<P>) {
         let name = type_name::<common::Iterations>();
 
@@ -73,7 +103,7 @@ impl Step {
     }
 
     /// Returns all entries.
-    pub fn entries(&self) -> &[Entry] {
+    pub(crate) fn entries(&self) -> &[Entry] {
         &self.entries
     }
 }
@@ -85,6 +115,7 @@ pub struct Entry {
     pub value: Box<dyn DynSerialize + Send>,
 }
 
+/// A compressed [`Log`] representation.
 #[derive(Default, Serialize)]
 struct CompressedLog<'a> {
     names: Vec<&'static str>,
@@ -121,7 +152,8 @@ impl<'a> From<&'a Log> for CompressedLog<'a> {
     }
 }
 
-fn path_into_writer(path: impl AsRef<Path>) -> ExecResult<impl std::io::Write> {
+/// Creates a writer for `path`.
+fn create_writer(path: impl AsRef<Path>) -> ExecResult<impl std::io::Write> {
     let file = File::create(path.as_ref()).wrap_err("failed to create log file")?;
     Ok(BufWriter::new(file))
 }
@@ -132,14 +164,14 @@ impl Log {
     }
 
     pub fn to_json(&self, path: impl AsRef<Path>) -> ExecResult<()> {
-        let writer = path_into_writer(path)?;
+        let writer = create_writer(path)?;
         serde_json::to_writer_pretty(writer, &self.as_compressed())
             .wrap_err("failed to write json log")?;
         Ok(())
     }
 
     pub fn to_cbor(&self, path: impl AsRef<Path>) -> ExecResult<()> {
-        let writer = path_into_writer(path)?;
+        let writer = create_writer(path)?;
         ciborium::ser::into_writer(&self.as_compressed(), writer)
             .wrap_err("failed to write cbor log")?;
         Ok(())

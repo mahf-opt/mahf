@@ -168,6 +168,8 @@ where
 
     /// Enables modifying the [`LogConfig`] used by the [`Logger`].
     ///
+    /// If no [`LogConfig`] is present in the `State`, it is created and inserted.
+    ///
     /// Note that repeated calls of this method access the same [`LogConfig`].
     ///
     /// [`LogConfig`]: logging::LogConfig

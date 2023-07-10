@@ -18,7 +18,7 @@
 //! - Templates for common heuristics
 //! - Flexible logging of runtime information
 
-// TODO: #![warn(missing_docs)]
+// #![warn(missing_docs)]
 
 #[doc(hidden)]
 pub use derive_more;
