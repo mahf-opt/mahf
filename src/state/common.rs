@@ -88,7 +88,7 @@ impl<'a, P: Problem, I: Identifier> CustomState<'a> for Evaluator<'a, P, I> {}
 ///
 /// ```
 /// # use mahf::Problem;
-/// use mahf::{State, state::common::Evaluations};
+/// use mahf::{state::common::Evaluations, State};
 ///
 /// # pub fn example<P: Problem>() {
 /// let mut state: State<P> = State::new();
@@ -122,7 +122,7 @@ impl CustomState<'_> for Evaluations {}
 ///
 /// ```
 /// # use mahf::Problem;
-/// use mahf::{State, state::common::Iterations};
+/// use mahf::{state::common::Iterations, State};
 ///
 /// # pub fn example<P: Problem>() {
 /// let mut state: State<P> = State::new();
@@ -196,7 +196,7 @@ impl<T> CustomState<'_> for Progress<T> {}
 /// # use std::fmt::Debug;
 /// # use std::ops::Deref;
 /// # use mahf::{Individual, SingleObjectiveProblem};
-/// use mahf::{State, state::common::BestIndividual};
+/// use mahf::{state::common::BestIndividual, State};
 ///
 /// # pub fn example<P: SingleObjectiveProblem>() where P::Encoding: Debug {
 /// // Requires `P: SingleObjectiveProblem`.
@@ -264,7 +264,7 @@ impl<P: SingleObjectiveProblem> CustomState<'_> for BestIndividual<P> {}
 /// # use std::cell::Ref;
 /// # use std::fmt::Debug;
 /// # use mahf::{Individual, MultiObjectiveProblem};
-/// use mahf::{State, state::common::ParetoFront};
+/// use mahf::{state::common::ParetoFront, State};
 ///
 /// // Requires `P: MultiObjectiveProblem`.
 /// # pub fn example<P: MultiObjectiveProblem>() where P::Encoding: Debug {
@@ -448,7 +448,7 @@ impl<P: Problem> Populations<P> {
     /// # pub fn example<P: Problem>(state: &mut State<P>) {
     /// let populations: Ref<Populations<P>> = state.populations();
     /// if let Some(top_most_population) = populations.get_current() {
-    ///    // Do something with the population.
+    ///     // Do something with the population.
     /// }
     /// # }
     /// ```

@@ -17,8 +17,7 @@ use crate::{component::ExecResult, conditions::Condition, state::StateReq, Probl
 /// # use mahf::{Problem, ExecResult};
 /// # fn condition1<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
 /// # fn condition2<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
-/// use mahf::Configuration;
-/// use mahf::conditions::OptimumReached;
+/// use mahf::{conditions::OptimumReached, Configuration};
 ///
 /// # fn example<P: Problem>() -> ExecResult<Configuration<P>> {
 /// # Ok(
@@ -88,8 +87,7 @@ impl<P: Problem> ops::BitAnd for Box<dyn Condition<P>> {
 /// # use mahf::{Problem, ExecResult};
 /// # fn condition1<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
 /// # fn condition2<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
-/// use mahf::Configuration;
-/// use mahf::conditions::OptimumReached;
+/// use mahf::{conditions::OptimumReached, Configuration};
 ///
 /// # fn example<P: Problem>() -> ExecResult<Configuration<P>> {
 /// # Ok(
@@ -158,8 +156,7 @@ impl<P: Problem> ops::BitOr for Box<dyn Condition<P>> {
 /// ```
 /// # use mahf::{Problem, ExecResult};
 /// # fn condition<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
-/// use mahf::Configuration;
-/// use mahf::conditions::OptimumReached;
+/// use mahf::{conditions::OptimumReached, Configuration};
 ///
 /// # fn example<P: Problem>() -> ExecResult<Configuration<P>> {
 /// # Ok(

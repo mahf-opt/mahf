@@ -67,7 +67,7 @@ fn main() -> ExecResult<()> {
 
     // Specify the metaheuristic: e.g. Particle Swarm Optimization ...
     let _: Configuration<Sphere> = pso::real_pso(
-        /*params: */
+        /* params: */
         pso::RealProblemParameters {
             num_particles: 120,
             start_weight: 0.9,
@@ -76,13 +76,13 @@ fn main() -> ExecResult<()> {
             c_two: 1.7,
             v_max: 1.0,
         },
-        /*condition: */
+        /* condition: */
         conditions::LessThanN::iterations(10_000) & !conditions::OptimumReached::new(0.01)?,
     )?;
 
     // ... or a Genetic Algorithm.
     let config = ga::real_ga(
-        /*params: */
+        /* params: */
         ga::RealProblemParameters {
             population_size: 120,
             tournament_size: 5,
@@ -90,7 +90,7 @@ fn main() -> ExecResult<()> {
             deviation: 0.1,
             pc: 0.8,
         },
-        /*condition: */
+        /* condition: */
         conditions::LessThanN::iterations(10_000) & !conditions::OptimumReached::new(0.01)?,
     )?;
 

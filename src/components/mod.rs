@@ -84,8 +84,9 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///
 /// ```
 /// use std::fmt::Debug;
-/// use serde::Serialize;
+///
 /// use mahf::{Component, ExecResult, Problem, State};
+/// use serde::Serialize;
 ///
 /// #[derive(Clone, Serialize)]
 /// pub struct PrintPopulation;
@@ -95,12 +96,20 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///         Self
 ///     }
 ///
-///     pub fn new<P>() -> Box<dyn Component<P>> where P: Problem, P::Encoding: Debug {
+///     pub fn new<P>() -> Box<dyn Component<P>>
+///     where
+///         P: Problem,
+///         P::Encoding: Debug,
+///     {
 ///         Box::new(Self::from_params())
 ///     }
 /// }
 ///
-/// impl<P> Component<P> for PrintPopulation where P: Problem, P::Encoding: Debug {
+/// impl<P> Component<P> for PrintPopulation
+/// where
+///     P: Problem,
+///     P::Encoding: Debug,
+/// {
 ///     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
 ///         println!("Current population: {:?}", state.populations().current());
 ///         Ok(())

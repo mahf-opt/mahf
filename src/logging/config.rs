@@ -22,7 +22,12 @@ pub(crate) struct ExtractionRule<P: Problem> {
 
 impl<P: Problem> ExtractionRule<P> {
     /// Adds the value extracted by `extractor` to the `Step` if the `trigger` evaluates to `true`.
-    pub(crate) fn execute(&self, problem: &P, state: &mut State<P>, step: &mut Step) -> ExecResult<()> {
+    pub(crate) fn execute(
+        &self,
+        problem: &P,
+        state: &mut State<P>,
+        step: &mut Step,
+    ) -> ExecResult<()> {
         if self.trigger.evaluate(problem, state)? {
             step.push(self.extractor.extract_entry(problem, state))
         }
@@ -176,7 +181,12 @@ impl<P: Problem> LogConfig<P> {
     }
 
     /// Executes all [`ExtractionRule`]s.
-    pub(crate) fn execute(&self, problem: &P, state: &mut State<P>, step: &mut Step) -> ExecResult<()> {
+    pub(crate) fn execute(
+        &self,
+        problem: &P,
+        state: &mut State<P>,
+        step: &mut Step,
+    ) -> ExecResult<()> {
         for rule in &self.rules {
             rule.execute(problem, state, step)?;
         }

@@ -19,8 +19,7 @@ use crate::{problems::SingleObjectiveProblem, Individual, Problem};
 /// # Examples
 ///
 /// ```
-/// use mahf::{Individual, Problem};
-/// use mahf::population::AsSolutions;
+/// use mahf::{population::AsSolutions, Individual, Problem};
 ///
 /// pub fn example<P: Problem>(population: &[Individual<P>]) {
 ///     for solution in population.as_solutions() {
@@ -54,8 +53,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use mahf::{Individual, Problem};
-/// use mahf::population::AsSolutionsMut;
+/// use mahf::{population::AsSolutionsMut, Individual, Problem};
 ///
 /// pub fn example<P: Problem>(mut population: &mut [Individual<P>]) {
 ///     for solution in population.as_solutions_mut() {
@@ -95,8 +93,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use mahf::{Individual, Problem};
-/// use mahf::population::IntoSolutions;
+/// use mahf::{population::IntoSolutions, Individual, Problem};
 ///
 /// pub fn example<P: Problem>(population: Vec<Individual<P>>) {
 ///     for solution in population.into_solutions() {
@@ -137,8 +134,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use mahf::{Individual, Problem};
-/// use mahf::population::{IntoIndividuals};
+/// use mahf::{population::IntoIndividuals, Individual, Problem};
 ///
 /// pub fn example<P: Problem>(solutions: Vec<P::Encoding>) {
 ///     for individual in solutions.into_individuals::<P>() {
@@ -186,8 +182,10 @@ pub enum SingleIndividualError {
 ///
 /// ```
 /// # use mahf::problems::VectorProblem;
-/// use mahf::Individual;
-/// use mahf::population::{IntoSingle, SingleIndividualError};
+/// use mahf::{
+///     population::{IntoSingle, SingleIndividualError},
+///     Individual,
+/// };
 ///
 /// # pub fn make_individual<P: VectorProblem<Element = usize>>() -> Individual<P> {
 /// #     Individual::new_unevaluated(vec![1, 2, 3])
@@ -195,7 +193,10 @@ pub enum SingleIndividualError {
 /// # pub fn example<P: VectorProblem<Element = usize>>() {
 /// let population: Vec<Individual<P>> = vec![];
 /// // `into_single` returns `Err` for empty populations.
-/// assert_eq!(population.into_single(), Err(SingleIndividualError::EmptyPopulation));
+/// assert_eq!(
+///     population.into_single(),
+///     Err(SingleIndividualError::EmptyPopulation)
+/// );
 ///
 /// let population: Vec<Individual<P>> = vec![make_individual()];
 /// // `into_single` returns `Ok` for populations with exactly a single individual.
@@ -203,7 +204,10 @@ pub enum SingleIndividualError {
 ///
 /// let population: Vec<Individual<P>> = vec![make_individual(), make_individual()];
 /// // `into_single` returns `Err` for populations with more than one individual.
-/// assert_eq!(population.into_single(), Err(SingleIndividualError::TooManyIndividuals(2)));
+/// assert_eq!(
+///     population.into_single(),
+///     Err(SingleIndividualError::TooManyIndividuals(2))
+/// );
 /// # }
 /// ```
 ///
@@ -243,8 +247,10 @@ where
 ///
 /// ```
 /// # use mahf::problems::VectorProblem;
-/// use mahf::Individual;
-/// use mahf::population::{IntoSingleRef, SingleIndividualError};
+/// use mahf::{
+///     population::{IntoSingleRef, SingleIndividualError},
+///     Individual,
+/// };
 ///
 /// # pub fn make_individual<P: VectorProblem<Element = usize>>() -> Individual<P> {
 /// #     Individual::new_unevaluated(vec![1, 2, 3])
@@ -252,7 +258,10 @@ where
 /// # pub fn example<P: VectorProblem<Element = usize>>() {
 /// let population: Vec<Individual<P>> = vec![];
 /// // `into_single_ref` returns `Err` for empty populations.
-/// assert_eq!(population.into_single_ref(), Err(SingleIndividualError::EmptyPopulation));
+/// assert_eq!(
+///     population.into_single_ref(),
+///     Err(SingleIndividualError::EmptyPopulation)
+/// );
 ///
 /// let population: Vec<Individual<P>> = vec![make_individual()];
 /// // `into_single_ref` returns `Ok` for populations with exactly a single individual.
@@ -260,7 +269,10 @@ where
 ///
 /// let population: Vec<Individual<P>> = vec![make_individual(), make_individual()];
 /// // `into_single_ref` returns `Err` for populations with more than one individual.
-/// assert_eq!(population.into_single_ref(), Err(SingleIndividualError::TooManyIndividuals(2)));
+/// assert_eq!(
+///     population.into_single_ref(),
+///     Err(SingleIndividualError::TooManyIndividuals(2))
+/// );
 /// # }
 /// ```
 ///
@@ -296,8 +308,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use mahf::{Individual, SingleObjectiveProblem};
-/// use mahf::population::BestIndividual;
+/// use mahf::{population::BestIndividual, Individual, SingleObjectiveProblem};
 ///
 /// pub fn example<P: SingleObjectiveProblem>(population: &[Individual<P>]) {
 ///     let best: Option<&Individual<P>> = population.best_individual();

@@ -134,7 +134,7 @@ trait_set! {
 /// A simple implementation of the n-dimensional real-valued sphere function `f(x) = x^2`:
 ///
 /// ```
-/// use mahf::{Problem, SingleObjective, problems::VectorProblem};
+/// use mahf::{problems::VectorProblem, Problem, SingleObjective};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -179,7 +179,11 @@ pub trait VectorProblem: Problem<Encoding = Vec<Self::Element>> {
 ///
 /// ```
 /// use std::ops::{Range, RangeInclusive};
-/// use mahf::{Problem, SingleObjective, problems::{VectorProblem, LimitedVectorProblem}};
+///
+/// use mahf::{
+///     problems::{LimitedVectorProblem, VectorProblem},
+///     Problem, SingleObjective,
+/// };
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -224,7 +228,8 @@ pub trait LimitedVectorProblem: VectorProblem {
 ///
 /// ```
 /// use std::ops::Range;
-/// use mahf::{Problem, SingleObjective, problems::KnownOptimumProblem};
+///
+/// use mahf::{problems::KnownOptimumProblem, Problem, SingleObjective};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -263,7 +268,10 @@ pub trait KnownOptimumProblem: SingleObjectiveProblem {
 /// A simple implementation of the Travelling Salesperson Problem given a edge weight matrix:
 ///
 /// ```
-/// use mahf::{Problem, problems::{VectorProblem, TravellingSalespersonProblem}, SingleObjective};
+/// use mahf::{
+///     problems::{TravellingSalespersonProblem, VectorProblem},
+///     Problem, SingleObjective,
+/// };
 ///
 /// pub struct TSP {
 ///     pub instance: String,

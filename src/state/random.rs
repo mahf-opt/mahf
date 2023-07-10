@@ -36,9 +36,9 @@ use crate::state::CustomState;
 ///
 /// ```
 /// # use std::cell::RefMut;
-/// use rand::Rng;
 /// # use mahf::Problem;
-/// use mahf::{State, state::Random};
+/// use mahf::{state::Random, State};
+/// use rand::Rng;
 ///
 /// // `state: State` is assumed to contain `Random`.
 /// # pub fn example<P: Problem>(state: &mut State<P>) {
@@ -73,11 +73,14 @@ impl Random {
     /// # Examples
     ///
     /// ```
-    /// use rand::Rng;
     /// use mahf::Random;
+    /// use rand::Rng;
     ///
     /// let mut rng = Random::new(42);
-    /// println!("A random number between 0 and 10: {}", rng.gen_range(0..=10));
+    /// println!(
+    ///     "A random number between 0 and 9: {}",
+    ///     rng.gen_range(0..10)
+    /// );
     /// ```
     pub fn new(seed: u64) -> Self {
         Random::with_rng::<ChaCha12Rng>(seed)
@@ -90,11 +93,14 @@ impl Random {
     /// Creating the generator with [`rand::rngs::StdRng`]:
     ///
     /// ```
-    /// use rand::{Rng, rngs::StdRng};
     /// use mahf::Random;
+    /// use rand::{rngs::StdRng, Rng};
     ///
     /// let mut rng = Random::with_rng::<StdRng>(42);
-    /// println!("A random number between 0 and 10: {}", rng.gen_range(0..=10));
+    /// println!(
+    ///     "A random number between 0 and 9: {}",
+    ///     rng.gen_range(0..10)
+    /// );
     /// ```
     pub fn with_rng<RNG>(seed: u64) -> Self
     where
@@ -117,8 +123,8 @@ impl Random {
     /// # Examples
     ///
     /// ```
-    /// use rand::Rng;
     /// use mahf::Random;
+    /// use rand::Rng;
     ///
     /// let mut rng1 = Random::testing();
     /// let mut rng2 = Random::testing();
@@ -152,8 +158,8 @@ impl Random {
     /// Creating 10 child generators from a given generator:
     ///
     /// ```
-    /// use rand::Rng;
     /// use mahf::Random;
+    /// use rand::Rng;
     ///
     /// let mut rng = Random::new(42);
     /// let children: Vec<Random> = rng.iter_children().take(10).collect();
@@ -163,16 +169,22 @@ impl Random {
     /// enables reproducible pseudo-random numbers even across threads:
     ///
     /// ```
-    /// use rand::Rng;
     /// use mahf::Random;
+    /// use rand::Rng;
     ///
     /// let mut rng1 = Random::new(42);
     /// let mut children1: Vec<Random> = rng1.iter_children().take(10).collect();
-    /// let numbers1: Vec<usize> = children1.iter_mut().map(|rng| rng.gen_range(0..10)).collect();
+    /// let numbers1: Vec<usize> = children1
+    ///     .iter_mut()
+    ///     .map(|rng| rng.gen_range(0..10))
+    ///     .collect();
     ///
     /// let mut rng2 = Random::new(42);
     /// let mut children2: Vec<Random> = rng2.iter_children().take(10).collect();
-    /// let numbers2: Vec<usize> = children2.iter_mut().map(|rng| rng.gen_range(0..10)).collect();
+    /// let numbers2: Vec<usize> = children2
+    ///     .iter_mut()
+    ///     .map(|rng| rng.gen_range(0..10))
+    ///     .collect();
     ///
     /// assert_eq!(numbers1, numbers2);
     /// ```

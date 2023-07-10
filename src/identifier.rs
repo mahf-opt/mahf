@@ -39,19 +39,27 @@ impl<I: Identifier> Serialize for PhantomId<I> {
     }
 }
 
-identifier!(Global, "The default identifier.\n\nIf no identifier is specified, it is assumed the `Global` identifier is used.");
+#[rustfmt::skip]
+mod inner {
+    use super::*;
 
-identifier!(A, "An identifier to distinguish between components of the same type.");
-identifier!(B, "An identifier to distinguish between components of the same type.");
-identifier!(C, "An identifier to distinguish between components of the same type.");
-identifier!(D, "An identifier to distinguish between components of the same type.");
-identifier!(E, "An identifier to distinguish between components of the same type.");
+    identifier!(Global, "The default identifier.\n\nIf no identifier is specified, it is assumed the `Global` identifier is used.");
 
-identifier!(I0, "An identifier to distinguish between components of the same type.");
-identifier!(I1, "An identifier to distinguish between components of the same type.");
-identifier!(I2, "An identifier to distinguish between components of the same type.");
-identifier!(I3, "An identifier to distinguish between components of the same type.");
-identifier!(I4, "An identifier to distinguish between components of the same type.");
+    identifier!(A, "An identifier to distinguish between components of the same type.");
+    identifier!(B, "An identifier to distinguish between components of the same type.");
+    identifier!(C, "An identifier to distinguish between components of the same type.");
+    identifier!(D, "An identifier to distinguish between components of the same type.");
+    identifier!(E, "An identifier to distinguish between components of the same type.");
 
-identifier!(Seq, "An identifier to signalize a sequential evaluator.");
-identifier!(Par, "An identifier to signalize a parallel evaluator.");
+    identifier!(I0, "An identifier to distinguish between components of the same type.");
+    identifier!(I1, "An identifier to distinguish between components of the same type.");
+    identifier!(I2, "An identifier to distinguish between components of the same type.");
+    identifier!(I3, "An identifier to distinguish between components of the same type.");
+    identifier!(I4, "An identifier to distinguish between components of the same type.");
+
+    identifier!(Seq, "An identifier to signalize a sequential evaluator.");
+    identifier!(Par, "An identifier to signalize a parallel evaluator.");
+}
+
+#[doc(inline)]
+pub use inner::*;

@@ -246,7 +246,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::{StateRegistry, state::registry::Entry};
+    /// use mahf::{state::registry::Entry, StateRegistry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -281,7 +281,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::{StateRegistry, state::registry::Entry};
+    /// use mahf::{state::registry::Entry, StateRegistry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -324,7 +324,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::{StateRegistry, state::registry::Entry};
+    /// use mahf::{state::registry::Entry, StateRegistry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -357,7 +357,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::{StateRegistry, state::registry::Entry};
+    /// use mahf::{state::registry::Entry, StateRegistry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -392,7 +392,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::{StateRegistry, state::registry::Entry};
+    /// use mahf::{state::registry::Entry, StateRegistry};
     /// # #[derive(Default, Debug, PartialEq, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
@@ -400,7 +400,7 @@ where
     /// let mut registry = StateRegistry::new();
     /// registry.entry::<A>().or_insert(A(12));
     ///
-    /// if let Entry::Occupied(o) =  registry.entry::<A>()  {
+    /// if let Entry::Occupied(o) = registry.entry::<A>() {
     ///     assert_eq!(o.remove(), A(12));
     /// }
     ///
@@ -438,7 +438,7 @@ where
     /// # use better_any::{Tid, TidAble};
     /// # use derive_more::{Deref, DerefMut};
     /// # use mahf::CustomState;
-    /// use mahf::{StateRegistry, state::registry::Entry};
+    /// use mahf::{state::registry::Entry, StateRegistry};
     /// # #[derive(Default, Debug, Deref, DerefMut, Tid)]
     /// # pub struct A(usize);
     /// # impl CustomState<'_> for A {}
