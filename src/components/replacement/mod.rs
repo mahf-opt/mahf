@@ -15,6 +15,7 @@ pub use common::{
     DiscardOffspring, Generational, KeepBetterAtIndex, Merge, MuPlusLambda, RandomReplacement,
 };
 
+/// Trait for representing a component that replaces a parent population with its child population.
 pub trait Replacement<P: Problem>: AnyComponent {
     fn replace(
         &self,
@@ -24,9 +25,9 @@ pub trait Replacement<P: Problem>: AnyComponent {
     ) -> ExecResult<Vec<Individual<P>>>;
 }
 
-erased_serde::serialize_trait_object!(<P: Problem> Replacement<P>);
-dyn_clone::clone_trait_object!(<P: Problem> Replacement<P>);
-
+/// A default implementation of [`Component::execute`] for types implementing [`Replacement`].
+///
+/// [`Component::execute`]: crate::Component::execute
 pub fn replacement<P, T>(component: &T, _problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,

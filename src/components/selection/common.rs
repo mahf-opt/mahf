@@ -1,7 +1,7 @@
 //! Common selection components.
 
 use color_eyre::Section;
-use eyre::{ensure, eyre, ContextCompat, WrapErr};
+use eyre::{ensure, ContextCompat, WrapErr};
 use rand::{seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -11,11 +11,13 @@ use crate::{
         selection::{functional as f, selection, Selection},
         Component,
     },
+    population::IntoSingleRef,
     problems::SingleObjectiveProblem,
     state::random::Random,
     Individual, Problem, State,
 };
 
+/// Selects all individuals once.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct All;
 
@@ -45,6 +47,7 @@ impl<P: Problem> Component<P> for All {
     }
 }
 
+/// Selects no individual.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct None;
 
@@ -74,8 +77,17 @@ impl<P: Problem> Component<P> for None {
     }
 }
 
+/// Select the single individual in the population `num_selected` times.
+///
+/// This is useful for cloning the current individual in a single-solution-based metaheuristic
+/// and then performing some operation on each cloned individual e.g. for generating multiple neighbors.
+///
+/// # Errors
+///
+/// The component returns an `Err` if the population does not contain exactly one individual.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CloneSingle {
+    /// Number of times the single individual is cloned.
     pub num_selected: u32,
 }
 
@@ -95,16 +107,10 @@ impl<P: Problem> Selection<P> for CloneSingle {
         population: &'a [Individual<P>],
         _rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
-        if let [single] = population {
-            Ok(std::iter::repeat(single)
-                .take(self.num_selected as usize)
-                .collect())
-        } else {
-            Err(eyre!(
-                "population must contain a single individual, but {} were found",
-                population.len()
-            ))
-        }
+        let single = population.into_single_ref()?;
+        Ok(std::iter::repeat(single)
+            .take(self.num_selected as usize)
+            .collect())
     }
 }
 
@@ -114,8 +120,10 @@ impl<P: Problem> Component<P> for CloneSingle {
     }
 }
 
+/// Selects `num_selected` random individuals with replacement.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct FullyRandom {
+    /// Number of selected individuals.
     pub num_selected: u32,
 }
 
@@ -149,8 +157,14 @@ impl<P: Problem> Component<P> for FullyRandom {
     }
 }
 
+/// Selects `num_selected` random individuals without replacement.
+///
+/// # Errors
+///
+/// Returns an `Err` if there is not a sufficient amount of solutions to choose from.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomWithoutRepetition {
+    /// Number of selected individuals.
     pub num_selected: u32,
 }
 
@@ -170,9 +184,12 @@ impl<P: Problem> Selection<P> for RandomWithoutRepetition {
         population: &'a [Individual<P>],
         rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
-        let selection = population
-            .choose_multiple(rng, self.num_selected as usize)
-            .collect();
+        let num_selected = self.num_selected as usize;
+        ensure!(
+            population.len() > num_selected,
+            "the population does not contain enough individuals to sample without replacement"
+        );
+        let selection = population.choose_multiple(rng, num_selected).collect();
         Ok(selection)
     }
 }
@@ -183,9 +200,21 @@ impl<P: Problem> Component<P> for RandomWithoutRepetition {
     }
 }
 
+/// Selects `num_selected` individuals using the roulette-wheel method with replacement.
+///
+/// The weights for individuals are calculated using
+/// [`proportional_weights`] with the `offset` as argument.
+///
+/// [`proportional_weights`]: f::proportional_weights
+///
+/// # Errors
+///
+/// Returns an `Err` if the population contains individuals with infinite objective value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RouletteWheel {
+    /// Number of selected individuals.
     pub num_selected: u32,
+    /// The `offset` weight to prevent the worst individual having a weight of 0.
     pub offset: f64,
 }
 
@@ -223,9 +252,23 @@ impl<P: SingleObjectiveProblem> Component<P> for RouletteWheel {
     }
 }
 
+/// Selects `num_selected` individuals using stochastic universal sampling with replacement.
+///
+/// Note that the population is not sorted by fitness, but individuals are weighted "in place".
+///
+/// The weights for individuals are calculated using
+/// [`proportional_weights`] with the `offset` as argument.
+///
+/// [`proportional_weights`]: f::proportional_weights
+///
+/// # Errors
+///
+/// Returns an `Err` if the population contains individuals with infinite objective value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct StochasticUniversalSampling {
+    /// Number of selected individuals.
     pub num_selected: u32,
+    /// The `offset` weight to prevent the worst individual having a weight of 0.
     pub offset: f64,
 }
 
@@ -280,9 +323,12 @@ impl<P: SingleObjectiveProblem> Component<P> for StochasticUniversalSampling {
     }
 }
 
+/// Selects `num_selected` individuals using deterministic Tournament selection of `size` with replacement.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Tournament {
+    /// Number of selected individuals.
     pub num_selected: u32,
+    /// Tournament size.
     pub size: u32,
 }
 
@@ -325,8 +371,10 @@ impl<P: SingleObjectiveProblem> Component<P> for Tournament {
     }
 }
 
+/// Selects `num_selected` solutions with replacement using linear ranking.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LinearRank {
+    /// Number of selected individuals.
     pub num_selected: u32,
 }
 
@@ -359,19 +407,29 @@ impl<P: SingleObjectiveProblem> Component<P> for LinearRank {
     }
 }
 
+/// Selects `num_selected` solutions with replacement using exponential ranking.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ExponentialRank {
+    /// Number of selected individuals.
     pub num_selected: u32,
+    /// Base of the exponent within (0,1).
     pub base: f64,
 }
 
 impl ExponentialRank {
-    pub fn from_params(num_selected: u32, base: f64) -> Self {
-        Self { num_selected, base }
+    pub fn from_params(num_selected: u32, base: f64) -> ExecResult<Self> {
+        ensure!(
+            (f64::EPSILON..1.0).contains(&base),
+            "the base of the exponent must be within (0, 1)"
+        );
+        Ok(Self { num_selected, base })
     }
 
-    pub fn new<P: SingleObjectiveProblem>(num_selected: u32, base: f64) -> Box<dyn Component<P>> {
-        Box::new(Self::from_params(num_selected, base))
+    pub fn new<P: SingleObjectiveProblem>(
+        num_selected: u32,
+        base: f64,
+    ) -> ExecResult<Box<dyn Component<P>>> {
+        Ok(Box::new(Self::from_params(num_selected, base)?))
     }
 }
 

@@ -20,13 +20,13 @@ use crate::{
     Problem,
 };
 
+/// Trait for representing a component that repairs solutions that violate boundary constraints.
 pub trait BoundaryConstraint<P: Problem>: AnyComponent {
+    /// Repairs the `solution` such that it no longer violates any boundary constraints.
     fn constrain(&self, solution: &mut P::Encoding, problem: &P, rng: &mut Random);
 }
 
-erased_serde::serialize_trait_object!(<P: Problem> BoundaryConstraint<P>);
-dyn_clone::clone_trait_object!(<P: Problem> BoundaryConstraint<P>);
-
+/// A default implementation of [`Component::execute`] for types implementing [`BoundaryConstraint`].
 pub fn boundary_constraint<P, T>(component: &T, problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,
@@ -39,6 +39,7 @@ where
     Ok(())
 }
 
+/// Clamps the values to the domain boundaries.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Saturation;
 
@@ -75,6 +76,8 @@ where
     }
 }
 
+/// Reflects values outside the domain off the opposite domain boundary inwards,
+/// as if the boundaries are connected and the domain forms a ring.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Toroidal;
 
@@ -120,6 +123,7 @@ where
     }
 }
 
+/// The amount exceeding the boundary is reflected inwards at the same boundary.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Mirror;
 
@@ -168,6 +172,13 @@ where
     }
 }
 
+/// Re-samples the values outside the bounds \[a, b\] from
+/// - `a + P(a, b)` for the lower bound,
+/// - `b - P(a, b)` for the upper bound,
+///
+/// where `P(a, b) ~ |N(0, (b - a)/3)|`.
+///
+/// Re-sampling is performed until the value is within the domain.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CompleteOneTailedNormalCorrection;
 

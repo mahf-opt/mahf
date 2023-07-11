@@ -8,6 +8,11 @@ pub mod debug;
 pub mod improvement;
 pub mod populations;
 
+/// Doesn't do anything.
+///
+/// Can be used as a placeholder in e.g. [heuristic templates].
+///
+/// [heuristic templates]: crate::heuristics
 #[derive(Clone, Serialize)]
 pub struct Noop;
 

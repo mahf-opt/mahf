@@ -15,6 +15,13 @@ use crate::{
     Problem, State,
 };
 
+/// Multiplies the `L::Target` with `alpha`.
+///
+/// Note that this multiplication is executed on every execution, even within the same iteration.
+///
+/// This geometric cooling schedule is usually used on the [`Temperature`].
+///
+/// [`Temperature`]: crate::components::replacement::sa::Temperature
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]

@@ -12,11 +12,26 @@ use crate::{
     State,
 };
 
+/// The current temperature of the search process.
 #[derive(Default, Tid, Deref, DerefMut)]
 pub struct Temperature(pub f64);
 
 impl CustomState<'_> for Temperature {}
 
+/// Accepts the candidate solution `S'` if it is better than the current solution `S`,
+/// or with probability
+/// ```text
+/// exp(f(S) - f(S') / T)
+/// ```
+/// if it is worse, where `f` is the objective function, and `T` is the [`Temperature`].
+///
+/// Originally proposed for, and use as acceptance criterion (replacement) in [`sa`].
+///
+/// [`sa`]: crate::heuristics::sa
+///
+/// # Errors
+///
+/// Returns an `Err` if the two top-most populations do not contain exactly one individual.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ExponentialAnnealingAcceptance {
     t_0: f64,

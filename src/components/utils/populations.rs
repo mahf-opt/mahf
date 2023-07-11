@@ -8,6 +8,7 @@ use crate::{
     component::ExecResult, components::Component, problems::SingleObjectiveProblem, Problem, State,
 };
 
+/// Removes all individuals from the population.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ClearPopulation;
 
@@ -28,6 +29,11 @@ impl<P: Problem> Component<P> for ClearPopulation {
     }
 }
 
+/// Shifts the first `n` populations circularly by one.
+///
+/// See [`Populations::rotate`] for more information.
+///
+/// [`Populations::rotate`]: crate::state::common::Populations::rotate
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RotatePopulations {
     n: usize,
@@ -54,6 +60,9 @@ impl<P: Problem> Component<P> for RotatePopulations {
     }
 }
 
+/// Splits the population into two subpopulations, where the upper populations contains
+/// the half of the previous population with better objective values, and the lower population
+/// the half with worse objective values.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SplitPopulationByObjectiveValue;
 
@@ -91,6 +100,7 @@ impl<P: SingleObjectiveProblem> Component<P> for SplitPopulationByObjectiveValue
     }
 }
 
+/// Interleaves the two top-most populations into one population.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct InterleavePopulations;
 
@@ -114,6 +124,8 @@ impl<P: SingleObjectiveProblem> Component<P> for InterleavePopulations {
     }
 }
 
+/// Duplicates all individuals in the population interleaved, i.e. each individual is immediately
+/// followed by its duplicate.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DuplicatePopulation;
 

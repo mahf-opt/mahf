@@ -15,6 +15,9 @@ use crate::{
     Individual, Problem, State,
 };
 
+/// Discards all individuals in the child population, keeping the parents unchanged.
+///
+/// The opposite of this is [`Generational`].
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DiscardOffspring;
 
@@ -45,6 +48,7 @@ impl<P: Problem> Component<P> for DiscardOffspring {
     }
 }
 
+/// Merges the parent and child populations.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Merge;
 
@@ -75,8 +79,10 @@ impl<P: Problem> Component<P> for Merge {
     }
 }
 
+/// Keeps the `max_population_size` fittest individuals from both populations.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct MuPlusLambda {
+    /// Maximal allowed population size.
     pub max_population_size: u32,
 }
 
@@ -112,8 +118,12 @@ impl<P: SingleObjectiveProblem> Component<P> for MuPlusLambda {
     }
 }
 
+/// Discards all individuals in the parent population, keeping the children unchanged.
+///
+/// The opposite of this is [`DiscardOffspring`].
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Generational {
+    /// Maximal allowed population size.
     pub max_population_size: u32,
 }
 
@@ -146,6 +156,7 @@ impl<P: Problem> Component<P> for Generational {
     }
 }
 
+/// Keeps `max_population_size` random individuals from parents and children without replacement.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomReplacement {
     pub max_population_size: u32,
@@ -163,12 +174,6 @@ impl RandomReplacement {
     }
 }
 
-impl<P: Problem> Component<P> for RandomReplacement {
-    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        replacement(self, problem, state)
-    }
-}
-
 impl<P: Problem> Replacement<P> for RandomReplacement {
     fn replace(
         &self,
@@ -183,6 +188,17 @@ impl<P: Problem> Replacement<P> for RandomReplacement {
     }
 }
 
+impl<P: Problem> Component<P> for RandomReplacement {
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        replacement(self, problem, state)
+    }
+}
+
+/// Keeps the better individual from parent and offspring at the same index.
+///
+/// # Errors
+///
+/// Returns an `Err` if the parent and child populations have different size.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct KeepBetterAtIndex;
 

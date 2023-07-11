@@ -16,6 +16,7 @@ pub use common::{
     TranslocationMutation, UniformMutation,
 };
 
+/// Trait for representing a component that mutates solutions.
 pub trait Mutation<P: Problem>: AnyComponent {
     fn mutate(
         &self,
@@ -25,6 +26,9 @@ pub trait Mutation<P: Problem>: AnyComponent {
     ) -> ExecResult<()>;
 }
 
+/// A default implementation of [`Component::execute`] for types implementing [`Mutation`].
+///
+/// [`Component::execute`]: crate::Component::execute
 pub fn mutation<T, P>(component: &T, problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,

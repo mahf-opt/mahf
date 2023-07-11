@@ -12,6 +12,7 @@ use rand::{
 
 use crate::state::random::Random;
 
+/// Generates uniformly distributed solutions within the boundaries of the search space.
 pub fn random_spread<D>(
     domain: &[Range<D>],
     population_size: usize,
@@ -30,6 +31,7 @@ where
     .collect()
 }
 
+/// Generates random permutations.
 pub fn random_permutation(
     dimension: usize,
     population_size: usize,
@@ -44,6 +46,7 @@ pub fn random_permutation(
     .collect()
 }
 
+/// Generates new random binary strings with a 1 or `true` having a probability of `p`.
 pub fn random_bitstring(
     dimension: usize,
     p: f64,

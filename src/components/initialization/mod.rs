@@ -13,13 +13,15 @@ pub use common::{Empty, RandomBitstring, RandomPermutation, RandomSpread};
 
 use crate::population::IntoIndividuals;
 
+/// Trait for representing a component that initializes solutions in the search space.
 pub trait Initialization<P: Problem>: AnyComponent {
+    /// Initializes solutions in the search space.
     fn initialize(&self, problem: &P, rng: &mut Random) -> Vec<P::Encoding>;
 }
 
-erased_serde::serialize_trait_object!(<P: Problem> Initialization<P>);
-dyn_clone::clone_trait_object!(<P: Problem> Initialization<P>);
-
+/// A default implementation of [`Component::execute`] for types implementing [`Initialization`].
+///
+/// [`Component::execute`]: crate::Component::execute
 pub fn initialization<P, T>(component: &T, problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,
