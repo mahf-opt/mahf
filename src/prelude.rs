@@ -2,7 +2,7 @@
 
 pub use crate::{
     components::{
-        self, evaluation, generative, initialization, mapping, mutation, recombination,
+        self, boundary, evaluation, generative, initialization, mapping, mutation, recombination,
         replacement, selection, swarm, Component,
     },
     conditions::{self, Condition},

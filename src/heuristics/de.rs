@@ -35,7 +35,7 @@ pub struct RealProblemParameters {
 
 /// An example single-objective DE operating on a real search space.
 ///
-/// Uses the [`de]` component internally.
+/// Uses the [`de`] component internally.
 pub fn real_de<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
