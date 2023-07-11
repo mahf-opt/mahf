@@ -24,10 +24,11 @@
 //! # Usage
 //!
 //! ## Pre-implemented problems
-//! There exist several pre-implemented problems in the MAHF ecosystem, which provide a good
+//!
+//! There exist several pre-implemented problems in the [MAHF ecosystem], which provide a good
 //! starting point.
 //!
-//! TODO: Reference mahf-problems repo(s) here.
+//! [MAHF ecosystem]: https://github.com/mahf-opt#problems-libraries
 //!
 //! ## Implement custom problems
 //!
@@ -71,7 +72,13 @@ pub use objective::{MultiObjective, Objective, SingleObjective};
 /// information accessible to components, and should only provide exactly as much information
 /// as the components need to function.
 ///
-/// TODO: Reference component (module) documentation here.
+/// [`Component`]s are generic over the problem type `P`, and adding traits bounds to `P`
+/// symbolizes that the [`Component`] requires the information that the traits offer.
+/// For example, a component that only works on problems with a single objective adds
+/// a `P: `[`SingleObjective`] trait bound to its [`Component`] implementation.
+///
+///
+/// [`Component`]: crate::Component
 ///
 /// # Examples
 ///

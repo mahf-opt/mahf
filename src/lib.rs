@@ -59,12 +59,11 @@
 //! # [`Component`]-based design
 //!
 //! MAHF is based on the concept of *unified metaheuristics*, which means that we interpret
-//! metaheuristics to be composed of components that can be mixed and matched.
-//!
-//! In this framework they are represented by the [`Component`] and [`Condition`] traits.
+//! metaheuristics to be composed of components and conditions that can be mixed and matched.
+//! They are represented by the [`Component`] and [`Condition`] traits.
 //!
 //! Putting components together into a metaheuristic is as easy as writing pseudo-code thanks to
-//! the [`Configuration::builder`].
+//! the [`Configuration::builder`], as you can see in the [example](crate#example).
 //!
 //!
 //! # Runtime [`state`]
@@ -76,11 +75,13 @@
 //!
 //! # Optimization [`problems`]
 //!
-//! Optimization problems are represented by the [`Problem`] and [`Evaluate`] traits:
+//! Optimization [`problems`] are represented by the [`Problem`] and [`Evaluate`] traits:
 //! - [`Problem`] and subtraits offer a way to provide any problem-specific information to
 //!  components and allow them to be as generic as possible by only specifying the
 //!  minimal trait bounds they need to function
 //! - [`Evaluate`] provides means of evaluating the objective function, e.g. in parallel
+//!
+//! Optimizing some problem is then as easy as calling [`Configuration::optimize`].
 //!
 //! [`Evaluate`]: problems::Evaluate
 //!
@@ -88,8 +89,10 @@
 //!
 //! [`heuristic`]: heuristics
 //!
-//! MAHF offers pre-built templates for a dozen of common metaheuristics as a starting point
+//! MAHF offers pre-built modular templates for a dozen of common meta[`heuristics`] as a starting point
 //! for more complex hybrids.
+//! Take a look at their implementation if you want to get a feel
+//! for how different metaheuristics are represented in MAHF.
 //!
 //! # Citing MAHF
 //!

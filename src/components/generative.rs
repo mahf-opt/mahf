@@ -14,6 +14,7 @@ use crate::{
     problems::TravellingSalespersonProblem, state::StateReq, CustomState, State,
 };
 
+/// A `NxN` pheromone matrix.
 #[derive(Clone, Tid)]
 pub struct PheromoneMatrix {
     dimension: usize,
@@ -59,6 +60,13 @@ impl ops::MulAssign<f64> for PheromoneMatrix {
 
 impl CustomState<'_> for PheromoneMatrix {}
 
+/// Generates a population from the [`PheromoneMatrix`].
+///
+/// Originally proposed for, and used as operator in [`aco`].
+///
+/// [`aco`]: crate::heuristics::aco
+///
+/// A single greedy route and `num_ants` probabilistic routes are generated.
 #[derive(Clone, Serialize)]
 pub struct AcoGeneration {
     pub num_ants: usize,
@@ -147,6 +155,7 @@ impl<P: TravellingSalespersonProblem> Component<P> for AcoGeneration {
     }
 }
 
+/// Updates the [`PheromoneMatrix`] with the population, using the Ant System (AS) formula.
 #[derive(Clone, Serialize)]
 pub struct AsPheromoneUpdate {
     pub evaporation: f64,
@@ -197,6 +206,7 @@ impl<P: TravellingSalespersonProblem> Component<P> for AsPheromoneUpdate {
     }
 }
 
+/// Updates the [`PheromoneMatrix`] with the population, using the MAX-MIN Ant System (MMAS) formula.
 #[derive(Clone, Serialize)]
 pub struct MinMaxPheromoneUpdate {
     pub evaporation: f64,
