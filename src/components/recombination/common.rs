@@ -272,7 +272,7 @@ impl CycleCrossover {
         Box::new(Self::from_params(pc, insert_both))
     }
 
-    /// Creates a new `ArithmeticCrossover` which inserts only the first child.
+    /// Creates a new `CycleCrossover` which inserts only the first child.
     pub fn new_insert_single<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,
@@ -281,7 +281,7 @@ impl CycleCrossover {
         Self::new(pc, false)
     }
 
-    /// Creates a new `ArithmeticCrossover` which inserts both children.
+    /// Creates a new `CycleCrossover` which inserts both children.
     pub fn new_insert_both<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,

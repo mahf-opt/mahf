@@ -160,7 +160,7 @@ where
 /// # Adapting parameters
 ///
 /// Adapting the `bound` and `rm` is possible through modifying the respective states:
-/// - `std_dev`: [`MutationStrength<UniformMutation<I>>`]
+/// - `bound`: [`MutationStrength<UniformMutation<I>>`]
 /// - `rm`: [`MutationRate<UniformMutation<I>>`]
 ///
 /// # Errors
