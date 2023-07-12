@@ -2,8 +2,6 @@
 
 use std::marker::PhantomData;
 
-use better_any::{Tid, TidAble};
-use derive_more::{Deref, DerefMut};
 use eyre::{ensure, WrapErr};
 use itertools::multizip;
 use rand::{
@@ -15,58 +13,16 @@ use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    component::{AnyComponent, ExecResult},
-    components::{mutation::functional as f, Component},
+    component::ExecResult,
+    components::{
+        mutation::{functional as f, MutationRate, MutationStrength},
+        Component,
+    },
     identifier::{Global, Identifier},
     population::AsSolutionsMut,
     problems::{LimitedVectorProblem, VectorProblem},
-    CustomState, State,
+    State,
 };
-
-/// The mutation strength of a mutation component `T`.
-#[derive(Deref, DerefMut, Tid)]
-pub struct MutationStrength<T: AnyComponent + 'static>(
-    #[deref]
-    #[deref_mut]
-    f64,
-    PhantomData<T>,
-);
-
-impl<T: AnyComponent> MutationStrength<T> {
-    /// Creates a new `MutationStrength` with initial `value`.
-    pub fn new(value: f64) -> Self {
-        Self(value, PhantomData)
-    }
-}
-
-impl<T: AnyComponent> CustomState<'_> for MutationStrength<T> {}
-
-/// The mutation rate of a mutation component `T`.
-#[derive(Deref, DerefMut, Tid)]
-pub struct MutationRate<T: AnyComponent + 'static>(
-    #[deref]
-    #[deref_mut]
-    f64,
-    PhantomData<T>,
-);
-
-impl<T: AnyComponent> MutationRate<T> {
-    /// Creates a new `MutationRate` with initial `value`.
-    pub fn new(value: f64) -> Self {
-        Self(value, PhantomData)
-    }
-
-    /// Returns the mutation rate, and `Err` if it is not within `[0, 1]`.
-    pub fn value(&self) -> ExecResult<f64> {
-        ensure!(
-            (0.0..=1.0).contains(&self.0),
-            "mutation rate must be in [0, 1]"
-        );
-        Ok(self.0)
-    }
-}
-
-impl<T: AnyComponent> CustomState<'_> for MutationRate<T> {}
 
 /// Mutates each dimension with a delta from a normal distribution `N(0, std_dev)`
 /// depending on the mutation probability `rm`.
@@ -387,7 +343,7 @@ where
     }
 }
 
-/// Applies a scramble mutation with probability `rm`.
+/// Applies a scramble mutation i.e. shuffling with probability `rm`.
 ///
 /// # Adapting parameters
 ///

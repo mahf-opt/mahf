@@ -1,9 +1,15 @@
 //! Mutate solutions.
 
+use std::marker::PhantomData;
+
+use better_any::{Tid, TidAble};
+use derive_more::{Deref, DerefMut};
+use eyre::ensure;
+
 use crate::{
     component::{AnyComponent, ExecResult},
     population::AsSolutionsMut,
-    Problem, State,
+    CustomState, Problem, State,
 };
 
 pub mod common;
@@ -11,9 +17,8 @@ pub mod de;
 pub mod functional;
 
 pub use common::{
-    BitFlipMutation, InversionMutation, MutationRate, MutationStrength, NormalMutation,
-    PartialRandomBitstring, PartialRandomSpread, ScrambleMutation, SwapMutation,
-    TranslocationMutation, UniformMutation,
+    BitFlipMutation, InversionMutation, NormalMutation, PartialRandomBitstring,
+    PartialRandomSpread, ScrambleMutation, SwapMutation, TranslocationMutation, UniformMutation,
 };
 
 /// Trait for representing a component that mutates solutions.
@@ -42,3 +47,48 @@ where
 
     Ok(())
 }
+
+/// The mutation strength of a mutation component `T`.
+#[derive(Deref, DerefMut, Tid)]
+pub struct MutationStrength<T: AnyComponent + 'static>(
+    #[deref]
+    #[deref_mut]
+    f64,
+    PhantomData<T>,
+);
+
+impl<T: AnyComponent> MutationStrength<T> {
+    /// Creates a new `MutationStrength` with initial `value`.
+    pub fn new(value: f64) -> Self {
+        Self(value, PhantomData)
+    }
+}
+
+impl<T: AnyComponent> CustomState<'_> for MutationStrength<T> {}
+
+/// The mutation rate of a mutation component `T`.
+#[derive(Deref, DerefMut, Tid)]
+pub struct MutationRate<T: AnyComponent + 'static>(
+    #[deref]
+    #[deref_mut]
+    f64,
+    PhantomData<T>,
+);
+
+impl<T: AnyComponent> MutationRate<T> {
+    /// Creates a new `MutationRate` with initial `value`.
+    pub fn new(value: f64) -> Self {
+        Self(value, PhantomData)
+    }
+
+    /// Returns the mutation rate, and `Err` if it is not within `[0, 1]`.
+    pub fn value(&self) -> ExecResult<f64> {
+        ensure!(
+            (0.0..=1.0).contains(&self.0),
+            "mutation rate must be in [0, 1]"
+        );
+        Ok(self.0)
+    }
+}
+
+impl<T: AnyComponent> CustomState<'_> for MutationRate<T> {}
