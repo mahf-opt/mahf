@@ -79,7 +79,7 @@ where
 
 trait_set! {
     /// Helper trait to represent serializable float-like numbers (e.g. `f64` or `u32`).
-    pub trait AnyFloatLike =  Copy + Serialize + PartialOrd + Into<f64> + Send + Sync + 'static;
+    pub trait AnyFloatLike = Copy + Serialize + PartialOrd + Into<f64> + Send + Sync + 'static;
 }
 
 /// Evaluates to `true` if `lens` evaluates to a value less than `n`.

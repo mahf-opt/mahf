@@ -63,8 +63,9 @@ where
     }
 }
 
-/// Inserts the elitists from the [`ElitistArchive`] into the population, given the population
-/// does not already contain them.
+/// Inserts the elitists from the [`ElitistArchive`] into the population.
+///
+/// It won't add duplicates to the archive.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ElitistArchiveIntoPopulation;
 

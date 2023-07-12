@@ -68,7 +68,7 @@ impl<T: AnyComponent> MutationRate<T> {
 
 impl<T: AnyComponent> CustomState<'_> for MutationRate<T> {}
 
-/// Mutates each dimension with a delta from a normal distribution `N(0, `std_dev`)`
+/// Mutates each dimension with a delta from a normal distribution `N(0, std_dev)`
 /// depending on the mutation probability `rm`.
 ///
 /// # Adapting parameters

@@ -87,8 +87,9 @@ where
     }
 }
 
-/// The inertia weight ω used to update the particle velocity, which can be
-/// interpreted as describing the fluidity of the medium in which a particle moves.
+/// The inertia weight ω used to update the particle velocity.
+///
+/// This can be interpreted as describing the fluidity of the medium in which a particle moves.
 #[derive(Deref, DerefMut, Tid)]
 pub struct InertiaWeight<T: AnyComponent + 'static>(
     #[deref]

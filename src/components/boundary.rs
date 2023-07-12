@@ -172,7 +172,9 @@ where
     }
 }
 
-/// Re-samples the values outside the bounds \[a, b\] from
+/// Re-samples the values outside the bounds.
+///
+/// Given the bounds \[a, b\], it will resample from
 /// - `a + P(a, b)` for the lower bound,
 /// - `b - P(a, b)` for the upper bound,
 ///
