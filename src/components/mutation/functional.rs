@@ -20,6 +20,11 @@ pub fn circular_swap<D: 'static>(permutation: &mut [D], indices: &[usize]) {
 }
 
 /// Swaps all `indices` in the `permutation` circularly.
+///
+/// This implementation allocates and removes from a buffer, and was observed to be slower
+/// than [`circular_swap`].
+///
+/// It is included for transparency reasons.
 #[contracts::requires(indices.len() > 1, "swapping less than two indices is not possible")]
 pub fn circular_swap2<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     let mut buffer = indices.to_owned();
@@ -59,6 +64,11 @@ pub fn translocate_slice<D: 'static>(permutation: &mut [D], range: Range<usize>,
 }
 
 /// Removes the slice specified by the `range` from the `permutation` and inserts it at `index`.
+///
+/// This implementation allocates and copies multiple times, and was observed to be slower
+/// than [`translocate_slice`].
+///
+/// It is included for transparency reasons.
 #[contracts::requires(index < permutation.len())]
 #[contracts::requires(range.start < permutation.len())]
 #[contracts::requires(range.end < permutation.len())]

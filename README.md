@@ -12,12 +12,13 @@ The framework supports not only evolutionary algorithms, but also any other meta
 # Overview
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
-In addition to construction it also provides utilities for logging, evaluation, and comparison of those heuristics:
+It provides a comprehensive set of utilities for logging, evaluation, and comparison of these heuristics. 
 
-- Simple modular construction of metaheuristics
-- State management and state tracking
-- Collection of common operators
-- Templates for common heuristics
+Key features include:
+- Simple and modular metaheuristic construction
+- Effortless state management and tracking
+- Ready-to-use collection of common operators
+- Templates for popular metaheuristics
 - Flexible logging of runtime information
 
 Although MAHF has been developed primarily as a research tool, it can be used to solve real-world problems.

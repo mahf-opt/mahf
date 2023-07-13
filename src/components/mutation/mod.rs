@@ -1,4 +1,11 @@
 //! Mutate solutions.
+//!
+//! # Parameters
+//!
+//! A common pattern for mutation components is to store their mutation rate and -strength in the
+//! [`MutationRate`] and [`MutationStrength`] states for adaptation.
+//!
+//! See the documentation of the respective components for more information.
 
 use std::marker::PhantomData;
 

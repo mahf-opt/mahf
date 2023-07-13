@@ -94,6 +94,9 @@ impl<I: AnyComponent> Default for Diversity<I> {
 impl<I: AnyComponent + 'static> CustomState<'_> for Diversity<I> {}
 
 /// Lens for accessing the normalized diversity of [`Diversity`].
+///
+/// The diversity is normalized by dividing through the maximal yet encountered diversity,
+/// scaling it between 0 and 1.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Default(bound = ""), Clone(bound = ""))]
