@@ -8,18 +8,22 @@ use crate::{
     population::IntoSingleRef, Problem, State,
 };
 
+/// Evaluates if decomposition or on-wall-ineffective-collision should happen in CRO.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DecompositionCriterion {
-    // Balances between diversification (Decomposition) and intensification (OnWallIneffectiveCollision).
-    // A lower value makes Decomposition more likely.
+    /// Balances between diversification (decomposition) and intensification (on-wall-ineffective-collision).
+    ///
+    /// A lower value makes decomposition more likely.
     alpha: u32,
 }
 
 impl DecompositionCriterion {
+    /// Creates  a new `DecompositionCriterion` with the provided `alpha`.
     pub fn from_params(alpha: u32) -> Self {
         Self { alpha }
     }
 
+    /// Creates  a new `DecompositionCriterion` with the provided `alpha`.
     pub fn new<P>(alpha: u32) -> Box<dyn Condition<P>>
     where
         P: Problem,
@@ -49,18 +53,22 @@ where
     }
 }
 
+/// Evaluates if synthesis or intermolecular-ineffective-collision should happen in CRO.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SynthesisCriterion {
-    // Balances between diversification (Synthesis) and intensification (IntermolecularIneffectiveCollision).
-    // A higher value makes Synthesis more likely.
+    /// Balances between diversification (synthesis) and intensification (intermolecular-ineffective-collision).
+    ///
+    /// A higher value makes synthesis more likely.
     beta: f64,
 }
 
 impl SynthesisCriterion {
+    /// Creates  a new `SynthesisCriterion` with the provided `beta`.
     pub fn from_params(beta: f64) -> Self {
         Self { beta }
     }
 
+    /// Creates  a new `SynthesisCriterion` with the provided `beta`.
     pub fn new<P>(beta: f64) -> Box<dyn Condition<P>>
     where
         P: Problem,

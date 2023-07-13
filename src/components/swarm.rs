@@ -6,14 +6,14 @@ use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
-use eyre::{ensure, ContextCompat};
+use eyre::{ensure, ContextCompat, WrapErr};
 use itertools::multizip;
 use rand::Rng;
 use serde::Serialize;
 
 use crate::{
     component::{AnyComponent, ExecResult},
-    components::Component,
+    components::{Block, Component},
     identifier::{Global, Identifier, PhantomId},
     population::{AsSolutions, AsSolutionsMut, BestIndividual},
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
@@ -21,6 +21,7 @@ use crate::{
     CustomState, Individual, Problem, State,
 };
 
+/// The velocity vectors of the particles in the population.
 #[derive(Deref, DerefMut, Tid)]
 pub struct ParticleVelocities<I: Identifier + 'static>(
     #[deref]
@@ -37,6 +38,7 @@ impl<I: Identifier> ParticleVelocities<I> {
 
 impl<I: Identifier> CustomState<'_> for ParticleVelocities<I> {}
 
+/// Initializes the [`ParticleVelocities`] uniformly in `[-v_max, v_max]`.
 #[derive(Clone, Serialize)]
 pub struct ParticleVelocitiesInit<I: Identifier = Global> {
     pub v_max: f64,
@@ -85,6 +87,9 @@ where
     }
 }
 
+/// The inertia weight ω used to update the particle velocity.
+///
+/// This can be interpreted as describing the fluidity of the medium in which a particle moves.
 #[derive(Deref, DerefMut, Tid)]
 pub struct InertiaWeight<T: AnyComponent + 'static>(
     #[deref]
@@ -101,6 +106,14 @@ impl<T: AnyComponent> InertiaWeight<T> {
 
 impl<T: AnyComponent> CustomState<'_> for InertiaWeight<T> {}
 
+/// Updates the [`ParticleVelocities`] and particle positions.
+///
+/// Originally proposed for, and used as operator in [`pso`].
+///
+/// Uses the [`InertiaWeight`].
+/// [`BestParticle`] is used as global best, and [`BestParticles`] as local bests.
+///
+/// [`pso`]: crate::heuristics::pso
 #[derive(Clone, Serialize)]
 pub struct ParticleVelocitiesUpdate<I: Identifier = Global> {
     pub weight: f64,
@@ -125,11 +138,25 @@ impl<I: Identifier> ParticleVelocitiesUpdate<I> {
         })
     }
 
-    pub fn new<P>(weight: f64, c_1: f64, c_2: f64, v_max: f64) -> ExecResult<Box<dyn Component<P>>>
+    pub fn new_with_id<P>(
+        weight: f64,
+        c_1: f64,
+        c_2: f64,
+        v_max: f64,
+    ) -> ExecResult<Box<dyn Component<P>>>
     where
         P: LimitedVectorProblem<Element = f64>,
     {
         Ok(Box::new(Self::from_params(weight, c_1, c_2, v_max)?))
+    }
+}
+
+impl ParticleVelocitiesUpdate<Global> {
+    pub fn new<P>(weight: f64, c_1: f64, c_2: f64, v_max: f64) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: LimitedVectorProblem<Element = f64>,
+    {
+        Self::new_with_id(weight, c_1, c_2, v_max)
     }
 }
 
@@ -195,8 +222,9 @@ where
     }
 }
 
+/// Represents multiple best particles in the search space.
 #[derive(Deref, DerefMut, Tid)]
-pub struct BestParticles<P: Problem + 'static, I: Identifier + 'static>(
+pub struct BestParticles<P: Problem + 'static, I: Identifier + 'static = Global>(
     #[deref]
     #[deref_mut]
     Vec<Individual<P>>,
@@ -211,6 +239,7 @@ impl<P: Problem, I: Identifier> BestParticles<P, I> {
 
 impl<P: Problem, I: Identifier> CustomState<'_> for BestParticles<P, I> {}
 
+/// Initializes the [`BestParticles`] using the population.
 #[derive(Clone, Serialize)]
 pub struct PersonalBestParticlesInit<I: Identifier = Global>(PhantomId<I>);
 
@@ -243,6 +272,7 @@ where
     }
 }
 
+/// Updates the [`BestParticles`] with the personal bests of the population.
 #[derive(Clone, Serialize)]
 pub struct PersonalBestParticlesUpdate<I: Identifier = Global>(PhantomId<I>);
 
@@ -278,6 +308,7 @@ where
     }
 }
 
+/// Represents a single best particle in the search space.
 #[derive(Deref, DerefMut, Tid)]
 pub struct BestParticle<P: Problem + 'static, I: Identifier + 'static = Global>(
     #[deref]
@@ -294,6 +325,7 @@ impl<P: Problem, I: Identifier> BestParticle<P, I> {
 
 impl<P: Problem, I: Identifier> CustomState<'_> for BestParticle<P, I> {}
 
+/// Initializes and updates the [`BestParticle`] using the best individual from the population.
 #[derive(Clone, Serialize)]
 pub struct GlobalBestParticleUpdate<I: Identifier = Global>(PhantomId<I>);
 
@@ -337,5 +369,57 @@ where
         }
 
         Ok(())
+    }
+}
+
+/// Initializes the particle velocities, personal bests and global best particle.
+///
+/// Originally proposed for, and used as operator in [`pso`].
+///
+/// [`pso`]: crate::heuristics::pso
+pub struct ParticleSwarmInit<I: Identifier = Global>(PhantomId<I>);
+
+impl<I: Identifier> ParticleSwarmInit<I> {
+    pub fn new_with_id<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+        v_max: f64,
+    ) -> ExecResult<Box<dyn Component<P>>> {
+        Ok(Block::new([
+            <ParticleVelocitiesInit>::new(v_max)
+                .wrap_err("failed to construct particle velocities init")?,
+            <PersonalBestParticlesInit>::new(),
+            <GlobalBestParticleUpdate>::new(),
+        ]))
+    }
+}
+
+impl ParticleSwarmInit<Global> {
+    pub fn new<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+        v_max: f64,
+    ) -> ExecResult<Box<dyn Component<P>>> {
+        Self::new_with_id(v_max)
+    }
+}
+
+/// Updates the personal bests and global best particle.
+///
+/// Originally proposed for, and used as operator in [`pso`].
+///
+/// [`pso`]: crate::heuristics::pso
+pub struct ParticleSwarmUpdate<I: Identifier = Global>(PhantomId<I>);
+
+impl<I: Identifier> ParticleSwarmUpdate<I> {
+    pub fn new_with_id<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
+        Block::new([
+            <PersonalBestParticlesUpdate>::new(),
+            <GlobalBestParticleUpdate>::new(),
+        ])
+    }
+}
+
+impl ParticleSwarmUpdate<Global> {
+    pub fn new<P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>>(
+    ) -> Box<dyn Component<P>> {
+        Self::new_with_id()
     }
 }

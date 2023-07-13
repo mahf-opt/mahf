@@ -12,6 +12,7 @@ use crate::{
     problems::SingleObjectiveProblem, state::StateReq, CustomState, Individual, Problem, State,
 };
 
+/// A molecule with metadata.
 #[derive(Clone)]
 pub struct Molecule<P: Problem> {
     pub kinetic_energy: f64,
@@ -43,6 +44,7 @@ impl<P: SingleObjectiveProblem> Molecule<P> {
     }
 }
 
+/// A chemical reaction with multiple molecules.
 #[derive(Deref, DerefMut, Tid)]
 pub struct ChemicalReaction<P: Problem + 'static>(pub Vec<Molecule<P>>);
 
@@ -54,11 +56,15 @@ impl<P: Problem> Default for ChemicalReaction<P> {
 
 impl<P: Problem> CustomState<'_> for ChemicalReaction<P> {}
 
+/// The energy of the [`ChemicalReaction`].
 #[derive(Deref, DerefMut, Tid)]
 pub struct EnergyBuffer(pub f64);
 
 impl CustomState<'_> for EnergyBuffer {}
 
+/// Initializes the [`ChemicalReaction`] using the population and `kinetic_energy`.
+///
+/// The `buffer` is used as [`EnergyBuffer`] for the reaction.
 #[derive(Clone, Serialize)]
 pub struct ChemicalReactionInit {
     kinetic_energy: f64,
@@ -104,14 +110,20 @@ where
 
 /// Updates state after an OnWallIneffectiveCollision.
 ///
-/// Updates the energy buffer and molecule data in [`ChemicalReaction`].
+/// Originally proposed for, and used as operator in [`cro`].
+///
+/// [`cro`]: crate::heuristics::cro
+///
+/// Updates the [`EnergyBuffer`] and molecule data in [`ChemicalReaction`].
+///
+/// # Population stack
 ///
 /// It assumes the following [`Populations`] structure:
 /// - One mutated individual i'
 /// - One selected individual i
 /// - Population
 ///
-/// Note that this component does **NOT** perform the operation, but only updates state afterwards.
+/// Note that this component does **not** perform the operation, but only updates state afterwards.
 ///
 /// [`Populations`]: crate::state::common::Populations
 #[derive(Clone, Serialize)]
@@ -191,14 +203,20 @@ where
 
 /// Updates state after a Decomposition.
 ///
-/// Updates the energy buffer and molecule data in [`ChemicalReaction`].
+/// Originally proposed for, and used as operator in [`cro`].
+///
+/// [`cro`]: crate::heuristics::cro
+///
+/// Updates the [`EnergyBuffer`] and molecule data in [`ChemicalReaction`].
+///
+/// # Population stack
 ///
 /// It assumes the following [`Populations`] structure:
 /// - Two mutated individuals i' and i''
 /// - One selected individual i
 /// - Population
 ///
-/// Note that this component does **NOT** perform the operation, but only updates state afterwards.
+/// Note that this component does **not** perform the operation, but only updates state afterwards.
 ///
 /// [`Populations`]: crate::state::common::Populations
 #[derive(Clone, Serialize)]
@@ -288,14 +306,20 @@ where
 
 /// Updates state after an IntermolecularIneffectiveCollision.
 ///
-/// Updates the energy buffer and molecule data in [`ChemicalReaction`].
+/// Originally proposed for, and used as operator in [`cro`].
+///
+/// [`cro`]: crate::heuristics::cro
+///
+/// Updates the [`EnergyBuffer`] and molecule data in [`ChemicalReaction`].
+///
+/// # Population stack
 ///
 /// It assumes the following [`Populations`] structure:
 /// - Two mutated individuals i' and j'
 /// - Two selected individuals i and j
 /// - Population
 ///
-/// Note that this component does **NOT** perform the operation, but only updates state afterwards.
+/// Note that this component does **not** perform the operation, but only updates state afterwards.
 ///
 /// [`Populations`]: crate::state::common::Populations
 #[derive(Debug, serde::Serialize, Clone)]
@@ -392,6 +416,24 @@ where
     }
 }
 
+/// Updates state after a Synthesis.
+///
+/// Originally proposed for, and used as operator in [`cro`].
+///
+/// [`cro`]: crate::heuristics::cro
+///
+/// Updates the [`EnergyBuffer`] and molecule data in [`ChemicalReaction`].
+///
+/// # Population stack
+///
+/// It assumes the following [`Populations`] structure:
+/// - One combined individual k
+/// - Two selected individuals i and j
+/// - Population
+///
+/// Note that this component does **not** perform the operation, but only updates state afterwards.
+///
+/// [`Populations`]: crate::state::common::Populations
 #[derive(Clone, Serialize)]
 pub struct SynthesisUpdate;
 

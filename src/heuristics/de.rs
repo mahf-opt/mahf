@@ -1,18 +1,31 @@
 //! Differential Evolution (DE).
+//!
+//! # References
+//!
+//! \[1\] Anna V. Kononova, Fabio Caraffini, and Thomas Bäck. 2021.
+//! Differential evolution outside the box.
+//! Information Sciences 581, (December 2021), 587–604.
+//! DOI:<https://doi.org/10/grsff3>
+//!
+//! \[2\] R. Storn. 1996.
+//! On the usage of differential evolution for function optimization.
+//! In Proceedings of North American Fuzzy Information Processing, 519–523.
+//! DOI:<https://doi.org/10/ds8ctb>
 
 use eyre::WrapErr;
 
 use crate::{
     component::ExecResult,
-    components::*,
+    components::{boundary, initialization, mutation, recombination, replacement, selection},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
+    Component,
 };
 
-/// Parameters for [real_de].
+/// Parameters for [`real_de`].
 pub struct RealProblemParameters {
     pub population_size: u32,
     pub y: u32,
@@ -20,11 +33,9 @@ pub struct RealProblemParameters {
     pub pc: f64,
 }
 
-/// An example single-objective Differential Evolution algorithm operating on a real search space.
-/// Uses the [de] component internally.
+/// An example single-objective DE operating on a real search space.
 ///
-/// # References
-/// [doi.org/10.1016/j.ins.2021.09.058](https://doi.org/10.1016/j.ins.2021.09.058)
+/// Uses the [`de`] component internally.
 pub fn real_de<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -58,7 +69,7 @@ where
         .build())
 }
 
-/// Basic building blocks of Differential Evolution.
+/// Basic building blocks of [`de`].
 pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub mutation: Box<dyn Component<P>>,
@@ -67,7 +78,7 @@ pub struct Parameters<P> {
     pub replacement: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Differential Evolution template.
+/// A generic single-objective Differential Evolution (DE) template.
 pub fn de<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,

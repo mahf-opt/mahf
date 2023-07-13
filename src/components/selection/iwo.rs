@@ -14,6 +14,26 @@ use crate::{
     Individual, State,
 };
 
+/// Selects individuals deterministically proportional to their fitness.
+///
+/// Originally proposed for, and used as selection in [`iwo`].
+///
+/// Each individual gets selected between `min_selected` and `max_selected` times:
+/// - The worst solution gets selected exactly `min_selected` times.
+/// - The best solution gets selected exactly `max_selected` times.
+/// - All solutions between them get selected based on the linear interpolation
+///   between `min_selected` and `max_selected`.
+///
+/// [`iwo`]: crate::heuristics::iwo
+///
+/// # Deviation from the Reference
+///
+/// If all individuals have the same fitness value, they will all be considered average and receive a 50% bonus.
+/// This case has not been accounted for in the reference paper.
+///
+/// # Errors
+///
+/// Returns an `Err` if the population contains individuals with infinite objective value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DeterministicFitnessProportional {
     pub min_selected: u32,

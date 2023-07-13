@@ -3,7 +3,8 @@
 use std::{fmt::Debug, fs, path::Path, sync::Arc};
 
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use itertools::Itertools;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::{
     problems::{KnownOptimumProblem, SingleObjectiveProblem},
@@ -11,6 +12,25 @@ use crate::{
     Configuration, ExecResult, State,
 };
 
+/// Execute the `config` on all `problems` `runs` times in parallel.
+///
+/// Execution is parallelized using [`rayon`].
+/// Progress is displayed using [`indicatif`].
+///
+/// # Setup
+///
+/// The `setup` function can be used to initialize the [`State`] before each run.
+///
+/// Note that the [`Random`] seed is automatically set to the run number.
+///
+/// # Saving the results
+///
+/// The `config` is serialized into the `folder`.
+///
+/// If `log` is true, the [`Log`] is serialized into the `folder` using the [`Log::to_cbor`] method.
+///
+/// [`Log`]: crate::logging::Log
+/// [`Log::to_cbor`]: crate::logging::Log::to_cbor
 pub fn par_experiment<P>(
     config: &Configuration<P>,
     setup: impl Fn(&mut State<P>) -> ExecResult<()> + Send + Sync,
@@ -35,18 +55,17 @@ where
     bar.set_style(ProgressStyle::with_template("{percent}% |{bar:40.white/green}| {pos:>7}/{len:7} [{elapsed_precise}<{eta_precise}, {per_sec}] {msg}").unwrap());
 
     (0..runs)
-        .into_par_iter()
+        .cartesian_product(problems)
+        .par_bridge()
         .progress_with(bar)
-        .map(|run| {
-            for problem in problems {
-                let state = config.optimize_with(problem, |state| {
-                    state.insert(Random::new(run));
-                    setup(state)
-                })?;
-                if log {
-                    let log_file = data_dir.join(format!("{}_{run}.cbor", problem.name()));
-                    state.log().to_cbor(log_file)?;
-                }
+        .map(|(run, problem)| {
+            let state = config.optimize_with(problem, |state| {
+                state.insert(Random::new(run));
+                setup(state)
+            })?;
+            if log {
+                let log_file = data_dir.join(format!("{}_{run}.cbor", problem.name()));
+                state.log().to_cbor(log_file)?;
             }
             Ok(())
         })

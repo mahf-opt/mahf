@@ -1,4 +1,4 @@
-//! Selecting a subset of a population, e.g. for recombination.
+//! Select a subset of a population, e.g. for recombination.
 
 use eyre::WrapErr;
 
@@ -18,7 +18,9 @@ pub use common::{
     RouletteWheel, StochasticUniversalSampling, Tournament,
 };
 
+/// Trait for representing a component that selects a subset of a population.
 pub trait Selection<P: Problem>: AnyComponent {
+    /// Selects a subset of the `population`.
     fn select<'a>(
         &self,
         population: &'a [Individual<P>],
@@ -26,9 +28,9 @@ pub trait Selection<P: Problem>: AnyComponent {
     ) -> ExecResult<Vec<&'a Individual<P>>>;
 }
 
-erased_serde::serialize_trait_object!(<P: Problem> Selection<P>);
-dyn_clone::clone_trait_object!(<P: Problem> Selection<P>);
-
+/// A default implementation of [`Component::execute`] for types implementing [`Selection`].
+///
+/// [`Component::execute`]: crate::Component::execute
 pub fn selection<P, T>(component: &T, _problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,

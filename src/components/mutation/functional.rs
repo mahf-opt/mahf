@@ -6,7 +6,8 @@ use std::{cmp::Ordering, ops::Range};
 
 use itertools::Itertools;
 
-#[contracts::debug_requires(indices.len() > 1, "swapping less than two indices is not possible")]
+/// Swaps all `indices` in the `permutation` circularly.
+#[contracts::requires(indices.len() > 1, "swapping less than two indices is not possible")]
 pub fn circular_swap<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     for (&i, &j) in indices
         .iter()
@@ -18,7 +19,13 @@ pub fn circular_swap<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     }
 }
 
-#[contracts::debug_requires(indices.len() > 1, "swapping less than two indices is not possible")]
+/// Swaps all `indices` in the `permutation` circularly.
+///
+/// This implementation allocates and removes from a buffer, and was observed to be slower
+/// than [`circular_swap`].
+///
+/// It is included for transparency reasons.
+#[contracts::requires(indices.len() > 1, "swapping less than two indices is not possible")]
 pub fn circular_swap2<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     let mut buffer = indices.to_owned();
     let n = buffer.len();
@@ -32,12 +39,13 @@ pub fn circular_swap2<D: 'static>(permutation: &mut [D], indices: &[usize]) {
     }
 }
 
-#[contracts::debug_requires(index < permutation.len())]
-#[contracts::debug_requires(range.start < permutation.len())]
-#[contracts::debug_requires(range.end < permutation.len())]
+/// Removes the slice specified by the `range` from the `permutation` and inserts it at `index`.
+#[contracts::requires(index < permutation.len())]
+#[contracts::requires(range.start < permutation.len())]
+#[contracts::requires(range.end < permutation.len())]
 pub fn translocate_slice<D: 'static>(permutation: &mut [D], range: Range<usize>, index: usize) {
     let chunk_size = range.end - range.start;
-    debug_assert!(
+    assert!(
         index + chunk_size <= permutation.len(),
         "moving the slice {:?} to index {} results in out of bounds access",
         range,
@@ -55,15 +63,21 @@ pub fn translocate_slice<D: 'static>(permutation: &mut [D], range: Range<usize>,
     }
 }
 
-#[contracts::debug_requires(index < permutation.len())]
-#[contracts::debug_requires(range.start < permutation.len())]
-#[contracts::debug_requires(range.end < permutation.len())]
+/// Removes the slice specified by the `range` from the `permutation` and inserts it at `index`.
+///
+/// This implementation allocates and copies multiple times, and was observed to be slower
+/// than [`translocate_slice`].
+///
+/// It is included for transparency reasons.
+#[contracts::requires(index < permutation.len())]
+#[contracts::requires(range.start < permutation.len())]
+#[contracts::requires(range.end < permutation.len())]
 pub fn translocate_slice2<D: Clone + 'static>(
     permutation: &mut [D],
     range: Range<usize>,
     index: usize,
 ) {
-    debug_assert!(
+    assert!(
         index + range.end - range.start <= permutation.len(),
         "moving the slice {:?} to index {} results in out of bounds access",
         range,

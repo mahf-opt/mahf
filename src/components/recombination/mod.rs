@@ -13,13 +13,19 @@ pub mod functional;
 
 pub use common::{ArithmeticCrossover, CycleCrossover, NPointCrossover, UniformCrossover};
 
+/// Represents either no, one, or two elements.
 pub enum OptionalPair<T> {
+    /// No element.
     None,
+    /// A single element.
     Single(T),
+    /// Two elements.
     Both([T; 2]),
 }
 
 impl<T> OptionalPair<T> {
+    /// Constructs the optional pair from the array `ts` with `both` deciding if to use both or
+    /// only a single element.
     pub fn from_pair(ts: [T; 2], both: bool) -> Self {
         if both {
             Self::Both(ts)
@@ -30,6 +36,7 @@ impl<T> OptionalPair<T> {
     }
 }
 
+/// Trait for representing a component that recombines multiple solutions.
 pub trait Recombination<P: Problem>: AnyComponent {
     fn recombine(
         &self,
@@ -39,9 +46,9 @@ pub trait Recombination<P: Problem>: AnyComponent {
     ) -> OptionalPair<P::Encoding>;
 }
 
-erased_serde::serialize_trait_object!(<P: Problem> Recombination<P>);
-dyn_clone::clone_trait_object!(<P: Problem> Recombination<P>);
-
+/// A default implementation of [`Component::execute`] for types implementing [`Recombination`].
+///
+/// [`Component::execute`]: crate::Component::execute
 pub fn recombination<P, T>(component: &T, _problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,

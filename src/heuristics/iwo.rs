@@ -1,10 +1,17 @@
 //! Invasive Weed Optimization (IWO).
+//!
+//! # References
+//!
+//! \[1\] Ali Reza Mehrabian and Caro Lucas. 2006.
+//! A novel numerical optimization algorithm inspired from weed colonization.
+//! Ecological Informatics 1, 4 (December 2006), 355–366.
+//! DOI:<https://doi.org/10/dc4njs>
 
 use eyre::ensure;
 
 use crate::{
     component::ExecResult,
-    components::*,
+    components::{boundary, initialization, mapping, mutation, replacement, selection, Block},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
@@ -12,6 +19,7 @@ use crate::{
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
     state::common,
+    Component,
 };
 
 #[derive(Clone, Debug)]
@@ -26,15 +34,13 @@ pub struct RealProblemParameters {
 }
 
 /// An example single-objective Invasive Weed Optimization operating on a real search space.
+///
 /// Uses the [iwo] component internally.
 ///
 /// # Requirements
 /// - initial_population_size <= max_population_size
 /// - min_number_of_seeds <= max_number_of_seeds
 /// - final_deviation <= initial_deviation
-///
-/// # References
-/// [doi.org/10.1016/j.ecoinf.2006.07.003](https://doi.org/10.1016/j.ecoinf.2006.07.003)
 pub fn real_iwo<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -84,7 +90,7 @@ where
         .build())
 }
 
-/// Basic building blocks of Invasive Weed Optimization.
+/// Basic building blocks of [`iwo`].
 pub struct Parameters<P> {
     pub max_population_size: u32,
     pub min_number_of_seeds: u32,
@@ -93,7 +99,7 @@ pub struct Parameters<P> {
     pub constraints: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Invasive Weed Optimization template.
+/// A generic single-objective Invasive Weed Optimization (IWO) template.
 pub fn iwo<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,

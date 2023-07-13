@@ -16,6 +16,9 @@ use crate::{
     Problem, State,
 };
 
+/// Linear maps the input between `start` and `end` using `f(x) = (end - start) * x + start`.
+///
+/// Note that `x`, i.e. `I::Target` is assumed to be within `[0, 1]` to respect the bounds.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -71,6 +74,9 @@ where
     }
 }
 
+/// Maps the input between `start` and `end` using the polynomial function `f(x) = (end - start) * x^n + start`.
+///
+/// Note that `x`, i.e. `I::Target` is assumed to be within `[0, 1]` to respect the bounds.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
@@ -138,6 +144,7 @@ trait_set! {
     pub trait AnySampleRange = SampleRange<f64> + Clone + Serialize + Send + Sync + 'static;
 }
 
+/// Overwrites the output using a value uniformly distributed in the `range`.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]

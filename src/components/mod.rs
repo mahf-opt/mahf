@@ -37,12 +37,16 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 /// # Phases
 ///
 /// `Component`s define three phases:
-/// - `initialize` (optional): Used to initialize custom state, and is only called once per optimization.
+/// - `initialize` (optional): Used to initialize custom state, and is only called once*.
 /// - `require` (optional): Used to check if the custom state was properly initialized in the
-/// `initialize` phase, and is only called once per optimization.
+/// `initialize` phase, and is only called once*.
 /// Specifically used to check if necessary custom state initialized by other components is present.
 /// - `execute`: Executes the functionality the component constitutes.
 /// This phase is usually called in a loop during the optimization process.
+///
+/// *More complex control flow might reinitialize components during execution, which means that
+/// `initialize` and `require` get called multiple times.
+/// See their documentation for more details.
 ///
 /// # State
 ///
@@ -84,8 +88,9 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///
 /// ```
 /// use std::fmt::Debug;
-/// use serde::Serialize;
+///
 /// use mahf::{Component, ExecResult, Problem, State};
+/// use serde::Serialize;
 ///
 /// #[derive(Clone, Serialize)]
 /// pub struct PrintPopulation;
@@ -95,12 +100,20 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///         Self
 ///     }
 ///
-///     pub fn new<P>() -> Box<dyn Component<P>> where P: Problem, P::Encoding: Debug {
+///     pub fn new<P>() -> Box<dyn Component<P>>
+///     where
+///         P: Problem,
+///         P::Encoding: Debug,
+///     {
 ///         Box::new(Self::from_params())
 ///     }
 /// }
 ///
-/// impl<P> Component<P> for PrintPopulation where P: Problem, P::Encoding: Debug {
+/// impl<P> Component<P> for PrintPopulation
+/// where
+///     P: Problem,
+///     P::Encoding: Debug,
+/// {
 ///     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
 ///         println!("Current population: {:?}", state.populations().current());
 ///         Ok(())

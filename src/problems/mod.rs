@@ -24,10 +24,11 @@
 //! # Usage
 //!
 //! ## Pre-implemented problems
-//! There exist several pre-implemented problems in the MAHF ecosystem, which provide a good
+//!
+//! There exist several pre-implemented problems in the [MAHF ecosystem], which provide a good
 //! starting point.
 //!
-//! TODO: Reference mahf-problems repo(s) here.
+//! [MAHF ecosystem]: https://github.com/mahf-opt#problems-libraries
 //!
 //! ## Implement custom problems
 //!
@@ -71,7 +72,13 @@ pub use objective::{MultiObjective, Objective, SingleObjective};
 /// information accessible to components, and should only provide exactly as much information
 /// as the components need to function.
 ///
-/// TODO: Reference component (module) documentation here.
+/// [`Component`]s are generic over the problem type `P`, and adding traits bounds to `P`
+/// symbolizes that the [`Component`] requires the information that the traits offer.
+/// For example, a component that only works on problems with a single objective adds
+/// a `P: `[`SingleObjective`] trait bound to its [`Component`] implementation.
+///
+///
+/// [`Component`]: crate::Component
 ///
 /// # Examples
 ///
@@ -134,7 +141,7 @@ trait_set! {
 /// A simple implementation of the n-dimensional real-valued sphere function `f(x) = x^2`:
 ///
 /// ```
-/// use mahf::{Problem, SingleObjective, problems::VectorProblem};
+/// use mahf::{problems::VectorProblem, Problem, SingleObjective};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -179,7 +186,11 @@ pub trait VectorProblem: Problem<Encoding = Vec<Self::Element>> {
 ///
 /// ```
 /// use std::ops::{Range, RangeInclusive};
-/// use mahf::{Problem, SingleObjective, problems::{VectorProblem, LimitedVectorProblem}};
+///
+/// use mahf::{
+///     problems::{LimitedVectorProblem, VectorProblem},
+///     Problem, SingleObjective,
+/// };
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -224,7 +235,8 @@ pub trait LimitedVectorProblem: VectorProblem {
 ///
 /// ```
 /// use std::ops::Range;
-/// use mahf::{Problem, SingleObjective, problems::KnownOptimumProblem};
+///
+/// use mahf::{problems::KnownOptimumProblem, Problem, SingleObjective};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -250,18 +262,23 @@ pub trait KnownOptimumProblem: SingleObjectiveProblem {
     fn known_optimum(&self) -> SingleObjective;
 }
 
-/// The Travelling Salesperson Problem (TSP) optimization problem.
+/// The [Travelling Salesperson Problem (TSP)].
 ///
 /// TSP is a single-objective optimization problem that involves finding
 /// the shortest possible route that visits a given set of vertices and
 /// returns to the starting vertex.
+///
+/// [Travelling Salesperson Problem (TSP)]: https://en.wikipedia.org/wiki/Travelling_salesman_problem
 ///
 /// # Examples
 ///
 /// A simple implementation of the Travelling Salesperson Problem given a edge weight matrix:
 ///
 /// ```
-/// use mahf::{Problem, problems::{VectorProblem, TravellingSalespersonProblem}, SingleObjective};
+/// use mahf::{
+///     problems::{TravellingSalespersonProblem, VectorProblem},
+///     Problem, SingleObjective,
+/// };
 ///
 /// pub struct TSP {
 ///     pub instance: String,

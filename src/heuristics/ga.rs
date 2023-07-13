@@ -1,17 +1,32 @@
 //! Genetic Algorithm (GA).
+//!
+//! # References
+//!
+//! \[1\] John H. Holland. 1992.
+//! Genetic Algorithms.
+//! Scientific American 267, 1 (1992), 66–73.
+//! DOI:<https://doi.org/10/bmbqnb>
+//!
+//! \[2\] Kumara Sastry, David E. Goldberg, and Graham Kendall. 2014.
+//! Genetic Algorithms.
+//! In Search Methodologies: Introductory Tutorials in Optimization and Decision Support Techniques,
+//! Edmund K. Burke and Graham Kendall (eds.). Springer US, Boston, MA, 93–117.
+//! DOI:<https://doi.org/10.1007/978-1-4614-6940-7_4>
 
 use crate::{
     component::ExecResult,
-    components::*,
+    components::{
+        boundary, initialization, mutation, recombination, replacement, selection, utils,
+    },
     conditions,
-    conditions::*,
     configuration::Configuration,
     identifier::{Global, Identifier},
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem, VectorProblem},
+    Component, Condition,
 };
 
-/// Parameters for [binary_ga].
+/// Parameters for [`binary_ga`].
 #[derive(Clone, Copy, Debug)]
 pub struct BinaryProblemParameters {
     pub population_size: u32,
@@ -21,8 +36,9 @@ pub struct BinaryProblemParameters {
     pub pm: f64,
 }
 
-/// An example single-objective Genetic Algorithm operating on a binary search space.
-/// Uses the [ga] component internally.
+/// An example single-objective GA operating on a binary search space.
+///
+/// Uses the [`ga`] component internally.
 pub fn binary_ga<P>(
     params: BinaryProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -49,7 +65,7 @@ where
                 selection: selection::Tournament::new(population_size, tournament_size),
                 crossover: recombination::UniformCrossover::new_insert_both(pc),
                 pm,
-                mutation: <mutation::BitFlipMutation>::new(rm),
+                mutation: mutation::BitFlipMutation::new(rm),
                 constraints: utils::Noop::new(),
                 archive: None,
                 replacement: replacement::Generational::new(population_size),
@@ -59,7 +75,7 @@ where
         .build())
 }
 
-/// Parameters for [real_ga].
+/// Parameters for [`real_ga`].
 #[derive(Clone, Copy, Debug)]
 pub struct RealProblemParameters {
     pub population_size: u32,
@@ -69,8 +85,9 @@ pub struct RealProblemParameters {
     pub pc: f64,
 }
 
-/// An example single-objective Genetic Algorithm operating on a real search space.
-/// Uses the [ga] component internally.
+/// An example single-objective GA operating on a real search space.
+///
+/// Uses the [`ga`] component internally.
 pub fn real_ga<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
@@ -105,7 +122,7 @@ where
         .build())
 }
 
-/// Basic building blocks of a Genetic Algorithm.
+/// Basic building blocks of [`ga`].
 pub struct Parameters<P> {
     pub selection: Box<dyn Component<P>>,
     pub crossover: Box<dyn Component<P>>,
@@ -116,10 +133,7 @@ pub struct Parameters<P> {
     pub replacement: Box<dyn Component<P>>,
 }
 
-/// A generic single-objective Genetic Algorithm template.
-///
-/// # References
-/// [link.springer.com/10.1007/978-3-319-07153-4_28-1](http://link.springer.com/10.1007/978-3-319-07153-4_28-1)
+/// A generic single-objective Genetic Algorithm (GA) template.
 pub fn ga<P, I>(params: Parameters<P>, termination: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,

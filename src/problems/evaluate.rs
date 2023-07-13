@@ -22,7 +22,7 @@ use crate::{CustomState, Individual, Problem, State};
 /// objective function only depends on `x`.
 ///
 /// ```
-/// use mahf::{Individual, Problem, SingleObjective, State, problems::Evaluate};
+/// use mahf::{problems::Evaluate, Individual, Problem, SingleObjective, State};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -47,8 +47,8 @@ use crate::{CustomState, Individual, Problem, State};
 ///         &mut self,
 ///         _problem: &Self::Problem,
 ///         _state: &mut State<Self::Problem>,
-///         individuals: &mut [Individual<Self::Problem>])
-///     {
+///         individuals: &mut [Individual<Self::Problem>],
+///     ) {
 ///         for individual in individuals {
 ///             individual.evaluate_with(|solution| {
 ///                 solution
@@ -102,13 +102,13 @@ use crate::{CustomState, Individual, Problem, State};
 /// # }
 /// #
 /// # fn example(config: Configuration<Sphere>, problem: Sphere) -> ExecResult<()> {
-///  // Implicit ...
-///  let state = config.optimize(&problem, SequentialSphereEvaluator::new())?;
-///  // ... or explicit insertion into the state.
-///  let state = config.optimize_with(&problem, |state| {
+/// // Implicit ...
+/// let state = config.optimize(&problem, SequentialSphereEvaluator::new())?;
+/// // ... or explicit insertion into the state.
+/// let state = config.optimize_with(&problem, |state| {
 ///     state.insert_evaluator(SequentialSphereEvaluator::new());
 ///     Ok(())
-///  })?;
+/// })?;
 /// # Ok(())
 /// # }
 /// ```
@@ -142,7 +142,7 @@ pub trait Evaluate: Send {
 /// A simple implementation of the n-dimensional real-valued sphere function `f(x) = x^2`.
 ///
 /// ```
-/// use mahf::{Individual, Problem, SingleObjective, State, problems::ObjectiveFunction};
+/// use mahf::{problems::ObjectiveFunction, Individual, Problem, SingleObjective, State};
 ///
 /// pub struct Sphere {
 ///     pub dim: usize,
@@ -160,13 +160,13 @@ pub trait Evaluate: Send {
 /// impl ObjectiveFunction for Sphere {
 ///     /// Implements `f(x) = \sum (x_i)^2`.
 ///     fn objective(&self, solution: &Self::Encoding) -> Self::Objective {
-///             debug_assert_eq!(self.dim, solution.len());
-///             solution
-///                 .iter()
-///                 .map(|x| x.powi(2))
-///                 .sum::<f64>()
-///                 .try_into()
-///                 .unwrap()
+///         debug_assert_eq!(self.dim, solution.len());
+///         solution
+///             .iter()
+///             .map(|x| x.powi(2))
+///             .sum::<f64>()
+///             .try_into()
+///             .unwrap()
 ///     }
 /// }
 /// ```
@@ -197,13 +197,13 @@ pub trait Evaluate: Send {
 /// # }
 ///
 /// # fn example(config: Configuration<Sphere>, problem: Sphere) -> ExecResult<()> {
-///  // Implicit insertion into the state ...
-///  let state = config.optimize(&problem, evaluate::Sequential::new())?;
-///  // ... or explicit.
-///  let state = config.optimize_with(&problem, |state| {
+/// // Implicit insertion into the state ...
+/// let state = config.optimize(&problem, evaluate::Sequential::new())?;
+/// // ... or explicit.
+/// let state = config.optimize_with(&problem, |state| {
 ///     state.insert_evaluator(evaluate::Sequential::new());
 ///     Ok(())
-///  })?;
+/// })?;
 /// # Ok(())
 /// # }
 /// ```

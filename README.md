@@ -5,20 +5,23 @@
 
 A framework for modular construction and evaluation of metaheuristics.
 
-MAHF enables easy construction and experimental analysis of metaheuristics by breaking them down into their fundamental components.
+MAHF enables easy construction and experimental analysis of metaheuristics by decomposing them into their fundamental components.
 
-The framework supports not only evolutionary algorithms, but also any other metaheuristic framework, including non-population-based, constructive, and specifically hybrid approaches.
+The framework supports not only evolutionary algorithms, but also any other metaheuristic frameworks, including non-population-based, constructive, and especially hybrid approaches.
 
 # Overview
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
-In addition to construction it also provides utilities for logging, evaluation and comparison of those heuristics:
+It provides a comprehensive set of utilities for logging, evaluation, and comparison of these heuristics. 
 
-- Simple modular construction of metaheuristics
-- State management and state tracking
-- Collection of common operators
-- Templates for common heuristics
+Key features include:
+- Simple and modular metaheuristic construction
+- Effortless state management and tracking
+- Ready-to-use collection of common operators
+- Templates for popular metaheuristics
 - Flexible logging of runtime information
+
+Although MAHF has been developed primarily as a research tool, it can be used to solve real-world problems.
 
 # Getting Started
 
@@ -38,7 +41,7 @@ mahf = { git = "https://github.com/mahf-opt/mahf" }
 
 ## Example
 
-A simple genetic algorithm for real-valued black box optimization.
+A simple genetic algorithm for real-valued black-box optimization.
 
 The example uses the [common benchmark functions](https://github.com/mahf-opt/mahf-bmf) for MAHF.
 
@@ -57,6 +60,7 @@ let ga = Configuration::builder()
            .do_(selection::Tournament::new(num_selected, size))
            .do_(recombination::ArithmeticCrossover::new_insert_both(pc))
            .do_(mutation::NormalMutation::new(std_dev, rm))
+           .do_(boundary::Saturation::new())
            .evaluate()
            .update_best_individual()
            .do_(replacement::MuPlusLambda::new(max_population_size))

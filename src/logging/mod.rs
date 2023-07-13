@@ -6,7 +6,7 @@
 //!
 //! A [`Logger`] is configured by the [`LogConfig`], which in turn consist of [`Condition`]s
 //! and [`EntryExtractor`]s.
-//! See their respective documentation pages for more information on how to use them.
+//! See their documentation for more information on how to use them.
 //!
 //! When calling [`Configuration::optimize`] or [`Configuration::optimize_with`], a [`Log`] will be
 //! added to the state, which the [`Logger`] will use to store the entries.
@@ -23,6 +23,9 @@ pub mod extractor;
 pub mod log;
 pub mod logger;
 
+#[doc(inline)]
 pub use config::LogConfig;
+#[doc(inline)]
 pub use log::Log;
+#[doc(inline)]
 pub use logger::Logger;

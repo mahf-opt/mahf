@@ -38,7 +38,7 @@ pub fn objective_bounds<P: SingleObjectiveProblem>(
 ///
 /// If `normalize` is true, the weights sum to `1`.
 /// Note that most sampling methods don't require normalized weights.
-#[contracts::debug_requires(offset >= 0.0, "the `offset` is required to be positive or zero")]
+#[contracts::requires(offset >= 0.0, "the `offset` is required to be positive or zero")]
 pub fn proportional_weights<P: SingleObjectiveProblem>(
     population: &[Individual<P>],
     offset: f64,

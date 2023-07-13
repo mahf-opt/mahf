@@ -52,6 +52,7 @@ impl PartialOrd for MultiObjective {
     /// Note that [Ordering::Less] means that `self` dominates `other`:
     /// ```
     /// use std::cmp::Ordering;
+    ///
     /// use mahf::MultiObjective;
     ///
     /// let a = MultiObjective::try_from(vec![0., 0.]).unwrap();

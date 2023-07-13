@@ -11,6 +11,39 @@
 //!
 //! Note that a mapping only defines `f` (and maybe specifies bounds on `X` and `Y`), but
 //! the caller decides what `x` and `y` actually are.
+//!
+//! # Example
+//!
+//! A specific example for this is adapting the [`InertiaWeight`] used by [`ParticleVelocitiesUpdate`].
+//! A common way to adapt the inertia weight of PSO at runtime is to decrease it linearly
+//! over the course of iterations, e.g. from 0.9 to 0.4.
+//!
+//! The [`Linear`] mapping can be used to implement this,
+//! using [`ValueOf<Progress<ValueOf<Iterations>>>`] as input lens and
+//! [`ValueOf<InertiaWeight>`] as output lens:
+//!
+//! [`InertiaWeight`]: crate::components::swarm::InertiaWeight
+//! [`ParticleVelocitiesUpdate`]: crate::components::swarm::ParticleVelocitiesUpdate
+//! [`ValueOf<Progress<ValueOf<Iterations>>>`]: crate::lens::ValueOf
+//! [`ValueOf<InertiaWeight>`]: crate::lens::ValueOf
+//!
+//! ```
+//! use mahf::{
+//!     components::{mapping::Linear, swarm},
+//!     lens::ValueOf,
+//!     state::common,
+//! #    Component, Problem,
+//! };
+//!
+//! # fn example<P: Problem>() -> Box<dyn Component<P>> {
+//! Linear::new(
+//!     0.4,
+//!     0.9,
+//!     ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
+//!     ValueOf::<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>::new(),
+//! )
+//! # }
+//! ```
 
 use crate::{
     component::ExecResult,
@@ -24,13 +57,19 @@ pub mod sa;
 
 pub use common::{Linear, Polynomial, RandomRange};
 
+/// Trait for representing a component that maps from some input state to an output state.
 pub trait Mapping<P: Problem> {
+    /// The input type.
     type Input;
+    /// The output type.
     type Output;
-
+    /// Maps from the `Input` to the `Output`.
     fn map(&self, value: Self::Input, rng: &mut Random) -> ExecResult<Self::Output>;
 }
 
+/// A default implementation of [`Component::execute`] for types implementing [`Mapping`].
+///
+/// [`Component::execute`]: crate::Component::execute
 pub fn mapping<P, T, I, O>(
     component: &T,
     input_lens: &I,

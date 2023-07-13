@@ -2,8 +2,6 @@
 
 use std::marker::PhantomData;
 
-use better_any::{Tid, TidAble};
-use derive_more::{Deref, DerefMut};
 use eyre::{ensure, WrapErr};
 use itertools::multizip;
 use rand::{
@@ -15,58 +13,35 @@ use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    component::{AnyComponent, ExecResult},
-    components::{mutation::functional as f, Component},
+    component::ExecResult,
+    components::{
+        mutation::{functional as f, MutationRate, MutationStrength},
+        Component,
+    },
     identifier::{Global, Identifier},
     population::AsSolutionsMut,
     problems::{LimitedVectorProblem, VectorProblem},
-    CustomState, State,
+    State,
 };
 
-#[derive(Deref, DerefMut, Tid)]
-pub struct MutationStrength<T: AnyComponent + 'static>(
-    #[deref]
-    #[deref_mut]
-    f64,
-    PhantomData<T>,
-);
-
-impl<T: AnyComponent> MutationStrength<T> {
-    pub fn new(value: f64) -> Self {
-        Self(value, PhantomData)
-    }
-}
-
-impl<T: AnyComponent> CustomState<'_> for MutationStrength<T> {}
-
-#[derive(Deref, DerefMut, Tid)]
-pub struct MutationRate<T: AnyComponent + 'static>(
-    #[deref]
-    #[deref_mut]
-    f64,
-    PhantomData<T>,
-);
-
-impl<T: AnyComponent> MutationRate<T> {
-    pub fn new(value: f64) -> Self {
-        Self(value, PhantomData)
-    }
-
-    pub fn value(&self) -> ExecResult<f64> {
-        ensure!(
-            (0.0..=1.0).contains(&self.0),
-            "mutation rate must be in [0, 1]"
-        );
-        Ok(self.0)
-    }
-}
-
-impl<T: AnyComponent> CustomState<'_> for MutationRate<T> {}
-
+/// Mutates each dimension with a delta from a normal distribution `N(0, std_dev)`
+/// depending on the mutation probability `rm`.
+///
+/// # Adapting parameters
+///
+/// Adapting the `std_dev` and `rm` is possible through modifying the respective states:
+/// - `std_dev`: [`MutationStrength<NormalMutation<I>>`]
+/// - `rm`: [`MutationRate<NormalMutation<I>>`]
+///
+/// # Errors
+///
+/// Returns an `Err` if the [`MutationStrength`] or [`MutationRate`] contain invalid values.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NormalMutation<I: Identifier = Global> {
-    std_dev: f64,
-    rm: f64,
+    /// Standard deviation of the normal distribution.
+    pub std_dev: f64,
+    /// Mutation rate.
+    pub rm: f64,
     phantom: PhantomData<I>,
 }
 
@@ -92,9 +67,10 @@ impl NormalMutation<Global> {
     where
         P: VectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(std_dev, rm))
+        Self::new_with_id(std_dev, rm)
     }
 
+    /// Creates the `NormalMutation` with a mutation rate of 1.
     pub fn new_dev<P>(std_dev: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = f64>,
@@ -134,10 +110,24 @@ where
     }
 }
 
+/// Mutates each dimension with a delta from a uniform distribution `[-bound, bound]`
+/// depending on the mutation probability `rm`.
+///
+/// # Adapting parameters
+///
+/// Adapting the `bound` and `rm` is possible through modifying the respective states:
+/// - `bound`: [`MutationStrength<UniformMutation<I>>`]
+/// - `rm`: [`MutationRate<UniformMutation<I>>`]
+///
+/// # Errors
+///
+/// Returns an `Err` if the [`MutationStrength`] or [`MutationRate`] contain invalid values.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UniformMutation<I: Identifier = Global> {
-    bound: f64,
-    rm: f64,
+    /// Bound of the uniform distribution `[-bound, bound]`.
+    pub bound: f64,
+    /// Mutation rate.
+    pub rm: f64,
     phantom: PhantomData<I>,
 }
 
@@ -163,7 +153,7 @@ impl UniformMutation<Global> {
     where
         P: VectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(bound, rm))
+        Self::new_with_id(bound, rm)
     }
 
     pub fn new_bound<P>(bound: f64) -> Box<dyn Component<P>>
@@ -207,9 +197,20 @@ where
     }
 }
 
+/// Flips each bit with probability `rm`.
+///
+/// # Adapting parameters
+///
+/// Adapting the `rm` is possible through modifying the respective state:
+/// - `rm`: [`MutationRate<BitFlipMutation<I>>`]
+///
+/// # Errors
+///
+/// Returns an `Err` if the [`MutationRate`] contains an invalid value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BitFlipMutation<I: Identifier = Global> {
-    rm: f64,
+    /// Probability of flipping a bit.
+    pub rm: f64,
     phantom: PhantomData<I>,
 }
 
@@ -234,7 +235,7 @@ impl BitFlipMutation<Global> {
     where
         P: VectorProblem<Element = bool>,
     {
-        Box::new(Self::from_params(rm))
+        Self::new_with_id(rm)
     }
 }
 
@@ -265,8 +266,19 @@ where
     }
 }
 
+/// Applies a random uniform reset of a position in the solution with probability `rm`.
+///
+/// # Adapting parameters
+///
+/// Adapting the `rm` is possible through modifying the respective state:
+/// - `rm`: [`MutationRate<PartialRandomSpread<I>>`]
+///
+/// # Errors
+///
+/// Returns an `Err` if the [`MutationRate`] contains an invalid value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PartialRandomSpread<I: Identifier = Global> {
+    /// Mutation rate.
     pub rm: f64,
     phantom: PhantomData<I>,
 }
@@ -292,9 +304,10 @@ impl PartialRandomSpread<Global> {
     where
         P: LimitedVectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(rm))
+        Self::new_with_id(rm)
     }
 
+    /// Creates a new `PartialRandomSpread` which fully re-initializes the population in the search space.
     pub fn new_full<P>() -> Box<dyn Component<P>>
     where
         P: LimitedVectorProblem<Element = f64>,
@@ -330,6 +343,16 @@ where
     }
 }
 
+/// Applies a scramble mutation i.e. shuffling with probability `rm`.
+///
+/// # Adapting parameters
+///
+/// Adapting the `rm` is possible through modifying the respective state:
+/// - `rm`: [`MutationRate<ScrambleMutation<I>>`]
+///
+/// # Errors
+///
+/// Returns an `Err` if the [`MutationRate`] contains an invalid value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ScrambleMutation<I: Identifier = Global> {
     pub rm: f64,
@@ -359,9 +382,10 @@ impl ScrambleMutation<Global> {
         P: VectorProblem,
         P::Element: 'static,
     {
-        Box::new(Self::from_params(rm))
+        Self::new_with_id(rm)
     }
 
+    /// Creates a new `ScrambleMutation` which scrambles all solutions.
     pub fn new_full<P>() -> Box<dyn Component<P>>
     where
         P: VectorProblem,
@@ -397,9 +421,22 @@ where
     }
 }
 
+/// Re-samples each bit depending on the mutation rate `rm`, where `p` is the probability
+/// of generating a 1 or `true`.
+///
+/// # Adapting parameters
+///
+/// Adapting the `rm` is possible through modifying the respective state:
+/// - `rm`: [`MutationRate<PartialRandomBitstring<I>>`]
+///
+/// # Errors
+///
+/// Returns an `Err` if the [`MutationRate`] contains an invalid value.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PartialRandomBitstring<I: Identifier = Global> {
+    /// Probability to sample 1 or `true`.
     pub p: f64,
+    /// Mutation rate.
     pub rm: f64,
     phantom: PhantomData<I>,
 }
@@ -426,7 +463,7 @@ impl PartialRandomBitstring<Global> {
     where
         P: VectorProblem<Element = bool>,
     {
-        Box::new(Self::from_params(p, rm))
+        Self::new_with_id(p, rm)
     }
 
     pub fn new_uniform<P>(rm: f64) -> Box<dyn Component<P>>
@@ -478,6 +515,13 @@ where
     }
 }
 
+/// Applies a swap mutation to `num_swap` elements.
+///
+/// For more than two elements the swap is performed circular.
+///
+/// # Errors
+///
+/// Returns an `Err` if `num_swap` is greater than the solution length.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SwapMutation {
     pub num_swap: u32,
@@ -487,12 +531,14 @@ impl SwapMutation {
     pub fn from_params(num_swap: u32) -> ExecResult<Self> {
         ensure!(
             num_swap > 2,
-            "at least 2 indices need to be swapped, while {} was provided",
+            "at least two indices need to be swapped, while {} was provided",
             num_swap
         );
         Ok(Self { num_swap })
     }
 
+    /// Creates a new `SwapMutation`, or returns an `Err` if `num_swap` is less than two,
+    /// as it is not possible to swap less than two elements.
     pub fn new<P>(num_swap: u32) -> ExecResult<Box<dyn Component<P>>>
     where
         P: VectorProblem,
@@ -527,6 +573,8 @@ where
     }
 }
 
+/// Applies a inversion mutation to the solution, i.e. taking a random slice of the solution
+/// and inverting it.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct InversionMutation;
 
@@ -562,6 +610,45 @@ where
     }
 }
 
+/// Applies a insertion mutation to the solution, i.e. removing a random element
+/// from the solution and inserting it on a random position.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct InsertionMutation;
+
+impl InsertionMutation {
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+    where
+        P: VectorProblem,
+        P::Element: 'static,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> Component<P> for InsertionMutation
+where
+    P: VectorProblem,
+    P::Element: 'static,
+{
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let mut populations = state.populations_mut();
+        let mut rng = state.random_mut();
+
+        for solution in populations.current_mut().as_solutions_mut() {
+            let element = rng.gen_range(0..solution.len());
+            let index = rng.gen_range(0..solution.len());
+            f::translocate_slice(solution, element..element + 1, index);
+        }
+        Ok(())
+    }
+}
+
+/// Applies a translocation mutation to the solution, i.e. removing a random slice
+/// from solution and inserting it on a random position.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TranslocationMutation;
 

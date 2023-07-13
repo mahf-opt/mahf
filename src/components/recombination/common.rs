@@ -20,10 +20,16 @@ use crate::{
     State,
 };
 
+/// Applies a `n`-point crossover to two parent solutions depending on crossover probability `pc`.
+///
+/// If `insert_both` is `false`, the second child is discarded.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NPointCrossover {
+    /// Number of points (N).
     pub n: usize,
+    /// Crossover probability.
     pub pc: f64,
+    /// If `false`, the second child is discarded.
     pub insert_both: bool,
 }
 
@@ -40,6 +46,7 @@ impl NPointCrossover {
         Box::new(Self::from_params(n, pc, insert_both))
     }
 
+    /// Creates a new `NPointCrossover` which inserts only the first child.
     pub fn new_insert_single<P, D>(n: usize, pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,
@@ -48,6 +55,7 @@ impl NPointCrossover {
         Self::new(n, pc, false)
     }
 
+    /// Creates a new `NPointCrossover` which inserts both children.
     pub fn new_insert_both<P, D>(n: usize, pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,
@@ -89,9 +97,14 @@ where
     }
 }
 
+/// Applies a uniform crossover to two parent solutions depending on crossover probability `pc`.
+///
+/// If `insert_both` is `false`, the second child is discarded.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UniformCrossover {
+    /// Crossover probability.
     pub pc: f64,
+    /// If `false`, the second child is discarded.
     pub insert_both: bool,
 }
 
@@ -108,6 +121,7 @@ impl UniformCrossover {
         Box::new(Self::from_params(pc, insert_both))
     }
 
+    /// Creates a new `UniformCrossover` which inserts only the first child.
     pub fn new_insert_single<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,
@@ -116,6 +130,7 @@ impl UniformCrossover {
         Self::new(pc, false)
     }
 
+    /// Creates a new `UniformCrossover` which inserts both children.
     pub fn new_insert_both<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,
@@ -160,9 +175,14 @@ where
     }
 }
 
+/// Applies an arithmetic crossover to two parent solutions depending on crossover probability `pc`.
+///
+/// If `insert_both` is `false`, the second child is discarded.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ArithmeticCrossover {
+    /// Crossover probability.
     pub pc: f64,
+    /// If `false`, the second child is discarded.
     pub insert_both: bool,
 }
 
@@ -178,6 +198,7 @@ impl ArithmeticCrossover {
         Box::new(Self::from_params(pc, insert_both))
     }
 
+    /// Creates a new `ArithmeticCrossover` which inserts only the first child.
     pub fn new_insert_single<P>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = f64>,
@@ -185,6 +206,7 @@ impl ArithmeticCrossover {
         Self::new(pc, false)
     }
 
+    /// Creates a new `ArithmeticCrossover` which inserts both children.
     pub fn new_insert_both<P>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = f64>,
@@ -226,9 +248,14 @@ where
     }
 }
 
+/// Applies a cycle crossover to two parent solutions depending on crossover probability `pc`.
+///
+/// Usually exclusive to combinatorial problems.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct CycleCrossover {
+    /// Crossover probability.
     pub pc: f64,
+    /// If `false`, the second child is discarded.
     pub insert_both: bool,
 }
 
@@ -245,6 +272,7 @@ impl CycleCrossover {
         Box::new(Self::from_params(pc, insert_both))
     }
 
+    /// Creates a new `CycleCrossover` which inserts only the first child.
     pub fn new_insert_single<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,
@@ -253,6 +281,7 @@ impl CycleCrossover {
         Self::new(pc, false)
     }
 
+    /// Creates a new `CycleCrossover` which inserts both children.
     pub fn new_insert_both<P, D>(pc: f64) -> Box<dyn Component<P>>
     where
         P: VectorProblem<Element = D>,

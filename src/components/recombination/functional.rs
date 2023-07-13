@@ -6,6 +6,7 @@ use itertools::multizip;
 
 use crate::problems::encoding::valid_permutation;
 
+/// Applies a n-point crossover to two parents using the `indices` to split the solutions.
 #[contracts::requires(!indices.is_empty())]
 #[contracts::requires(indices.len() < parent1.len())]
 #[contracts::requires(indices.len() < parent2.len())]
@@ -34,8 +35,9 @@ where
     [child1, child2]
 }
 
-#[contracts::debug_requires(mask.len() >= parent1.len())]
-#[contracts::debug_requires(mask.len() >= parent2.len())]
+/// Applies a uniform crossover to two parents using the `mask` to decide which elements to swap.
+#[contracts::requires(mask.len() >= parent1.len())]
+#[contracts::requires(mask.len() >= parent2.len())]
 pub fn uniform_crossover<D>(parent1: &[D], parent2: &[D], mask: &[bool]) -> [Vec<D>; 2]
 where
     D: Clone,
@@ -52,6 +54,7 @@ where
     [child1, child2]
 }
 
+/// Applies an arithmetic crossover to two parents using the `alphas` to interpolate between the elements.
 #[contracts::requires(alphas.len() >= parent1.len())]
 #[contracts::requires(alphas.len() >= parent2.len())]
 pub fn arithmetic_crossover(parent1: &[f64], parent2: &[f64], alphas: &[f64]) -> [Vec<f64>; 2] {
@@ -66,6 +69,7 @@ pub fn arithmetic_crossover(parent1: &[f64], parent2: &[f64], alphas: &[f64]) ->
     [child1, child2]
 }
 
+/// Applies a cycle crossover to two parents.
 #[contracts::requires(parent1.len() == parent2.len())]
 #[contracts::requires(valid_permutation(parent1))]
 #[contracts::requires(valid_permutation(parent2))]

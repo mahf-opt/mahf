@@ -1,5 +1,6 @@
 //! Recombination components for Differential Evolution (DE).
 
+use eyre::ContextCompat;
 use itertools::multizip;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -12,6 +13,19 @@ use crate::{
     Problem, State,
 };
 
+/// Performs a binomial crossover, combining two individuals from two populations at the same index.
+///
+/// Originally proposed for, and used as recombination in [`de`].
+///
+/// Requires at least two populations on the stack, where the top population is modified.
+///
+/// Note that this crossover only has an effect if the two populations differ from each other.
+///
+/// [`de`]: crate::heuristics::de
+///
+/// # Errors
+///
+/// Returns an `Err` if there are less than two populations on the stack.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DEBinomialCrossover {
     pc: f64,
@@ -38,8 +52,12 @@ where
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
 
-        let mut mutations = populations.pop();
-        let bases = populations.current();
+        let mut mutations = populations
+            .try_pop()
+            .wrap_err("mutated individuals are missing")?;
+        let bases = populations
+            .get_current()
+            .wrap_err("base population is missing")?;
 
         for (mutation, base) in multizip((mutations.as_solutions_mut(), bases.as_solutions())) {
             let index = rng.gen_range(0..problem.dimension());
@@ -56,6 +74,19 @@ where
     }
 }
 
+/// Performs a exponential crossover, combining two individuals from two populations at the same index.
+///
+/// Originally proposed for, and used as recombination in [`de`].
+///
+/// Requires at least two populations on the stack, where the top population is modified.
+///
+/// Note that this crossover only has an effect if the two populations differ from each other.
+///
+/// [`de`]: crate::heuristics::de
+///
+/// # Errors
+///
+/// Returns an `Err` if there are less than two populations on the stack.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DEExponentialCrossover {
     pc: f64,

@@ -99,12 +99,17 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// # Examples
     ///
     /// ```
-    /// use mahf::Individual;
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64> {
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64>,
+    /// {
     ///     // The default solution for `VectorProblem<Element=f64>` is all zeros.
-    ///     assert_eq!(Individual::<P>::default().solution(), &vec![0.0; problem.dimension()])
+    ///     assert_eq!(
+    ///         Individual::<P>::default().solution(),
+    ///         &vec![0.0; problem.dimension()]
+    ///     )
     /// }
     /// ```
     pub fn solution(&self) -> &P::Encoding {
@@ -117,11 +122,14 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// # Examples
     ///
     /// ```
-    /// use mahf::{Individual, SingleObjective};
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual, SingleObjective};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64, Objective=SingleObjective> {
-    ///     let mut individual = Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64, Objective = SingleObjective>,
+    /// {
+    ///     let mut individual =
+    ///         Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
     ///     assert!(individual.is_evaluated());
     ///     // Overwrite the solution with all ones.
     ///     *individual.solution_mut() = vec![1.0; problem.dimension()];
@@ -139,12 +147,17 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// # Examples
     ///
     /// ```
-    /// use mahf::Individual;
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64> {
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64>,
+    /// {
     ///     // The default solution for `VectorProblem<Element=f64>` is all zeros.
-    ///     assert_eq!(Individual::<P>::default().into_solution(), vec![0.0; problem.dimension()])
+    ///     assert_eq!(
+    ///         Individual::<P>::default().into_solution(),
+    ///         vec![0.0; problem.dimension()]
+    ///     )
     /// }
     /// ```
     pub fn into_solution(self) -> P::Encoding {
@@ -156,12 +169,15 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// # Examples
     ///
     /// ```
-    /// use mahf::{Individual, SingleObjective};
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual, SingleObjective};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64, Objective=SingleObjective> {
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64, Objective = SingleObjective>,
+    /// {
     ///     // Explicitly assign Inf as objective value.
-    ///     let individual = Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
+    ///     let individual =
+    ///         Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
     ///     assert!(individual.is_evaluated());
     ///     // `Individual::default` constructs the individual without objective value.
     ///     let individual = Individual::<P>::default();
@@ -177,13 +193,19 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// # Examples
     ///
     /// ```
-    /// use mahf::{Individual, SingleObjective};
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual, SingleObjective};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64, Objective=SingleObjective> {
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64, Objective = SingleObjective>,
+    /// {
     ///     // Explicitly assign Inf as objective value.
-    ///     let individual = Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
-    ///     assert_eq!(individual.get_objective(), Some(&f64::INFINITY.try_into().unwrap()));
+    ///     let individual =
+    ///         Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
+    ///     assert_eq!(
+    ///         individual.get_objective(),
+    ///         Some(&f64::INFINITY.try_into().unwrap())
+    ///     );
     ///     // `Individual::default` constructs the individual without objective value.
     ///     let individual = Individual::<P>::default();
     ///     assert_eq!(individual.get_objective(), None);
@@ -207,12 +229,15 @@ impl<P: Problem + ?Sized> Individual<P> {
     /// # Examples
     ///
     /// ```
-    /// use mahf::{Individual, SingleObjective};
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual, SingleObjective};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64, Objective=SingleObjective> {
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64, Objective = SingleObjective>,
+    /// {
     ///     // Explicitly assign Inf as objective value.
-    ///     let individual = Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
+    ///     let individual =
+    ///         Individual::<P>::new(P::Encoding::default(), f64::INFINITY.try_into().unwrap());
     ///     assert_eq!(individual.objective(), &f64::INFINITY.try_into().unwrap());
     ///     // `Individual::default` constructs the individual without objective value.
     ///     let individual = Individual::<P>::default();
@@ -247,11 +272,16 @@ where
     /// # Examples
     ///
     /// ```
-    /// use mahf::Individual;
-    /// use mahf::problems::VectorProblem;
+    /// use mahf::{problems::VectorProblem, Individual};
     ///
-    /// pub fn example<P>(problem: &P) where P: VectorProblem<Element=f64> {
-    ///     assert_eq!(Individual::<P>::default(), Individual::new_unevaluated(P::Encoding::default()));
+    /// pub fn example<P>(problem: &P)
+    /// where
+    ///     P: VectorProblem<Element = f64>,
+    /// {
+    ///     assert_eq!(
+    ///         Individual::<P>::default(),
+    ///         Individual::new_unevaluated(P::Encoding::default())
+    ///     );
     /// }
     /// ```
     fn default() -> Self {

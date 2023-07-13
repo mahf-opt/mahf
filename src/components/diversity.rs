@@ -1,6 +1,18 @@
 //! Diversity measures for populations.
+//!
+//! # References
+//!
+//! \[1\] Shi Cheng, Yuhui Shi, Quande Qin, Qingyu Zhang, and Ruibin Bai. 2014.
+//! Population Diversity Maintenance In Brain Storm Optimization Algorithm.
+//! Journal of Artificial Intelligence and Soft Computing Research 4, 2 (April 2014), 83–97.
+//! DOI:<https://doi.org/10/ggrd47>
+//!
+//! \[2\] Guillaume Corriveau, Raynald Guilbault, Antoine Tahan, and Robert Sabourin. 2012.
+//! Review and Study of Genotypic Diversity Measures for Real-Coded Representations.
+//! IEEE Transactions on Evolutionary Computation 16, 5 (October 2012), 695–710.
+//! DOI:<https://doi.org/10/f4ct44>
 
-use std::marker::PhantomData;
+use std::{any::type_name, marker::PhantomData};
 
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
@@ -13,13 +25,17 @@ use crate::{
     logging::extractor::{EntryExtractor, EntryName},
     population::AsSolutions,
     problems::VectorProblem,
+    utils::SerializablePhantom,
     CustomState, Problem, State,
 };
 
+/// Trait for representing a component that measures the diversity of the population.
 pub trait DiversityMeasure<P: Problem>: AnyComponent {
+    /// Calculates the diversity of the `solutions`.
     fn measure(&self, problem: &P, solutions: &[&P::Encoding]) -> f64;
 }
 
+/// A default implementation of [`Component::execute`] for types implementing [`DiversityMeasure`].
 pub fn diversity_measure<P, T>(component: &T, problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,
@@ -38,6 +54,9 @@ where
     Ok(())
 }
 
+/// The diversity of the population as measured by the component `I`.
+///
+/// The normalized diversity value can be accessed using the [`NormalizedDiversityLens<I>`].
 #[derive(Tid)]
 pub struct Diversity<I: AnyComponent + 'static> {
     /// Normalized diversity.
@@ -48,6 +67,7 @@ pub struct Diversity<I: AnyComponent + 'static> {
 }
 
 impl<I: AnyComponent> Diversity<I> {
+    /// Creates a new `Diversity` with initial values of 0.
     pub fn new() -> Self {
         Self {
             diversity: 0.,
@@ -56,6 +76,7 @@ impl<I: AnyComponent> Diversity<I> {
         }
     }
 
+    /// Updates the normalized and maximal diversity using `diversity`.
     pub fn update(&mut self, diversity: f64) {
         if diversity > self.max_diversity {
             self.max_diversity = diversity;
@@ -72,10 +93,14 @@ impl<I: AnyComponent> Default for Diversity<I> {
 
 impl<I: AnyComponent + 'static> CustomState<'_> for Diversity<I> {}
 
+/// Lens for accessing the normalized diversity of [`Diversity`].
+///
+/// The diversity is normalized by dividing through the maximal yet encountered diversity,
+/// scaling it between 0 and 1.
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Default(bound = ""), Clone(bound = ""))]
-pub struct NormalizedDiversityLens<I>(#[serde(skip)] PhantomData<fn() -> I>);
+pub struct NormalizedDiversityLens<I>(SerializablePhantom<I>);
 
 impl<I: AnyComponent + 'static> AnyLens for NormalizedDiversityLens<I> {
     type Target = f64;
@@ -83,11 +108,17 @@ impl<I: AnyComponent + 'static> AnyLens for NormalizedDiversityLens<I> {
 
 impl<I> EntryName for NormalizedDiversityLens<I> {
     fn entry_name() -> &'static str {
-        "NormalizedDiversity"
+        type_name::<I>()
     }
 }
 
 impl<I> NormalizedDiversityLens<I> {
+    /// Constructs the lens.
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
+
+    /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
     where
         P: VectorProblem<Element = f64>,
@@ -106,6 +137,9 @@ impl<I: AnyComponent + 'static> LensMap for NormalizedDiversityLens<I> {
     }
 }
 
+/// Measures the dimension-wise diversity of the population.
+///
+/// The value is stored in the [`Diversity<DimensionWiseDiversity>`] state.
 #[derive(Clone, Serialize)]
 pub struct DimensionWiseDiversity;
 
@@ -154,6 +188,9 @@ where
     }
 }
 
+/// Measures the pairwise distance between solutions in the population.
+///
+/// The value is stored in the [`Diversity<PairwiseDistanceDiversity>`] state.
 #[derive(Clone, Serialize)]
 pub struct PairwiseDistanceDiversity;
 
@@ -208,6 +245,9 @@ where
     }
 }
 
+/// Measures the average standard deviation of each solution in the population, i.e, "true diversity".
+///
+/// The value is stored in the [`Diversity<TrueDiversity>`] state.
 #[derive(Clone, Serialize)]
 pub struct TrueDiversity;
 
@@ -258,6 +298,9 @@ where
     }
 }
 
+/// Measures the distance to the average solution for all solutions in the population.
+///
+/// The value is stored in the [`Diversity<DistanceToAveragePointDiversity>`] state.
 #[derive(Clone, Serialize)]
 pub struct DistanceToAveragePointDiversity;
 

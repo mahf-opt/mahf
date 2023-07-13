@@ -7,16 +7,21 @@ use crate::{
     SingleObjective, State,
 };
 
+/// The number of steps performed without any improvement in the [`BestIndividual`].
+///
+/// [`BestIndividual`]: crate::state::common::BestIndividual
 #[derive(Clone, Default, Deref, DerefMut, Serialize, Tid)]
 pub struct StepsWithoutImprovement(pub u32);
 
 impl CustomState<'_> for StepsWithoutImprovement {}
 
+/// The objective value in the previous step.
 #[derive(Clone, Default, Deref, DerefMut, Serialize, Tid)]
 struct PreviousObjectiveValue(pub SingleObjective);
 
 impl CustomState<'_> for PreviousObjectiveValue {}
 
+/// Updates the [`StepsWithoutImprovement`].
 #[derive(Clone, Serialize)]
 pub struct StepsWithoutImprovementUpdate;
 

@@ -7,13 +7,36 @@ use serde::Serialize;
 
 use crate::{component::ExecResult, conditions::Condition, state::StateReq, Problem, State};
 
-/// Boolean `AND` operator (`&`) for conditions.
+/// Boolean `AND` operator (`&`) for [`Condition`]s.
+///
+/// # Examples
+///
+/// Requiring both `condition1` and `condition2` to be `true`:
+///
+/// ```
+/// # use mahf::{Problem, ExecResult};
+/// # fn condition1<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// # fn condition2<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// use mahf::{conditions::OptimumReached, Configuration};
+///
+/// # fn example<P: Problem>() -> ExecResult<Configuration<P>> {
+/// # Ok(
+/// Configuration::builder()
+///     .while_(condition1() & condition2(), |builder| {
+///         /* ... */
+///         # builder
+///     })
+///     .build()
+/// # )
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
 pub struct And<P: Problem>(Vec<Box<dyn Condition<P>>>);
 
 impl<P: Problem> And<P> {
+    /// Constructs a new `And` using the provided `conditions`.
     pub fn new(
         conditions: impl IntoIterator<Item = Box<dyn Condition<P>>>,
     ) -> Box<dyn Condition<P>> {
@@ -54,13 +77,36 @@ impl<P: Problem> ops::BitAnd for Box<dyn Condition<P>> {
     }
 }
 
-/// Boolean `OR` operator (`|`) for conditions.
+/// Boolean `OR` operator (`|`) for [`Condition`]s.
+///
+/// # Examples
+///
+/// Requiring `condition1` or `condition2` to be `true`:
+///
+/// ```
+/// # use mahf::{Problem, ExecResult};
+/// # fn condition1<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// # fn condition2<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// use mahf::{conditions::OptimumReached, Configuration};
+///
+/// # fn example<P: Problem>() -> ExecResult<Configuration<P>> {
+/// # Ok(
+/// Configuration::builder()
+///     .while_(condition1() | condition2(), |builder| {
+///         /* ... */
+///         # builder
+///     })
+///     .build()
+/// # )
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
 pub struct Or<P: Problem>(Vec<Box<dyn Condition<P>>>);
 
 impl<P: Problem> Or<P> {
+    /// Constructs a new `Or` using the provided `conditions`.
     pub fn new(
         conditions: impl IntoIterator<Item = Box<dyn Condition<P>>>,
     ) -> Box<dyn Condition<P>> {
@@ -101,13 +147,35 @@ impl<P: Problem> ops::BitOr for Box<dyn Condition<P>> {
     }
 }
 
-/// Boolean `NOT` operator (`!`) for conditions.
+/// Boolean `NOT` operator (`!`) for [`Condition`]s.
+///
+/// # Examples
+///
+/// Inverting a `condition`:
+///
+/// ```
+/// # use mahf::{Problem, ExecResult};
+/// # fn condition<P: Problem>() -> Box<dyn mahf::Condition<P>> { unimplemented!() }
+/// use mahf::{conditions::OptimumReached, Configuration};
+///
+/// # fn example<P: Problem>() -> ExecResult<Configuration<P>> {
+/// # Ok(
+/// Configuration::builder()
+///     .while_(!condition(), |builder| {
+///         /* ... */
+///         # builder
+///     })
+///     .build()
+/// # )
+/// # }
+/// ```
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
 pub struct Not<P: Problem>(Box<dyn Condition<P>>);
 
 impl<P: Problem> Not<P> {
+    /// Constructs a new `Not` using the provided `condition`.
     pub fn new(condition: Box<dyn Condition<P>>) -> Box<dyn Condition<P>> {
         Box::new(Self(condition))
     }

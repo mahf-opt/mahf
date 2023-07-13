@@ -14,6 +14,7 @@ use crate::{
     Problem, State,
 };
 
+/// Initializes an empty population.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Empty;
 
@@ -34,8 +35,10 @@ impl<P: Problem> Component<P> for Empty {
     }
 }
 
+/// Generates uniformly distributed solutions within the boundaries of the search space.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomSpread {
+    /// Size of the population to be generated.
     pub population_size: u32,
 }
 
@@ -73,8 +76,10 @@ where
     }
 }
 
+/// Generates random permutations.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomPermutation {
+    /// Size of the population to be generated.
     pub population_size: u32,
 }
 
@@ -109,9 +114,12 @@ where
     }
 }
 
+/// Generates new random binary strings with a 1 or `true` having a probability of `p`.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RandomBitstring {
+    /// Size of the population to be generated.
     pub population_size: u32,
+    /// Probability of generating a 1 or `true`.
     pub p: f64,
 }
 

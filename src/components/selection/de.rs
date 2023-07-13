@@ -17,6 +17,12 @@ use crate::{
 
 /// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.
 ///
+/// Originally proposed for, and used as selection in [`de`].
+///
+/// [`de`]: crate::heuristics::de
+///
+/// # Dependencies
+///
 /// This component is meant to be used together with [`DEMutation`], as it initializes the population
 /// in a representation necessary to perform this special mutation.
 ///
@@ -63,6 +69,12 @@ impl<P: Problem> Component<P> for DERand {
 }
 
 /// Selects individuals in the form [best, `y * 2` random] for every individual in the population, keeping the order.
+///
+/// Originally proposed for, and used as selection in [`de`].
+///
+/// [`de`]: crate::heuristics::de
+///
+/// # Dependencies
 ///
 /// This component is meant to be used together with [`DEMutation`], as it initializes the population
 /// in a representation necessary to perform this special mutation.
@@ -115,6 +127,12 @@ impl<P: SingleObjectiveProblem> Component<P> for DEBest {
 }
 
 /// Selects individuals in the form [current, best, `y * 2 - 1` random] for every individual in the population, keeping the order.
+///
+/// Originally proposed for, and used as selection in [`de`].
+///
+/// [`de`]: crate::heuristics::de
+///
+/// # Dependencies
 ///
 /// This component is meant to be used together with [`DEMutation`], as it initializes the population
 /// in a representation necessary to perform this special mutation.

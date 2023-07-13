@@ -187,8 +187,8 @@ impl<P: Problem> Configuration<P> {
     /// Optimizing some `problem` with a sequential evaluator:
     ///
     /// ```
-    /// # use mahf::problems::{ObjectiveFunction, Sequential};
-    /// use mahf::Configuration;
+    /// # use mahf::problems::ObjectiveFunction;
+    /// use mahf::{problems::Sequential, Configuration};
     ///
     /// # fn example<P: ObjectiveFunction>(problem: P) {
     /// let config = Configuration::builder()
@@ -236,13 +236,12 @@ impl<P: Problem> Configuration<P> {
     ///
     /// ```
     /// # use mahf::problems::ObjectiveFunction;
-    /// use mahf::{Configuration, Random, problems::Sequential};
-    /// use mahf::identifier::Global;
+    /// use mahf::{identifier::Global, problems::Sequential, Configuration, Random};
     ///
     /// # fn example<P: ObjectiveFunction>(problem: P) {
     /// let config = Configuration::builder()/* ... */.build();
     /// let state = config.optimize_with(&problem, |state| {
-    ///     state.insert_evaluator_as::<Global>(Sequential::new());
+    ///     state.insert_evaluator(Sequential::new());
     ///     state.insert(Random::new(42));
     ///     Ok(())
     /// });
@@ -357,11 +356,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// # pub fn example<P: Problem>() -> Configuration<P> {
     /// Configuration::builder()
-    ///     .do_many_([
-    ///         metric1(),
-    ///         metric2(),
-    ///         metric3(),
-    ///     ])
+    ///     .do_many_([metric1(), metric2(), metric3()])
     ///     .build()
     /// # }
     /// ```
@@ -499,7 +494,7 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// # pub fn example<P: Problem>() -> Configuration<P> {
     /// Configuration::builder()
-    ///     .scope_(|builder| { builder.do_(heuristic()) })
+    ///     .scope_(|builder| builder.do_(heuristic()))
     ///     .build()
     /// # }
     /// ```
@@ -574,7 +569,9 @@ impl<P: Problem> ConfigurationBuilder<P> {
     ///
     /// # pub fn example<P>() -> Configuration<P> where P: Problem, P::Encoding: Debug {
     /// Configuration::builder()
-    ///     .debug(|_problem, state| println!("Current Population: {:?}", state.populations().current()))
+    ///     .debug(|_problem, state| {
+    ///         println!("Current Population: {:?}", state.populations().current())
+    ///     })
     ///     .build()
     /// # }
     /// ```

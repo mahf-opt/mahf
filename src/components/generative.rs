@@ -14,6 +14,7 @@ use crate::{
     problems::TravellingSalespersonProblem, state::StateReq, CustomState, State,
 };
 
+/// A `NxN` pheromone matrix.
 #[derive(Clone, Tid)]
 pub struct PheromoneMatrix {
     dimension: usize,
@@ -59,6 +60,13 @@ impl ops::MulAssign<f64> for PheromoneMatrix {
 
 impl CustomState<'_> for PheromoneMatrix {}
 
+/// Generates a population from the [`PheromoneMatrix`].
+///
+/// Originally proposed for, and used as operator in [`aco`].
+///
+/// [`aco`]: crate::heuristics::aco
+///
+/// A single greedy route and `num_ants` probabilistic routes are generated.
 #[derive(Clone, Serialize)]
 pub struct AcoGeneration {
     pub num_ants: usize,
@@ -147,6 +155,7 @@ impl<P: TravellingSalespersonProblem> Component<P> for AcoGeneration {
     }
 }
 
+/// Updates the [`PheromoneMatrix`] with the population, using the Ant System (AS) formula.
 #[derive(Clone, Serialize)]
 pub struct AsPheromoneUpdate {
     pub evaporation: f64,
@@ -197,6 +206,7 @@ impl<P: TravellingSalespersonProblem> Component<P> for AsPheromoneUpdate {
     }
 }
 
+/// Updates the [`PheromoneMatrix`] with the population, using the MAX-MIN Ant System (MMAS) formula.
 #[derive(Clone, Serialize)]
 pub struct MinMaxPheromoneUpdate {
     pub evaporation: f64,
@@ -255,9 +265,9 @@ impl<P: TravellingSalespersonProblem> Component<P> for MinMaxPheromoneUpdate {
             .min_by_key(|i| i.objective())
             .unwrap();
 
-        let fitness = individual.objective().value();
+        let objective = individual.objective().value();
         let route = individual.solution();
-        let delta = 1.0 / fitness;
+        let delta = 1.0 / objective;
         for (&a, &b) in route.iter().zip(route.iter().skip(1)) {
             pm[a][b] = (pm[a][b] + delta).clamp(self.min_pheromones, self.max_pheromones);
             pm[b][a] = (pm[b][a] + delta).clamp(self.min_pheromones, self.max_pheromones);
