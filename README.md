@@ -1,5 +1,7 @@
 # MAHF
 
+![Crates.io](https://img.shields.io/crates/v/mahf)
+![docs.rs](https://img.shields.io/docsrs/mahf)
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/mahf-opt/mahf/ci.yml?logo=github)
 ![GitHub](https://img.shields.io/github/license/mahf-opt/mahf)
 
@@ -9,7 +11,7 @@ MAHF enables easy construction and experimental analysis of metaheuristics by de
 
 The framework supports not only evolutionary algorithms, but also any other metaheuristic frameworks, including non-population-based, constructive, and especially hybrid approaches.
 
-# Overview
+## Overview
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
 It provides a comprehensive set of utilities for logging, evaluation, and comparison of these heuristics. 
@@ -23,23 +25,23 @@ Key features include:
 
 Although MAHF has been developed primarily as a research tool, it can be used to solve real-world problems.
 
-# Getting Started
+## Getting Started
 
-## Requirements
+### Requirements
 
 - [The Rust Programming Language](https://rust-lang.org)
 - Either `gcc` or `clang`
 
-## Installation
+### Installation
 
 Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mahf = { git = "https://github.com/mahf-opt/mahf" }
+mahf = "0.1.0"
 ```
 
-## Example
+### Example
 
 A simple genetic algorithm for real-valued black-box optimization.
 
@@ -77,36 +79,28 @@ Examples of heuristic templates can be found under [heuristics](src/heuristics).
 
 For component implementations, see [components](src/components).
 
-# Documentation
+## Documentation
 
-MAHF has extensive documentation, which should make it easy to get started.
+MAHF has extensive [documentation](https://docs.rs/mahf/latest/mahf/), which should make it easy to get started.
 
-Just run
-
-```sh
-$ cargo doc --open
-```
-
-to build and open the documentation.
-
-# Related Projects
+## Related Projects
 
 - [mahf-bmf](https://github.com/mahf-opt/mahf-bmf): Common continuous benchmark functions
 - [mahf-coco](https://github.com/mahf-opt/mahf-coco): Bindings to the [COCO](https://github.com/numbbo/coco) benchmarking framework
 - [mahf-tsplib](https://github.com/mahf-opt/mahf-tsplib): Bindings to the [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) library
 
-# Contributing
+## Contributing
 
 We welcome contributions from the community and appreciate your interest in improving this project.
 A contribution guide will follow shortly.
 
-# License
+## License
 
 This project is licensed under the [GNU General Public License v3.0](https://github.com/mahf-opt/mahf/blob/master/LICENSE).
 
-# Publications
+## Publications
 
-## Citing MAHF
+### Citing MAHF
 
 If you use MAHF in a scientific publication, we would appreciate citations to the following paper:
 
