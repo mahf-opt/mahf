@@ -135,13 +135,12 @@ A framework for modular construction and evaluation of metaheuristics.
 Fakultät für Angewandte Informatik. https://opus.bibliothek.uni-augsburg.de/opus4/103452
 
 ```bibtex
-@techreport{stegherr2023,
-  author    = {Helena Stegherr and Leopold Luley and Jonathan Wurth and Michael Heider and J{\"o}rg H{\"a}hner},
-  title     = {A framework for modular construction and evaluation of metaheuristics},
-  institution = {Fakult{\"a}t f{\"u}r Angewandte Informatik},
-  series    = {Reports / Technische Berichte der Fakult{\"a}t f{\"u}r Angewandte Informatik der Universit{\"a}t Augsburg},
-  number    = {2023-01},
-  pages     = {25},
-  year      = {2023},
+@report{stegherr2023,
+  title = {A Framework for Modular Construction and Evaluation of Metaheuristics},
+  author = {Stegherr, Helena and Luley, Leopold and Wurth, Jonathan and Heider, Michael and Hähner, Jörg},
+  date = {2023},
+  pages = {25},
+  institution = {{Fakultät für Angewandte Informatik}},
+  url = {https://opus.bibliothek.uni-augsburg.de/opus4/103452},
 }
 ```

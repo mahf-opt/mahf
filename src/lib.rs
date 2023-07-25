@@ -97,23 +97,46 @@
 //!
 //! # Citing MAHF
 //!
-//! If you use MAHF in a scientific publication, we would appreciate citations to the following paper:
+//! If you use MAHF in a scientific publication, we would appreciate citations to the following paper or the technical report:
+//!
+//! #### Conference Paper
+//!
+//! Jonathan Wurth, Helena Stegherr, Michael Heider, Leopold Luley, and Jörg Hähner. 2023.
+//! Fast, Flexible, and Fearless: A Rust Framework for the Modular Construction of Metaheuristics.
+//! In Proceedings of the Companion Conference on Genetic and Evolutionary Computation (GECCO ’23 Companion),
+//! Association for Computing Machinery, New York, NY, USA, 1900–1909.
+//! DOI:<https://doi.org/10.1145/3583133.3596335>
+//!
+//! ```bibtex
+//! @inproceedings{wurth2023,
+//!   title = {Fast, {{Flexible}}, and {{Fearless}}: {{A Rust Framework}} for the {{Modular Construction}} of {{Metaheuristics}}},
+//!   booktitle = {Proceedings of the {{Companion Conference}} on {{Genetic}} and {{Evolutionary Computation}}},
+//!   author = {Wurth, Jonathan and Stegherr, Helena and Heider, Michael and Luley, Leopold and Hähner, Jörg},
+//!   date = {2023-07-24},
+//!   series = {{{GECCO}} '23 {{Companion}}},
+//!   pages = {1900--1909},
+//!   publisher = {{Association for Computing Machinery}},
+//!   location = {{New York, NY, USA}},
+//!   doi = {10.1145/3583133.3596335},
+//!   url = {https://dl.acm.org/doi/10.1145/3583133.3596335},
+//!   isbn = {9798400701207},
+//! }
+//! ```
+//!
+//! #### Technical Report
 //!
 //! Helena Stegherr, Leopold Luley, Jonathan Wurth, Michael Heider, and Jörg Hähner. 2023. A framework for modular
 //! construction and evaluation of metaheuristics. Fakultät für Angewandte
 //! Informatik. <https://opus.bibliothek.uni-augsburg.de/opus4/103452>
 //!
-//! Bibtex entry:
-//!
 //! ```bibtex
-//! @techreport{stegherr2023,
-//!   author    = {Helena Stegherr and Leopold Luley and Jonathan Wurth and Michael Heider and J{\"o}rg H{\"a}hner},
-//!   title     = {A framework for modular construction and evaluation of metaheuristics},
-//!   institution = {Fakult{\"a}t f{\"u}r Angewandte Informatik},
-//!   series    = {Reports / Technische Berichte der Fakult{\"a}t f{\"u}r Angewandte Informatik der Universit{\"a}t Augsburg},
-//!   number    = {2023-01},
-//!   pages     = {25},
-//!   year      = {2023},
+//! @report{stegherr2023,
+//!   title = {A Framework for Modular Construction and Evaluation of Metaheuristics},
+//!   author = {Stegherr, Helena and Luley, Leopold and Wurth, Jonathan and Heider, Michael and Hähner, Jörg},
+//!   date = {2023},
+//!   pages = {25},
+//!   institution = {{Fakultät für Angewandte Informatik}},
+//!   url = {https://opus.bibliothek.uni-augsburg.de/opus4/103452},
 //! }
 //! ```
 
