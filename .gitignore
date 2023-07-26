@@ -4,6 +4,7 @@ Cargo.lock
 
 ## Intellij Idea
 .idea/
+.run/
 
 ## Visual Studio Code
 .vscode/
