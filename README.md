@@ -1,5 +1,7 @@
 # MAHF
 
+![Crates.io](https://img.shields.io/crates/v/mahf)
+![docs.rs](https://img.shields.io/docsrs/mahf)
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/mahf-opt/mahf/ci.yml?logo=github)
 ![GitHub](https://img.shields.io/github/license/mahf-opt/mahf)
 
@@ -9,7 +11,7 @@ MAHF enables easy construction and experimental analysis of metaheuristics by de
 
 The framework supports not only evolutionary algorithms, but also any other metaheuristic frameworks, including non-population-based, constructive, and especially hybrid approaches.
 
-# Overview
+## Overview
 
 MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
 It provides a comprehensive set of utilities for logging, evaluation, and comparison of these heuristics. 
@@ -23,23 +25,23 @@ Key features include:
 
 Although MAHF has been developed primarily as a research tool, it can be used to solve real-world problems.
 
-# Getting Started
+## Getting Started
 
-## Requirements
+### Requirements
 
 - [The Rust Programming Language](https://rust-lang.org)
 - Either `gcc` or `clang`
 
-## Installation
+### Installation
 
 Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mahf = { git = "https://github.com/mahf-opt/mahf" }
+mahf = "0.1.0"
 ```
 
-## Example
+### Example
 
 A simple genetic algorithm for real-valued black-box optimization.
 
@@ -77,53 +79,68 @@ Examples of heuristic templates can be found under [heuristics](src/heuristics).
 
 For component implementations, see [components](src/components).
 
-# Documentation
+## Documentation
 
-MAHF has extensive documentation, which should make it easy to get started.
+MAHF has extensive [documentation](https://docs.rs/mahf/latest/mahf/), which should make it easy to get started.
 
-Just run
-
-```sh
-$ cargo doc --open
-```
-
-to build and open the documentation.
-
-# Related Projects
+## Related Projects
 
 - [mahf-bmf](https://github.com/mahf-opt/mahf-bmf): Common continuous benchmark functions
 - [mahf-coco](https://github.com/mahf-opt/mahf-coco): Bindings to the [COCO](https://github.com/numbbo/coco) benchmarking framework
 - [mahf-tsplib](https://github.com/mahf-opt/mahf-tsplib): Bindings to the [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) library
 
-# Contributing
+## Contributing
 
 We welcome contributions from the community and appreciate your interest in improving this project.
 A contribution guide will follow shortly.
 
-# License
+## License
 
 This project is licensed under the [GNU General Public License v3.0](https://github.com/mahf-opt/mahf/blob/master/LICENSE).
 
-# Publications
+## Publications
 
-## Citing MAHF
+### Citing MAHF
 
-If you use MAHF in a scientific publication, we would appreciate citations to the following paper:
+If you use MAHF in a scientific publication, we would appreciate citations to the following paper or the technical report:
 
-Helena Stegherr, Leopold Luley, Jonathan Wurth, Michael Heider, and Jörg Hähner. 2023. A framework for modular
-construction and evaluation of metaheuristics. Fakultät für Angewandte
-Informatik. https://opus.bibliothek.uni-augsburg.de/opus4/103452
+#### Conference Paper
 
-Bibtex entry:
+Jonathan Wurth, Helena Stegherr, Michael Heider, Leopold Luley, and Jörg Hähner. 2023.
+Fast, Flexible, and Fearless: A Rust Framework for the Modular Construction of Metaheuristics.
+In Proceedings of the Companion Conference on Genetic and Evolutionary Computation (GECCO ’23 Companion),
+Association for Computing Machinery, New York, NY, USA, 1900–1909.
+DOI:https://doi.org/10.1145/3583133.3596335
 
 ```bibtex
-@techreport{stegherr2023,
-  author    = {Helena Stegherr and Leopold Luley and Jonathan Wurth and Michael Heider and J{\"o}rg H{\"a}hner},
-  title     = {A framework for modular construction and evaluation of metaheuristics},
-  institution = {Fakult{\"a}t f{\"u}r Angewandte Informatik},
-  series    = {Reports / Technische Berichte der Fakult{\"a}t f{\"u}r Angewandte Informatik der Universit{\"a}t Augsburg},
-  number    = {2023-01},
-  pages     = {25},
-  year      = {2023},
+@inproceedings{wurth2023,
+  title = {Fast, {{Flexible}}, and {{Fearless}}: {{A Rust Framework}} for the {{Modular Construction}} of {{Metaheuristics}}},
+  booktitle = {Proceedings of the {{Companion Conference}} on {{Genetic}} and {{Evolutionary Computation}}},
+  author = {Wurth, Jonathan and Stegherr, Helena and Heider, Michael and Luley, Leopold and Hähner, Jörg},
+  date = {2023-07-24},
+  series = {{{GECCO}} '23 {{Companion}}},
+  pages = {1900--1909},
+  publisher = {{Association for Computing Machinery}},
+  location = {{New York, NY, USA}},
+  doi = {10.1145/3583133.3596335},
+  url = {https://dl.acm.org/doi/10.1145/3583133.3596335},
+  isbn = {9798400701207},
+}
+```
+
+#### Technical Report
+
+Helena Stegherr, Leopold Luley, Jonathan Wurth, Michael Heider, and Jörg Hähner. 2023.
+A framework for modular construction and evaluation of metaheuristics.
+Fakultät für Angewandte Informatik. https://opus.bibliothek.uni-augsburg.de/opus4/103452
+
+```bibtex
+@report{stegherr2023,
+  title = {A Framework for Modular Construction and Evaluation of Metaheuristics},
+  author = {Stegherr, Helena and Luley, Leopold and Wurth, Jonathan and Heider, Michael and Hähner, Jörg},
+  date = {2023},
+  pages = {25},
+  institution = {{Fakultät für Angewandte Informatik}},
+  url = {https://opus.bibliothek.uni-augsburg.de/opus4/103452},
 }
 ```
