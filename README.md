@@ -1,7 +1,7 @@
 # MAHF
 
 ![Crates.io](https://img.shields.io/crates/v/mahf)
-![docs.rs](https://img.shields.io/docsrs/mahf)
+![docs.rs](https://img.shields.io/docsrs/mahf?logo=docsdotrs)
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/mahf-opt/mahf/ci.yml?logo=github)
 ![GitHub](https://img.shields.io/github/license/mahf-opt/mahf)
 
