@@ -1,9 +1,9 @@
 # MAHF
 
-![Crates.io](https://img.shields.io/crates/v/mahf)
-![docs.rs](https://img.shields.io/docsrs/mahf?logo=docsdotrs)
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/mahf-opt/mahf/ci.yml?logo=github)
-![GitHub](https://img.shields.io/github/license/mahf-opt/mahf)
+[![Crates.io](https://img.shields.io/crates/v/mahf)](https://crates.io/crates/mahf)
+[![docs.rs](https://img.shields.io/docsrs/mahf?logo=docsdotrs)](https://docs.rs/mahf/latest/mahf/)
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/mahf-opt/mahf/ci.yml?logo=github)](https://github.com/mahf-opt/mahf/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/mahf-opt/mahf)](https://github.com/mahf-opt/mahf/blob/master/LICENSE)
 
 A framework for modular construction and evaluation of metaheuristics.
 
@@ -13,8 +13,8 @@ The framework supports not only evolutionary algorithms, but also any other meta
 
 ## Overview
 
-MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible. 
-It provides a comprehensive set of utilities for logging, evaluation, and comparison of these heuristics. 
+MAHF aims to make construction and modification of metaheuristics as simple and reliable as possible.
+It provides a comprehensive set of utilities for logging, evaluation, and comparison of these heuristics.
 
 Key features include:
 - Simple and modular metaheuristic construction
