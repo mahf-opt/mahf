@@ -464,22 +464,22 @@ where
 #[derive(Clone, Serialize, Deserialize)]
 pub struct OptimumReached {
     /// The maximal difference between best objective value and optimum.
-    pub delta: f64,
+    pub epsilon: f64,
 }
 
 impl OptimumReached {
     /// Creates a new `OptimumReached` with the given `delta`.
-    pub fn from_params(delta: f64) -> ExecResult<Self> {
-        ensure!(delta >= 0., "distance must be greater than 0");
-        Ok(Self { delta })
+    pub fn from_params(epsilon: f64) -> ExecResult<Self> {
+        ensure!(epsilon >= 0., "distance must be greater than 0");
+        Ok(Self { epsilon })
     }
 
     /// Creates a new `OptimumReached` with the given `delta`.
-    pub fn new<P>(delta: f64) -> ExecResult<Box<dyn Condition<P>>>
+    pub fn new<P>(epsilon: f64) -> ExecResult<Box<dyn Condition<P>>>
     where
         P: KnownOptimumProblem,
     {
-        Ok(Box::new(Self::from_params(delta)?))
+        Ok(Box::new(Self::from_params(epsilon)?))
     }
 }
 
@@ -489,7 +489,7 @@ where
 {
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
         let value = if let Some(objective) = state.best_objective_value() {
-            objective.value() <= problem.known_optimum().value() + self.delta
+            objective.value() <= problem.known_optimum().value() + self.epsilon
         } else {
             false
         };
