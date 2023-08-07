@@ -42,7 +42,7 @@ pub struct State<'a, P> {
     #[deref]
     #[deref_mut]
     registry: StateRegistry<'a>,
-    marker: PhantomData<P>,
+    marker: PhantomData<fn() -> P>,
 }
 
 impl<'a, P> State<'a, P> {
