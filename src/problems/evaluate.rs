@@ -3,6 +3,7 @@
 use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};
+use derivative::Derivative;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 
 use crate::{CustomState, Individual, Problem, State};
@@ -215,7 +216,8 @@ pub trait ObjectiveFunction: Problem {
 /// A sequential evaluator for an optimization problem, i.e. [`ObjectiveFunction`].
 ///
 /// The evaluator simply evaluates all individuals sequentially in order.
-#[derive(Tid)]
+#[derive(Tid, Derivative)]
+#[derivative(Clone(bound = ""))]
 pub struct Sequential<P: ObjectiveFunction + 'static>(PhantomData<fn() -> P>);
 
 impl<P: ObjectiveFunction> Sequential<P> {
@@ -268,7 +270,8 @@ impl<P: ObjectiveFunction> CustomState<'_> for Sequential<P> {}
 /// Requires `P` to be `Sync`.
 ///
 /// The evaluator evaluates the individuals in parallel using the [`rayon`] library.
-#[derive(Tid)]
+#[derive(Tid, Derivative)]
+#[derivative(Clone(bound = ""))]
 pub struct Parallel<P: ObjectiveFunction + 'static>(PhantomData<fn() -> P>);
 
 impl<P: ObjectiveFunction> Parallel<P> {
