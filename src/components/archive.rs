@@ -46,6 +46,19 @@ pub struct ElitistArchiveUpdate {
     pub num_elitists: usize,
 }
 
+impl ElitistArchiveUpdate {
+    pub fn from_params(num_elitists: usize) -> Self {
+        Self { num_elitists }
+    }
+
+    pub fn new<P>(num_elitists: usize) -> Box<dyn Component<P>>
+    where
+        P: SingleObjectiveProblem,
+    {
+        Box::new(Self::from_params(num_elitists))
+    }
+}
+
 impl<P> Component<P> for ElitistArchiveUpdate
 where
     P: SingleObjectiveProblem,
@@ -68,6 +81,19 @@ where
 /// It won't add duplicates to the archive.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ElitistArchiveIntoPopulation;
+
+impl ElitistArchiveIntoPopulation {
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+    where
+        P: SingleObjectiveProblem,
+    {
+        Box::new(Self::from_params())
+    }
+}
 
 impl<P> Component<P> for ElitistArchiveIntoPopulation
 where
