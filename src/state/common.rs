@@ -13,7 +13,7 @@ use derive_more::{Deref, DerefMut};
 use serde::{Serialize, Serializer};
 
 use crate::{
-    identifier::{Identifier, PhantomId},
+    identifier::{Global, Identifier, PhantomId},
     problems::{Evaluate, MultiObjectiveProblem, SingleObjectiveProblem},
     CustomState, Individual, Problem,
 };
@@ -33,7 +33,7 @@ use crate::{
 /// [`PopulationEvaluator`]: crate::components::evaluation::PopulationEvaluator
 /// [`State::insert_evaluator`]: crate::State::insert_evaluator_as
 #[derive(Tid)]
-pub struct Evaluator<'a, P: Problem + 'static, I: Identifier + 'static> {
+pub struct Evaluator<'a, P: Problem + 'static, I: Identifier + 'static = Global> {
     inner: Box<dyn Evaluate<Problem = P> + 'a>,
     #[allow(dead_code)] // Unclear why clippy complains here, otherwise `I` would be unused.
     marker: PhantomId<I>,
