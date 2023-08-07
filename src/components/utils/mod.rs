@@ -7,6 +7,7 @@ use crate::{component::ExecResult, components::Component, Problem, State};
 pub mod debug;
 pub mod improvement;
 pub mod populations;
+pub mod progress;
 
 /// Doesn't do anything.
 ///
