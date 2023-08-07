@@ -58,4 +58,9 @@ impl<'a, 'b, P> StateReq<'a, 'b, P> {
             .then_some(())
             .ok_or_else(StateError::required_missing::<Source, T>)
     }
+
+    /// Returns the `state` for advanced requirements.
+    pub fn state<'c>(&'c self) -> &'c State<'b, P> {
+        self.0
+    }
 }
