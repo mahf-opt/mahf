@@ -134,7 +134,7 @@ pub struct Parameters<P> {
 }
 
 /// A generic single-objective Genetic Algorithm (GA) template.
-pub fn ga<P, I>(params: Parameters<P>, termination: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
+pub fn ga<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
 where
     P: SingleObjectiveProblem,
     I: Identifier,
@@ -150,7 +150,7 @@ where
     } = params;
 
     Configuration::builder()
-        .while_(termination, |builder| {
+        .while_(condition, |builder| {
             builder
                 .do_(selection)
                 .do_(crossover)

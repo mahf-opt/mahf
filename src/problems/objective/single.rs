@@ -2,7 +2,7 @@
 
 use std::{cmp::Ordering, fmt::Debug};
 
-use derive_more::{Add, Mul, Neg, Sub};
+use derive_more::{Add, Div, Mul, Neg, Sub};
 use serde::Serialize;
 
 use crate::problems::objective::{IllegalObjective, Objective};
@@ -22,10 +22,12 @@ use crate::problems::objective::{IllegalObjective, Objective};
 /// For details, see [`IllegalObjective`].
 ///
 /// [`SingleObjectiveProblem`]: crate::problems::SingleObjectiveProblem
-#[derive(Copy, Clone, Serialize, PartialEq, PartialOrd, Add, Sub, Mul, Neg)]
+#[derive(Copy, Clone, Serialize, PartialEq, PartialOrd, Add, Sub, Mul, Div, Neg)]
 pub struct SingleObjective(f64);
 
 impl SingleObjective {
+    pub const INFINITY: SingleObjective = SingleObjective(f64::INFINITY);
+
     /// Checks if the objective is `+Inf` (positive infinity) or not.
     pub fn is_finite(&self) -> bool {
         self.0.is_finite()
