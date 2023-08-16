@@ -162,6 +162,7 @@ pub mod heuristics;
 pub mod identifier;
 pub mod lens;
 pub mod logging;
+pub mod params;
 pub mod population;
 pub mod prelude;
 pub mod problems;
