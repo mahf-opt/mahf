@@ -1,12 +1,12 @@
 //! Access arbitrary state without knowing the exact type of the container.
 //!
 //! This is especially handy if your component can work with arbitrary data of some specific
-//! type ([`AnyLens::Target`]), and the caller should be able to specify at construction where
+//! type ([`BaseLens::Target`]), and the caller should be able to specify at construction where
 //! the data comes from.
 //!
 //! # Usages
 //!
-//! [`AnyLens`] is the base trait of several other lens traits:
+//! [`BaseLens`] is the base trait of several other lens traits:
 //! - To access owned `Clone`-able or generated data, see [`Lens`].
 //! - To access a reference to owned data, see [`LensRef`].
 //! - To access a mutable reference to owned data, see [`LensMut`].
@@ -16,7 +16,7 @@
 //!
 //! This module is inspired by the concept of [`lenses`] from functional programming.
 //! While its application is somewhat different from the original idea of having direct view
-//! (a lens) on inner fields of (deeply) nested structures, [`AnyLens`] and subtraits
+//! (a lens) on inner fields of (deeply) nested structures, [`BaseLens`] and subtraits
 //! are a lens into the [`State`] and [`Problem`] only.
 //!
 //! [`lenses`]: https://rust-unofficial.github.io/patterns/functional/lenses.html
@@ -36,7 +36,7 @@ pub mod common;
 pub use common::{IdLens, ValueOf};
 
 /// Collection of traits required by every lens.
-pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
+pub trait BaseLens: Clone + Serialize + Send + Sync + 'static {
     /// The target type of the lens.
     type Target;
 }
@@ -51,17 +51,17 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 ///
 /// ```
 /// use mahf::{
-///     lens::{AnyLens, Lens},
+///     lens::{BaseLens, Lens},
 ///     prelude::*,
 /// };
 /// use serde::Serialize;
 ///
 /// #[derive(Clone, Serialize)]
-/// struct SomeComponentInvolvingAnInteger<L: AnyLens> {
+/// struct SomeComponentInvolvingAnInteger<L: BaseLens> {
 ///     pub lens: L,
 /// }
 ///
-/// impl<L: AnyLens> SomeComponentInvolvingAnInteger<L> {
+/// impl<L: BaseLens> SomeComponentInvolvingAnInteger<L> {
 ///     pub fn from_params(lens: L) -> Self {
 ///         Self { lens }
 ///     }
@@ -108,7 +108,7 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 /// ```
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, Lens},
+///     lens::{BaseLens, Lens},
 ///     CustomState, ExecResult, Individual, Problem, State,
 /// };
 /// use serde::Serialize;
@@ -124,7 +124,7 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 /// #[derive(Clone, Serialize)]
 /// pub struct StateWithManyFieldsFloatLens;
 ///
-/// impl AnyLens for StateWithManyFieldsFloatLens {
+/// impl BaseLens for StateWithManyFieldsFloatLens {
 ///     type Target = f64;
 /// }
 ///
@@ -134,7 +134,7 @@ pub trait AnyLens: Clone + Serialize + Send + Sync + 'static {
 ///     }
 /// }
 /// ```
-pub trait Lens<P: Problem>: AnyLens {
+pub trait Lens<P: Problem>: BaseLens {
     /// Tries to extract an owned value from the `problem` and/or `state`.
     fn get(&self, problem: &P, state: &State<P>) -> ExecResult<Self::Target>;
 }
@@ -153,7 +153,7 @@ pub trait Lens<P: Problem>: AnyLens {
 /// ```
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, Lens, LensMap},
+///     lens::{BaseLens, Lens, LensMap},
 ///     CustomState, ExecResult, Individual, Problem, State,
 /// };
 /// use serde::Serialize;
@@ -168,7 +168,7 @@ pub trait Lens<P: Problem>: AnyLens {
 /// #[derive(Clone, Serialize)]
 /// pub struct StateWithManyFieldsFloatLens;
 ///
-/// impl AnyLens for StateWithManyFieldsFloatLens {
+/// impl BaseLens for StateWithManyFieldsFloatLens {
 ///     type Target = f64;
 /// }
 ///
@@ -180,7 +180,7 @@ pub trait Lens<P: Problem>: AnyLens {
 ///     }
 /// }
 /// ```
-pub trait LensMap: AnyLens {
+pub trait LensMap: BaseLens {
     /// The source type to map to `Target` from.
     type Source;
 
@@ -212,7 +212,7 @@ where
 ///
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, IdLens, LensRef},
+///     lens::{BaseLens, IdLens, LensRef},
 ///     prelude::*,
 /// };
 /// use serde::Serialize;
@@ -233,11 +233,11 @@ where
 /// }
 ///
 /// #[derive(Clone, Serialize)]
-/// struct SomeComponentInvolvingSomeTrait<L: AnyLens> {
+/// struct SomeComponentInvolvingSomeTrait<L: BaseLens> {
 ///     pub lens: L,
 /// }
 ///
-/// impl<L: AnyLens> SomeComponentInvolvingSomeTrait<L> {
+/// impl<L: BaseLens> SomeComponentInvolvingSomeTrait<L> {
 ///     pub fn from_params(lens: L) -> Self {
 ///         Self { lens }
 ///     }
@@ -285,7 +285,7 @@ where
 ///
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, LensRef},
+///     lens::{BaseLens, LensRef},
 ///     CustomState, ExecResult, Individual, Problem, State,
 /// };
 /// use serde::Serialize;
@@ -301,7 +301,7 @@ where
 /// #[derive(Clone, Serialize)]
 /// pub struct StateWithManyFieldsFloatLens;
 ///
-/// impl AnyLens for StateWithManyFieldsFloatLens {
+/// impl BaseLens for StateWithManyFieldsFloatLens {
 ///     type Target = f64;
 /// }
 ///
@@ -318,7 +318,7 @@ where
 ///     }
 /// }
 /// ```
-pub trait LensRef<P: Problem>: AnyLens {
+pub trait LensRef<P: Problem>: BaseLens {
     /// Tries to extract a reference to a value from the `problem` and/or `state`.
     fn get_ref<'a>(&self, problem: &P, state: &'a State<P>) -> ExecResult<Ref<'a, Self::Target>>;
 }
@@ -337,7 +337,7 @@ pub trait LensRef<P: Problem>: AnyLens {
 /// ```
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, Lens, LensMapRef},
+///     lens::{BaseLens, Lens, LensMapRef},
 ///     CustomState, ExecResult, Individual, Problem, State,
 /// };
 /// use serde::Serialize;
@@ -352,7 +352,7 @@ pub trait LensRef<P: Problem>: AnyLens {
 /// #[derive(Clone, Serialize)]
 /// pub struct StateWithManyFieldsFloatLens;
 ///
-/// impl AnyLens for StateWithManyFieldsFloatLens {
+/// impl BaseLens for StateWithManyFieldsFloatLens {
 ///     type Target = f64;
 /// }
 ///
@@ -364,7 +364,7 @@ pub trait LensRef<P: Problem>: AnyLens {
 ///     }
 /// }
 /// ```
-pub trait LensMapRef: AnyLens {
+pub trait LensMapRef: BaseLens {
     /// The source type to map to `&Target` from.
     type Source;
 
@@ -398,7 +398,7 @@ where
 ///
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, IdLens, LensMut},
+///     lens::{BaseLens, IdLens, LensMut},
 ///     prelude::*,
 /// };
 /// use serde::Serialize;
@@ -419,11 +419,11 @@ where
 /// }
 ///
 /// #[derive(Clone, Serialize)]
-/// struct SomeComponentInvolvingSomeTrait<L: AnyLens> {
+/// struct SomeComponentInvolvingSomeTrait<L: BaseLens> {
 ///     pub lens: L,
 /// }
 ///
-/// impl<L: AnyLens> SomeComponentInvolvingSomeTrait<L> {
+/// impl<L: BaseLens> SomeComponentInvolvingSomeTrait<L> {
 ///     pub fn from_params(lens: L) -> Self {
 ///         Self { lens }
 ///     }
@@ -471,7 +471,7 @@ where
 ///
 /// use better_any::{Tid, TidAble};
 /// use mahf::{
-///     lens::{AnyLens, LensMut, LensRef},
+///     lens::{BaseLens, LensMut, LensRef},
 ///     CustomState, ExecResult, Individual, Problem, State,
 /// };
 /// use serde::Serialize;
@@ -487,7 +487,7 @@ where
 /// #[derive(Clone, Serialize)]
 /// pub struct StateWithManyFieldsFloatLens;
 ///
-/// impl AnyLens for StateWithManyFieldsFloatLens {
+/// impl BaseLens for StateWithManyFieldsFloatLens {
 ///     type Target = f64;
 /// }
 ///
@@ -535,15 +535,15 @@ pub trait LensMut<P: Problem>: LensRef<P> {
 ///
 /// ```
 /// use serde::Serialize;
-/// use mahf::lens::{AnyLens, LensAssign};
+/// use mahf::lens::{BaseLens, LensAssign};
 /// use mahf::prelude::*;
 ///
 /// #[derive(Clone, Serialize)]
-/// struct SomeComponent<L: AnyLens> {
+/// struct SomeComponent<L: BaseLens> {
 ///     pub lens: L,
 /// }
 ///
-/// impl<L: AnyLens> SomeComponent<L> {
+/// impl<L: BaseLens> SomeComponent<L> {
 ///     pub fn from_params(lens: L) -> Self {
 ///         Self { lens }
 ///     }

@@ -10,7 +10,7 @@ use crate::{
         mapping::{mapping, Mapping},
         Component,
     },
-    lens::{AnyLens, ValueLens},
+    lens::{BaseLens, ValueLens},
     state::random::Random,
     Problem, State,
 };
@@ -25,12 +25,12 @@ use crate::{
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct GeometricCooling<L: AnyLens> {
+pub struct GeometricCooling<L: BaseLens> {
     pub alpha: f64,
     pub lens: L,
 }
 
-impl<L: AnyLens> GeometricCooling<L> {
+impl<L: BaseLens> GeometricCooling<L> {
     pub fn from_params(alpha: f64, lens: L) -> ExecResult<Self> {
         ensure!((0.0..1.0).contains(&alpha), "`alpha` must be in [0, 1)");
         Ok(Self { alpha, lens })

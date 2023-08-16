@@ -21,7 +21,7 @@ use serde::Serialize;
 use crate::{
     component::{ComponentLike, ExecResult},
     components::Component,
-    lens::{AnyLens, Lens, LensMap},
+    lens::{BaseLens, Lens, LensMap},
     logging::extractor::{EntryExtractor, EntryName},
     population::AsSolutions,
     problems::VectorProblem,
@@ -102,7 +102,7 @@ impl<I: ComponentLike + 'static> CustomState<'_> for Diversity<I> {}
 #[derivative(Default(bound = ""), Clone(bound = ""))]
 pub struct NormalizedDiversityLens<I>(SerializablePhantom<I>);
 
-impl<I: ComponentLike + 'static> AnyLens for NormalizedDiversityLens<I> {
+impl<I: ComponentLike + 'static> BaseLens for NormalizedDiversityLens<I> {
     type Target = f64;
 }
 
@@ -123,7 +123,7 @@ impl<I> NormalizedDiversityLens<I> {
     where
         P: VectorProblem<Element = f64>,
         Self: Lens<P>,
-        <Self as AnyLens>::Target: Serialize + Send + 'static,
+        <Self as BaseLens>::Target: Serialize + Send + 'static,
     {
         Box::<Self>::default()
     }

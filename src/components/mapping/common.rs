@@ -11,7 +11,7 @@ use crate::{
         mapping::{mapping, Mapping},
         Component,
     },
-    lens::{AnyLens, Lens, LensAssign},
+    lens::{BaseLens, Lens, LensAssign},
     state::random::Random,
     Problem, State,
 };
@@ -22,14 +22,14 @@ use crate::{
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct Linear<I: AnyLens, O: AnyLens> {
+pub struct Linear<I: BaseLens, O: BaseLens> {
     pub start: f64,
     pub end: f64,
     pub input_lens: I,
     pub output_lens: O,
 }
 
-impl<I: AnyLens, O: AnyLens> Linear<I, O> {
+impl<I: BaseLens, O: BaseLens> Linear<I, O> {
     pub fn from_params(start: f64, end: f64, input_lens: I, output_lens: O) -> Self {
         Self {
             start,
@@ -80,7 +80,7 @@ where
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct Polynomial<I: AnyLens, O: AnyLens> {
+pub struct Polynomial<I: BaseLens, O: BaseLens> {
     pub start: f64,
     pub end: f64,
     pub n: f64,
@@ -88,7 +88,7 @@ pub struct Polynomial<I: AnyLens, O: AnyLens> {
     pub output_lens: O,
 }
 
-impl<I: AnyLens, O: AnyLens> Polynomial<I, O> {
+impl<I: BaseLens, O: BaseLens> Polynomial<I, O> {
     pub fn from_params(start: f64, end: f64, n: f64, input_lens: I, output_lens: O) -> Self {
         Self {
             start,
@@ -148,12 +148,12 @@ trait_set! {
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct RandomRange<R: AnySampleRange, O: AnyLens> {
+pub struct RandomRange<R: AnySampleRange, O: BaseLens> {
     pub range: R,
     pub output_lens: O,
 }
 
-impl<R: AnySampleRange, O: AnyLens> RandomRange<R, O> {
+impl<R: AnySampleRange, O: BaseLens> RandomRange<R, O> {
     pub fn from_params(range: R, output_lens: O) -> Self {
         Self { range, output_lens }
     }

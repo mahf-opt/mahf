@@ -13,7 +13,7 @@ use serde::Serialize;
 
 use crate::{
     component::ExecResult,
-    lens::{AnyLens, Lens, LensMap, LensMut, LensRef},
+    lens::{BaseLens, Lens, LensMap, LensMut, LensRef},
     logging::extractor::{EntryExtractor, EntryName},
     problems::SingleObjectiveProblem,
     state::common::{BestIndividual, Populations},
@@ -58,7 +58,7 @@ where
     }
 }
 
-impl<T: 'static> AnyLens for IdLens<T> {
+impl<T: 'static> BaseLens for IdLens<T> {
     type Target = T;
 }
 
@@ -140,7 +140,7 @@ where
     }
 }
 
-impl<T> AnyLens for ValueOf<T>
+impl<T> BaseLens for ValueOf<T>
 where
     T: Deref + for<'a> CustomState<'a>,
     <T as Deref>::Target: Sized,
@@ -202,7 +202,7 @@ where
     }
 }
 
-impl<P: Problem> AnyLens for PopulationSizeLens<P> {
+impl<P: Problem> BaseLens for PopulationSizeLens<P> {
     type Target = u32;
 }
 
@@ -248,7 +248,7 @@ where
     }
 }
 
-impl<P: Problem> AnyLens for BestSolutionLens<P> {
+impl<P: Problem> BaseLens for BestSolutionLens<P> {
     type Target = P::Encoding;
 }
 
@@ -263,7 +263,7 @@ where
     P: SingleObjectiveProblem,
     P::Encoding: Clone,
     Self: Lens<P>,
-    <Self as AnyLens>::Target: Serialize + Send,
+    <Self as BaseLens>::Target: Serialize + Send,
 {
     /// Constructs the lens for logging entries.
     pub fn entry() -> Box<dyn EntryExtractor<P>> {
@@ -308,7 +308,7 @@ where
     }
 }
 
-impl<P: Problem> AnyLens for BestObjectiveValueLens<P> {
+impl<P: Problem> BaseLens for BestObjectiveValueLens<P> {
     type Target = SingleObjective;
 }
 
@@ -322,7 +322,7 @@ impl<P> BestObjectiveValueLens<P>
 where
     P: SingleObjectiveProblem,
     Self: Lens<P>,
-    <Self as AnyLens>::Target: Serialize + Send,
+    <Self as BaseLens>::Target: Serialize + Send,
 {
     /// Constructs the lens for logging entries.
     pub fn entry() -> Box<dyn EntryExtractor<P>> {

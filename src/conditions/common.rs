@@ -15,7 +15,7 @@ use trait_set::trait_set;
 use crate::{
     component::ExecResult,
     conditions::Condition,
-    lens::{AnyLens, Lens, LensRef, ValueOf},
+    lens::{BaseLens, Lens, LensRef, ValueOf},
     problems::KnownOptimumProblem,
     state::common::{Evaluations, Iterations, Progress},
     CustomState, Problem, State,
@@ -116,7 +116,7 @@ trait_set! {
 #[derivative(Clone(bound = ""))]
 pub struct LessThanN<L>
 where
-    L: AnyLens,
+    L: BaseLens,
     L::Target: AnyFloatLike,
 {
     /// The value of N.
@@ -127,7 +127,7 @@ where
 
 impl<L> LessThanN<L>
 where
-    L: AnyLens,
+    L: BaseLens,
     L::Target: AnyFloatLike,
 {
     /// Constructs a new `LessThanN` with the given `n` and `lens`.
@@ -215,14 +215,14 @@ where
 #[derive(Serialize, Derivative)]
 #[serde(bound = "")]
 #[derivative(Clone(bound = ""))]
-pub struct EveryN<L: AnyLens> {
+pub struct EveryN<L: BaseLens> {
     /// The value of N.
     pub n: u32,
     /// The lens to the value to compare with `n`
     pub lens: L,
 }
 
-impl<L: AnyLens> EveryN<L> {
+impl<L: BaseLens> EveryN<L> {
     /// Constructs a new `LessThanN` with the given `n` and `lens`.
     pub fn from_params(n: u32, lens: L) -> Self {
         Self { n, lens }
@@ -377,7 +377,7 @@ where
 #[derivative(Clone(bound = ""))]
 pub struct ChangeOf<L>
 where
-    L: AnyLens,
+    L: BaseLens,
 {
     /// The equality checker.
     pub checker: Box<dyn EqualityChecker<L::Target>>,
@@ -387,7 +387,7 @@ where
 
 impl<L> ChangeOf<L>
 where
-    L: AnyLens,
+    L: BaseLens,
     L::Target: Clone + Send,
 {
     /// Creates a new `ChangeOf` with the provided equality `checker` and `lens`.
