@@ -12,7 +12,7 @@ use rand::Rng;
 use serde::Serialize;
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     components::{Block, Component},
     identifier::{Global, Identifier, PhantomId},
     population::{AsSolutions, AsSolutionsMut, BestIndividual},
@@ -91,20 +91,20 @@ where
 ///
 /// This can be interpreted as describing the fluidity of the medium in which a particle moves.
 #[derive(Deref, DerefMut, Tid)]
-pub struct InertiaWeight<T: AnyComponent + 'static>(
+pub struct InertiaWeight<T: ComponentLike + 'static>(
     #[deref]
     #[deref_mut]
     f64,
     PhantomData<T>,
 );
 
-impl<T: AnyComponent> InertiaWeight<T> {
+impl<T: ComponentLike> InertiaWeight<T> {
     pub fn new(value: f64) -> Self {
         Self(value, PhantomData)
     }
 }
 
-impl<T: AnyComponent> CustomState<'_> for InertiaWeight<T> {}
+impl<T: ComponentLike> CustomState<'_> for InertiaWeight<T> {}
 
 /// Updates the [`ParticleVelocities`] and particle positions.
 ///

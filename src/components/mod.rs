@@ -5,7 +5,7 @@
 #![allow(clippy::new_ret_no_self)]
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     state::StateReq,
     Problem, State,
 };
@@ -120,7 +120,7 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 ///     }
 /// }
 /// ```
-pub trait Component<P: Problem>: AnyComponent {
+pub trait Component<P: Problem>: ComponentLike {
     /// Can be used to initialize custom state required by the component.
     #[allow(unused_variables)]
     fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {

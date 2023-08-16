@@ -1,7 +1,7 @@
 //! Recombine multiple solutions (also called crossover).
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     population::{IntoIndividuals, IntoSolutions},
     state::random::Random,
     Problem, State,
@@ -37,7 +37,7 @@ impl<T> OptionalPair<T> {
 }
 
 /// Trait for representing a component that recombines multiple solutions.
-pub trait Recombination<P: Problem>: AnyComponent {
+pub trait Recombination<P: Problem>: ComponentLike {
     fn recombine(
         &self,
         parent1: &P::Encoding,

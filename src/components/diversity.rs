@@ -19,7 +19,7 @@ use derivative::Derivative;
 use serde::Serialize;
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     components::Component,
     lens::{AnyLens, Lens, LensMap},
     logging::extractor::{EntryExtractor, EntryName},
@@ -30,7 +30,7 @@ use crate::{
 };
 
 /// Trait for representing a component that measures the diversity of the population.
-pub trait DiversityMeasure<P: Problem>: AnyComponent {
+pub trait DiversityMeasure<P: Problem>: ComponentLike {
     /// Calculates the diversity of the `solutions`.
     fn measure(&self, problem: &P, solutions: &[&P::Encoding]) -> f64;
 }
@@ -58,7 +58,7 @@ where
 ///
 /// The normalized diversity value can be accessed using the [`NormalizedDiversityLens<I>`].
 #[derive(Tid)]
-pub struct Diversity<I: AnyComponent + 'static> {
+pub struct Diversity<I: ComponentLike + 'static> {
     /// Normalized diversity.
     pub diversity: f64,
     /// Non-normalized maximal diversity.
@@ -66,7 +66,7 @@ pub struct Diversity<I: AnyComponent + 'static> {
     marker: PhantomData<I>,
 }
 
-impl<I: AnyComponent> Diversity<I> {
+impl<I: ComponentLike> Diversity<I> {
     /// Creates a new `Diversity` with initial values of 0.
     pub fn new() -> Self {
         Self {
@@ -85,13 +85,13 @@ impl<I: AnyComponent> Diversity<I> {
     }
 }
 
-impl<I: AnyComponent> Default for Diversity<I> {
+impl<I: ComponentLike> Default for Diversity<I> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<I: AnyComponent + 'static> CustomState<'_> for Diversity<I> {}
+impl<I: ComponentLike + 'static> CustomState<'_> for Diversity<I> {}
 
 /// Lens for accessing the normalized diversity of [`Diversity`].
 ///
@@ -102,7 +102,7 @@ impl<I: AnyComponent + 'static> CustomState<'_> for Diversity<I> {}
 #[derivative(Default(bound = ""), Clone(bound = ""))]
 pub struct NormalizedDiversityLens<I>(SerializablePhantom<I>);
 
-impl<I: AnyComponent + 'static> AnyLens for NormalizedDiversityLens<I> {
+impl<I: ComponentLike + 'static> AnyLens for NormalizedDiversityLens<I> {
     type Target = f64;
 }
 
@@ -129,7 +129,7 @@ impl<I> NormalizedDiversityLens<I> {
     }
 }
 
-impl<I: AnyComponent + 'static> LensMap for NormalizedDiversityLens<I> {
+impl<I: ComponentLike + 'static> LensMap for NormalizedDiversityLens<I> {
     type Source = Diversity<I>;
 
     fn map(&self, source: &Self::Source) -> Self::Target {

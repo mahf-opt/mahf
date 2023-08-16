@@ -3,7 +3,7 @@
 use eyre::WrapErr;
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     state::random::Random,
     Individual, Problem, State,
 };
@@ -19,7 +19,7 @@ pub use common::{
 };
 
 /// Trait for representing a component that selects a subset of a population.
-pub trait Selection<P: Problem>: AnyComponent {
+pub trait Selection<P: Problem>: ComponentLike {
     /// Selects a subset of the `population`.
     fn select<'a>(
         &self,

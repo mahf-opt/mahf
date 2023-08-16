@@ -2,6 +2,8 @@
 
 use trait_set::trait_set;
 
+use crate::params::Parametrized;
+
 trait_set! {
     /// Collection of traits required by every component.
     ///
@@ -13,7 +15,7 @@ trait_set! {
     ///
     /// [`Component`]: crate::components::Component
     /// [`Condition`]: crate::conditions::Condition
-    pub trait AnyComponent = dyn_clone::DynClone + erased_serde::Serialize + Send + Sync;
+    pub trait ComponentLike = dyn_clone::DynClone + erased_serde::Serialize + Parametrized + Send + Sync;
 }
 
 /// The result type for fallible execution.

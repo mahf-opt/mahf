@@ -5,7 +5,7 @@
 #![allow(clippy::new_ret_no_self)]
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     state::StateReq,
     Problem, State,
 };
@@ -33,7 +33,7 @@ pub use logical::{And, Not, Or};
 /// [`BitAnd`]: std::ops::BitAnd
 /// [`BitOr`]: std::ops::BitOr
 /// [`Not`]: std::ops::Not
-pub trait Condition<P: Problem>: AnyComponent {
+pub trait Condition<P: Problem>: ComponentLike {
     /// Can be used to initialize custom state required by the condition.
     #[allow(unused_variables)]
     fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {

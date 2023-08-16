@@ -12,7 +12,7 @@ use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     components::Component,
     population::AsSolutionsMut,
     problems::LimitedVectorProblem,
@@ -21,7 +21,7 @@ use crate::{
 };
 
 /// Trait for representing a component that repairs solutions that violate boundary constraints.
-pub trait BoundaryConstraint<P: Problem>: AnyComponent {
+pub trait BoundaryConstraint<P: Problem>: ComponentLike {
     /// Repairs the `solution` such that it no longer violates any boundary constraints.
     fn constrain(&self, solution: &mut P::Encoding, problem: &P, rng: &mut Random);
 }

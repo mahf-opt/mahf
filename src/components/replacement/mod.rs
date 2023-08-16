@@ -3,7 +3,7 @@
 use eyre::WrapErr;
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     state::random::Random,
     Individual, Problem, State,
 };
@@ -16,7 +16,7 @@ pub use common::{
 };
 
 /// Trait for representing a component that replaces a parent population with its child population.
-pub trait Replacement<P: Problem>: AnyComponent {
+pub trait Replacement<P: Problem>: ComponentLike {
     fn replace(
         &self,
         parents: Vec<Individual<P>>,

@@ -1,7 +1,7 @@
 //! Initialize solutions in the search space.
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     state::random::Random,
     Problem, State,
 };
@@ -14,7 +14,7 @@ pub use common::{Empty, RandomBitstring, RandomPermutation, RandomSpread};
 use crate::population::IntoIndividuals;
 
 /// Trait for representing a component that initializes solutions in the search space.
-pub trait Initialization<P: Problem>: AnyComponent {
+pub trait Initialization<P: Problem>: ComponentLike {
     /// Initializes solutions in the search space.
     fn initialize(&self, problem: &P, rng: &mut Random) -> Vec<P::Encoding>;
 }

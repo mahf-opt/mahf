@@ -14,7 +14,7 @@ use derive_more::{Deref, DerefMut};
 use eyre::ensure;
 
 use crate::{
-    component::{AnyComponent, ExecResult},
+    component::{ComponentLike, ExecResult},
     population::AsSolutionsMut,
     CustomState, Problem, State,
 };
@@ -29,7 +29,7 @@ pub use common::{
 };
 
 /// Trait for representing a component that mutates solutions.
-pub trait Mutation<P: Problem>: AnyComponent {
+pub trait Mutation<P: Problem>: ComponentLike {
     fn mutate(
         &self,
         solution: &mut P::Encoding,
@@ -57,32 +57,32 @@ where
 
 /// The mutation strength of a mutation component `T`.
 #[derive(Deref, DerefMut, Tid)]
-pub struct MutationStrength<T: AnyComponent + 'static>(
+pub struct MutationStrength<T: ComponentLike + 'static>(
     #[deref]
     #[deref_mut]
     f64,
     PhantomData<T>,
 );
 
-impl<T: AnyComponent> MutationStrength<T> {
+impl<T: ComponentLike> MutationStrength<T> {
     /// Creates a new `MutationStrength` with initial `value`.
     pub fn new(value: f64) -> Self {
         Self(value, PhantomData)
     }
 }
 
-impl<T: AnyComponent> CustomState<'_> for MutationStrength<T> {}
+impl<T: ComponentLike> CustomState<'_> for MutationStrength<T> {}
 
 /// The mutation rate of a mutation component `T`.
 #[derive(Deref, DerefMut, Tid)]
-pub struct MutationRate<T: AnyComponent + 'static>(
+pub struct MutationRate<T: ComponentLike + 'static>(
     #[deref]
     #[deref_mut]
     f64,
     PhantomData<T>,
 );
 
-impl<T: AnyComponent> MutationRate<T> {
+impl<T: ComponentLike> MutationRate<T> {
     /// Creates a new `MutationRate` with initial `value`.
     pub fn new(value: f64) -> Self {
         Self(value, PhantomData)
@@ -98,4 +98,4 @@ impl<T: AnyComponent> MutationRate<T> {
     }
 }
 
-impl<T: AnyComponent> CustomState<'_> for MutationRate<T> {}
+impl<T: ComponentLike> CustomState<'_> for MutationRate<T> {}
