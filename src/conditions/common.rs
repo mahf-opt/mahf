@@ -15,10 +15,13 @@ use trait_set::trait_set;
 use crate::{
     component::ExecResult,
     conditions::Condition,
-    lens::{BaseLens, Lens, LensRef, ValueOf},
+    lens::{
+        common::{BestObjectiveValueLens, BestSolutionLens},
+        BaseLens, Lens, LensRef, ValueOf,
+    },
     problems::KnownOptimumProblem,
     state::common::{Evaluations, Iterations, Progress},
-    CustomState, Problem, State,
+    CustomState, Problem, SingleObjectiveProblem, State,
 };
 
 /// Evaluates to `true` with a probability of `p`.
@@ -403,6 +406,23 @@ where
         L::Target: Clone + Send,
     {
         Box::new(Self::from_params(checker, lens))
+    }
+}
+
+impl<P: SingleObjectiveProblem> ChangeOf<BestObjectiveValueLens<P>> {
+    /// Creates a new `ChangeOf` that evaluates to `true` when the best objective value changes.
+    pub fn best_objective_value(threshold: f64) -> ExecResult<Box<dyn Condition<P>>> {
+        Ok(Self::new(
+            DeltaEqChecker::new(threshold.try_into()?),
+            BestObjectiveValueLens::new(),
+        ))
+    }
+}
+
+impl<P: SingleObjectiveProblem> ChangeOf<BestSolutionLens<P>> {
+    /// Creates a new `ChangeOf` that evaluates to `true` when the best solution changes.
+    pub fn best_solution() -> ExecResult<Box<dyn Condition<P>>> {
+        Ok(Self::new(PartialEqChecker::new(), BestSolutionLens::new()))
     }
 }
 
