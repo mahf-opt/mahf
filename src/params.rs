@@ -5,12 +5,15 @@ use std::{
 };
 
 use downcast_rs::Downcast;
-pub use mahf_derive::{TryFromParams, Parametrized};
+use itertools::Itertools;
+pub use mahf_derive::{Parametrized, TryFromParams};
 use trait_set::trait_set;
+
+use crate::{Component, ExecResult, Problem};
 
 trait_set! {
     /// A type-erased parameter.
-    pub trait Parameter = Debug + dyn_clone::DynClone + Downcast;
+    pub trait Parameter = Debug + dyn_clone::DynClone + Downcast + Send;
 }
 
 downcast_rs::impl_downcast!(Parameter);
@@ -77,10 +80,24 @@ impl Params {
         self.with(name, value.into())
     }
 
-    pub fn insert<T: Parameter>(&mut self, name: impl Into<String>, value: T) {
+    pub fn insert_raw(&mut self, name: impl Into<String>, value: Param) {
         let name = name.into();
-        assert!(!name.contains("."), "dots (.) are not allowed in parameter names");
-        self.params.insert(name, Param::new(value));
+        assert!(
+            !name.contains('.'),
+            "dots (.) are not allowed in parameter names"
+        );
+        self.params.insert(name, value);
+    }
+
+    pub fn insert<T: Parameter>(&mut self, name: impl Into<String>, value: T) {
+        self.insert_raw(name, Param::new(value));
+    }
+
+    pub fn contains<T: Parameter>(&self, name: &str) -> bool {
+        self.params
+            .get(name)
+            .and_then(|param| param.is::<T>().then_some(()))
+            .is_some()
     }
 
     pub fn get<T: Parameter>(&self, name: &str) -> Option<&T> {
@@ -130,7 +147,36 @@ impl Params {
     }
 
     pub fn nest(&mut self) -> bool {
-        todo!()
+        let keys = self
+            .params
+            .keys()
+            .filter_map(|key| {
+                let (outer, inner) = key.split_once('.')?;
+                Some((outer.to_string(), (key.to_string(), inner.to_string())))
+            })
+            .into_group_map();
+
+        let modified = !keys.is_empty();
+
+        for (outer, group) in keys {
+            let params: HashMap<_, _> = group
+                .into_iter()
+                .map(|(key, inner)| {
+                    let value = self.params.remove(&key).unwrap();
+                    (inner, value)
+                })
+                .collect();
+
+            self.insert(outer, Self::from(params));
+        }
+
+        modified
+    }
+
+    pub fn as_nest(&self) -> Self {
+        let mut params = self.clone();
+        params.nest();
+        params
     }
 }
 
@@ -147,12 +193,35 @@ impl From<HashMap<String, Param>> for Params {
 }
 
 pub trait TryFromParams: TryFrom<Params> {
-    fn try_from_params(params: Params) -> Result<Self, Self::Error>;
+    fn try_from_params(params: Params) -> ExecResult<Self>;
 }
 
-impl<T: TryFrom<Params>> TryFromParams for T {
-    fn try_from_params(params: Params) -> Result<Self, Self::Error> {
-        Self::try_from(params)
+impl<T> TryFromParams for T
+where
+    T: TryFrom<Params>,
+    eyre::Report: From<<T as TryFrom<Params>>::Error>,
+{
+    fn try_from_params(params: Params) -> ExecResult<Self> {
+        Ok(Self::try_from(params)?)
+    }
+}
+
+pub trait TryComponentFromParams<P: Problem> {
+    fn try_from_params(params: Params) -> ExecResult<Box<dyn Component<P>>>
+    where
+        Self: Sized;
+}
+
+impl<P, T> TryComponentFromParams<P> for T
+where
+    P: Problem,
+    T: TryFromParams + Component<P> + 'static,
+{
+    fn try_from_params(params: Params) -> ExecResult<Box<dyn Component<P>>>
+    where
+        Self: Sized,
+    {
+        Self::try_from_params(params).map(|t| Box::new(t) as Box<dyn Component<P>>)
     }
 }
 
