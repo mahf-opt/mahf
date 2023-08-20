@@ -30,8 +30,7 @@ use crate::{
 /// Parameters for [`real_pso`].
 pub struct RealProblemParameters {
     pub num_particles: u32,
-    pub start_weight: f64,
-    pub end_weight: f64,
+    pub inertia_weight: f64,
     pub c_one: f64,
     pub c_two: f64,
     pub v_max: f64,
@@ -49,8 +48,7 @@ where
 {
     let RealProblemParameters {
         num_particles,
-        start_weight,
-        end_weight,
+        inertia_weight,
         c_one,
         c_two,
         v_max,
@@ -64,19 +62,14 @@ where
             Parameters {
                 particle_init: swarm::ParticleSwarmInit::new(v_max)?,
                 particle_update: swarm::ParticleVelocitiesUpdate::new(
-                    start_weight,
+                    inertia_weight,
                     c_one,
                     c_two,
                     v_max,
                 )
                 .wrap_err("failed to construct particle velocities update")?,
                 constraints: boundary::Saturation::new(),
-                inertia_weight_update: Some(mapping::Linear::new(
-                    start_weight,
-                    end_weight,
-                    ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
-                    ValueOf::<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>::new(),
-                )),
+                inertia_weight_update: None,
                 state_update: swarm::ParticleSwarmUpdate::new(),
             },
             condition,
