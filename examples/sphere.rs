@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use mahf::{
-    conditions::common::{ChangeOf, DeltaEqChecker},
+    conditions::common::ChangeOf,
     experiments::par_experiment,
     lens::common::{BestObjectiveValueLens, BestSolutionLens},
     prelude::*,
@@ -70,18 +70,17 @@ fn main() -> ExecResult<()> {
         /* params: */
         pso::RealProblemParameters {
             num_particles: 120,
-            start_weight: 0.9,
-            end_weight: 0.4,
-            c_one: 1.7,
-            c_two: 1.7,
-            v_max: 1.0,
+            inertia_weight: 0.6,
+            c_one: 0.4,
+            c_two: 1.9,
+            v_max: 0.03,
         },
         /* condition: */
         conditions::LessThanN::iterations(10_000) & !conditions::OptimumReached::new(0.01)?,
     )?;
 
     // ... or a Genetic Algorithm.
-    let config = ga::real_ga(
+    let config: Configuration<Sphere> = ga::real_ga(
         /* params: */
         ga::RealProblemParameters {
             population_size: 120,
@@ -99,20 +98,13 @@ fn main() -> ExecResult<()> {
         state.configure_log(|config| {
             config
                 .with_common(conditions::EveryN::iterations(50))
-                .with(
-                    ChangeOf::new(
-                        DeltaEqChecker::new(0.001.try_into().unwrap()),
-                        BestObjectiveValueLens::new(),
-                    ) & conditions::OptimumReached::new(0.05)?,
-                    BestObjectiveValueLens::entry(),
-                )
-                .with(
-                    conditions::EveryN::iterations(1_000),
-                    BestSolutionLens::entry(),
+                .with_many(
+                    ChangeOf::best_objective_value(1e-6)? & conditions::OptimumReached::new(0.05)?,
+                    [BestObjectiveValueLens::entry(), BestSolutionLens::entry()],
                 );
             Ok(())
         })
     };
 
-    par_experiment(&config, setup, &[problem], 4096, "data/bmf/GA", false)
+    par_experiment(&config, setup, &[problem], 4096, "data/bmf/sphere", false)
 }
