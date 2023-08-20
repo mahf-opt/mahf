@@ -142,6 +142,9 @@
 
 // TODO: #![warn(missing_docs)]
 
+// Enable macros from `mahf-derive` inside `mahf`.
+extern crate self as mahf;
+
 #[doc(hidden)]
 pub use derive_more;
 #[doc(hidden)]

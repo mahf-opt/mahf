@@ -6,7 +6,10 @@ use std::{
 
 use downcast_rs::Downcast;
 use itertools::Itertools;
+#[cfg(feature = "macros")]
 pub use mahf_derive::{Parametrized, TryFromParams};
+#[cfg(not(feature = "macros"))]
+pub(crate) use mahf_derive::{Parametrized, TryFromParams};
 use trait_set::trait_set;
 
 use crate::{Component, ExecResult, Problem};
