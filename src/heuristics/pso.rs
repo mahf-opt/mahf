@@ -16,14 +16,12 @@ use eyre::WrapErr;
 
 use crate::{
     component::ExecResult,
-    components::{boundary, initialization, mapping, swarm},
+    components::{boundary, initialization, swarm},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
-    lens::ValueOf,
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
-    state::common,
     Component,
 };
 
