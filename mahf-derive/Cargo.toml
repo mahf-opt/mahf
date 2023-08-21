@@ -6,7 +6,7 @@ edition = "2021"
 description = "Derive macros for MAHF."
 readme = "README.md"
 license = "GPL-3.0-or-later"
-repository = "https://github.com/mahf-opt/mahf-derive"
+repository = "https://github.com/mahf-opt/mahf"
 keywords = ["heuristic", "metaheuristic", "optimization"]
 categories = ["science", "algorithms"]
 
