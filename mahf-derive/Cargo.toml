@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Leopold Luley <git@leopoldluley.de>", "Helena Stegherr <helena.stegherr@uni-a.de>", "Jonathan Wurth <jonathan.wurth@uni-a.de>"]
 edition = "2021"
 description = "Derive macros for MAHF."
-readme = "README.md"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/mahf-opt/mahf"
 keywords = ["heuristic", "metaheuristic", "optimization"]

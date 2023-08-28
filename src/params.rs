@@ -5,6 +5,7 @@ use std::{
 };
 
 use downcast_rs::Downcast;
+use eyre::ContextCompat;
 use itertools::Itertools;
 #[cfg(feature = "macros")]
 pub use mahf_derive::{Parametrized, TryFromParams};
@@ -70,19 +71,6 @@ impl Params {
         }
     }
 
-    pub fn with<T: Parameter>(mut self, name: impl Into<String>, value: T) -> Self {
-        self.insert(name, value);
-        self
-    }
-
-    pub fn with_real(self, name: impl Into<String>, value: impl Into<f64>) -> Self {
-        self.with(name, value.into())
-    }
-
-    pub fn with_int(self, name: impl Into<String>, value: impl Into<u32>) -> Self {
-        self.with(name, value.into())
-    }
-
     pub fn insert_raw(&mut self, name: impl Into<String>, value: Param) {
         let name = name.into();
         assert!(
@@ -94,6 +82,19 @@ impl Params {
 
     pub fn insert<T: Parameter>(&mut self, name: impl Into<String>, value: T) {
         self.insert_raw(name, Param::new(value));
+    }
+
+    pub fn with<T: Parameter>(mut self, name: impl Into<String>, value: T) -> Self {
+        self.insert(name, value);
+        self
+    }
+
+    pub fn with_real(self, name: impl Into<String>, value: impl Into<f64>) -> Self {
+        self.with(name, value.into())
+    }
+
+    pub fn with_int(self, name: impl Into<String>, value: impl Into<u32>) -> Self {
+        self.with(name, value.into())
     }
 
     pub fn contains<T: Parameter>(&self, name: &str) -> bool {
@@ -115,6 +116,14 @@ impl Params {
         self.params
             .remove(name)
             .and_then(|param| param.into_inner())
+    }
+
+    pub fn try_extract<T: Parameter>(&mut self, name: &str) -> ExecResult<T> {
+        self.extract(name).wrap_err(format!(
+            "parameter {}:{} not found",
+            name,
+            std::any::type_name::<T>()
+        ))
     }
 
     pub fn flatten(&mut self) -> bool {
