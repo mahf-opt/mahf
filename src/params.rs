@@ -1,10 +1,12 @@
+//! Type-erased parameters.
+
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
     fmt::{Debug, Formatter},
 };
 
-use downcast_rs::Downcast;
+use downcast_rs::{Downcast, DowncastSync};
 use eyre::ContextCompat;
 use itertools::Itertools;
 #[cfg(feature = "macros")]
@@ -17,7 +19,7 @@ use crate::{Component, ExecResult, Problem};
 
 trait_set! {
     /// A type-erased parameter.
-    pub trait Parameter = Debug + dyn_clone::DynClone + Downcast + Send;
+    pub trait Parameter = Debug + dyn_clone::DynClone + DowncastSync;
 }
 
 downcast_rs::impl_downcast!(Parameter);
