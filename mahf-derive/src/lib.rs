@@ -1,9 +1,9 @@
 use proc_macro::TokenStream;
-
 use quote::quote;
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
-use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Field, Fields, GenericParam};
+use syn::{
+    parse_macro_input, parse_quote, punctuated::Punctuated, token::Comma, Data, DeriveInput, Field,
+    Fields, GenericParam,
+};
 
 fn parse_fields(input: &DeriveInput) -> Punctuated<Field, Comma> {
     match &input.data {
