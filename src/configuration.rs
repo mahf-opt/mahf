@@ -51,7 +51,6 @@ use crate::{
 ///
 /// For the purpose of easily identifying which experiment was done with which components
 /// and parameters, it is serializable (but not deserializable).
-#[derive(Clone)]
 pub struct Configuration<P: Problem>(Box<dyn Component<P>>);
 
 impl<P: Problem> Configuration<P> {
@@ -266,6 +265,12 @@ impl<P: Problem> Configuration<P> {
         self.run(problem, &mut state)?;
 
         Ok(state)
+    }
+}
+
+impl<P: Problem> Clone for Configuration<P> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }
 
