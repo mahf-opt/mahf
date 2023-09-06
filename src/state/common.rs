@@ -69,6 +69,15 @@ where
     }
 }
 
+impl<'a, P: Problem, I: Identifier> From<Box<dyn Evaluate<Problem = P> + 'a>> for Evaluator<'a, P, I> {
+    fn from(value: Box<dyn Evaluate<Problem = P> + 'a>) -> Self {
+        Self {
+            inner: value,
+            marker: PhantomId::default(),
+        }
+    }
+}
+
 impl<'a, P: Problem, I: Identifier> CustomState<'a> for Evaluator<'a, P, I> {}
 
 /// The number of evaluations of the objective function.
