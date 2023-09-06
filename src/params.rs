@@ -6,24 +6,29 @@ use std::{
     fmt::{Debug, Formatter},
 };
 
-use downcast_rs::{Downcast, DowncastSync};
+use downcast_rs::DowncastSync;
 use eyre::ContextCompat;
 use itertools::Itertools;
 #[cfg(feature = "macros")]
 pub use mahf_derive::{Parametrized, TryFromParams};
 #[cfg(not(feature = "macros"))]
 pub(crate) use mahf_derive::{Parametrized, TryFromParams};
-use trait_set::trait_set;
 
 use crate::{Component, ExecResult, Problem};
 
-trait_set! {
-    /// A type-erased parameter.
-    pub trait Parameter = Debug + dyn_clone::DynClone + DowncastSync;
+/// A type-erased parameter.
+pub trait Parameter: Debug + dyn_clone::DynClone + DowncastSync {
+    fn type_name(&self) -> &'static str;
 }
 
 downcast_rs::impl_downcast!(Parameter);
 dyn_clone::clone_trait_object!(Parameter);
+
+impl<T: Debug + Clone + DowncastSync> Parameter for T {
+    fn type_name(&self) -> &'static str {
+        std::any::type_name::<T>()
+    }
+}
 
 #[derive(Clone)]
 pub struct Param {
@@ -47,12 +52,16 @@ impl Param {
         self.inner.as_ref().as_any().is::<T>()
     }
 
+    pub fn inner_type_name(&self) -> &'static str {
+        self.inner.as_ref().type_name()
+    }
+
     pub fn as_ref<T: Parameter>(&self) -> Option<&T> {
-        self.inner.as_any().downcast_ref()
+        self.inner.as_ref().as_any().downcast_ref()
     }
 
     pub fn as_mut<T: Parameter>(&mut self) -> Option<&mut T> {
-        self.inner.as_any_mut().downcast_mut()
+        self.inner.as_mut().as_any_mut().downcast_mut()
     }
 
     pub fn into_inner<T: Parameter>(self) -> Option<T> {
@@ -75,10 +84,6 @@ impl Params {
 
     pub fn insert_raw(&mut self, name: impl Into<String>, value: Param) {
         let name = name.into();
-        assert!(
-            !name.contains('.'),
-            "dots (.) are not allowed in parameter names"
-        );
         self.params.insert(name, value);
     }
 
@@ -106,8 +111,16 @@ impl Params {
             .is_some()
     }
 
+    pub fn type_name_of(&self, name: &str) -> Option<&'static str> {
+        self.params.get(name).map(|param| param.inner_type_name())
+    }
+
     pub fn get<T: Parameter>(&self, name: &str) -> Option<&T> {
         self.params.get(name).and_then(|param| param.as_ref())
+    }
+
+    pub fn try_get<T: Parameter>(&self, name: &str) -> ExecResult<&T> {
+        self.get(name).wrap_err(self.format_missing::<T>(name))
     }
 
     pub fn get_mut<T: Parameter>(&mut self, name: &str) -> Option<&mut T> {
@@ -121,11 +134,15 @@ impl Params {
     }
 
     pub fn try_extract<T: Parameter>(&mut self, name: &str) -> ExecResult<T> {
-        self.extract(name).wrap_err(format!(
+        self.extract(name).wrap_err(self.format_missing::<T>(name))
+    }
+
+    fn format_missing<T: Parameter>(&self, name: &str) -> String {
+        format!(
             "parameter {}:{} not found",
             name,
             std::any::type_name::<T>()
-        ))
+        )
     }
 
     pub fn flatten(&mut self) -> bool {
@@ -181,7 +198,10 @@ impl Params {
                 })
                 .collect();
 
-            self.insert(outer, Self::from(params));
+            let mut inner = Self::from(params);
+            inner.nest();
+
+            self.insert(outer, inner);
         }
 
         modified
