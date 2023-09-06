@@ -194,15 +194,15 @@ where
         ensure!(
             vs.len() == xs.len(),
             "the number of particles and particle velocities is different ({} vs. {})",
-            vs.len(),
-            xs.len()
+            xs.len(),
+            vs.len()
         );
         let xps = state.borrow_value::<BestParticles<P, I>>();
         ensure!(
             xps.len() == xs.len(),
             "the number of particles and local best particles is different ({} vs. {})",
-            xps.len(),
-            xs.len()
+            xs.len(),
+            xps.len()
         );
         let best = state.borrow_value::<BestParticle<P, I>>();
         let xg = best.as_ref().wrap_err("global best is missing")?.solution();
