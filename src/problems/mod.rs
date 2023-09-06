@@ -51,7 +51,7 @@ use trait_set::trait_set;
 
 pub mod encoding;
 pub mod evaluate;
-pub mod individual;
+mod individual;
 pub mod objective;
 
 pub use encoding::AnyEncoding;
