@@ -1,7 +1,7 @@
 //! Selection components for Differential Evolution (DE).
 
 use eyre::{ensure, ContextCompat};
-use rand::seq::SliceRandom;
+use rand::{distributions::Uniform, seq::SliceRandom, Rng};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -167,7 +167,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
     ) -> ExecResult<Vec<&'a Individual<P>>> {
         let size = (self.y * 2 - 1) as usize;
         let best = f::best(population).wrap_err("population is empty")?;
-        let selection = population
+        let selection: Vec<_> = population
             .iter()
             .flat_map(|individual| {
                 let mut selection = vec![individual, best];
@@ -176,10 +176,32 @@ impl<P: SingleObjectiveProblem> Selection<P> for DECurrentToBest {
                 let remaining_population: Vec<_> =
                     population.iter().filter(|&i| i != individual).collect();
 
-                selection.extend(remaining_population.choose_multiple(rng, size));
+                match remaining_population.len() {
+                    // Choose multiple without repetition if there are enough distinct individuals.
+                    k if k >= size => {
+                        selection.extend(remaining_population.choose_multiple(rng, size))
+                    }
+                    // Choose with repetition if there are not enough distinct.
+                    k if k > 0 => selection.extend(
+                        rng.sample_iter(Uniform::new(0, k))
+                            .take(size)
+                            .map(|i| remaining_population[i]),
+                    ),
+                    // This happens only for populations with zero diversity.
+                    // TODO: Find a better solution.
+                    _ => selection.extend(vec![individual; size]),
+                };
+
                 selection
             })
             .collect();
+        assert_eq!(
+            population.len() * (size + 2),
+            selection.len(),
+            "should have selected {}, but got only {}",
+            population.len() * (size + 2),
+            selection.len()
+        );
         Ok(selection)
     }
 }
