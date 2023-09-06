@@ -183,9 +183,8 @@ pub use conditions::Condition;
 pub use configuration::Configuration;
 #[doc(hidden)]
 pub use problems::{
-    individual::Individual,
     objective::{MultiObjective, Objective, SingleObjective},
-    MultiObjectiveProblem, Problem, SingleObjectiveProblem,
+    Individual, MultiObjectiveProblem, Problem, SingleObjectiveProblem,
 };
 #[doc(hidden)]
 pub use state::{CustomState, Random, State, StateError, StateRegistry};
