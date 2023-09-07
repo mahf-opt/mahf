@@ -49,7 +49,7 @@ submit a pull request with your changes.
 
 ### Code Contributions
 
-In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susam/gitpr)
+In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susam/gitpr):
 
 1. Fork the repository to your own GitHub account.
 2. Clone the project to your machine.
@@ -64,6 +64,7 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 
 PRs to our projects are always welcome and can be a quick way to get your fix or improvement slated for the next
 release.
+
 When submitting a PR, please:
 
 1. Provide a clear and concise title and description.
@@ -155,7 +156,7 @@ Please add examples for all public methods.
   <summary>Run doctests</summary>
 
   ```shell
-  $ cargo test --workspace --workspace --all-features --doc --verbose
+  $ cargo test --workspace --all-features --doc --verbose
   ```
 
 </details>
