@@ -70,10 +70,10 @@ fn main() -> ExecResult<()> {
         /* params: */
         pso::RealProblemParameters {
             num_particles: 120,
-            inertia_weight: 0.6,
-            c_one: 0.4,
-            c_two: 1.9,
-            v_max: 0.03,
+            inertia_weight: 0.8,
+            c_one: 2.7,
+            c_two: 0.6,
+            v_max: 0.7,
         },
         /* condition: */
         conditions::LessThanN::iterations(10_000) & !conditions::OptimumReached::new(0.01)?,
