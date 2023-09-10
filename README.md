@@ -92,7 +92,7 @@ MAHF has extensive [documentation](https://docs.rs/mahf/latest/mahf/), which sho
 ## Contributing
 
 We welcome contributions from the community and appreciate your interest in improving this project.
-A contribution guide will follow shortly.
+Please take a look at our [contribution guide](CONTRIBUTING.md).
 
 ## License
 
