@@ -4,7 +4,7 @@ use eyre::WrapErr;
 
 use crate::{
     component::ExecResult,
-    components::{boundary, evaluation, initialization, mutation, replacement, selection, utils},
+    components::{boundary, initialization, mutation, replacement, selection, utils},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
@@ -38,7 +38,6 @@ where
         .do_(initialization::RandomSpread::new(1))
         .evaluate()
         .update_best_individual()
-        .do_(evaluation::BestIndividualUpdate::new())
         .do_(ls::<P, Global>(
             Parameters {
                 num_neighbors: n_neighbors,
@@ -101,7 +100,7 @@ where
     I: Identifier,
 {
     let Parameters {
-        num_neighbors: n_neighbors,
+        num_neighbors,
         neighbors,
         constraints,
     } = params;
@@ -109,7 +108,7 @@ where
     Configuration::builder()
         .while_(condition, |builder| {
             builder
-                .do_(selection::CloneSingle::new(n_neighbors))
+                .do_(selection::CloneSingle::new(num_neighbors))
                 .do_(neighbors)
                 .do_(constraints)
                 .evaluate_with::<I>()
