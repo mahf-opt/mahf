@@ -54,7 +54,7 @@ pub fn real_fa<P>(
         .update_best_individual()
         .do_(fa::<P, Global>(
             Parameters {
-                firefly_update: swarm::FireflyPositionsUpdate::new(
+                firefly_update: swarm::fa::FireflyPositionsUpdate::new(
                     alpha,
                     beta,
                     gamma,
@@ -62,7 +62,7 @@ pub fn real_fa<P>(
                 constraints: boundary::Saturation::new(),
                 alpha_update: Box::from(mapping::sa::GeometricCooling::new(
                     delta,
-                    ValueOf::<swarm::RandomizationParameter>::new(),
+                    ValueOf::<swarm::fa::RandomizationParameter>::new(),
                 )),
             },
             condition,
