@@ -49,6 +49,7 @@ impl<P: SingleObjectiveProblem> Component<P> for ExponentialAnnealingAcceptance 
         Ok(())
     }
 
+
     #[ensures(state.populations().current().len() == 1, "population after should contain a single individual")]
     #[ensures(state.populations().len() == old(state.populations().len()) - 1)]
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {

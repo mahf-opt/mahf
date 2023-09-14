@@ -3,6 +3,8 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
+use crate::problems::VectorProblem;
+use crate::{SingleObjective, SingleObjectiveProblem};
 
 /// Allows enumeration for functions which normally don't support enumeration, e.g. [`Vec::retain`].
 ///
@@ -46,6 +48,6 @@ impl<T> serde::Serialize for SerializablePhantom<T> {
 }
 
 /// Calculates squared Euclidean distance between two vectors.
-pub fn squared_euclidean(a: &Vec<f64>, b:&Vec<f64>) -> f64 {
-    a.iter().zip(b.iter()).map(|(p, q)| (q - p).powf(2.0)).sum::<f64>()
+pub fn squared_euclidean(a: &[f64], b:&Vec<f64>) -> f64 {
+    a.iter().zip(b).map(|(p, q)| (q - p).powi(2)).sum::<f64>()
 }
