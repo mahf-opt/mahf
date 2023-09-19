@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
 use eyre::{ensure, ContextCompat, WrapErr};
-use itertools::multizip;
+use itertools::{izip, multizip};
 use rand::Rng;
 use serde::Serialize;
 
@@ -84,49 +84,52 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
         let a = state.get_value::<RandomizationParameter>();
 
         // Get necessary state
-        let mut jj: Vec<Individual<P>> = populations.current().into_iter().cloned().collect();
-        let mut ii: Vec<Individual<P>> = populations.current().into_iter().cloned().collect();
-        let mut x: Vec<&mut Vec<f64>> = populations.current_mut().as_solutions_mut();
+        let mut individuals = populations.current_mut().clone();
 
-        // scale for adapting to problem domain; at the moment only if domain in each dim is the same
-        let scale = (problem.domain()[0].end - problem.domain()[0].start).abs();
+        // scale for adapting to problem domain
+        let scales = problem.domain()
+            .iter()
+            .map(|p| (p.end - p.start).abs())
+            .collect::<Vec<f64>>();
+
+        // shifts in position for each firefly
+        let mut positions = vec![];
 
         // Perform the update step.
         // compare all individuals
-        for (u, i) in  ii.iter_mut().enumerate() {
-            for j in jj.iter_mut() {
+        for i in  &individuals {
+            // new position for firefly i considering all fireflies j
+            let mut position: Vec<Vec<f64>> = vec![];
+            for j in &individuals {
                 // if individual j is "more attractive" (i.e. has lower fitness), move towards j
-                if i.get_objective() > j.get_objective() {
+                if i.objective() > j.objective() {
                     // draw random values from uniform distribution between 0 and 1
                     // according to paper: also possible to use normal distribution, depending on problem
-                    let rand: Vec<f64> = (0..problem.dimension()).map(|_| rng.gen_range(0.0..1.0)).collect();
-                    // calculate distance between i and j; without .sqrt() as it has to be squared again in the next step
-                    let r = i.solution_mut()
-                        .into_iter()
-                        .zip(j.solution_mut())
-                        .map(|(p, q)| (p.clone() - q.clone()).powf(2.0))
-                        .sum::<f64>();
-                    // calculate "attractiveness"
-                    let b = beta * (- gamma * r).exp();
-                    // calculate difference of solutions j and i
-                    let diff = i.solution_mut()
-                        .into_iter()
-                        .zip(j.solution_mut())
-                        .map(|(p, q)| q.clone() - p.clone())
-                        .collect::<Vec<f64>>();
-                    // calculate values that should be added to current position
-                    let pos = diff
-                        .into_iter()
-                        .zip(rand)
-                        .map(|(p, q)| b * p + a * (q - 0.5) * scale)
-                        .collect::<Vec<f64>>();
-                    // Add values to firefly position
-                    for s in 0..i.solution_mut().len() {
-                        x[u][s] += pos[s];
-                    }
+                    let rands: Vec<f64> = (0..problem.dimension()).map(|_| rng.gen_range(0.0..1.0)).collect();
+                    position.push(izip!(i.solution(), j.solution(), &scales, rands)
+                        .map(|(xi, xj, scale, rand)| {
+                            // calculate "attractiveness"
+                            let b = beta * (-gamma * (xi - xj).powf(2.0)).exp();
+                            // calculate value that should be added to current position
+                            b * (xj - xi) + a * (rand - 0.5) * scale
+                        })
+                        .collect::<Vec<f64>>())
                 }
             }
+            let mut sums = vec![0.0; individuals.len()];
+            for v in position {
+                for (i, x) in v.into_iter().enumerate() {
+                    sums[i] += x;
+                }
+            }
+            positions.push(sums);
         }
+        // Add values to firefly position
+        let individuals2 = populations.current_mut();
+
+        let _ = izip!(individuals2, positions)
+            .map(|(p, q)| izip!(p.solution_mut(), q).map(|(u, v)| *u + v));
+
         Ok(())
     }
 }

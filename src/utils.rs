@@ -48,9 +48,7 @@ impl<T> serde::Serialize for SerializablePhantom<T> {
 }
 
 /// Calculates squared Euclidean distance between two vectors.
-pub fn squared_euclidean<P> (a: Vec<P>, b: Vec<P>) -> f64
-where
-    P: VectorProblem<Element = f64, Objective = SingleObjective>,
+pub fn squared_euclidean (a: &Vec<f64>, b: &Vec<f64>) -> f64
 {
-    a.iter().zip(b).map(|p, q| (p - q).powf(2.0)).sum::<f64>()
+    a.iter().zip(b).map(|(p, q)| (p - q).powf(2.0)).sum::<f64>()
 }

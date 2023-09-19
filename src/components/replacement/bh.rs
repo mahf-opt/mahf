@@ -3,6 +3,7 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use crate::{Component, ExecResult, Individual, SingleObjectiveProblem, State};
+use crate::population::BestIndividual;
 use crate::problems::LimitedVectorProblem;
 use crate::utils::squared_euclidean;
 
@@ -10,9 +11,11 @@ use crate::utils::squared_euclidean;
 pub struct EventHorizon;
 
 impl EventHorizon {
-    pub fn new<P: SingleObjectiveProblem + LimitedVectorProblem>() -> Box<dyn Component<P>>
+    pub fn new<P>() -> Box<dyn Component<P>>
         where
-            P: LimitedVectorProblem<Element = f64>, {
+            P: LimitedVectorProblem<Element = f64>,
+            P: SingleObjectiveProblem,
+    {
         Box::new(Self)
     }
 }
@@ -20,6 +23,7 @@ impl EventHorizon {
 impl<P> Component<P> for EventHorizon
     where
         P: LimitedVectorProblem<Element = f64>,
+        P: SingleObjectiveProblem,
 {
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
@@ -28,13 +32,14 @@ impl<P> Component<P> for EventHorizon
 
         let f_bh = state.best_objective_value().unwrap().value();
 
-        let fitness_sum = offspring.iter().map(|x| *x.objective().value()).sum::<f64>();
+        let fitness_sum = offspring.iter().map(|x| x.objective().value()).sum::<f64>();
         let radius = f_bh / fitness_sum;
 
         let rng = &mut state.random_mut();
 
-        let best = state.best_individual().solution();
-        let distances = offspring.iter().map(|o| squared_euclidean(*o.as_solution(), best).sqrt()).collect::<Vec<f64>>();
+        let best_ind = state.populations().current().best_individual().cloned();
+        let best = best_ind.unwrap().solution().clone();
+        let distances = offspring.iter().map(|o| squared_euclidean(o.solution(), &best).sqrt()).collect::<Vec<f64>>();
 
         for (u, mut i) in offspring.iter().enumerate() {
             if distances[u] < radius {
