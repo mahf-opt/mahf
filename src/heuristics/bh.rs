@@ -72,7 +72,7 @@ pub struct Parameters<P> {
 /// A generic single-objective Black Hole algorithm (BH) template.
 pub fn bh<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
     where
-        P: SingleObjectiveProblem + LimitedVectorProblem,
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
         I: Identifier,
 {
     let Parameters {
