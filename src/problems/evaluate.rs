@@ -127,6 +127,22 @@ pub trait Evaluate: Send {
     );
 }
 
+impl<T> Evaluate for Box<T>
+where
+    T: Evaluate,
+{
+    type Problem = <T as Evaluate>::Problem;
+
+    fn evaluate(
+        &mut self,
+        problem: &Self::Problem,
+        state: &mut State<Self::Problem>,
+        individuals: &mut [Individual<Self::Problem>],
+    ) {
+        <T as Evaluate>::evaluate(self, problem, state, individuals)
+    }
+}
+
 /// Trait for a non-mutable objective function of an optimization problem.
 ///
 /// [`Sequential`] and [`Parallel`] provide a default implementation of sequential and parallel
