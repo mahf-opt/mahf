@@ -1,21 +1,15 @@
-use std::marker::PhantomData;
+use std::array::from_mut;
+use std::ops::Deref;
 
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
-use eyre::{ensure, ContextCompat, WrapErr};
-use itertools::{izip, multizip};
+use itertools::{izip};
 use rand::Rng;
 use serde::Serialize;
 
-use crate::{
-    component::{AnyComponent, ExecResult},
-    components::{Block, Component},
-    identifier::{Global, Identifier, PhantomId},
-    population::{AsSolutions, AsSolutionsMut, BestIndividual},
-    problems::{LimitedVectorProblem, SingleObjectiveProblem},
-    state::StateReq,
-    CustomState, Individual, Problem, State,
-};
+use crate::{component::ExecResult, components::Component, identifier::{Global, Identifier, PhantomId}, problems::{LimitedVectorProblem}, CustomState, State};
+use crate::state::common;
+use crate::state::common::Evaluator;
 
 /// Updates the and firefly positions.
 ///
@@ -84,7 +78,8 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
         let a = state.get_value::<RandomizationParameter>();
 
         // Get necessary state
-        let mut individuals = populations.current_mut().clone();
+        let mut individuals = populations.current_mut();
+        let mut evaluator = state.borrow::<Evaluator<P>>();
 
         // scale for adapting to problem domain
         let scales = problem.domain()
@@ -92,44 +87,32 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
             .map(|p| (p.end - p.start).abs())
             .collect::<Vec<f64>>();
 
-        // shifts in position for each firefly
-        let mut positions = vec![];
 
         // Perform the update step.
         // compare all individuals
-        for i in  &individuals {
-            // new position for firefly i considering all fireflies j
-            let mut position: Vec<Vec<f64>> = vec![];
-            for j in &individuals {
+        for i in  0..individuals.len() {
+            for j in 0..individuals.len() {
                 // if individual j is "more attractive" (i.e. has lower fitness), move towards j
-                if i.objective() > j.objective() {
+                if individuals[i].objective() > individuals[j].objective() {
                     // draw random values from uniform distribution between 0 and 1
                     // according to paper: also possible to use normal distribution, depending on problem
                     let rands: Vec<f64> = (0..problem.dimension()).map(|_| rng.gen_range(0.0..1.0)).collect();
-                    position.push(izip!(i.solution(), j.solution(), &scales, rands)
+                    let mut current = individuals[i].clone();
+                    izip!(current.solution_mut(), individuals[j].solution(), &scales, rands)
                         .map(|(xi, xj, scale, rand)| {
                             // calculate "attractiveness"
-                            let b = beta * (-gamma * (xi - xj).powf(2.0)).exp();
+                            //let b = ;
                             // calculate value that should be added to current position
-                            b * (xj - xi) + a * (rand - 0.5) * scale
-                        })
-                        .collect::<Vec<f64>>())
+                            let pos = beta * (-gamma * (*xi - xj).powf(2.0)).exp() * (xj - *xi) + a * (rand - 0.5) * scale;
+                            (xi, pos) })
+                        .for_each(|(xi, pos)| *xi += pos);
+                    individuals[i] = current;
+
+                    evaluator.evaluate(problem, state, from_mut(&mut individuals[i]));
+                    *state.borrow_value_mut::<common::Evaluations>() += 1;
                 }
             }
-            let mut sums = vec![0.0; individuals.len()];
-            for v in position {
-                for (i, x) in v.into_iter().enumerate() {
-                    sums[i] += x;
-                }
-            }
-            positions.push(sums);
         }
-        // Add values to firefly position
-        let individuals2 = populations.current_mut();
-
-        let _ = izip!(individuals2, positions)
-            .map(|(p, q)| izip!(p.solution_mut(), q).map(|(u, v)| *u + v));
-
         Ok(())
     }
 }
