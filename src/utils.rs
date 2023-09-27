@@ -33,7 +33,7 @@ pub fn all_eq<T: PartialEq>(arr: &[T]) -> bool {
 ///
 /// It additionally implements `Send` + `Sync` even if `T` doesn't.
 #[derive(Derivative)]
-#[derivative(Default(bound = ""), Copy(bound = ""), Clone(bound = ""))]
+#[derivative(Default(bound = ""), Copy(bound = ""))]
 pub struct SerializablePhantom<T>(PhantomData<fn() -> T>);
 
 impl<T> serde::Serialize for SerializablePhantom<T> {
@@ -42,5 +42,11 @@ impl<T> serde::Serialize for SerializablePhantom<T> {
         S: serde::Serializer,
     {
         serializer.serialize_unit_struct(std::any::type_name::<T>())
+    }
+}
+
+impl<T> Clone for SerializablePhantom<T> {
+    fn clone(&self) -> Self {
+        *self
     }
 }

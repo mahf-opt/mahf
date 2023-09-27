@@ -3,6 +3,8 @@
 
 use std::fmt::{Debug, Formatter};
 
+use mahf::state::registry::LocalStateRegistry;
+
 use crate::problems::Problem;
 
 /// An encoded solution with an associated (optional) objective value.
@@ -11,6 +13,7 @@ use crate::problems::Problem;
 pub struct Individual<P: Problem + ?Sized> {
     solution: P::Encoding,
     objective: Option<P::Objective>,
+    registry: LocalStateRegistry,
 }
 
 impl<P: Problem + ?Sized> Individual<P> {
@@ -37,6 +40,7 @@ impl<P: Problem + ?Sized> Individual<P> {
         Self {
             solution,
             objective: Some(objective),
+            registry: LocalStateRegistry::new(),
         }
     }
 
@@ -68,6 +72,7 @@ impl<P: Problem + ?Sized> Individual<P> {
         Self {
             solution,
             objective: None,
+            registry: LocalStateRegistry::new(),
         }
     }
 
@@ -247,6 +252,14 @@ impl<P: Problem + ?Sized> Individual<P> {
     pub fn objective(&self) -> &P::Objective {
         self.objective.as_ref().unwrap()
     }
+
+    pub fn state(&self) -> &LocalStateRegistry {
+        &self.registry
+    }
+
+    pub fn state_mut(&mut self) -> &mut LocalStateRegistry {
+        &mut self.registry
+    }
 }
 
 impl<P> Individual<P>
@@ -294,6 +307,7 @@ impl<P: Problem> Clone for Individual<P> {
         Self {
             solution: self.solution.clone(),
             objective: self.objective.clone(),
+            registry: self.registry.clone(),
         }
     }
 }

@@ -12,11 +12,13 @@ use better_any::TidExt;
 mod custom;
 pub mod entry;
 pub mod error;
+mod local;
 pub mod multi;
 
 pub use custom::CustomState;
 pub use entry::{Entry, OccupiedEntry, VacantEntry};
 pub use error::{StateError, StateResult};
+pub use local::{LocalCustomState, LocalStateRegistry};
 pub use multi::MultiStateTuple;
 
 /// A set of types with dynamic borrowing.
