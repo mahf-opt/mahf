@@ -96,12 +96,12 @@ impl Params {
         self
     }
 
-    pub fn with_real(self, name: impl Into<String>, value: impl Into<f64>) -> Self {
-        self.with(name, value.into())
+    pub fn with_real(self, name: impl Into<String>, value: f64) -> Self {
+        self.with(name, value)
     }
 
-    pub fn with_int(self, name: impl Into<String>, value: impl Into<u32>) -> Self {
-        self.with(name, value.into())
+    pub fn with_integer(self, name: impl Into<String>, value: u32) -> Self {
+        self.with(name, value)
     }
 
     pub fn contains<T: Parameter>(&self, name: &str) -> bool {
