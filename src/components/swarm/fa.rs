@@ -68,8 +68,8 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
     }
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let mut populations = state.populations_mut();
-        let mut rng = state.random_mut();
+
+
 
         // Prepare parameters
         let &Self {
@@ -78,8 +78,12 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
         let a = state.get_value::<RandomizationParameter>();
 
         // Get necessary state
-        let mut individuals = populations.current_mut();
-        let mut evaluator = state.borrow::<Evaluator<P>>();
+
+        //let binding = state.borrow_mut::<Evaluator<P, I>>();
+        //let mut evaluator = binding.deref();
+        //let mut populations = state.populations_mut();
+        let mut rng = state.random_mut();
+        let mut individuals = state.populations_mut().pop();
 
         // scale for adapting to problem domain
         let scales = problem.domain()
@@ -108,11 +112,17 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
                         .for_each(|(xi, pos)| *xi += pos);
                     individuals[i] = current;
 
-                    evaluator.evaluate(problem, state, from_mut(&mut individuals[i]));
+                    state.holding::<Evaluator<P, I>>(
+                        |evaluator: &mut Evaluator<P, I>, state| {
+                            evaluator.evaluate(problem, state, from_mut(&mut individuals[i]));
+                            Ok(())
+                        },
+                    )?;
                     *state.borrow_value_mut::<common::Evaluations>() += 1;
                 }
             }
         }
+        state.populations_mut().push(individuals);
         Ok(())
     }
 }
