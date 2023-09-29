@@ -1,5 +1,4 @@
 use std::array::from_mut;
-use std::ops::Deref;
 
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
@@ -69,20 +68,13 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
 
-
-
         // Prepare parameters
         let &Self {
             beta, gamma, ..
         } = self;
         let a = state.get_value::<RandomizationParameter>();
 
-        // Get necessary state
-
-        //let binding = state.borrow_mut::<Evaluator<P, I>>();
-        //let mut evaluator = binding.deref();
-        //let mut populations = state.populations_mut();
-        let mut rng = state.random_mut();
+        // Get population from state
         let mut individuals = state.populations_mut().pop();
 
         // scale for adapting to problem domain
@@ -91,22 +83,17 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
             .map(|p| (p.end - p.start).abs())
             .collect::<Vec<f64>>();
 
-
         // Perform the update step.
-        // compare all individuals
         for i in  0..individuals.len() {
             for j in 0..individuals.len() {
                 // if individual j is "more attractive" (i.e. has lower fitness), move towards j
                 if individuals[i].objective() > individuals[j].objective() {
                     // draw random values from uniform distribution between 0 and 1
                     // according to paper: also possible to use normal distribution, depending on problem
-                    let rands: Vec<f64> = (0..problem.dimension()).map(|_| rng.gen_range(0.0..1.0)).collect();
+                    let rands: Vec<f64> = (0..problem.dimension()).map(|_|  state.random_mut().gen_range(0.0..1.0)).collect();
                     let mut current = individuals[i].clone();
                     izip!(current.solution_mut(), individuals[j].solution(), &scales, rands)
                         .map(|(xi, xj, scale, rand)| {
-                            // calculate "attractiveness"
-                            //let b = ;
-                            // calculate value that should be added to current position
                             let pos = beta * (-gamma * (*xi - xj).powf(2.0)).exp() * (xj - *xi) + a * (rand - 0.5) * scale;
                             (xi, pos) })
                         .for_each(|(xi, pos)| *xi += pos);
@@ -114,7 +101,9 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
 
                     state.holding::<Evaluator<P, I>>(
                         |evaluator: &mut Evaluator<P, I>, state| {
-                            evaluator.evaluate(problem, state, from_mut(&mut individuals[i]));
+                            evaluator
+                                .as_inner_mut()
+                                .evaluate(problem, state, from_mut(&mut individuals[i]));
                             Ok(())
                         },
                     )?;

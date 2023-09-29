@@ -3,8 +3,6 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
-use crate::problems::VectorProblem;
-use crate::{SingleObjective, SingleObjectiveProblem};
 
 /// Allows enumeration for functions which normally don't support enumeration, e.g. [`Vec::retain`].
 ///
