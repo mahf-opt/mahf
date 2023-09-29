@@ -7,22 +7,17 @@
 //! In Information Sciences 222, 175–184.
 //! DOI:<http://dx.doi.org/10.1016/j.ins.2012.08.023>
 
-use eyre::WrapErr;
-
 use crate::{
     component::ExecResult,
-    components::{boundary, initialization, mapping, swarm},
+    components::{boundary, initialization, swarm},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
-    lens::ValueOf,
     logging::Logger,
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
-    state::common,
     Component,
 };
 use crate::components::replacement;
-use crate::prelude::selection::selection;
 
 /// Parameters for [`real_bh`].
 pub struct RealProblemParameters {
@@ -49,13 +44,7 @@ pub fn real_bh<P>(
         .update_best_individual()
         .do_(bh::<P, Global>(
             Parameters {
-                particle_update: swarm::pso::ParticleVelocitiesUpdate::new(
-                    0.0,
-                    0.0,
-                    1.0,
-                    1.0,
-                )
-                    .wrap_err("failed to construct particle velocities update")?,
+                particle_update: swarm::bh::BlackHoleParticlesUpdate::new(),
                 constraints: boundary::Saturation::new(),
             },
             condition,

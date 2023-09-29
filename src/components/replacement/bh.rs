@@ -35,15 +35,18 @@ impl<P> Component<P> for EventHorizon
         let fitness_sum = offspring.iter().map(|x| x.objective().value()).sum::<f64>();
         let radius = f_bh / fitness_sum;
 
-        let rng = &mut state.random_mut();
-
         let best_ind = state.populations().current().best_individual().cloned();
         let best = best_ind.unwrap().solution().clone();
-        let distances = offspring.iter().map(|o| squared_euclidean(o.solution(), &best).sqrt()).collect::<Vec<f64>>();
+        let distances = offspring
+            .iter()
+            .map(|o| squared_euclidean(o.solution(), &best).sqrt())
+            .collect::<Vec<f64>>();
 
         for (u, mut i) in offspring.iter().enumerate() {
             if distances[u] < radius {
-                let rand: Vec<f64> = (0..problem.dimension()).map(|_| rng.gen_range(problem.domain()[0].clone())).collect();
+                let rand: Vec<f64> = (0..problem.dimension())
+                    .map(|_| state.random_mut().gen_range(problem.domain()[0].clone()))
+                    .collect();
                 let j = Individual::new_unevaluated(rand);
                 i = &j;
             }
