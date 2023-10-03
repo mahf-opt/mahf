@@ -346,3 +346,58 @@ impl<P: SingleObjectiveProblem> LensRef<P> for BestObjectiveValueLens<P> {
         .map_err(|_| eyre!("no best individual found yet"))
     }
 }
+
+/// Lens for extracting the objective values of the current population.
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Default(bound = ""), Clone(bound = ""))]
+pub struct ObjectiveValuesLens<P>(#[serde(skip)] PhantomData<fn() -> P>);
+
+impl<P> ObjectiveValuesLens<P>
+where
+    P: Problem,
+    Self: Lens<P, Target = Vec<SingleObjective>>,
+{
+    /// Constructs the lens.
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<P: Problem> BaseLens for ObjectiveValuesLens<P> {
+    type Target = Vec<SingleObjective>;
+}
+
+impl<P> EntryName for ObjectiveValuesLens<P> {
+    fn entry_name() -> &'static str {
+        "ObjectiveValues"
+    }
+}
+
+impl<P> ObjectiveValuesLens<P>
+where
+    P: SingleObjectiveProblem,
+    Self: Lens<P>,
+    <Self as BaseLens>::Target: Serialize + Send,
+{
+    /// Constructs the lens for logging entries.
+    pub fn entry() -> Box<dyn EntryExtractor<P>> {
+        Box::<Self>::default()
+    }
+}
+
+impl<P: SingleObjectiveProblem> Lens<P> for ObjectiveValuesLens<P> {
+    fn get(&self, _problem: &P, state: &State<P>) -> ExecResult<Self::Target> {
+        state
+            .populations()
+            .current()
+            .iter()
+            .map(|individual| {
+                individual
+                    .get_objective()
+                    .copied()
+                    .ok_or_else(|| eyre!("individual is not evaluated"))
+            })
+            .collect()
+    }
+}
