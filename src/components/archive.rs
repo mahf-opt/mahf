@@ -1,6 +1,7 @@
 //! Elitist archive.
 
 use better_any::{Tid, TidAble};
+use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -113,6 +114,45 @@ where
             if !population.contains(elitist) {
                 population.push(elitist.clone());
             }
+        }
+
+        Ok(())
+    }
+}
+
+/// Inserts a random elitist from the [`ElitistArchive`] into the population.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct RandomElitistIntoPopulation;
+
+impl RandomElitistIntoPopulation {
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+    where
+        P: SingleObjectiveProblem,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> Component<P> for RandomElitistIntoPopulation
+where
+    P: SingleObjectiveProblem,
+{
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+        state_req.require::<Self, ElitistArchive<P>>()?;
+        Ok(())
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let archive = state.borrow::<ElitistArchive<P>>();
+        let mut populations = state.populations_mut();
+        let population = populations.current_mut();
+
+        if let Some(elitist) = archive.elitists().choose(&mut *state.random_mut()) {
+            population.push(elitist.clone());
         }
 
         Ok(())
