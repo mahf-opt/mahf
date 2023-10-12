@@ -8,7 +8,6 @@
 //! SAGA 2009. Lecture Notes in Computer Science, vol 5792. Springer, Berlin, Heidelberg.
 //! DOI:<https://doi.org/10.1007/978-3-642-04944-6_14>
 
-
 use crate::{
     component::ExecResult,
     components::{boundary, initialization, mapping, swarm},
@@ -37,8 +36,8 @@ pub fn real_fa<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
-    where
-        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+where
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
     let RealProblemParameters {
         pop_size,
@@ -54,11 +53,7 @@ pub fn real_fa<P>(
         .update_best_individual()
         .do_(fa::<P, Global>(
             Parameters {
-                firefly_update: swarm::fa::FireflyPositionsUpdate::new(
-                    alpha,
-                    beta,
-                    gamma,
-                ),
+                firefly_update: swarm::fa::FireflyPositionsUpdate::new(alpha, beta, gamma),
                 constraints: boundary::Saturation::new(),
                 alpha_update: Box::from(mapping::sa::GeometricCooling::new(
                     delta,
@@ -79,9 +74,9 @@ pub struct Parameters<P> {
 
 /// A generic single-objective Firefly Algorithm (FA) template.
 pub fn fa<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
-    where
-        P: SingleObjectiveProblem,
-        I: Identifier,
+where
+    P: SingleObjectiveProblem,
+    I: Identifier,
 {
     let Parameters {
         firefly_update,

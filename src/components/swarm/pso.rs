@@ -335,17 +335,17 @@ impl<I: Identifier> GlobalBestParticleUpdate<I> {
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params())
     }
 }
 
 impl<P, I> Component<P> for GlobalBestParticleUpdate<I>
-    where
-        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state
