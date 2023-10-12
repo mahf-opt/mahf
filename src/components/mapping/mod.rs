@@ -40,7 +40,7 @@
 //!     0.4,
 //!     0.9,
 //!     ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
-//!     ValueOf::<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>::new(),
+//!     ValueOf::<swarm::pso::InertiaWeight<swarm::pso::ParticleVelocitiesUpdate>>::new(),
 //! )
 //! # }
 //! ```

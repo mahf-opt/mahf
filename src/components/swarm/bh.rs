@@ -1,9 +1,7 @@
 use crate::population::{AsSolutionsMut, BestIndividual};
 use crate::{
     component::ExecResult,
-    components,
     components::Component,
-    heuristics,
     identifier::{Global, Identifier, PhantomId},
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
@@ -22,8 +20,8 @@ use serde::Serialize;
 /// v_max = 1
 ///
 /// [`bh`]: crate::heuristics::bh
-/// [`ParticleVelocitiesUpdate`]: components::swarm::pso::ParticleVelocitiesUpdate`
-/// [`pso`]: heuristics::pso
+/// [`ParticleVelocitiesUpdate`]: crate::components::swarm::pso::ParticleVelocitiesUpdate`
+/// [`pso`]: crate::heuristics::pso
 #[derive(Clone, Serialize)]
 pub struct BlackHoleParticlesUpdate<I: Identifier = Global> {
     id: PhantomId<I>,
