@@ -12,20 +12,19 @@ pub struct EventHorizon;
 
 impl EventHorizon {
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
-            P: SingleObjectiveProblem,
+    where
+        P: LimitedVectorProblem<Element = f64>,
+        P: SingleObjectiveProblem,
     {
         Box::new(Self)
     }
 }
 
 impl<P> Component<P> for EventHorizon
-    where
-        P: LimitedVectorProblem<Element = f64>,
-        P: SingleObjectiveProblem,
+where
+    P: LimitedVectorProblem<Element = f64>,
+    P: SingleObjectiveProblem,
 {
-
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let offspring = populations.pop();

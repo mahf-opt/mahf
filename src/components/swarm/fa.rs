@@ -12,8 +12,9 @@ use crate::{
     component::ExecResult,
     components::Component,
     identifier::{Global, Identifier, PhantomId},
-    problems::{LimitedVectorProblem},
-    CustomState, State};
+    problems::LimitedVectorProblem,
+    CustomState, State,
+};
 
 /// Updates the and firefly positions.
 ///
@@ -40,13 +41,9 @@ impl<I: Identifier> FireflyPositionsUpdate<I> {
         }
     }
 
-    pub fn new_with_id<P>(
-        alpha: f64,
-        beta: f64,
-        gamma: f64,
-    ) -> Box<dyn Component<P>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    pub fn new_with_id<P>(alpha: f64, beta: f64, gamma: f64) -> Box<dyn Component<P>>
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params(alpha, beta, gamma))
     }
@@ -54,17 +51,17 @@ impl<I: Identifier> FireflyPositionsUpdate<I> {
 
 impl FireflyPositionsUpdate<Global> {
     pub fn new<P>(alpha: f64, beta: f64, gamma: f64) -> Box<dyn Component<P>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Self::new_with_id(alpha, beta, gamma)
     }
 }
 
 impl<P, I> Component<P> for FireflyPositionsUpdate<I>
-    where
-        P: LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(RandomizationParameter(self.alpha));
@@ -97,24 +94,27 @@ impl<P, I> Component<P> for FireflyPositionsUpdate<I>
                         .map(|_| state.random_mut().gen_range(0.0..1.0))
                         .collect();
                     let mut current = individuals[i].clone();
-                    izip!(current.solution_mut(), individuals[j].solution(), &scales, rands)
-                        .map(|(xi, xj, scale, rand)| {
-                            let pos = beta * (-gamma * (*xi - xj).powf(2.0)).exp() * (xj - *xi)
-                                + a * (rand - 0.5) * scale;
-                            (xi, pos)
-                        })
-                        .for_each(|(xi, pos)| *xi += pos);
+                    izip!(
+                        current.solution_mut(),
+                        individuals[j].solution(),
+                        &scales,
+                        rands
+                    )
+                    .map(|(xi, xj, scale, rand)| {
+                        let pos = beta * (-gamma * (*xi - xj).powf(2.0)).exp() * (xj - *xi)
+                            + a * (rand - 0.5) * scale;
+                        (xi, pos)
+                    })
+                    .for_each(|(xi, pos)| *xi += pos);
                     individuals[i] = current;
 
                     state.holding::<Evaluator<P, I>>(
                         |evaluator: &mut Evaluator<P, I>, state| {
-                            evaluator
-                                .as_inner_mut()
-                                .evaluate(
-                                    problem,
-                                    state,
-                                    from_mut(&mut individuals[i])
-                                );
+                            evaluator.as_inner_mut().evaluate(
+                                problem,
+                                state,
+                                from_mut(&mut individuals[i]),
+                            );
                             Ok(())
                         },
                     )?;

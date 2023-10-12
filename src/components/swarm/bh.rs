@@ -1,13 +1,15 @@
-use rand::distributions::{Distribution, Uniform};
-use serde::Serialize;
 use crate::population::{AsSolutionsMut, BestIndividual};
 use crate::{
     component::ExecResult,
+    components,
     components::Component,
+    heuristics,
     identifier::{Global, Identifier, PhantomId},
-    problems::{LimitedVectorProblem},
-    SingleObjectiveProblem, State
+    problems::LimitedVectorProblem,
+    SingleObjectiveProblem, State,
 };
+use rand::distributions::{Distribution, Uniform};
+use serde::Serialize;
 
 /// Updates the positions in the black hole algorithm.
 ///
@@ -20,6 +22,8 @@ use crate::{
 /// v_max = 1
 ///
 /// [`bh`]: crate::heuristics::bh
+/// [`ParticleVelocitiesUpdate`]: components::swarm::pso::ParticleVelocitiesUpdate`
+/// [`pso`]: heuristics::pso
 #[derive(Clone, Serialize)]
 pub struct BlackHoleParticlesUpdate<I: Identifier = Global> {
     id: PhantomId<I>,
@@ -33,8 +37,8 @@ impl<I: Identifier> BlackHoleParticlesUpdate<I> {
     }
 
     pub fn new_with_id<P>() -> Box<dyn Component<P>>
-        where
-            P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params())
     }
@@ -42,17 +46,17 @@ impl<I: Identifier> BlackHoleParticlesUpdate<I> {
 
 impl BlackHoleParticlesUpdate<Global> {
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Self::new_with_id()
     }
 }
 
 impl<P, I> Component<P> for BlackHoleParticlesUpdate<I>
-    where
-        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn init(&self, _problem: &P, _state: &mut State<P>) -> ExecResult<()> {
         Ok(())

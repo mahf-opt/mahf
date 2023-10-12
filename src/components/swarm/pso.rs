@@ -55,17 +55,17 @@ impl<I: Identifier> ParticleVelocitiesInit<I> {
     }
 
     pub fn new<P>(v_max: f64) -> ExecResult<Box<dyn Component<P>>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Ok(Box::new(Self::from_params(v_max)?))
     }
 }
 
 impl<P, I> Component<P> for ParticleVelocitiesInit<I>
-    where
-        P: LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(ParticleVelocities::<I>::new(Vec::new()));
@@ -78,8 +78,8 @@ impl<P, I> Component<P> for ParticleVelocitiesInit<I>
                 .take(problem.dimension())
                 .collect::<Vec<_>>()
         })
-            .take(state.populations().current().len())
-            .collect::<Vec<_>>();
+        .take(state.populations().current().len())
+        .collect::<Vec<_>>();
 
         state.set_value::<ParticleVelocities<I>>(velocities);
 
@@ -144,8 +144,8 @@ impl<I: Identifier> ParticleVelocitiesUpdate<I> {
         c_2: f64,
         v_max: f64,
     ) -> ExecResult<Box<dyn Component<P>>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Ok(Box::new(Self::from_params(weight, c_1, c_2, v_max)?))
     }
@@ -153,17 +153,17 @@ impl<I: Identifier> ParticleVelocitiesUpdate<I> {
 
 impl ParticleVelocitiesUpdate<Global> {
     pub fn new<P>(weight: f64, c_1: f64, c_2: f64, v_max: f64) -> ExecResult<Box<dyn Component<P>>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Self::new_with_id(weight, c_1, c_2, v_max)
     }
 }
 
 impl<P, I> Component<P> for ParticleVelocitiesUpdate<I>
-    where
-        P: LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(InertiaWeight::<Self>::new(self.weight));
@@ -249,17 +249,17 @@ impl<I: Identifier> PersonalBestParticlesInit<I> {
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params())
     }
 }
 
 impl<P, I> Component<P> for PersonalBestParticlesInit<I>
-    where
-        P: LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(BestParticles::<P, I>::new(Vec::new()));
@@ -282,17 +282,17 @@ impl<I: Identifier> PersonalBestParticlesUpdate<I> {
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
+    where
+        P: LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params())
     }
 }
 
 impl<P, I> Component<P> for PersonalBestParticlesUpdate<I>
-    where
-        P: LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: LimitedVectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let populations = state.populations();
