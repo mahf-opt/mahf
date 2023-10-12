@@ -9,7 +9,7 @@
 
 use crate::{
     component::ExecResult,
-    components::{boundary, initialization, swarm},
+    components::{boundary, initialization, replacement, swarm},
     conditions::Condition,
     configuration::Configuration,
     identifier::{Global, Identifier},
@@ -17,7 +17,6 @@ use crate::{
     problems::{LimitedVectorProblem, SingleObjectiveProblem},
     Component,
 };
-use crate::components::replacement;
 
 /// Parameters for [`real_bh`].
 pub struct RealProblemParameters {
@@ -31,12 +30,10 @@ pub fn real_bh<P>(
     params: RealProblemParameters,
     condition: Box<dyn Condition<P>>,
 ) -> ExecResult<Configuration<P>>
-    where
-        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+where
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
 {
-    let RealProblemParameters {
-        num_particles,
-    } = params;
+    let RealProblemParameters { num_particles } = params;
 
     Ok(Configuration::builder()
         .do_(initialization::RandomSpread::new(num_particles))
@@ -46,6 +43,7 @@ pub fn real_bh<P>(
             Parameters {
                 particle_update: swarm::bh::BlackHoleParticlesUpdate::new(),
                 constraints: boundary::Saturation::new(),
+                replacement: replacement::bh::EventHorizon::new(),
             },
             condition,
         ))
@@ -56,17 +54,19 @@ pub fn real_bh<P>(
 pub struct Parameters<P> {
     pub particle_update: Box<dyn Component<P>>,
     pub constraints: Box<dyn Component<P>>,
+    pub replacement: Box<dyn Component<P>>,
 }
 
 /// A generic single-objective Black Hole algorithm (BH) template.
 pub fn bh<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<dyn Component<P>>
-    where
-        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
-        I: Identifier,
+where
+    P: SingleObjectiveProblem,
+    I: Identifier,
 {
     let Parameters {
         particle_update,
         constraints,
+        replacement,
     } = params;
 
     Configuration::builder()
@@ -76,7 +76,7 @@ pub fn bh<P, I>(params: Parameters<P>, condition: Box<dyn Condition<P>>) -> Box<
                 .do_(constraints)
                 .evaluate_with::<I>()
                 .update_best_individual()
-                .do_(replacement::bh::EventHorizon::new())
+                .do_(replacement)
                 .evaluate_with::<I>()
                 .update_best_individual()
                 .do_(Logger::new())

@@ -1,10 +1,13 @@
-use rand::{
-    distributions::{Distribution, Uniform},
-};
+use rand::distributions::{Distribution, Uniform};
 use serde::Serialize;
-
-use crate::{component::ExecResult, components::Component, identifier::{Global, Identifier, PhantomId}, problems::{LimitedVectorProblem}, State};
 use crate::population::{AsSolutionsMut, BestIndividual};
+use crate::{
+    component::ExecResult,
+    components::Component,
+    identifier::{Global, Identifier, PhantomId},
+    problems::{LimitedVectorProblem},
+    SingleObjectiveProblem, State
+};
 
 /// Updates the positions in the black hole algorithm.
 ///
@@ -31,7 +34,7 @@ impl<I: Identifier> BlackHoleParticlesUpdate<I> {
 
     pub fn new_with_id<P>() -> Box<dyn Component<P>>
         where
-            P: LimitedVectorProblem<Element = f64>,
+            P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params())
     }
@@ -40,7 +43,7 @@ impl<I: Identifier> BlackHoleParticlesUpdate<I> {
 impl BlackHoleParticlesUpdate<Global> {
     pub fn new<P>() -> Box<dyn Component<P>>
         where
-            P: LimitedVectorProblem<Element = f64>,
+            P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Self::new_with_id()
     }
@@ -48,7 +51,7 @@ impl BlackHoleParticlesUpdate<Global> {
 
 impl<P, I> Component<P> for BlackHoleParticlesUpdate<I>
     where
-        P: LimitedVectorProblem<Element = f64>,
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
         I: Identifier,
 {
     fn init(&self, _problem: &P, _state: &mut State<P>) -> ExecResult<()> {
@@ -56,12 +59,14 @@ impl<P, I> Component<P> for BlackHoleParticlesUpdate<I>
     }
 
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let mut distr = Uniform::new(0.0, 1.0);
+        let distr = Uniform::new(0.0, 1.0);
 
         // Get necessary state like global best `xg`
         let best = state.populations().current().best_individual().cloned();
-        let xg = best.unwrap().solution();
-        let xs = state.populations_mut().current_mut().as_solutions_mut();
+        let binding = best.unwrap();
+        let xg = binding.solution();
+        let mut binding2 = state.populations_mut();
+        let xs = binding2.current_mut().as_solutions_mut();
 
         // Perform the update step.
         for x in xs {

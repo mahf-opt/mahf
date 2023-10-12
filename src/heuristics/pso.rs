@@ -75,7 +75,8 @@ where
                     start_weight,
                     end_weight,
                     ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
-                    ValueOf::<swarm::pso::InertiaWeight<swarm::pso::ParticleVelocitiesUpdate>>::new(),
+                    ValueOf::<swarm::pso::InertiaWeight<swarm::pso::ParticleVelocitiesUpdate>>::new(
+                    ),
                 )),
                 state_update: swarm::pso::ParticleSwarmUpdate::new(),
             },
