@@ -1,11 +1,12 @@
 //! Replacement components for the Black Hole algorithm (BH).
 
-use crate::population::BestIndividual;
-use crate::problems::LimitedVectorProblem;
-use crate::utils::squared_euclidean;
-use crate::{Component, ExecResult, Individual, SingleObjectiveProblem, State};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    population::BestIndividual, problems::LimitedVectorProblem, utils::squared_euclidean,
+    Component, ExecResult, Individual, SingleObjectiveProblem, State,
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct EventHorizon;

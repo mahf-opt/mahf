@@ -6,13 +6,12 @@ use itertools::izip;
 use rand::Rng;
 use serde::Serialize;
 
-use crate::state::common;
-use crate::state::common::Evaluator;
 use crate::{
     component::ExecResult,
     components::Component,
     identifier::{Global, Identifier, PhantomId},
     problems::LimitedVectorProblem,
+    state::{common, common::Evaluator},
     CustomState, State,
 };
 

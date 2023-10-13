@@ -1,13 +1,14 @@
-use crate::population::{AsSolutionsMut, BestIndividual};
+use rand::distributions::{Distribution, Uniform};
+use serde::Serialize;
+
 use crate::{
     component::ExecResult,
     components::Component,
     identifier::{Global, Identifier, PhantomId},
+    population::{AsSolutionsMut, BestIndividual},
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
-use rand::distributions::{Distribution, Uniform};
-use serde::Serialize;
 
 /// Updates the positions in the black hole algorithm.
 ///
