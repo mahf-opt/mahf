@@ -334,7 +334,7 @@ where
             (a, b) => a - b,
         };
 
-        diff >= self.threshold
+        diff <= self.threshold
     }
 }
 
@@ -442,7 +442,7 @@ where
         let mut previous = state.try_borrow_value_mut::<Previous<L::Target>>()?;
 
         let changed = if let Some(previous) = &*previous {
-            self.checker.eq(&*current, previous)
+            !self.checker.eq(&*current, previous)
         } else {
             true
         };
