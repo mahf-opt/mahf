@@ -1,12 +1,9 @@
-//! Elitist archive.
+//! Archive for specified parts of population.
 
 use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    component::ExecResult, components::Component, problems::SingleObjectiveProblem,
-    state::StateReq, CustomState, Individual, State,
-};
+use crate::{component::ExecResult, components::Component, problems::SingleObjectiveProblem, state::StateReq, CustomState, Individual, State, Problem};
 
 /// An archive for storing elitist individuals.
 #[derive(Default, Tid)]
@@ -115,6 +112,68 @@ where
             }
         }
 
+        Ok(())
+    }
+}
+
+/// An archive for storing individuals between operators, e.g. for subsequent calculation of measures.
+#[derive(Default, Tid)]
+pub struct IntermediateArchive<P: Problem + 'static>(Vec<Individual<P>>);
+
+impl<P: Problem> CustomState<'_> for IntermediateArchive<P> {}
+
+impl<P: Problem> IntermediateArchive<P> {
+    /// Creates a new, empty `IntermediateArchive`.
+    fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    /// Updates the archive using the `population`, keeping all individuals at the current step of the algorithm.
+    fn update(&mut self, population: &[Individual<P>]) {
+        self.0 = Vec::from(population.clone());
+    }
+
+    /// Returns a reference to the archived population.
+    pub fn archived_population(&self) -> &[Individual<P>] {
+        &self.0
+    }
+
+    /// Returns a mutable reference to the archived population.
+    pub fn archived_population_mut(&mut self) -> &mut [Individual<P>] {
+        &mut self.0
+    }
+}
+
+/// Updates the [`IntermediateArchive`] with the current population.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct IntermediateArchiveUpdate;
+
+impl IntermediateArchiveUpdate {
+    pub fn from_params() -> Self {
+        Self {}
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+        where
+            P: Problem,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> Component<P> for IntermediateArchiveUpdate
+    where
+        P: Problem,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(IntermediateArchive::<P>::new());
+        Ok(())
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state
+            .borrow_mut::<IntermediateArchive<P>>()
+            .update(state.populations().current());
         Ok(())
     }
 }
