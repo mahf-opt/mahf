@@ -159,7 +159,7 @@ fn create_writer(path: impl AsRef<Path>) -> ExecResult<impl std::io::Write> {
 }
 
 impl Log {
-    fn as_compressed(&self) -> CompressedLog {
+    pub fn as_compressed(&self) -> CompressedLog {
         self.into()
     }
 
