@@ -117,7 +117,7 @@ pub struct Entry {
 
 /// A compressed [`Log`] representation.
 #[derive(Default, Serialize)]
-struct CompressedLog<'a> {
+pub struct CompressedLog<'a> {
     names: Vec<&'static str>,
     entries: Vec<HashMap<usize, &'a dyn DynSerialize>>,
 }
