@@ -31,8 +31,9 @@ test-case = "3.1.0"
 float_eq = "1.0.1"
 contracts = "0.6.3"
 itertools = "0.10.5"
-ron = "0.8.0"
+ron = "=0.8.0"
 indicatif = { version = "0.17.4", features = ["rayon"] }
+statrs = "0.16"
 
 [dev-dependencies]
 criterion = "0.5.1"

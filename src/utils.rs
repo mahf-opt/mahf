@@ -44,3 +44,8 @@ impl<T> serde::Serialize for SerializablePhantom<T> {
         serializer.serialize_unit_struct(std::any::type_name::<T>())
     }
 }
+
+/// Calculates squared Euclidean distance between two vectors.
+pub fn squared_euclidean(a: &Vec<f64>, b:&Vec<f64>) -> f64 {
+    a.iter().zip(b.iter()).map(|(p, q)| (q - p).powf(2.0)).sum::<f64>()
+}
