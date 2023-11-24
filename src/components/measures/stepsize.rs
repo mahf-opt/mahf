@@ -62,7 +62,7 @@ pub struct StepSize<I: AnyComponent + 'static> {
 }
 
 impl<I: AnyComponent> StepSize<I> {
-    /// Creates a new `StepSize` with initial value of 0 and an empty vector.
+    /// Creates a new `StepSize` with initial values of 0 and empty vectors.
     pub fn new() -> Self {
         Self {
             step_size: 0.,
