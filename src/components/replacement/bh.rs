@@ -4,8 +4,8 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    problems::LimitedVectorProblem, utils::squared_euclidean,
-    Component, ExecResult, SingleObjectiveProblem, State,
+    problems::LimitedVectorProblem, utils::squared_euclidean, Component, ExecResult,
+    SingleObjectiveProblem, State,
 };
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -48,7 +48,9 @@ where
         for (u, i) in offspring.iter_mut().enumerate() {
             // do not replace best individual
             if distances[u] < radius && u != index {
-                let rand: Vec<f64> = problem.domain().iter()
+                let rand: Vec<f64> = problem
+                    .domain()
+                    .iter()
                     .map(|d| state.random_mut().gen_range(d.clone()))
                     .collect();
                 *i.solution_mut() = rand;
