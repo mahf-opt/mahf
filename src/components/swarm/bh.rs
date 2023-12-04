@@ -62,20 +62,20 @@ where
     }
 
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let distr = Uniform::new(0.0, 1.0);
+        let distribution = Uniform::new(0.0, 1.0);
 
         // Get necessary state like global best `xg`
         let best = state.populations().current().best_individual().cloned();
-        let binding = best.unwrap();
-        let xg = binding.solution();
-        let mut binding2 = state.populations_mut();
-        let xs = binding2.current_mut().as_solutions_mut();
+        let best_ind = best.unwrap();
+        let xg = best_ind.solution();
+        let mut population = state.populations_mut();
+        let xs = population.current_mut().as_solutions_mut();
 
         // Perform the update step.
         for x in xs {
             for i in 0..x.len() {
                 // Calculate change in position
-                let pos = distr.sample(&mut *state.random_mut()) * (xg[i] - x[i]);
+                let pos = distribution.sample(&mut *state.random_mut()) * (xg[i] - x[i]);
                 // Add value to particle position
                 x[i] += pos;
             }
