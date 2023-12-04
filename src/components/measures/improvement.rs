@@ -39,19 +39,19 @@ where
 
     let mut cur = current_pop.clone();
     for i in 0..current_pop.len() {
-        if !cur[i].is_evaluated() {
-            state.holding::<Evaluator<P>>(
-                |evaluator: &mut Evaluator<P>, state| {
-                    evaluator.as_inner_mut().evaluate(
-                        problem,
-                        state,
-                        from_mut(&mut cur[i]),
-                    );
-                    Ok(())
-                },
-            ).expect("TODO: panic message");
-            *state.borrow_value_mut::<common::Evaluations>() += 1;
-        }
+        //if !cur[i].is_evaluated() {
+        state.holding::<Evaluator<P>>(
+            |evaluator: &mut Evaluator<P>, state| {
+                evaluator.as_inner_mut().evaluate(
+                    problem,
+                    state,
+                    from_mut(&mut cur[i]),
+                );
+                Ok(())
+            },
+        ).expect("TODO: panic message");
+        *state.borrow_value_mut::<common::Evaluations>() += 1;
+        //}
     }
     state.populations_mut().push(cur);
 
