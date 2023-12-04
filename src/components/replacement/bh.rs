@@ -28,7 +28,7 @@ where
 {
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
-        let mut offspring = populations.pop();
+        let offspring = populations.current_mut();
 
         let f_bh = state.best_objective_value().unwrap().value();
 
@@ -56,7 +56,6 @@ where
                 *i.solution_mut() = rand;
             }
         }
-        populations.push(offspring);
         Ok(())
     }
 }
