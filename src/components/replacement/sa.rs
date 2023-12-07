@@ -75,7 +75,6 @@ impl<P: SingleObjectiveProblem> Component<P> for ExponentialAnnealingAcceptance 
         } else {
             populations.pop();
         }
-
         Ok(())
     }
 }

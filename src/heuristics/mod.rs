@@ -8,9 +8,11 @@
 //! structure and adapt it to one's needs.
 
 pub mod aco;
+pub mod bh;
 pub mod cro;
 pub mod de;
 pub mod es;
+pub mod fa;
 pub mod ga;
 pub mod ils;
 pub mod iwo;

@@ -125,9 +125,9 @@ pub struct ParticleVelocitiesUpdate<I: Identifier = Global> {
 
 impl<I: Identifier> ParticleVelocitiesUpdate<I> {
     pub fn from_params(weight: f64, c_1: f64, c_2: f64, v_max: f64) -> ExecResult<Self> {
-        ensure!(weight > 0., "`weight` must be > 0, but was {}", weight);
-        ensure!(c_1 > 0., "`c_1` must be > 0, but was {}", c_1);
-        ensure!(c_2 > 0., "`c_2` must be > 0, but was {}", c_2);
+        ensure!(weight >= 0., "`weight` must be >= 0, but was {}", weight);
+        ensure!(c_1 >= 0., "`c_1` must be >= 0, but was {}", c_1);
+        ensure!(c_2 >= 0., "`c_2` must be >= 0, but was {}", c_2);
         ensure!(v_max > 0., "`v_max` must be > 0, but was {}", v_max);
         Ok(Self {
             weight,

@@ -62,8 +62,8 @@ where
         .update_best_individual()
         .do_(pso::<P, Global>(
             Parameters {
-                particle_init: swarm::ParticleSwarmInit::new(v_max)?,
-                particle_update: swarm::ParticleVelocitiesUpdate::new(
+                particle_init: swarm::pso::ParticleSwarmInit::new(v_max)?,
+                particle_update: swarm::pso::ParticleVelocitiesUpdate::new(
                     start_weight,
                     c_one,
                     c_two,
@@ -75,9 +75,10 @@ where
                     start_weight,
                     end_weight,
                     ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
-                    ValueOf::<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>::new(),
+                    ValueOf::<swarm::pso::InertiaWeight<swarm::pso::ParticleVelocitiesUpdate>>::new(
+                    ),
                 )),
-                state_update: swarm::ParticleSwarmUpdate::new(),
+                state_update: swarm::pso::ParticleSwarmUpdate::new(),
             },
             condition,
         ))

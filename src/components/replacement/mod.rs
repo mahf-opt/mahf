@@ -8,6 +8,7 @@ use crate::{
     Individual, Problem, State,
 };
 
+pub mod bh;
 pub mod common;
 pub mod sa;
 

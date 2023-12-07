@@ -22,8 +22,8 @@
 //! using [`ValueOf<Progress<ValueOf<Iterations>>>`] as input lens and
 //! [`ValueOf<InertiaWeight>`] as output lens:
 //!
-//! [`InertiaWeight`]: crate::components::swarm::InertiaWeight
-//! [`ParticleVelocitiesUpdate`]: crate::components::swarm::ParticleVelocitiesUpdate
+//! [`InertiaWeight`]: crate::components::swarm::pso::InertiaWeight
+//! [`ParticleVelocitiesUpdate`]: crate::components::swarm::pso::ParticleVelocitiesUpdate
 //! [`ValueOf<Progress<ValueOf<Iterations>>>`]: crate::lens::ValueOf
 //! [`ValueOf<InertiaWeight>`]: crate::lens::ValueOf
 //!
@@ -40,7 +40,7 @@
 //!     0.4,
 //!     0.9,
 //!     ValueOf::<common::Progress<ValueOf<common::Iterations>>>::new(),
-//!     ValueOf::<swarm::InertiaWeight<swarm::ParticleVelocitiesUpdate>>::new(),
+//!     ValueOf::<swarm::pso::InertiaWeight<swarm::pso::ParticleVelocitiesUpdate>>::new(),
 //! )
 //! # }
 //! ```
