@@ -40,6 +40,7 @@ where
     let mut cur = current_pop.clone();
     for i in 0..current_pop.len() {
         //if !cur[i].is_evaluated() {
+        //TODO Does not work; need to evaluate in config
         state.holding::<Evaluator<P>>(
             |evaluator: &mut Evaluator<P>, state| {
                 evaluator.as_inner_mut().evaluate(
