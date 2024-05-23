@@ -1,5 +1,6 @@
 //! Archive for specified parts of population.
 
+use std::cell::Ref;
 use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
 
@@ -174,6 +175,69 @@ impl<P> Component<P> for IntermediateArchiveUpdate
         state
             .borrow_mut::<IntermediateArchive<P>>()
             .update(state.populations().current());
+        Ok(())
+    }
+}
+
+
+/// An archive for storing all best individual yet, e.g. for subsequent calculation of measures.
+#[derive(Default, Tid)]
+pub struct BestIndividualsArchive<P: Problem + 'static>(Vec<Individual<P>>);
+
+impl<P: Problem> CustomState<'_> for BestIndividualsArchive<P> {}
+
+impl<P: Problem> BestIndividualsArchive<P> {
+    /// Creates a new, empty `BestIndividualsArchive`.
+    fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    /// Updates the archive using the `BestIndividual`, adding it to a vector of previously found best individuals.
+    fn update(&mut self, best_individual: Option<Ref<Individual<P>>>) {
+        self.0.push(best_individual.unwrap().clone());
+    }
+
+    /// Returns a reference to the archived individuals.
+    pub fn archived_best_individuals(&self) -> &[Individual<P>] {
+        &self.0
+    }
+
+    /// Returns a mutable reference to the archived individuals.
+    pub fn archived_best_individuals_mut(&mut self) -> &mut [Individual<P>] {
+        &mut self.0
+    }
+}
+
+/// Updates the [`crate::components::archive::BestIndividualsArchive`] with the current best individual.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct BestIndividualsArchiveUpdate;
+
+impl BestIndividualsArchiveUpdate {
+    pub fn from_params() -> Self {
+        Self {}
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+        where
+            P: Problem + SingleObjectiveProblem,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> Component<P> for BestIndividualsArchiveUpdate
+    where
+        P: Problem + SingleObjectiveProblem,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(BestIndividualsArchive::<P>::new());
+        Ok(())
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state
+            .borrow_mut::<BestIndividualsArchive<P>>()
+            .update(state.best_individual());
         Ok(())
     }
 }

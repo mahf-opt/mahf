@@ -191,10 +191,10 @@ where
 /// # Common lenses
 ///
 /// The most common lens used with this condition is [`ValueOf<Iterations>`],
-/// for which the [`LessThanN::iterations`] method is provided.
+/// for which the [`EveryN::iterations`] method is provided.
 ///
 /// [`ValueOf<Iterations>`]: ValueOf
-/// [`LessThanN::iterations`]: LessThanN<ValueOf<Iterations>>::iterations
+/// [`EveryN::iterations`]: EveryN<ValueOf<Iterations>>::iterations
 ///
 /// # Examples
 ///
@@ -223,12 +223,12 @@ pub struct EveryN<L: AnyLens> {
 }
 
 impl<L: AnyLens> EveryN<L> {
-    /// Constructs a new `LessThanN` with the given `n` and `lens`.
+    /// Constructs a new `EveryN` with the given `n` and `lens`.
     pub fn from_params(n: u32, lens: L) -> Self {
         Self { n, lens }
     }
 
-    /// Constructs a new `LessThanN` with the given `n` and `lens`.
+    /// Constructs a new `EveryN` with the given `n` and `lens`.
     pub fn new<P>(n: u32, lens: L) -> Box<dyn Condition<P>>
     where
         P: Problem,
@@ -239,7 +239,7 @@ impl<L: AnyLens> EveryN<L> {
 }
 
 impl EveryN<ValueOf<Iterations>> {
-    /// Creates a new `LessThanN` that evaluates to `true` every `n` [`Iterations`].
+    /// Creates a new `EveryN` that evaluates to `true` every `n` [`Iterations`].
     pub fn iterations<P>(n: u32) -> Box<dyn Condition<P>>
     where
         P: Problem,
@@ -256,6 +256,82 @@ where
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
         let value = self.lens.get(problem, state)?;
         Ok(value % self.n == 0)
+    }
+}
+
+
+/// Evaluates to `true` if `lens` evaluates to a value `v` such that `v == n`.
+///
+/// The condition is most commonly used as a trigger for logging.
+///
+/// # Common lenses
+///
+/// The most common lens used with this condition is [`ValueOf<Iterations>`],
+/// for which the [`crate::conditions::EqualToN::iterations`] method is provided.
+///
+/// [`ValueOf<Iterations>`]: ValueOf
+/// [`EqualToN::iterations`]: crate::conditions::EqualToN<ValueOf<Iterations>>::iterations
+///
+/// # Examples
+///
+/// Logging the best objective value at exactly 10 iterations:
+///
+/// ```
+/// # use mahf::{ExecResult, SingleObjectiveProblem, State};
+/// use mahf::{conditions::EqualToN, lens::common::BestObjectiveValueLens};
+///
+/// # fn example<P: SingleObjectiveProblem>(state: &mut State<P>) -> ExecResult<()> {
+/// state.configure_log(|config| {
+///     config.with(EqualToN::iterations(10), BestObjectiveValueLens::entry());
+///     Ok(())
+/// })?;
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
+pub struct EqualToN<L: AnyLens> {
+    /// The value of N.
+    pub n: u32,
+    /// The lens to the value to compare with `n`
+    pub lens: L,
+}
+
+impl<L: AnyLens> crate::conditions::EqualToN<L> {
+    /// Constructs a new `EqualToN` with the given `n` and `lens`.
+    pub fn from_params(n: u32, lens: L) -> Self {
+        Self { n, lens }
+    }
+
+    /// Constructs a new `EqualToN` with the given `n` and `lens`.
+    pub fn new<P>(n: u32, lens: L) -> Box<dyn Condition<P>>
+        where
+            P: Problem,
+            L: Lens<P, Target = u32>,
+    {
+        Box::new(Self::from_params(n, lens))
+    }
+}
+
+impl crate::conditions::EqualToN<ValueOf<Iterations>> {
+    /// Creates a new `EqualToN` that evaluates to `true` at exactly `n` [`Iterations`].
+    pub fn iterations<P>(n: u32) -> Box<dyn Condition<P>>
+        where
+            P: Problem,
+    {
+        Box::new(Self::from_params(n, ValueOf::<Iterations>::new()))
+    }
+}
+
+impl<P, L> Condition<P> for crate::conditions::EqualToN<L>
+    where
+        P: Problem,
+        L: Lens<P, Target = u32>,
+{
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
+        let value = self.lens.get(problem, state)?;
+        Ok(value == self.n)
     }
 }
 
