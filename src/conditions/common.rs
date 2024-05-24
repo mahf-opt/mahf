@@ -259,7 +259,6 @@ where
     }
 }
 
-
 /// Evaluates to `true` if `lens` evaluates to a value `v` such that `v == n`.
 ///
 /// The condition is most commonly used as a trigger for logging.
@@ -306,9 +305,9 @@ impl<L: AnyLens> crate::conditions::EqualToN<L> {
 
     /// Constructs a new `EqualToN` with the given `n` and `lens`.
     pub fn new<P>(n: u32, lens: L) -> Box<dyn Condition<P>>
-        where
-            P: Problem,
-            L: Lens<P, Target = u32>,
+    where
+        P: Problem,
+        L: Lens<P, Target = u32>,
     {
         Box::new(Self::from_params(n, lens))
     }
@@ -317,17 +316,17 @@ impl<L: AnyLens> crate::conditions::EqualToN<L> {
 impl crate::conditions::EqualToN<ValueOf<Iterations>> {
     /// Creates a new `EqualToN` that evaluates to `true` at exactly `n` [`Iterations`].
     pub fn iterations<P>(n: u32) -> Box<dyn Condition<P>>
-        where
-            P: Problem,
+    where
+        P: Problem,
     {
         Box::new(Self::from_params(n, ValueOf::<Iterations>::new()))
     }
 }
 
 impl<P, L> Condition<P> for crate::conditions::EqualToN<L>
-    where
-        P: Problem,
-        L: Lens<P, Target = u32>,
+where
+    P: Problem,
+    L: Lens<P, Target = u32>,
 {
     fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
         let value = self.lens.get(problem, state)?;

@@ -7,19 +7,17 @@
 //! Artif Intell Rev 54, 2323–2409 (2021).
 //! DOI: <https://doi.org/10.1007/s10462-020-09906-6>
 
-
-use better_any::{Tid, TidAble};
-use std::{any::type_name, marker::PhantomData};
-use derivative::Derivative;
-use serde::Serialize;
-
 use crate::component::AnyComponent;
-use crate::{Component, CustomState, ExecResult, Problem, SingleObjectiveProblem, State};
 use crate::components::archive;
 use crate::lens::{AnyLens, Lens, LensMap};
 use crate::logging::extractor::{EntryExtractor, EntryName};
 use crate::problems::{KnownOptimumProblem, VectorProblem};
 use crate::utils::SerializablePhantom;
+use crate::{Component, CustomState, ExecResult, Problem, SingleObjectiveProblem, State};
+use better_any::{Tid, TidAble};
+use derivative::Derivative;
+use serde::Serialize;
+use std::{any::type_name, marker::PhantomData};
 
 /// Trait for representing a component that measures the convergence rate.
 pub trait ConvergenceRateMeasure<P: Problem>: AnyComponent {
@@ -27,7 +25,11 @@ pub trait ConvergenceRateMeasure<P: Problem>: AnyComponent {
     fn measure(&self, problem: &P, previous: f64, current: f64) -> f64;
 }
 
-pub fn convergence_rate_measure<P, T>(component: &T, problem: &P, state: &mut State<P>) -> ExecResult<()>
+pub fn convergence_rate_measure<P, T>(
+    component: &T,
+    problem: &P,
+    state: &mut State<P>,
+) -> ExecResult<()>
 where
     P: Problem + SingleObjectiveProblem,
     T: ConvergenceRateMeasure<P> + 'static,
@@ -38,12 +40,11 @@ where
 
     let len = best_individuals.len();
     if len > 1 {
-        let current_best = best_individuals[len-1].clone().objective().value();
-        let previous_best = best_individuals[len-2].clone().objective().value();
+        let current_best = best_individuals[len - 1].clone().objective().value();
+        let previous_best = best_individuals[len - 2].clone().objective().value();
         convergence_rate.update(component.measure(problem, previous_best, current_best));
     } else {
         convergence_rate.update(0.0);
-
     }
 
     Ok(())
@@ -53,7 +54,7 @@ where
 #[derive(Tid)]
 pub struct ConvergenceRate<I: AnyComponent + 'static> {
     pub convergence_rate: f64,
-    marker: PhantomData<I>
+    marker: PhantomData<I>,
 }
 
 impl<I: AnyComponent> ConvergenceRate<I> {
@@ -97,7 +98,9 @@ impl<I> EntryName for ConvergenceRateLens<I> {
 
 impl<I> ConvergenceRateLens<I> {
     /// Constructs the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
@@ -125,11 +128,16 @@ impl<I: AnyComponent + 'static> LensMap for ConvergenceRateLens<I> {
 pub struct KnownOptimumIterationWiseConvergence;
 
 impl KnownOptimumIterationWiseConvergence {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
     where
-        P: VectorProblem<Element = f64> + KnownOptimumProblem, { Box::new(Self::from_params()) }
+        P: VectorProblem<Element = f64> + KnownOptimumProblem,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> ConvergenceRateMeasure<P> for KnownOptimumIterationWiseConvergence
@@ -139,8 +147,7 @@ where
     fn measure(&self, problem: &P, previous: f64, current: f64) -> f64 {
         let optimum = problem.known_optimum().value();
 
-        let convergence_rate = (optimum - current).abs() / (optimum - previous).abs();
-        convergence_rate
+        (optimum - current).abs() / (optimum - previous).abs()
     }
 }
 
@@ -165,28 +172,32 @@ where
 pub struct KnownOptimumConvergenceProgressiveRate;
 
 impl KnownOptimumConvergenceProgressiveRate {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem, { Box::new(Self::from_params()) }
+    where
+        P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> ConvergenceRateMeasure<P> for KnownOptimumConvergenceProgressiveRate
-    where
-        P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
+where
+    P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
 {
     fn measure(&self, problem: &P, _previous: f64, current: f64) -> f64 {
         let optimum = problem.known_optimum().value();
 
-        let convergence_rate = (optimum - current).abs();
-        convergence_rate
+        (optimum - current).abs()
     }
 }
 
 impl<P> Component<P> for KnownOptimumConvergenceProgressiveRate
-    where
-        P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
+where
+    P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(ConvergenceRate::<Self>::new());
@@ -205,26 +216,30 @@ impl<P> Component<P> for KnownOptimumConvergenceProgressiveRate
 pub struct UnknownOptimumConvergenceProgressiveRate;
 
 impl UnknownOptimumConvergenceProgressiveRate {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: VectorProblem<Element = f64> + SingleObjectiveProblem, { Box::new(Self::from_params()) }
+    where
+        P: VectorProblem<Element = f64> + SingleObjectiveProblem,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> ConvergenceRateMeasure<P> for UnknownOptimumConvergenceProgressiveRate
-    where
-        P: VectorProblem<Element = f64> + SingleObjectiveProblem,
+where
+    P: VectorProblem<Element = f64> + SingleObjectiveProblem,
 {
     fn measure(&self, _problem: &P, previous: f64, current: f64) -> f64 {
-        let convergence_rate = (current - previous).abs();
-        convergence_rate
+        (current - previous).abs()
     }
 }
 
 impl<P> Component<P> for UnknownOptimumConvergenceProgressiveRate
-    where
-        P: VectorProblem<Element = f64> + SingleObjectiveProblem,
+where
+    P: VectorProblem<Element = f64> + SingleObjectiveProblem,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(ConvergenceRate::<Self>::new());
@@ -243,16 +258,21 @@ impl<P> Component<P> for UnknownOptimumConvergenceProgressiveRate
 pub struct KnownOptimumLogarithmicConvergenceRate;
 
 impl KnownOptimumLogarithmicConvergenceRate {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem, { Box::new(Self::from_params()) }
+    where
+        P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> ConvergenceRateMeasure<P> for KnownOptimumLogarithmicConvergenceRate
-    where
-        P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
+where
+    P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
 {
     fn measure(&self, problem: &P, _previous: f64, current: f64) -> f64 {
         let optimum = problem.known_optimum().value();
@@ -263,8 +283,8 @@ impl<P> ConvergenceRateMeasure<P> for KnownOptimumLogarithmicConvergenceRate
 }
 
 impl<P> Component<P> for KnownOptimumLogarithmicConvergenceRate
-    where
-        P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
+where
+    P: VectorProblem<Element = f64> + SingleObjectiveProblem + KnownOptimumProblem,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(ConvergenceRate::<Self>::new());

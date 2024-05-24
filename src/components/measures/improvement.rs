@@ -2,34 +2,39 @@
 //!
 //! # References
 //!
-//! \[1\]
+//! \[1\] A. Scheibenpflug, S. Wagner, E. Pitzer, B. Burlacu, M. Affenzeller. 2012
+//! On the analysis, classification and prediction of metaheuristic algorithm behavior for combinatorial optimization problems.
+//! 24th European Modeling and Simulation Symposium, EMSS 1, (2012), 368-372
 
-
-use std::any::{type_name};
-use std::array::from_mut;
-use std::marker::PhantomData;
-use better_any::{Tid, TidAble};
-use derivative::Derivative;
-use serde::Serialize;
 use crate::component::AnyComponent;
-use crate::{Component, CustomState, ExecResult, Individual, Problem, SingleObjectiveProblem, State};
 use crate::components::archive;
 use crate::lens::{AnyLens, Lens, LensMap};
 use crate::logging::extractor::{EntryExtractor, EntryName};
 use crate::problems::{LimitedVectorProblem, VectorProblem};
-use crate::state::common;
-use crate::state::common::Evaluator;
 use crate::utils::SerializablePhantom;
+use crate::{
+    Component, CustomState, ExecResult, Individual, Problem, SingleObjectiveProblem, State,
+};
+use better_any::{Tid, TidAble};
+use derivative::Derivative;
+use serde::Serialize;
+use std::any::type_name;
+use std::marker::PhantomData;
 
 /// Trait for representing a component that measures the improvement of the solutions an operator caused.
 pub trait ImprovementMeasure<P: Problem>: AnyComponent {
     /// Calculates the amount of improvement between two `solutions`.
-    fn measure(&self, problem: &P, previous: &[Individual<P>], current: &[Individual<P>]) -> (Vec<f64>, Vec<f64>);
+    fn measure(
+        &self,
+        problem: &P,
+        previous: &[Individual<P>],
+        current: &[Individual<P>],
+    ) -> (Vec<f64>, Vec<f64>);
 }
 
 /// A default implementation of [`Component::execute`] for types implementing [`ImprovementMeasure`].
 ///
-/// Note that, if called between or directly after operators, solutions will be evaluated here.
+/// Note that, if called between or directly after operators, solutions have to be evaluated beforehand in the main loop.
 pub fn improvement_measure<P, T>(component: &T, problem: &P, state: &mut State<P>) -> ExecResult<()>
 where
     P: Problem,
@@ -37,34 +42,18 @@ where
 {
     let current_pop = state.populations_mut().pop();
 
-    let mut cur = current_pop.clone();
-    for i in 0..current_pop.len() {
-        //if !cur[i].is_evaluated() {
-        //TODO Does not work; need to evaluate in config
-        state.holding::<Evaluator<P>>(
-            |evaluator: &mut Evaluator<P>, state| {
-                evaluator.as_inner_mut().evaluate(
-                    problem,
-                    state,
-                    from_mut(&mut cur[i]),
-                );
-                Ok(())
-            },
-        ).expect("TODO: panic message");
-        *state.borrow_value_mut::<common::Evaluations>() += 1;
-        //}
-    }
+    let cur = current_pop.clone();
+
     state.populations_mut().push(cur);
 
     let archive = state.borrow_mut::<archive::IntermediateArchive<P>>();
-    let previous_pop= archive.archived_population();
+    let previous_pop = archive.archived_population();
     let mut improvement = state.borrow_mut::<Improvement<T>>();
-
 
     if previous_pop.is_empty() {
         improvement.update((vec![0.0], vec![0.0]));
     } else {
-        improvement.update(component.measure(problem, &previous_pop, &current_pop));
+        improvement.update(component.measure(problem, previous_pop, &current_pop));
     }
 
     Ok(())
@@ -99,7 +88,9 @@ impl<I: AnyComponent> Improvement<I> {
 }
 
 impl<I: AnyComponent> Default for Improvement<I> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<I: AnyComponent + 'static> CustomState<'_> for Improvement<I> {}
@@ -115,25 +106,34 @@ impl<I: AnyComponent + 'static> AnyLens for TotalImprovementLens<I> {
 }
 
 impl<I> EntryName for TotalImprovementLens<I> {
-    fn entry_name() -> &'static str { type_name::<I>() }
+    fn entry_name() -> &'static str {
+        type_name::<I>()
+    }
 }
 
 impl<I> TotalImprovementLens<I> {
     /// Construct the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
-        where
-            P: VectorProblem<Element = f64>,
-            Self: Lens<P>,
-            <Self as AnyLens>::Target: Serialize + Send + 'static, { Box::<Self>::default() }
+    where
+        P: VectorProblem<Element = f64>,
+        Self: Lens<P>,
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
+        Box::<Self>::default()
+    }
 }
 
 impl<I: AnyComponent + 'static> LensMap for TotalImprovementLens<I> {
     type Source = Improvement<I>;
 
-    fn map(&self, source: &Self::Source) -> Self::Target { source.total_improvement.clone() }
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        source.total_improvement.clone()
+    }
 }
 
 /// Lens for accessing the improvement percentages of [`Improvement`].
@@ -147,28 +147,37 @@ impl<I: AnyComponent + 'static> AnyLens for PercentageImprovementLens<I> {
 }
 
 impl<I> EntryName for PercentageImprovementLens<I> {
-    fn entry_name() -> &'static str { "Improvement in percent" }
+    fn entry_name() -> &'static str {
+        "Improvement in percent"
+    }
 }
 
 impl<I> PercentageImprovementLens<I> {
     /// Construct the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
-        where
-            P: VectorProblem<Element = f64>,
-            Self: Lens<P>,
-            <Self as AnyLens>::Target: Serialize + Send + 'static, { Box::<Self>::default() }
+    where
+        P: VectorProblem<Element = f64>,
+        Self: Lens<P>,
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
+        Box::<Self>::default()
+    }
 }
 
 impl<I: AnyComponent + 'static> LensMap for PercentageImprovementLens<I> {
     type Source = Improvement<I>;
 
-    fn map(&self, source: &Self::Source) -> Self::Target { source.percent_improvement.clone() }
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        source.percent_improvement.clone()
+    }
 }
 
-/// Measures the improvement by calculating the total and percentual difference between a solution
+/// Measures the improvement by calculating the total and percental difference between a solution
 /// before and after the application of an operator.
 ///
 /// Note that the results are flawed if the operator shuffles the population.
@@ -178,12 +187,14 @@ impl<I: AnyComponent + 'static> LensMap for PercentageImprovementLens<I> {
 pub struct FitnessImprovement;
 
 impl FitnessImprovement {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new_with_id<P>() -> Box<dyn Component<P>>
-        where
-            P: LimitedVectorProblem<Element = f64>,
-            P: SingleObjectiveProblem,
+    where
+        P: LimitedVectorProblem<Element = f64>,
+        P: SingleObjectiveProblem,
     {
         Box::new(Self::from_params())
     }
@@ -194,7 +205,9 @@ impl FitnessImprovement {
     where
         P: VectorProblem<Element = f64>,
         P: SingleObjectiveProblem,
-    { Box::new(Self::from_params()) }
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> ImprovementMeasure<P> for FitnessImprovement
@@ -202,7 +215,12 @@ where
     P: VectorProblem<Element = f64>,
     P: SingleObjectiveProblem,
 {
-    fn measure(&self, _problem: &P, previous: &[Individual<P>], current: &[Individual<P>]) -> (Vec<f64>, Vec<f64>) {
+    fn measure(
+        &self,
+        _problem: &P,
+        previous: &[Individual<P>],
+        current: &[Individual<P>],
+    ) -> (Vec<f64>, Vec<f64>) {
         let mut diffs = vec![];
         let mut percents = vec![];
 
@@ -211,7 +229,6 @@ where
             let frac = (previous[u].objective().value() / current[u].objective().value()) * 100.0;
             diffs.push(diff);
             percents.push(frac);
-
         }
         (percents, diffs)
     }

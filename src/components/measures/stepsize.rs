@@ -2,28 +2,34 @@
 //!
 //! # References
 //!
-//! \[1\]
+//! \[1\] A. Scheibenpflug, S. Wagner, E. Pitzer, B. Burlacu, M. Affenzeller. 2012
+//! On the analysis, classification and prediction of metaheuristic algorithm behavior for combinatorial optimization problems.
+//! 24th European Modeling and Simulation Symposium, EMSS 1, (2012), 368-372
 
-
-use std::any::type_name;
-use std::marker::PhantomData;
-use better_any::{Tid, TidAble};
-use derivative::Derivative;
-use serde::Serialize;
-use statrs::statistics::Statistics;
 use crate::component::AnyComponent;
-use crate::{Component, CustomState, ExecResult, Problem, State};
 use crate::components::archive;
 use crate::lens::{AnyLens, Lens, LensMap};
 use crate::logging::extractor::{EntryExtractor, EntryName};
 use crate::population::AsSolutions;
 use crate::problems::VectorProblem;
-use crate::utils::{SerializablePhantom, squared_euclidean};
+use crate::utils::{squared_euclidean, SerializablePhantom};
+use crate::{Component, CustomState, ExecResult, Problem, State};
+use better_any::{Tid, TidAble};
+use derivative::Derivative;
+use serde::Serialize;
+use statrs::statistics::Statistics;
+use std::any::type_name;
+use std::marker::PhantomData;
 
 /// Trait for representing a component that measures the step size of the change caused by an operator.
 pub trait StepSizeMeasure<P: Problem>: AnyComponent {
     /// Calculates the step size between two `solutions`.
-    fn measure(&self, problem: &P, previous: &[&P::Encoding], current: &[&P::Encoding]) -> (Vec<f64>, Vec<f64>);
+    fn measure(
+        &self,
+        problem: &P,
+        previous: &[&P::Encoding],
+        current: &[&P::Encoding],
+    ) -> (Vec<f64>, Vec<f64>);
 }
 
 /// A default implementation of [`Component::execute`] for types implementing [`StepSizeMeasure`].
@@ -35,13 +41,17 @@ where
     let populations = state.populations();
     let current_pop = populations.current();
     let archive = state.borrow_mut::<archive::IntermediateArchive<P>>();
-    let previous_pop= archive.archived_population();
+    let previous_pop = archive.archived_population();
     let mut step_size = state.borrow_mut::<StepSize<T>>();
 
     if current_pop.is_empty() || previous_pop.is_empty() {
         step_size.update((vec![0.0], vec![0.0]));
     } else {
-        step_size.update(component.measure(problem, &previous_pop.as_solutions(), &current_pop.as_solutions()));
+        step_size.update(component.measure(
+            problem,
+            &previous_pop.as_solutions(),
+            &current_pop.as_solutions(),
+        ));
     }
 
     Ok(())
@@ -84,10 +94,12 @@ impl<I: AnyComponent> StepSize<I> {
 }
 
 impl<I: AnyComponent> Default for StepSize<I> {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-impl<I: AnyComponent+ 'static> CustomState<'_> for StepSize<I> {}
+impl<I: AnyComponent + 'static> CustomState<'_> for StepSize<I> {}
 
 /// Lens for accessing the individual step sizes of [`StepSize`].
 #[derive(Serialize, Derivative)]
@@ -100,25 +112,34 @@ impl<I: AnyComponent + 'static> AnyLens for IndividualStepSizeLens<I> {
 }
 
 impl<I> EntryName for IndividualStepSizeLens<I> {
-    fn entry_name() -> &'static str { type_name::<I>() }
+    fn entry_name() -> &'static str {
+        type_name::<I>()
+    }
 }
 
 impl<I> IndividualStepSizeLens<I> {
     /// Construct the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
     where
         P: VectorProblem<Element = f64>,
         Self: Lens<P>,
-        <Self as AnyLens>::Target: Serialize + Send + 'static, { Box::<Self>::default() }
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
+        Box::<Self>::default()
+    }
 }
 
 impl<I: AnyComponent + 'static> LensMap for IndividualStepSizeLens<I> {
     type Source = StepSize<I>;
 
-    fn map(&self, source: &Self::Source) -> Self::Target { source.all_steps.clone() }
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        source.all_steps.clone()
+    }
 }
 
 /// Lens for accessing the individual variances of [`StepSize`].
@@ -132,25 +153,34 @@ impl<I: AnyComponent + 'static> AnyLens for IndividualVarianceLens<I> {
 }
 
 impl<I> EntryName for IndividualVarianceLens<I> {
-    fn entry_name() -> &'static str { "Individual Variances" }
+    fn entry_name() -> &'static str {
+        "Individual Variances"
+    }
 }
 
 impl<I> IndividualVarianceLens<I> {
     /// Construct the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
-        where
-            P: VectorProblem<Element = f64>,
-            Self: Lens<P>,
-            <Self as AnyLens>::Target: Serialize + Send + 'static, { Box::<Self>::default() }
+    where
+        P: VectorProblem<Element = f64>,
+        Self: Lens<P>,
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
+        Box::<Self>::default()
+    }
 }
 
 impl<I: AnyComponent + 'static> LensMap for IndividualVarianceLens<I> {
     type Source = StepSize<I>;
 
-    fn map(&self, source: &Self::Source) -> Self::Target { source.all_var.clone() }
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        source.all_var.clone()
+    }
 }
 
 /// Lens for accessing the mean step size of [`StepSize`].
@@ -164,25 +194,34 @@ impl<I: AnyComponent + 'static> AnyLens for MeanStepSizeLens<I> {
 }
 
 impl<I> EntryName for MeanStepSizeLens<I> {
-    fn entry_name() -> &'static str { "Mean Step Size" }
+    fn entry_name() -> &'static str {
+        "Mean Step Size"
+    }
 }
 
 impl<I> MeanStepSizeLens<I> {
     /// Construct the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
-        where
-            P: VectorProblem<Element = f64>,
-            Self: Lens<P>,
-            <Self as AnyLens>::Target: Serialize + Send + 'static, { Box::<Self>::default() }
+    where
+        P: VectorProblem<Element = f64>,
+        Self: Lens<P>,
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
+        Box::<Self>::default()
+    }
 }
 
 impl<I: AnyComponent + 'static> LensMap for MeanStepSizeLens<I> {
     type Source = StepSize<I>;
 
-    fn map(&self, source: &Self::Source) -> Self::Target { source.step_size }
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        source.step_size
+    }
 }
 
 /// Lens for accessing the variance of [`StepSize`].
@@ -196,25 +235,34 @@ impl<I: AnyComponent + 'static> AnyLens for StepSizeVarianceLens<I> {
 }
 
 impl<I> EntryName for StepSizeVarianceLens<I> {
-    fn entry_name() -> &'static str { "Step Size Variance" }
+    fn entry_name() -> &'static str {
+        "Step Size Variance"
+    }
 }
 
 impl<I> StepSizeVarianceLens<I> {
     /// Construct the lens.
-    pub fn new() -> Self { Self(SerializablePhantom::default()) }
+    pub fn new() -> Self {
+        Self(SerializablePhantom::default())
+    }
 
     /// Constructs the lens for logging.
     pub fn entry<P>() -> Box<dyn EntryExtractor<P>>
-        where
-            P: VectorProblem<Element = f64>,
-            Self: Lens<P>,
-            <Self as AnyLens>::Target: Serialize + Send + 'static, { Box::<Self>::default() }
+    where
+        P: VectorProblem<Element = f64>,
+        Self: Lens<P>,
+        <Self as AnyLens>::Target: Serialize + Send + 'static,
+    {
+        Box::<Self>::default()
+    }
 }
 
 impl<I: AnyComponent + 'static> LensMap for StepSizeVarianceLens<I> {
     type Source = StepSize<I>;
 
-    fn map(&self, source: &Self::Source) -> Self::Target { source.variance }
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        source.variance
+    }
 }
 
 /// Measures the step size in terms of the Euclidean distance between two solutions.
@@ -224,19 +272,28 @@ impl<I: AnyComponent + 'static> LensMap for StepSizeVarianceLens<I> {
 pub struct EuclideanStepSize;
 
 impl EuclideanStepSize {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
     where
-        P: VectorProblem<Element = f64>, { Box::new(Self::from_params()) }
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> StepSizeMeasure<P> for EuclideanStepSize
 where
     P: VectorProblem<Element = f64>,
 {
-    fn measure(&self, _problem: &P, previous: &[&Vec<f64>], current: &[&Vec<f64>]) -> (Vec<f64>, Vec<f64>) {
-
+    fn measure(
+        &self,
+        _problem: &P,
+        previous: &[&Vec<f64>],
+        current: &[&Vec<f64>],
+    ) -> (Vec<f64>, Vec<f64>) {
         let steps: Vec<f64> = previous
             .iter()
             .zip(current.iter())
@@ -268,23 +325,32 @@ where
 pub struct PositionalStepSize;
 
 impl PositionalStepSize {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
     where
-        P: VectorProblem<Element = f64>, { Box::new(Self::from_params()) }
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> StepSizeMeasure<P> for PositionalStepSize
 where
     P: VectorProblem<Element = f64>,
 {
-    fn measure(&self, _problem: &P, previous: &[&P::Encoding], current: &[&P::Encoding]) -> (Vec<f64>, Vec<f64>) {
+    fn measure(
+        &self,
+        _problem: &P,
+        previous: &[&P::Encoding],
+        current: &[&P::Encoding],
+    ) -> (Vec<f64>, Vec<f64>) {
         let diffs: Vec<Vec<f64>> = previous
             .iter()
             .zip(current.iter())
-            .map(|(p, q)|
-                p.iter().zip(q.iter()).map(|(v, w)| (v - w).abs()).collect())
+            .map(|(p, q)| p.iter().zip(q.iter()).map(|(v, w)| (v - w).abs()).collect())
             .collect();
 
         let mut steps: Vec<f64> = vec![];
@@ -318,25 +384,36 @@ where
 pub struct DimensionalStepSize;
 
 impl DimensionalStepSize {
-    pub fn from_params() -> Self { Self }
+    pub fn from_params() -> Self {
+        Self
+    }
 
     pub fn new<P>() -> Box<dyn Component<P>>
     where
-        P: VectorProblem<Element = f64>, { Box::new(Self::from_params()) }
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params())
+    }
 }
 
 impl<P> StepSizeMeasure<P> for DimensionalStepSize
 where
     P: VectorProblem<Element = f64>,
 {
-    fn measure(&self, problem: &P, previous: &[&P::Encoding], current: &[&P::Encoding]) -> (Vec<f64> ,Vec<f64>) {
+    fn measure(
+        &self,
+        problem: &P,
+        previous: &[&P::Encoding],
+        current: &[&P::Encoding],
+    ) -> (Vec<f64>, Vec<f64>) {
         let mut diffs: Vec<Vec<f64>> = vec![];
         let dims = problem.dimension();
         for d in 0..dims {
             let summed: Vec<f64> = previous
                 .iter()
                 .zip(current.iter())
-                .map(|(p, q)| (p[d] - q[d]).abs()).collect();
+                .map(|(p, q)| (p[d] - q[d]).abs())
+                .collect();
             diffs.push(summed);
         }
 

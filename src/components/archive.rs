@@ -1,10 +1,12 @@
 //! Archive for specified parts of population.
 
-use std::cell::Ref;
+use crate::{
+    component::ExecResult, components::Component, problems::SingleObjectiveProblem,
+    state::StateReq, CustomState, Individual, Problem, State,
+};
 use better_any::{Tid, TidAble};
 use serde::{Deserialize, Serialize};
-
-use crate::{component::ExecResult, components::Component, problems::SingleObjectiveProblem, state::StateReq, CustomState, Individual, State, Problem};
+use std::cell::Ref;
 
 /// An archive for storing elitist individuals.
 #[derive(Default, Tid)]
@@ -131,7 +133,7 @@ impl<P: Problem> IntermediateArchive<P> {
 
     /// Updates the archive using the `population`, keeping all individuals at the current step of the algorithm.
     fn update(&mut self, population: &[Individual<P>]) {
-        self.0 = Vec::from(population.clone());
+        self.0 = Vec::from(population);
     }
 
     /// Returns a reference to the archived population.
@@ -155,16 +157,16 @@ impl IntermediateArchiveUpdate {
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: Problem,
+    where
+        P: Problem,
     {
         Box::new(Self::from_params())
     }
 }
 
 impl<P> Component<P> for IntermediateArchiveUpdate
-    where
-        P: Problem,
+where
+    P: Problem,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(IntermediateArchive::<P>::new());
@@ -178,7 +180,6 @@ impl<P> Component<P> for IntermediateArchiveUpdate
         Ok(())
     }
 }
-
 
 /// An archive for storing all best individual yet, e.g. for subsequent calculation of measures.
 #[derive(Default, Tid)]
@@ -208,7 +209,7 @@ impl<P: Problem> BestIndividualsArchive<P> {
     }
 }
 
-/// Updates the [`crate::components::archive::BestIndividualsArchive`] with the current best individual.
+/// Updates the [`BestIndividualsArchive`] with the current best individual.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct BestIndividualsArchiveUpdate;
 
@@ -218,16 +219,16 @@ impl BestIndividualsArchiveUpdate {
     }
 
     pub fn new<P>() -> Box<dyn Component<P>>
-        where
-            P: Problem + SingleObjectiveProblem,
+    where
+        P: Problem + SingleObjectiveProblem,
     {
         Box::new(Self::from_params())
     }
 }
 
 impl<P> Component<P> for BestIndividualsArchiveUpdate
-    where
-        P: Problem + SingleObjectiveProblem,
+where
+    P: Problem + SingleObjectiveProblem,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         state.insert(BestIndividualsArchive::<P>::new());
