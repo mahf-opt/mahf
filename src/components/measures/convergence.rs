@@ -7,17 +7,21 @@
 //! Artif Intell Rev 54, 2323–2409 (2021).
 //! DOI: <https://doi.org/10.1007/s10462-020-09906-6>
 
-use crate::component::AnyComponent;
-use crate::components::archive;
-use crate::lens::{AnyLens, Lens, LensMap};
-use crate::logging::extractor::{EntryExtractor, EntryName};
-use crate::problems::{KnownOptimumProblem, VectorProblem};
-use crate::utils::SerializablePhantom;
-use crate::{Component, CustomState, ExecResult, Problem, SingleObjectiveProblem, State};
+use std::{any::type_name, marker::PhantomData};
+
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
 use serde::Serialize;
-use std::{any::type_name, marker::PhantomData};
+
+use crate::{
+    component::AnyComponent,
+    components::archive,
+    lens::{AnyLens, Lens, LensMap},
+    logging::extractor::{EntryExtractor, EntryName},
+    problems::{KnownOptimumProblem, VectorProblem},
+    utils::SerializablePhantom,
+    Component, CustomState, ExecResult, Problem, SingleObjectiveProblem, State,
+};
 
 /// Trait for representing a component that measures the convergence rate.
 pub trait ConvergenceRateMeasure<P: Problem>: AnyComponent {

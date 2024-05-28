@@ -6,20 +6,21 @@
 //! On the analysis, classification and prediction of metaheuristic algorithm behavior for combinatorial optimization problems.
 //! 24th European Modeling and Simulation Symposium, EMSS 1, (2012), 368-372
 
-use crate::component::AnyComponent;
-use crate::components::archive;
-use crate::lens::{AnyLens, Lens, LensMap};
-use crate::logging::extractor::{EntryExtractor, EntryName};
-use crate::problems::{LimitedVectorProblem, VectorProblem};
-use crate::utils::SerializablePhantom;
-use crate::{
-    Component, CustomState, ExecResult, Individual, Problem, SingleObjectiveProblem, State,
-};
+use std::{any::type_name, marker::PhantomData};
+
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
 use serde::Serialize;
-use std::any::type_name;
-use std::marker::PhantomData;
+
+use crate::{
+    component::AnyComponent,
+    components::archive,
+    lens::{AnyLens, Lens, LensMap},
+    logging::extractor::{EntryExtractor, EntryName},
+    problems::{LimitedVectorProblem, VectorProblem},
+    utils::SerializablePhantom,
+    Component, CustomState, ExecResult, Individual, Problem, SingleObjectiveProblem, State,
+};
 
 /// Trait for representing a component that measures the improvement of the solutions an operator caused.
 pub trait ImprovementMeasure<P: Problem>: AnyComponent {
@@ -82,8 +83,8 @@ impl<I: AnyComponent> Improvement<I> {
     /// Updates the improvement using the total and the percentage vectors.
     pub fn update(&mut self, improvement: (Vec<f64>, Vec<f64>)) {
         let (a, b) = improvement;
-        self.percent_improvement = a.clone();
-        self.total_improvement = b.clone();
+        self.percent_improvement.clone_from(&a);
+        self.total_improvement.clone_from(&b);
     }
 }
 

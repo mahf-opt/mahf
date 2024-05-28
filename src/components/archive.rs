@@ -1,12 +1,14 @@
 //! Archive for specified parts of population.
 
+use better_any::{Tid, TidAble};
+
+use serde::{Deserialize, Serialize};
+use std::cell::Ref;
+
 use crate::{
     component::ExecResult, components::Component, problems::SingleObjectiveProblem,
     state::StateReq, CustomState, Individual, Problem, State,
 };
-use better_any::{Tid, TidAble};
-use serde::{Deserialize, Serialize};
-use std::cell::Ref;
 
 /// An archive for storing elitist individuals.
 #[derive(Default, Tid)]

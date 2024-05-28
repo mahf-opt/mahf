@@ -6,20 +6,23 @@
 //! On the analysis, classification and prediction of metaheuristic algorithm behavior for combinatorial optimization problems.
 //! 24th European Modeling and Simulation Symposium, EMSS 1, (2012), 368-372
 
-use crate::component::AnyComponent;
-use crate::components::archive;
-use crate::lens::{AnyLens, Lens, LensMap};
-use crate::logging::extractor::{EntryExtractor, EntryName};
-use crate::population::AsSolutions;
-use crate::problems::VectorProblem;
-use crate::utils::{squared_euclidean, SerializablePhantom};
-use crate::{Component, CustomState, ExecResult, Problem, State};
+use std::{any::type_name, marker::PhantomData};
+
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
 use serde::Serialize;
 use statrs::statistics::Statistics;
-use std::any::type_name;
-use std::marker::PhantomData;
+
+use crate::{
+    component::AnyComponent,
+    components::archive,
+    lens::{AnyLens, Lens, LensMap},
+    logging::extractor::{EntryExtractor, EntryName},
+    population::AsSolutions,
+    problems::VectorProblem,
+    utils::{squared_euclidean, SerializablePhantom},
+    Component, CustomState, ExecResult, Problem, State,
+};
 
 /// Trait for representing a component that measures the step size of the change caused by an operator.
 pub trait StepSizeMeasure<P: Problem>: AnyComponent {
@@ -86,8 +89,8 @@ impl<I: AnyComponent> StepSize<I> {
     /// Updates the step size using the step size vector.
     pub fn update(&mut self, all_steps: (Vec<f64>, Vec<f64>)) {
         let (a, b) = all_steps;
-        self.all_steps = a.clone();
-        self.all_var = b.clone();
+        self.all_steps.clone_from(&a);
+        self.all_var.clone_from(&b);
         self.variance = a.clone().variance();
         self.step_size = a.mean();
     }
