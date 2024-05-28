@@ -1,4 +1,5 @@
 //! A collection of utilities.
+#![allow(clippy::non_canonical_clone_impl)]
 
 use std::marker::PhantomData;
 
@@ -32,6 +33,7 @@ pub fn all_eq<T: PartialEq>(arr: &[T]) -> bool {
 /// Wrapper around [`PhantomData`] that serializes the type name of `T`.
 ///
 /// It additionally implements `Send` + `Sync` even if `T` doesn't.
+
 #[derive(Derivative)]
 #[derivative(Default(bound = ""), Copy(bound = ""), Clone(bound = ""))]
 pub struct SerializablePhantom<T>(PhantomData<fn() -> T>);
