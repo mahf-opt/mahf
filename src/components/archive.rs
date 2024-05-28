@@ -1,9 +1,9 @@
 //! Archive for specified parts of population.
 
-use better_any::{Tid, TidAble};
-
-use serde::{Deserialize, Serialize};
 use std::cell::Ref;
+
+use better_any::{Tid, TidAble};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     component::ExecResult, components::Component, problems::SingleObjectiveProblem,
