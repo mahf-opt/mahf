@@ -346,3 +346,101 @@ impl<P: SingleObjectiveProblem> LensRef<P> for BestObjectiveValueLens<P> {
         .map_err(|_| eyre!("no best individual found yet"))
     }
 }
+
+/// Lens for extracting the solutions of the whole population.
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Default(bound = ""), Clone(bound = ""))]
+pub struct PopulationLens<P>(#[serde(skip)] PhantomData<fn() -> P>);
+
+impl<P> PopulationLens<P>
+where
+    P: Problem,
+    Self: Lens<P, Target = P::Encoding>,
+{
+    /// Constructs the lens.
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<P: Problem> AnyLens for PopulationLens<P> {
+    type Target = Vec<P::Encoding>;
+}
+
+impl<P> EntryName for PopulationLens<P> {
+    fn entry_name() -> &'static str {
+        "Population"
+    }
+}
+
+impl<P> PopulationLens<P>
+where
+    P: SingleObjectiveProblem,
+    P::Encoding: Clone,
+    Self: Lens<P>,
+    <Self as AnyLens>::Target: Serialize + Send,
+{
+    /// Constructs the lens for logging entries.
+    pub fn entry() -> Box<dyn EntryExtractor<P>> {
+        Box::<Self>::default()
+    }
+}
+
+impl<P: Problem> LensMap for PopulationLens<P> {
+    type Source = Populations<P>;
+
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        let pop = source.current();
+        pop.iter().map(|i| i.solution().to_owned()).collect()
+    }
+}
+
+/// Lens for extracting the objective values of the whole population.
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Default(bound = ""), Clone(bound = ""))]
+pub struct ObjectiveValuesLens<P>(#[serde(skip)] PhantomData<fn() -> P>);
+
+impl<P> ObjectiveValuesLens<P>
+where
+    P: Problem,
+    Self: Lens<P, Target = P::Objective>,
+{
+    /// Constructs the lens.
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<P: Problem> AnyLens for ObjectiveValuesLens<P> {
+    type Target = Vec<P::Objective>;
+}
+
+impl<P> EntryName for ObjectiveValuesLens<P> {
+    fn entry_name() -> &'static str {
+        "Population Objective Values"
+    }
+}
+
+impl<P> ObjectiveValuesLens<P>
+where
+    P: SingleObjectiveProblem,
+    P::Encoding: Clone,
+    Self: Lens<P>,
+    <Self as AnyLens>::Target: Serialize + Send,
+{
+    /// Constructs the lens for logging entries.
+    pub fn entry() -> Box<dyn EntryExtractor<P>> {
+        Box::<Self>::default()
+    }
+}
+
+impl<P: Problem> LensMap for ObjectiveValuesLens<P> {
+    type Source = Populations<P>;
+
+    fn map(&self, source: &Self::Source) -> Self::Target {
+        let pop = source.current();
+        pop.iter().map(|i| i.objective().to_owned()).collect()
+    }
+}

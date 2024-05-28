@@ -13,11 +13,11 @@ use crate::{
 pub mod archive;
 pub mod boundary;
 pub mod control_flow;
-pub mod diversity;
 pub mod evaluation;
 pub mod generative;
 pub mod initialization;
 pub mod mapping;
+pub mod measures;
 pub mod misc;
 pub mod mutation;
 pub mod recombination;
