@@ -63,7 +63,7 @@ where
 
         let size = (self.y * 2 + 1) as usize;
 
-        if !population.len() % size == 0 {
+        if population.len() % size != 0 {
             return Err(eyre!("the population must be in the format [`y` * 2 + 1]*, where the first individual is the base of the mutation"))
                 .suggestion("try to use an appropriate selection method for this mutation");
         }
