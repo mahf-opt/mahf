@@ -18,6 +18,7 @@
 //! DOI: <https://10.1109/CEC60901.2024.10611897>.
 
 use std::{any::type_name, marker::PhantomData};
+
 use better_any::{Tid, TidAble};
 use derivative::Derivative;
 use serde::Serialize;
@@ -359,7 +360,6 @@ where
     }
 }
 
-
 /// Measures the minimum sum of individual distances as described by Mascarenhas et al.
 ///
 /// The value is stored in the [`Diversity<MinimumIndividualDistance>`] state.
@@ -389,7 +389,6 @@ where
         let mut min_dist = vec![-1.0; n];
 
         for (ind1_i, ind1) in solutions.iter().enumerate() {
-
             for ind2 in solutions.iter() {
                 if ind1 == ind2 {
                     continue;
@@ -424,7 +423,6 @@ where
     }
 }
 
-
 /// Measures the radius diversity as described by Mascarenhas et al.
 ///
 /// The value is stored in the [`Diversity<RadiusDiversity>`] state.
@@ -453,13 +451,13 @@ where
     P: VectorProblem<Element = f64>,
 {
     fn measure(&self, _problem: &P, solutions: &[&Vec<f64>]) -> f64 {
-
         // Calculate the distance matrix using the Euclidean distance
         let mut dist_matrix = vec![vec![0.0; solutions.len()]; solutions.len()];
         for i in 0..solutions.len() {
             for j in 0..solutions.len() {
                 if i != j {
-                    let sum_sq: f64 = solutions[i].iter()
+                    let sum_sq: f64 = solutions[i]
+                        .iter()
                         .zip(solutions[j].iter())
                         .map(|(x1, x2)| (x1 - x2).powi(2))
                         .sum();
@@ -471,8 +469,13 @@ where
         let mut selected_flag = vec![false; solutions.len()];
         let original_indices: Vec<usize> = (0..solutions.len()).collect();
 
-        let sigma = dist_matrix.iter().flat_map(|row| row.iter()).cloned().fold(f64::NEG_INFINITY, f64::max);
-        let max_indices: Vec<usize> = dist_matrix.iter()
+        let sigma = dist_matrix
+            .iter()
+            .flat_map(|row| row.iter())
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
+        let max_indices: Vec<usize> = dist_matrix
+            .iter()
             .enumerate()
             .flat_map(|(i, row)| row.iter().enumerate().map(move |(j, &val)| (i, j, val)))
             .filter(|&(_, _, val)| val == sigma)
@@ -497,14 +500,21 @@ where
                 })
                 .collect();
 
-            let max_index = shortest_distances_list.iter()
+            let max_index = shortest_distances_list
+                .iter()
                 .cloned()
                 .enumerate()
                 .fold((0, f64::NEG_INFINITY), |(max_idx, max_val), (idx, val)| {
-                    if val > max_val { (idx, val) } else { (max_idx, max_val) }
-                }).0;
+                    if val > max_val {
+                        (idx, val)
+                    } else {
+                        (max_idx, max_val)
+                    }
+                })
+                .0;
 
-            let max_original_index = original_indices.iter()
+            let max_original_index = original_indices
+                .iter()
                 .filter(|&&idx| !selected_flag[idx])
                 .nth(max_index)
                 .unwrap();
