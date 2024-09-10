@@ -11,6 +11,11 @@
 //! Review and Study of Genotypic Diversity Measures for Real-Coded Representations.
 //! IEEE Transactions on Evolutionary Computation 16, 5 (October 2012), 695–710.
 //! DOI:<https://doi.org/10/f4ct44>
+//!
+//! \[3\] A. Mascarenhas, Y. Kobayashi and C. Aranha. 2024.
+//! Novel Genotypic Diversity Metrics for Real-Coded Optimization on Multi-Modal Problems.
+//! 2024 IEEE Congress on Evolutionary Computation (CEC), Yokohama, Japan, pp. 1-8.
+//! DOI: <https://10.1109/CEC60901.2024.10611897>.
 
 use std::{any::type_name, marker::PhantomData};
 
@@ -342,6 +347,189 @@ where
 }
 
 impl<P> Component<P> for DistanceToAveragePointDiversity
+where
+    P: VectorProblem<Element = f64>,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(Diversity::<Self>::new());
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        diversity_measure(self, problem, state)
+    }
+}
+
+/// Measures the minimum sum of individual distances as described by Mascarenhas et al.
+///
+/// The value is stored in the [`Diversity<MinimumIndividualDistance>`] state.
+#[derive(Clone, Serialize)]
+pub struct MinimumIndividualDistance;
+
+impl MinimumIndividualDistance {
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+    where
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> DiversityMeasure<P> for MinimumIndividualDistance
+where
+    P: VectorProblem<Element = f64>,
+{
+    fn measure(&self, _problem: &P, solutions: &[&Vec<f64>]) -> f64 {
+        let n = solutions.len();
+
+        let mut min_dist = vec![-1.0; n];
+
+        for (ind1_i, ind1) in solutions.iter().enumerate() {
+            for ind2 in solutions.iter() {
+                if ind1 == ind2 {
+                    continue;
+                }
+
+                let mut sum_d = 0.0;
+                for (x1, x2) in ind1.iter().zip(ind2.iter()) {
+                    sum_d += (x1 - x2).powi(2);
+                }
+                let d = sum_d.sqrt(); // Euclidean distance
+
+                if d < min_dist[ind1_i] || min_dist[ind1_i] == -1.0 {
+                    min_dist[ind1_i] = d;
+                }
+            }
+        }
+        min_dist.iter().sum::<f64>()
+    }
+}
+
+impl<P> Component<P> for MinimumIndividualDistance
+where
+    P: VectorProblem<Element = f64>,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(Diversity::<Self>::new());
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        diversity_measure(self, problem, state)
+    }
+}
+
+/// Measures the radius diversity as described by Mascarenhas et al.
+///
+/// The value is stored in the [`Diversity<RadiusDiversity>`] state.
+///
+/// *The code for this measure was generated with the help of ChatGPT (GPT-3.5) using the code
+/// provided by Mascarenhas et al. at <https://zenodo.org/records/11077281> and
+/// <https://github.com/mascarenhasav/wcci_2024_gdms_paper>.*
+#[derive(Clone, Serialize)]
+pub struct RadiusDiversity;
+
+impl RadiusDiversity {
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+    where
+        P: VectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> DiversityMeasure<P> for RadiusDiversity
+where
+    P: VectorProblem<Element = f64>,
+{
+    fn measure(&self, _problem: &P, solutions: &[&Vec<f64>]) -> f64 {
+        // Calculate the distance matrix using the Euclidean distance
+        let mut dist_matrix = vec![vec![0.0; solutions.len()]; solutions.len()];
+        for i in 0..solutions.len() {
+            for j in 0..solutions.len() {
+                if i != j {
+                    let sum_sq: f64 = solutions[i]
+                        .iter()
+                        .zip(solutions[j].iter())
+                        .map(|(x1, x2)| (x1 - x2).powi(2))
+                        .sum();
+                    dist_matrix[i][j] = sum_sq.sqrt();
+                }
+            }
+        }
+
+        let mut selected_flag = vec![false; solutions.len()];
+        let original_indices: Vec<usize> = (0..solutions.len()).collect();
+
+        let sigma = dist_matrix
+            .iter()
+            .flat_map(|row| row.iter())
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
+        let max_indices: Vec<usize> = dist_matrix
+            .iter()
+            .enumerate()
+            .flat_map(|(i, row)| row.iter().enumerate().map(move |(j, &val)| (i, j, val)))
+            .filter(|&(_, _, val)| val == sigma)
+            .map(|(i, _j, _)| i)
+            .take(2)
+            .collect();
+
+        selected_flag[max_indices[0]] = true;
+        selected_flag[max_indices[1]] = true;
+
+        let mut selected_indices = vec![max_indices[0], max_indices[1]];
+        let mut sigma_list = vec![0.0, sigma];
+
+        while selected_indices.len() < solutions.len() {
+            let shortest_distances_list: Vec<f64> = (0..solutions.len())
+                .filter(|&i| !selected_flag[i])
+                .map(|i| {
+                    (0..solutions.len())
+                        .filter(|&j| selected_flag[j])
+                        .map(|j| dist_matrix[i][j])
+                        .fold(f64::INFINITY, f64::min)
+                })
+                .collect();
+
+            let max_index = shortest_distances_list
+                .iter()
+                .cloned()
+                .enumerate()
+                .fold((0, f64::NEG_INFINITY), |(max_idx, max_val), (idx, val)| {
+                    if val > max_val {
+                        (idx, val)
+                    } else {
+                        (max_idx, max_val)
+                    }
+                })
+                .0;
+
+            let max_original_index = original_indices
+                .iter()
+                .filter(|&&idx| !selected_flag[idx])
+                .nth(max_index)
+                .unwrap();
+
+            selected_flag[*max_original_index] = true;
+            selected_indices.push(*max_original_index);
+            let sigma = shortest_distances_list[max_index];
+            sigma_list.push(sigma);
+        }
+
+        sigma_list.iter().sum()
+    }
+}
+
+impl<P> Component<P> for RadiusDiversity
 where
     P: VectorProblem<Element = f64>,
 {
