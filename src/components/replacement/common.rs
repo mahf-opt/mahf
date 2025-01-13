@@ -118,9 +118,50 @@ impl<P: SingleObjectiveProblem> Component<P> for MuPlusLambda {
     }
 }
 
+/// Keeps the `max_population_size` fittest individuals from children.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct MuCommaLambda {
+    /// Maximal allowed population size.
+    pub max_population_size: u32,
+}
+
+impl MuCommaLambda {
+    pub fn from_params(max_population_size: u32) -> Self {
+        Self {
+            max_population_size,
+        }
+    }
+
+    pub fn new<P: SingleObjectiveProblem>(max_population_size: u32) -> Box<dyn Component<P>> {
+        Box::new(Self::from_params(max_population_size))
+    }
+}
+
+impl<P: SingleObjectiveProblem> Replacement<P> for MuCommaLambda {
+    fn replace(
+        &self,
+        _parents: Vec<Individual<P>>,
+        offspring: Vec<Individual<P>>,
+        _rng: &mut Random,
+    ) -> ExecResult<Vec<Individual<P>>> {
+        let mut population = offspring.clone();
+        population.sort_unstable_by_key(|i| *i.objective());
+        population.truncate(self.max_population_size as usize);
+        Ok(population)
+    }
+}
+
+impl<P: SingleObjectiveProblem> Component<P> for MuCommaLambda {
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        replacement(self, problem, state)
+    }
+}
+
 /// Discards all individuals in the parent population, keeping the children unchanged.
 ///
 /// The opposite of this is [`DiscardOffspring`].
+///
+/// If 'max_population_size' is given, the new population is simply truncated.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Generational {
     /// Maximal allowed population size.
@@ -146,7 +187,13 @@ impl<P: Problem> Replacement<P> for Generational {
         offspring: Vec<Individual<P>>,
         _rng: &mut Random,
     ) -> ExecResult<Vec<Individual<P>>> {
-        Ok(offspring)
+        if offspring.len() > self.max_population_size as usize {
+            let mut population = offspring.clone();
+            population.truncate(self.max_population_size as usize);
+            Ok(population)
+        } else {
+            Ok(offspring)
+        }
     }
 }
 
