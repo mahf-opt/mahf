@@ -13,7 +13,8 @@ pub mod common;
 pub mod sa;
 
 pub use common::{
-    DiscardOffspring, Generational, KeepBetterAtIndex, Merge, MuPlusLambda, RandomReplacement,
+    DiscardOffspring, Generational, KeepBetterAtIndex, Merge, MuCommaLambda, MuPlusLambda,
+    RandomReplacement,
 };
 
 /// Trait for representing a component that replaces a parent population with its child population.
