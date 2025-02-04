@@ -1,4 +1,5 @@
 use std::f64::consts::PI;
+use eyre::Context;
 use itertools::{izip, multizip};
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
@@ -59,7 +60,7 @@ where
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut rng = state.random_mut();
-        let mut distribution = Normal::new(0., 1.0);
+        let distribution: Normal<f64> = Normal::new(0., 1.0).wrap_err("invalid distribution")?;;
 
         // Get population from state
         let mut population = state.populations_mut();
@@ -79,14 +80,14 @@ where
 
         // calculate vector of exploding particle positions
         let mut exploding_particles = Vec::new();
-        for _p in num_pieces{
+        for _p in 0..num_pieces {
             let mine_distance = distances
                 .iter()
                 .map(|d| d * (distribution.sample(&mut *rng)).powi(2))
                 .collect::<Vec<f64>>();
             let Xe = mine_distance
                 .iter()
-                .map(|d| d * (2 * PI / num_pieces as f64))
+                .map(|d| d * (2.0 * PI / num_pieces as f64))
                 .collect::<Vec<f64>>();
             exploding_particles.push(Xe);
 
