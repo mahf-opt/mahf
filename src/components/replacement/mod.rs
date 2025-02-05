@@ -10,6 +10,7 @@ use crate::{
 
 pub mod bh;
 pub mod common;
+pub mod pso;
 pub mod sa;
 
 pub use common::{
