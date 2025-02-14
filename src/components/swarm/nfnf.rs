@@ -12,41 +12,61 @@ use crate::{
 };
 use crate::population::IntoIndividuals;
 
-/// Updates the positions of particles according to the cyclic universe mechanism proposed for the
-/// Big Bang - Big Crunch (BBBC) algorithm.
+/// Updates the positions of particles according to the nuclear reaction mechanism proposed for the
+/// Nuclear Fission-Nuclear Fusion (NFNF/N2F) algorithm.
 #[derive(Clone, Serialize)]
-pub struct CyclicUniverseMechanism<I: Identifier = Global> {
+pub struct NuclearReactionMechanism<I: Identifier = Global> {
     /// Number of new individuals to generate.
     pub new_pop: usize,
+    /// Magnification factor.
+    pub mu: f64,
+    /// Amplification factor.
+    pub rho: f64,
+    /// Type of termination criterion counter.
+    pub termination_type: String,
+    /// Termination criterion.
+    pub termination_value: usize,
     id: PhantomId<I>,
 }
 
-impl<I: Identifier> CyclicUniverseMechanism<I> {
-    pub fn from_params(new_pop: usize) -> Self {
+impl<I: Identifier> NuclearReactionMechanism<I> {
+    pub fn from_params(new_pop: usize, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Self {
         Self {
             new_pop,
+            mu,
+            rho,
+            termination_type,
+            termination_value,
             id: PhantomId::default(),
         }
     }
 
-    pub fn new_with_id<P>(new_pop: usize) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(new_pop: usize, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(new_pop))
+        Box::new(Self::from_params(new_pop,
+                                   mu,
+                                   rho,
+                                   termination_type,
+                                   termination_value))
     }
 }
 
-impl CyclicUniverseMechanism<Global> {
-    pub fn new<P>(new_pop: usize) -> Box<dyn Component<P>>
+impl NuclearReactionMechanism<Global> {
+    pub fn new<P>(new_pop: usize, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
-        Self::new_with_id(new_pop)
+        Self::new_with_id(new_pop,
+                          mu,
+                          rho,
+                          termination_type,
+                          termination_value)
     }
 }
 
-impl<P, I> Component<P> for CyclicUniverseMechanism<I>
+impl<P, I> Component<P> for NuclearReactionMechanism<I>
 where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     I: Identifier,
@@ -65,18 +85,28 @@ where
 
         // prepare parameters
         let &Self {
-            new_pop, ..
+            new_pop, mu, rho, termination_value, ..
         } = self;
 
-        // Calculate center of mass
+        // Calculate magnification exponent
+        let mut m_exponent = 0.0;
+        if self.termination_type.as_str() == "iterations" {
+            m_exponent = - (termination_value as f64 / state.iterations() as f64);
+        } else if self.termination_type.as_str() == "evaluations" {
+            m_exponent = - (termination_value as f64 / state.evaluations() as f64);
+        }
+
+        // Calculate equivalent to center of mass
         let inverse_fitness_sum = xs
             .iter()
-            .map(|f| 1.0 / f.objective().value())
+            .map(|f| (state.best_objective_value().unwrap().value() / f.objective().value())
+                .powf(rho.powi((state.iterations() - 1) as i32)))
             .sum::<f64>();
-        
+
         let mut positions = Vec::new();
         for i in xs.iter() {
-            let weighted_position = i.solution().iter().map(|x| 1.0 / i.objective().value() * x).collect::<Vec<f64>>();
+            let weighted_position = i.solution().iter().map(|x| (state.best_objective_value().unwrap().value() / i.objective().value())
+                .powf(rho.powi((state.iterations() - 1) as i32)) * x).collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
         let sum_positions = positions.iter()
@@ -90,7 +120,7 @@ where
                     }
                 })
             }).unwrap_or_default();
-        
+
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
         // Generate new candidate solutions (new_pop specifies how many)
@@ -99,7 +129,7 @@ where
             let new_ind = center
                 .iter()
                 .zip(problem.domain())
-                .map(|(c, p)| c + (p.end * distribution.sample(&mut *rng)) / state.iterations() as f64)
+                .map(|(c, p)| c + distribution.sample(&mut *rng) * (p.end - p.start) * mu.powf(m_exponent))
                 .collect::<Vec<f64>>();
             new_pop.push(new_ind);
         }

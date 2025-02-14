@@ -3,7 +3,9 @@
 //! In these cases, it is necessary to keep the relation of the solutions to their velocities.
 
 use eyre::{ensure, ContextCompat, WrapErr};
+use rand::distributions::Uniform;
 use rand::Rng;
+use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -234,3 +236,115 @@ where
         Ok(())
     }
 }
+
+/// Replaces [`n_random`] individuals in a PSO population.
+///
+/// Keeps the former [`ParticleVelocities`] associated to the respective individuals.
+/// Generates new random [`ParticleVelocities`] for the offspring.
+#[derive(Clone, Serialize)]
+pub struct ReplaceRandomPSO<I: Identifier = Global> {
+    pub n_random: u32,
+    pub v_max: f64,
+    id: PhantomId<I>,
+}
+
+impl<I: Identifier> ReplaceRandomPSO<I> {
+    pub fn from_params(n_random: u32, v_max: f64) -> Self {
+        Self {
+            n_random,
+            v_max,
+            id: PhantomId::default(),
+        }
+    }
+    pub fn new_with_id<P>(n_random: u32, v_max: f64) -> Box<dyn Component<P>>
+    where
+        P: LimitedVectorProblem<Element = f64>,
+        P: SingleObjectiveProblem,
+    {
+        Box::new(Self::from_params(n_random, v_max))
+    }
+}
+
+impl ReplaceRandomPSO<Global> {
+    pub fn new<P>(n_random: u32, v_max: f64) -> Box<dyn Component<P>>
+    where
+        P: LimitedVectorProblem<Element = f64>,
+        P: SingleObjectiveProblem,
+    {
+        Self::new_with_id(n_random, v_max)
+    }
+}
+
+impl<P, I> Component<P> for ReplaceRandomPSO<I>
+where
+    P: LimitedVectorProblem<Element = f64>,
+    P: SingleObjectiveProblem,
+    I: Identifier,
+{
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+        state_req.require::<Self, ParticleVelocities<I>>()?;
+        Ok(())
+    }
+
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let mut populations = state.populations_mut();
+        let mut offspring = populations.pop();
+        let mut parents = populations.pop();
+        let mut velocities = state.borrow_value_mut::<ParticleVelocities<I>>();
+
+        ensure!(
+            parents.len() >= self.n_random as usize,
+            "In PSO replacement: more individuals to replace than available in parents ({} vs. {})",
+            parents.len(),
+            self.n_random as usize
+        );
+
+        ensure!(
+            offspring.len() >= self.n_random as usize,
+            "In PSO replacement: more offspring to replace than removed from parents ({} vs. {})",
+            offspring.len(),
+            self.n_random as usize
+        );
+
+        ensure!(
+            parents.len() == velocities.len(),
+            "In PSO replacement: number of particles and velocities do not match ({} vs. {})",
+            parents.len(),
+            velocities.len()
+        );
+
+        // Get random indices of PSO population
+        let mut rng = state.random_mut();
+        let mut indices = (0..parents.len()).collect::<Vec<_>>();
+        indices.shuffle(&mut *rng);
+        // split vec of indices to keep only the n_random indices in remove_indices
+        let mut remove_indices = indices.split_off(self.n_random as usize);
+        // Sort and reverse the remaining indices to be able to remove those individuals from the
+        // parents without changing the index
+        remove_indices.sort();
+        let sorted_indices = remove_indices.iter().rev();
+
+        // remove every individual and velocity from respective Vec that is indicated by index
+        for i in sorted_indices {
+            parents.remove(*i);
+            velocities.remove(*i);
+        }
+
+        // initialise velocities of offspring
+        let mut new_velocities = std::iter::repeat_with(|| {
+            std::iter::repeat_with(|| state.random_mut().gen_range(-self.v_max..=self.v_max))
+                .take(problem.dimension())
+                .collect::<Vec<_>>()
+        })
+            .take(offspring.len())
+            .collect::<Vec<_>>();
+        // add offspring to reduced parent population and offspring velocities to parent velocities
+        parents.append(&mut offspring);
+        velocities.append(&mut new_velocities);
+
+        // push new population in state
+        state.populations_mut().push(parents);
+        Ok(())
+    }
+}
+
