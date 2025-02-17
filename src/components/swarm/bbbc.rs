@@ -17,19 +17,19 @@ use crate::population::IntoIndividuals;
 #[derive(Clone, Serialize)]
 pub struct CyclicUniverseMechanism<I: Identifier = Global> {
     /// Number of new individuals to generate.
-    pub new_pop: usize,
+    pub new_pop: u32,
     id: PhantomId<I>,
 }
 
 impl<I: Identifier> CyclicUniverseMechanism<I> {
-    pub fn from_params(new_pop: usize) -> Self {
+    pub fn from_params(new_pop: u32) -> Self {
         Self {
             new_pop,
             id: PhantomId::default(),
         }
     }
 
-    pub fn new_with_id<P>(new_pop: usize) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(new_pop: u32) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
@@ -38,7 +38,7 @@ impl<I: Identifier> CyclicUniverseMechanism<I> {
 }
 
 impl CyclicUniverseMechanism<Global> {
-    pub fn new<P>(new_pop: usize) -> Box<dyn Component<P>>
+    pub fn new<P>(new_pop: u32) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
@@ -94,17 +94,17 @@ where
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
         // Generate new candidate solutions (new_pop specifies how many)
-        let mut new_pop = Vec::new();
-        for _ in 0..new_pop.len() {
+        let mut new_solutions = Vec::new();
+        for _ in 0..new_pop {
             let new_ind = center
                 .iter()
                 .zip(problem.domain())
                 .map(|(c, p)| c + (p.end * distribution.sample(&mut *rng)) / state.iterations() as f64)
                 .collect::<Vec<f64>>();
-            new_pop.push(new_ind);
+            new_solutions.push(new_ind);
         }
 
-        state.populations_mut().push(new_pop.into_individuals());
+        state.populations_mut().push(new_solutions.into_individuals());
         Ok(())
     }
 }

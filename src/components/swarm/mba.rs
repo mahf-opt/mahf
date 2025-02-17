@@ -23,14 +23,14 @@ use crate::population::IntoIndividuals;
 #[derive(Clone, Serialize)]
 pub struct MineExplosionDynamics<I: Identifier = Global> {
     /// Number of new individuals to generate.
-    pub num_pieces: usize,
+    pub num_pieces: u32,
     /// Solution used as center.
     pub center: String,
     id: PhantomId<I>,
 }
 
 impl<I: Identifier> MineExplosionDynamics<I> {
-    pub fn from_params(num_pieces: usize, center: String) -> Self {
+    pub fn from_params(num_pieces: u32, center: String) -> Self {
         Self {
             num_pieces,
             center,
@@ -38,7 +38,7 @@ impl<I: Identifier> MineExplosionDynamics<I> {
         }
     }
 
-    pub fn new_with_id<P>(num_pieces: usize, center: String) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(num_pieces: u32, center: String) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
@@ -47,7 +47,7 @@ impl<I: Identifier> MineExplosionDynamics<I> {
 }
 
 impl MineExplosionDynamics<Global> {
-    pub fn new<P>(num_pieces: usize, center: String) -> Box<dyn Component<P>>
+    pub fn new<P>(num_pieces: u32, center: String) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {

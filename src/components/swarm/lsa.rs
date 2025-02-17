@@ -19,14 +19,14 @@ use crate::population::IntoIndividuals;
 #[derive(Clone, Serialize)]
 pub struct NegativelyChargedSteppedLeader<I: Identifier = Global> {
     /// Number of new individuals to generate.
-    pub new_pop: usize,
+    pub new_pop: u32,
     /// Solution used as leader.
     pub leader: String,
     id: PhantomId<I>,
 }
 
 impl<I: Identifier> NegativelyChargedSteppedLeader<I> {
-    pub fn from_params(new_pop: usize, leader: String) -> Self {
+    pub fn from_params(new_pop: u32, leader: String) -> Self {
         Self {
             new_pop,
             leader,
@@ -34,7 +34,7 @@ impl<I: Identifier> NegativelyChargedSteppedLeader<I> {
         }
     }
 
-    pub fn new_with_id<P>(new_pop: usize, leader: String) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(new_pop: u32, leader: String) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
@@ -43,7 +43,7 @@ impl<I: Identifier> NegativelyChargedSteppedLeader<I> {
 }
 
 impl NegativelyChargedSteppedLeader<Global> {
-    pub fn new<P>(new_pop: usize, leader: String) -> Box<dyn Component<P>>
+    pub fn new<P>(new_pop: u32, leader: String) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {

@@ -17,7 +17,7 @@ use crate::population::IntoIndividuals;
 #[derive(Clone, Serialize)]
 pub struct NuclearReactionMechanism<I: Identifier = Global> {
     /// Number of new individuals to generate.
-    pub new_pop: usize,
+    pub new_pop: u32,
     /// Magnification factor.
     pub mu: f64,
     /// Amplification factor.
@@ -30,7 +30,7 @@ pub struct NuclearReactionMechanism<I: Identifier = Global> {
 }
 
 impl<I: Identifier> NuclearReactionMechanism<I> {
-    pub fn from_params(new_pop: usize, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Self {
+    pub fn from_params(new_pop: u32, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Self {
         Self {
             new_pop,
             mu,
@@ -41,7 +41,7 @@ impl<I: Identifier> NuclearReactionMechanism<I> {
         }
     }
 
-    pub fn new_with_id<P>(new_pop: usize, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(new_pop: u32, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
@@ -54,7 +54,7 @@ impl<I: Identifier> NuclearReactionMechanism<I> {
 }
 
 impl NuclearReactionMechanism<Global> {
-    pub fn new<P>(new_pop: usize, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
+    pub fn new<P>(new_pop: u32, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
@@ -124,17 +124,17 @@ where
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
         // Generate new candidate solutions (new_pop specifies how many)
-        let mut new_pop = Vec::new();
-        for _ in 0..new_pop.len() {
+        let mut new_solutions = Vec::new();
+        for _ in 0..new_pop {
             let new_ind = center
                 .iter()
                 .zip(problem.domain())
                 .map(|(c, p)| c + distribution.sample(&mut *rng) * (p.end - p.start) * mu.powf(m_exponent))
                 .collect::<Vec<f64>>();
-            new_pop.push(new_ind);
+            new_solutions.push(new_ind);
         }
 
-        state.populations_mut().push(new_pop.into_individuals());
+        state.populations_mut().push(new_solutions.into_individuals());
         Ok(())
     }
 }
