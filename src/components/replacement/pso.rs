@@ -331,7 +331,7 @@ where
 
         // initialise velocities of offspring
         let mut new_velocities = std::iter::repeat_with(|| {
-            std::iter::repeat_with(|| state.random_mut().gen_range(-self.v_max..=self.v_max))
+            std::iter::repeat_with(|| rng.gen_range(-self.v_max..=self.v_max))
                 .take(problem.dimension())
                 .collect::<Vec<_>>()
         })
