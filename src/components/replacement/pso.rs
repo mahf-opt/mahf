@@ -2,18 +2,17 @@
 //! While typically PSO does not need a replacement operator, certain hybridization approaches do.
 //! In these cases, it is necessary to keep the relation of the solutions to their velocities.
 
-use eyre::{ensure, ContextCompat, WrapErr};
-use rand::distributions::Uniform;
+use eyre::{ensure};
 use rand::Rng;
 use rand::seq::SliceRandom;
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 
 use crate::{
     identifier::{Global, Identifier, PhantomId},
-    problems::LimitedVectorProblem, utils::squared_euclidean, Component, ExecResult,
+    problems::LimitedVectorProblem, Component, ExecResult,
     SingleObjectiveProblem, State,
 };
-use crate::components::swarm::pso::{BestParticle, BestParticles, ParticleVelocities};
+use crate::components::swarm::pso::{ParticleVelocities};
 use crate::prelude::StateReq;
 
 /// Replaces the [`n_worst`] individuals in a PSO population.
@@ -242,13 +241,13 @@ where
 /// Keeps the former [`ParticleVelocities`] associated to the respective individuals.
 /// Generates new random [`ParticleVelocities`] for the offspring.
 #[derive(Clone, Serialize)]
-pub struct ReplaceRandomPSO<I: Identifier = Global> {
+pub struct ReplaceNRandomPSO<I: Identifier = Global> {
     pub n_random: u32,
     pub v_max: f64,
     id: PhantomId<I>,
 }
 
-impl<I: Identifier> ReplaceRandomPSO<I> {
+impl<I: Identifier> ReplaceNRandomPSO<I> {
     pub fn from_params(n_random: u32, v_max: f64) -> Self {
         Self {
             n_random,
@@ -265,7 +264,7 @@ impl<I: Identifier> ReplaceRandomPSO<I> {
     }
 }
 
-impl ReplaceRandomPSO<Global> {
+impl ReplaceNRandomPSO<Global> {
     pub fn new<P>(n_random: u32, v_max: f64) -> Box<dyn Component<P>>
     where
         P: LimitedVectorProblem<Element = f64>,
@@ -275,7 +274,7 @@ impl ReplaceRandomPSO<Global> {
     }
 }
 
-impl<P, I> Component<P> for ReplaceRandomPSO<I>
+impl<P, I> Component<P> for ReplaceNRandomPSO<I>
 where
     P: LimitedVectorProblem<Element = f64>,
     P: SingleObjectiveProblem,
@@ -343,7 +342,7 @@ where
         velocities.append(&mut new_velocities);
 
         // push new population in state
-        state.populations_mut().push(parents);
+        populations.push(parents);
         Ok(())
     }
 }

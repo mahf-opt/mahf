@@ -64,8 +64,7 @@ where
         let mut rng = state.random_mut();
 
         // Get population from state
-        let mut population = state.populations_mut();
-        let mut xs = population.pop();
+        let xs = state.populations_mut().pop();
 
         // Set center solution
         let mut leader_solution = Vec::new();

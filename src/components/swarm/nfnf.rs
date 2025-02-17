@@ -77,11 +77,10 @@ where
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut rng = state.random_mut();
-        let mut distribution = Uniform::new(0., 1.0);
+        let distribution = Uniform::new(0., 1.0);
 
         // Get population from state
-        let mut population = state.populations_mut();
-        let xs = population.pop();
+        let xs = state.populations_mut().pop();
 
         // prepare parameters
         let &Self {

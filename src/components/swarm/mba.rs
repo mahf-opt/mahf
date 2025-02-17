@@ -66,11 +66,10 @@ where
 
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut rng = state.random_mut();
-        let distribution: Normal<f64> = Normal::new(0., 1.0).wrap_err("invalid distribution")?;;
+        let distribution: Normal<f64> = Normal::new(0., 1.0).wrap_err("invalid distribution")?;
 
         // Get population from state
-        let mut population = state.populations_mut();
-        let xs = population.pop();
+        let xs = state.populations_mut().pop();
         
         // Set center solution
         let mut center_solution = Vec::new();
