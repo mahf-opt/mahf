@@ -70,7 +70,7 @@ where
 
         // Get population from state
         let mut population = state.populations_mut();
-        let mut xs = population.pop();
+        let xs = population.pop();
         
         // Set center solution
         let mut center_solution = Vec::new();
@@ -102,12 +102,12 @@ where
                 .iter()
                 .map(|d| d * distribution.sample(&mut *rng))
                 .collect::<Vec<f64>>();
-            let Xe = mine_distance
+            let xe = mine_distance
                 .iter()
                 .zip(center_solution.iter())
                 .map(|(d, c)| c + d * (2.0 * PI / num_pieces as f64))
                 .collect::<Vec<f64>>();
-            exploding_particles.push(Xe);
+            exploding_particles.push(xe);
         }
 
         state.populations_mut().push(exploding_particles.into_individuals());
