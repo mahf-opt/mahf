@@ -121,7 +121,7 @@ where
         velocities.append(&mut new_velocities);
         
         // push new population in state
-        state.populations_mut().push(parents);
+        populations.push(parents);
         Ok(())
     }
 }
@@ -231,7 +231,7 @@ where
         velocities.append(&mut new_velocities);
 
         // push new population in state
-        state.populations_mut().push(parents);
+        populations.push(parents);
         Ok(())
     }
 }
