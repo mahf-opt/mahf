@@ -1,12 +1,10 @@
 use rand::distributions::{Distribution, Uniform};
-use rand_distr::Normal;
 use serde::Serialize;
 
 use crate::{
     component::ExecResult,
     components::Component,
     identifier::{Global, Identifier, PhantomId},
-    population::{AsSolutionsMut, BestIndividual},
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
@@ -93,6 +91,8 @@ where
             m_exponent = - (termination_value as f64 / state.iterations() as f64);
         } else if self.termination_type.as_str() == "evaluations" {
             m_exponent = - (termination_value as f64 / state.evaluations() as f64);
+        } else {
+            println!("Invalid termination type");
         }
 
         // Calculate equivalent to center of mass

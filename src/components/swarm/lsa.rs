@@ -69,12 +69,14 @@ where
         // Set center solution
         let mut leader_solution = Vec::new();
         if self.leader.as_str() == "random_new" {
-            leader_solution = random_spread(&problem.domain(), 1, &mut *state.random_mut())[0].clone();
+            leader_solution = random_spread(&problem.domain(), 1, &mut *rng)[0].clone();
         } else if self.leader.as_str() == "best" {
             leader_solution = state.best_individual().unwrap().solution().clone();
         } else if self.leader.as_str() == "random_solution" {
             let random_index = &mut rng.gen_range(0..xs.len());
             leader_solution = xs[*random_index].solution().clone();
+        } else {
+            println!("Invalid leader solution");
         }
 
         // prepare parameters

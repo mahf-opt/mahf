@@ -1,9 +1,7 @@
 use std::f64::consts::PI;
 use eyre::Context;
-use itertools::{izip, multizip};
-use rand::distributions::{Distribution, Uniform};
+use rand::distributions::{Distribution};
 use rand::Rng;
-use rand::seq::IteratorRandom;
 use rand_distr::Normal;
 use serde::Serialize;
 
@@ -11,7 +9,6 @@ use crate::{
     component::ExecResult,
     components::Component,
     identifier::{Global, Identifier, PhantomId},
-    population::{AsSolutionsMut, BestIndividual},
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
@@ -74,12 +71,14 @@ where
         // Set center solution
         let mut center_solution = Vec::new();
         if self.center.as_str() == "random_new" {
-            center_solution = random_spread(&problem.domain(), 1, &mut *state.random_mut())[0].clone();
+            center_solution = random_spread(&problem.domain(), 1, &mut *rng)[0].clone();
         } else if self.center.as_str() == "best" { 
             center_solution = state.best_individual().unwrap().solution().clone();
         } else if self.center.as_str() == "random_solution" { 
             let random_index = &mut rng.gen_range(0..xs.len());
             center_solution = xs[*random_index].solution().clone();
+        } else {
+            println!("Invalid center solution");
         }
 
         // prepare parameters
