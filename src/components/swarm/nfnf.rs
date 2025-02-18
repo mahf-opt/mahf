@@ -102,12 +102,19 @@ where
                 .powf(rho.powi((state.iterations() - 1) as i32)))
             .sum::<f64>();
 
+        println!("Calculated inverse_fitness_sum");
+        // TODO find endless loop?
         let mut positions = Vec::new();
         for i in xs.iter() {
-            let weighted_position = i.solution().iter().map(|x| (state.best_objective_value().unwrap().value() / i.objective().value())
-                .powf(rho.powi((state.iterations() - 1) as i32)) * x).collect::<Vec<f64>>();
+            let weighted_position = i.solution()
+                .iter()
+                .map(|x| (state.best_objective_value().unwrap().value() / i.objective().value())
+                    .powf(rho.powi((state.iterations() - 1) as i32)) * x)
+                .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
+        println!("Calculated weighted positions");
+
         let sum_positions = positions.iter()
             .map(|v| v.iter()) // Convert each vector into an iterator
             .fold(None, |acc: Option<Vec<f64>>, v_iter| {
@@ -119,9 +126,11 @@ where
                     }
                 })
             }).unwrap_or_default();
+        println!("Calculated sum_positions");
 
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
+        println!("Calculated center");
         // Generate new candidate solutions (new_pop specifies how many)
         let mut new_solutions = Vec::new();
         for _ in 0..new_pop {

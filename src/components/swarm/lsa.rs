@@ -116,6 +116,10 @@ where
         let means: Vec<f64> = transposed.iter().map(|v| v.mean()).collect();
         let std_devs: Vec<f64> = transposed.iter().map(|v| v.variance().sqrt()).collect();
         
+        println!("means are {:?}", means);
+        println!("stds are {:?}", std_devs);
+
+
         // Disperse candidate solutions
         for (i, new_s) in new_solutions.iter_mut().enumerate() {
             izip!(new_s.iter_mut(),
@@ -123,6 +127,7 @@ where
                 means.iter(),
                 std_devs.iter(),
             ).for_each(|(s, rp, mean, std)| {
+                // TODO check mu and std
                 let adjustment = Exp::new(*rp).unwrap().sample(&mut *rng) + Normal::new(*mean, *std).unwrap().sample(&mut *rng);
                 if *s < 0.0 {
                     *s -= adjustment;
