@@ -110,7 +110,7 @@ where
         let inverse_fitness_sum = objective_values
             .iter()
             .map(|o| (best_objective / o)
-                .powf(rho.powi((state.iterations() - 1) as i32)))
+                .powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON)
             .sum::<f64>();
 
         println!("Calculated inverse_fitness_sum: {:?}", inverse_fitness_sum);
@@ -120,7 +120,7 @@ where
             let weighted_position = i.solution()
                 .iter()
                 .map(|x| ((best_objective / objective_values[o])
-                    .powf(rho.powi((state.iterations() - 1) as i32))) * x)
+                    .powf(rho.powi((state.iterations() - 1) as i32))) * x + f64::EPSILON)
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
