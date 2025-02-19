@@ -96,35 +96,36 @@ where
             println!("Invalid termination type");
         }
 
-        // Shift fitness values to always be > 0
-        let (_max, min) = selection::functional::objective_bounds(&*xs).unwrap();
+        // Shift fitness values to always be > 0; use best_objective_value as minimum that is always
+        // at least EPSILON bigger than 0
+        let min = state.best_objective_value().unwrap().value();
         let objective_values: Vec<_> = if min > 0.0 {
             xs.iter().map(|i| i.objective().value()).collect()
         } else {
             xs.iter().map(|i| i.objective().value() + min.abs() + f64::EPSILON).collect()
         };
-        let best_objective = state.best_objective_value().unwrap().value() + f64::EPSILON;
+        let best_objective = if min > 0.0 {
+            min
+        } else {
+            min + min.abs() + f64::EPSILON
+        };
         
-
         // Calculate equivalent to center of mass
         let inverse_fitness_sum = objective_values
             .iter()
             .map(|o| (best_objective / o)
-                .powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON)
+                .powf(rho.powi((state.iterations() - 1) as i32)))
             .sum::<f64>();
-
-        println!("Calculated inverse_fitness_sum: {:?}", inverse_fitness_sum);
-        // TODO find endless loop?
+        
         let mut positions = Vec::new();
         for (o, i) in xs.iter().enumerate() {
             let weighted_position = i.solution()
                 .iter()
                 .map(|x| ((best_objective / objective_values[o])
-                    .powf(rho.powi((state.iterations() - 1) as i32))) * x + f64::EPSILON)
+                    .powf(rho.powi((state.iterations() - 1) as i32))) * x)
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
-        println!("Calculated weighted positions: {:?}", positions);
 
         let sum_positions = positions.iter()
             .map(|v| v.iter()) // Convert each vector into an iterator
@@ -137,11 +138,9 @@ where
                     }
                 })
             }).unwrap_or_default();
-        println!("Calculated sum_positions: {:?}", sum_positions);
 
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
-        println!("Calculated center: {:?}", center);
         // Generate new candidate solutions (new_pop specifies how many)
         let mut new_solutions = Vec::new();
         for _ in 0..new_pop {
@@ -153,8 +152,6 @@ where
             new_solutions.push(new_ind);
         }
         
-        println!("New Solutions: {:?}", new_solutions);
-
         state.populations_mut().push(new_solutions.into_individuals());
         Ok(())
     }
