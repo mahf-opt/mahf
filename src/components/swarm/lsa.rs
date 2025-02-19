@@ -91,7 +91,7 @@ where
             let rate_param = problem
                 .domain()
                 .iter()
-                .map(|p| Uniform::from(0.0..(p.end).abs()).sample(&mut *rng))
+                .map(|p| Uniform::from(0.0..((p.end - p.start) / 2.0)).sample(&mut *rng))
                 .collect::<Vec<f64>>();
             rate_parameters.push(rate_param.clone());
             
@@ -115,10 +115,6 @@ where
         // Compute mean and standard deviation
         let means: Vec<f64> = transposed.iter().map(|v| v.mean()).collect();
         let std_devs: Vec<f64> = transposed.iter().map(|v| v.variance().sqrt()).collect();
-        
-        println!("means are {:?}", means);
-        println!("stds are {:?}", std_devs);
-
 
         // Disperse candidate solutions
         for (i, new_s) in new_solutions.iter_mut().enumerate() {

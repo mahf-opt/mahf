@@ -8,6 +8,7 @@ use crate::{
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
+use crate::components::selection;
 use crate::population::IntoIndividuals;
 
 /// Updates the positions of particles according to the nuclear reaction mechanism proposed for the
@@ -95,21 +96,31 @@ where
             println!("Invalid termination type");
         }
 
+        // Shift fitness values to always be > 0
+        let (_max, min) = selection::functional::objective_bounds(&*xs).unwrap();
+        let objective_values: Vec<_> = if min > 0.0 {
+            xs.iter().map(|i| i.objective().value()).collect()
+        } else {
+            xs.iter().map(|i| i.objective().value() + min.abs() + f64::EPSILON).collect()
+        };
+        let best_objective = state.best_objective_value().unwrap().value() + f64::EPSILON;
+        
+
         // Calculate equivalent to center of mass
-        let inverse_fitness_sum = xs
+        let inverse_fitness_sum = objective_values
             .iter()
-            .map(|f| (state.best_objective_value().unwrap().value() / f.objective().value())
+            .map(|o| (best_objective / o)
                 .powf(rho.powi((state.iterations() - 1) as i32)))
             .sum::<f64>();
 
         println!("Calculated inverse_fitness_sum: {:?}", inverse_fitness_sum);
         // TODO find endless loop?
         let mut positions = Vec::new();
-        for i in xs.iter() {
+        for (o, i) in xs.iter().enumerate() {
             let weighted_position = i.solution()
                 .iter()
-                .map(|x| (state.best_objective_value().unwrap().value() / i.objective().value())
-                    .powf(rho.powi((state.iterations() - 1) as i32)) * x)
+                .map(|x| ((best_objective / objective_values[o])
+                    .powf(rho.powi((state.iterations() - 1) as i32))) * x)
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }

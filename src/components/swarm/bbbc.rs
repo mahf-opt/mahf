@@ -1,3 +1,4 @@
+use std::f64::EPSILON;
 use rand::distributions::{Distribution, Uniform};
 use rand_distr::Normal;
 use serde::Serialize;
@@ -10,7 +11,9 @@ use crate::{
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
+use crate::components::selection;
 use crate::population::IntoIndividuals;
+use crate::prelude::selection::selection;
 
 /// Updates the positions of particles according to the cyclic universe mechanism proposed for the
 /// Big Bang - Big Crunch (BBBC) algorithm.
@@ -61,6 +64,14 @@ where
 
         // Get population from state
         let xs = state.populations_mut().pop();
+        
+        // Shift fitness values to always be > 0
+        let (_max, min) = selection::functional::objective_bounds(&*xs).unwrap();
+        let objective_values: Vec<_> = if min > 0.0 {
+            xs.iter().map(|i| i.objective().value()).collect()
+        } else {
+            xs.iter().map(|i| i.objective().value() + min.abs() + f64::EPSILON).collect()
+        };
 
         // prepare parameters
         let &Self {
@@ -68,14 +79,14 @@ where
         } = self;
 
         // Calculate center of mass
-        let inverse_fitness_sum = xs
+        let inverse_fitness_sum = objective_values
             .iter()
-            .map(|f| 1.0 / f.objective().value())
+            .map(|o| 1.0 / o)
             .sum::<f64>();
         
         let mut positions = Vec::new();
-        for i in xs.iter() {
-            let weighted_position = i.solution().iter().map(|x| 1.0 / i.objective().value() * x).collect::<Vec<f64>>();
+        for (o, i) in xs.iter().enumerate() {
+            let weighted_position = i.solution().iter().map(|x| (1.0 / objective_values[o]) * x).collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
         let sum_positions = positions.iter()
