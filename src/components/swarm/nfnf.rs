@@ -109,19 +109,15 @@ where
         } else {
             min + min.abs() + f64::EPSILON
         };
-
-        println!("best objective {:?} and min {:?}", best_objective, min);
-        println!("objectives {:?}", objective_values);
-
+        
         // Calculate equivalent to center of mass
+        // EPSILON is necessary because exponent gets too large for increasing iterations
         let inverse_fitness_sum = objective_values
             .iter()
             .map(|o| (best_objective / o).powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON)
             .sum::<f64>();
-
-        println!("iteration {:?} and rho {:?}", state.iterations(), rho);
-        println!("Calculated inverse_fitness_sum: {:?}", inverse_fitness_sum);
-
+        
+        // EPSILON is necessary because exponent gets too large for increasing iterations
         let mut positions = Vec::new();
         for (o, i) in xs.iter().enumerate() {
             let weighted_position = i.solution()
@@ -130,7 +126,6 @@ where
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
-        println!("Calculated weighted positions: {:?}", positions);
 
         let sum_positions = positions.iter()
             .map(|v| v.iter()) // Convert each vector into an iterator
@@ -143,11 +138,9 @@ where
                     }
                 })
             }).unwrap_or_default();
-        println!("Calculated sum_positions: {:?}", sum_positions);
 
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
-        println!("Calculated center: {:?}", center);
         // Generate new candidate solutions (new_pop specifies how many)
         let mut new_solutions = Vec::new();
         for _ in 0..new_pop {
@@ -158,9 +151,7 @@ where
                 .collect::<Vec<f64>>();
             new_solutions.push(new_ind);
         }
-
-        println!("New Solutions: {:?}", new_solutions);
-
+        
         state.populations_mut().push(new_solutions.into_individuals());
         Ok(())
     }
