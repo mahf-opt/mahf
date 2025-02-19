@@ -89,9 +89,9 @@ where
         // Calculate magnification exponent
         let mut m_exponent = 0.0;
         if self.termination_type.as_str() == "iterations" {
-            m_exponent = - (termination_value as f64 / state.iterations() as f64);
+            m_exponent = - (state.iterations() as f64 / termination_value as f64);
         } else if self.termination_type.as_str() == "evaluations" {
-            m_exponent = - (termination_value as f64 / state.evaluations() as f64);
+            m_exponent = - (state.evaluations() as f64 / termination_value as f64);
         } else {
             println!("Invalid termination type");
         }
