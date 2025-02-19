@@ -102,7 +102,7 @@ where
                 .powf(rho.powi((state.iterations() - 1) as i32)))
             .sum::<f64>();
 
-        println!("Calculated inverse_fitness_sum");
+        println!("Calculated inverse_fitness_sum: {:?}", inverse_fitness_sum);
         // TODO find endless loop?
         let mut positions = Vec::new();
         for i in xs.iter() {
@@ -113,7 +113,7 @@ where
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
-        println!("Calculated weighted positions");
+        println!("Calculated weighted positions: {:?}", positions);
 
         let sum_positions = positions.iter()
             .map(|v| v.iter()) // Convert each vector into an iterator
@@ -126,11 +126,11 @@ where
                     }
                 })
             }).unwrap_or_default();
-        println!("Calculated sum_positions");
+        println!("Calculated sum_positions: {:?}", sum_positions);
 
         let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
 
-        println!("Calculated center");
+        println!("Calculated center: {:?}", center);
         // Generate new candidate solutions (new_pop specifies how many)
         let mut new_solutions = Vec::new();
         for _ in 0..new_pop {
@@ -141,6 +141,8 @@ where
                 .collect::<Vec<f64>>();
             new_solutions.push(new_ind);
         }
+        
+        println!("New Solutions: {:?}", new_solutions);
 
         state.populations_mut().push(new_solutions.into_individuals());
         Ok(())

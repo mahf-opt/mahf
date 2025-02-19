@@ -91,7 +91,7 @@ where
             let rate_param = problem
                 .domain()
                 .iter()
-                .map(|p| Uniform::from(p.start..p.end).sample(&mut *rng))
+                .map(|p| Uniform::from(0.0..(p.end).abs()).sample(&mut *rng))
                 .collect::<Vec<f64>>();
             rate_parameters.push(rate_param.clone());
             
@@ -127,7 +127,6 @@ where
                 means.iter(),
                 std_devs.iter(),
             ).for_each(|(s, rp, mean, std)| {
-                // TODO check mu and std
                 let adjustment = Exp::new(*rp).unwrap().sample(&mut *rng) + Normal::new(*mean, *std).unwrap().sample(&mut *rng);
                 if *s < 0.0 {
                     *s -= adjustment;
