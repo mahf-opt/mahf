@@ -116,7 +116,7 @@ where
         // Calculate equivalent to center of mass
         let inverse_fitness_sum = objective_values
             .iter()
-            .map(|o| (best_objective / o).powf(rho.powi((state.iterations() - 1) as i32)))
+            .map(|o| (best_objective / o).powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON)
             .sum::<f64>();
 
         println!("iteration {:?} and rho {:?}", state.iterations(), rho);
@@ -126,7 +126,7 @@ where
         for (o, i) in xs.iter().enumerate() {
             let weighted_position = i.solution()
                 .iter()
-                .map(|x| ((best_objective / objective_values[o]).powf(rho.powi((state.iterations() - 1) as i32))) * x)
+                .map(|x| ((best_objective / objective_values[o]).powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON) * x)
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
