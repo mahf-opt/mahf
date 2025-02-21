@@ -3,6 +3,7 @@
 use std::ops::Sub;
 
 use better_any::{Tid, TidAble};
+use color_eyre::owo_colors::OwoColorize;
 use derivative::Derivative;
 use derive_more::{Deref, DerefMut};
 use dyn_clone::DynClone;
@@ -297,7 +298,7 @@ pub struct EqualToN<L: AnyLens> {
     pub lens: L,
 }
 
-impl<L: AnyLens> crate::conditions::EqualToN<L> {
+impl<L: AnyLens> EqualToN<L> {
     /// Constructs a new `EqualToN` with the given `n` and `lens`.
     pub fn from_params(n: u32, lens: L) -> Self {
         Self { n, lens }
@@ -313,7 +314,7 @@ impl<L: AnyLens> crate::conditions::EqualToN<L> {
     }
 }
 
-impl crate::conditions::EqualToN<ValueOf<Iterations>> {
+impl EqualToN<ValueOf<Iterations>> {
     /// Creates a new `EqualToN` that evaluates to `true` at exactly `n` [`Iterations`].
     pub fn iterations<P>(n: u32) -> Box<dyn Condition<P>>
     where
@@ -323,7 +324,7 @@ impl crate::conditions::EqualToN<ValueOf<Iterations>> {
     }
 }
 
-impl<P, L> Condition<P> for crate::conditions::EqualToN<L>
+impl<P, L> Condition<P> for EqualToN<L>
 where
     P: Problem,
     L: Lens<P, Target = u32>,
@@ -569,5 +570,128 @@ where
             false
         };
         Ok(value)
+    }
+}
+
+/// Evaluates to `true` if `lens` evaluates to the same value for `n` iterations.
+///
+/// The condition is most commonly used as a termination criterion or as a condition for branching.
+///
+/// # Common lenses
+///
+/// The most common lens used with this condition is [`ValueOf<Iterations>`],
+/// for which the [`crate::conditions::StagnationForN::iterations`] method is provided.
+///
+/// [`ValueOf<Iterations>`]: ValueOf
+/// [`StagnationForN::iterations`]: crate::conditions::StagnationForN<ValueOf<Iterations>, S>::iterations
+///
+/// # Examples
+///
+/// Terminating the algorithm if `BestObjectiveValue` has not changed for 100 iterations:
+///
+/// ```
+/// use mahf::{conditions::StagnationForN, Configuration};
+/// use mahf::conditions::common::PartialEqChecker;
+/// use mahf::lens::common::BestObjectiveValueLens;
+/// use mahf::lens::ValueOf;
+/// # use mahf::Problem;///
+/// # 
+/// use mahf::state::common::Iterations;
+///
+/// fn example<P: Problem>() -> Configuration<P> {
+/// Configuration::builder()
+///     .while_(!StagnationForN::new(100, ValueOf::<Iterations>::new(), BestObjectiveValueLens::new(), PartialEqChecker::new() ), |builder| {
+///         /* main loop */
+///         # builder
+///     })
+///     .build()
+/// # }
+/// ```
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Clone(bound = ""))]
+pub struct StagnationForN<L: AnyLens, S: AnyLens> {
+    /// The value of N.
+    pub n: usize,
+    /// The lens to the value to compare with `n`
+    pub step_lens: L,
+    /// The lens to the stagnated value.
+    pub stagnation_lens: S,
+    /// The equality checker.
+    pub checker: Box<dyn EqualityChecker<S::Target>>,
+}
+
+impl<L: AnyLens, S: AnyLens> StagnationForN<L, S> {
+    /// Constructs a new `StagnationForN` with the given `n`, `step_lens` and `stagnation_lens`.
+    pub fn from_params(n: usize, step_lens: L, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Self {
+        Self { n, step_lens, stagnation_lens, checker }
+    }
+
+    /// Constructs a new `StagnationForN` with the given `n`, `step_lens` and `stagnation_lens`.
+    pub fn new<P>(n: usize, step_lens: L, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+        L: Lens<P, Target = u32>,
+        S: Lens<P>,
+        S::Target: AnyFloatLike + Clone + Send,
+    {
+        Box::new(Self::from_params(n, step_lens, stagnation_lens, checker))
+    }
+}
+
+impl<S: AnyLens> StagnationForN<ValueOf<Iterations>, S> {
+    /// Creates a new `StagnationForN` that evaluates to `true` at exactly `n` [`Iterations`] when 
+    /// there are no changes to the observed value.
+    pub fn iterations<P>(n: usize, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Box<dyn Condition<P>>
+    where
+        P: Problem,
+        S: Lens<P>,
+        S::Target: AnyFloatLike + Clone + Send,
+    {
+        Box::new(Self::from_params(n, ValueOf::<Iterations>::new(), stagnation_lens, checker))
+    }
+}
+
+impl<P, L, S> Condition<P> for StagnationForN<L, S>
+where
+    P: Problem,
+    L: Lens<P, Target = u32>,
+    S: Lens<P>,
+    S::Target: AnyFloatLike + Clone + Send,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(Previous::<S::Target>::default());
+        state.insert(Previous::<L::Target>::default());
+        Ok(())
+    }
+    fn evaluate(&self, problem: &P, state: &mut State<P>) -> ExecResult<bool> {
+        // get current step counter (iterations or evaluations)
+        let step = self.step_lens.get(problem, state)?;
+        // get current value whose stagnation should be detected
+        let value = self.stagnation_lens.get(problem, state)?;
+        // get previous value and last step of change for comparison
+        let mut previous = state.try_borrow_value_mut::<Previous<S::Target>>()?;
+        let mut previous_step = state.try_borrow_value_mut::<Previous<L::Target>>()?;
+        
+        let mut stagnation = false;
+        // get if the value changed
+        let changed = if let Some(previous) = &*previous {
+                self.checker.eq(&value, previous)
+            } else {
+                true
+            };
+        
+        // if it changed, we want to set the new value and the current iterations/evaluations as the new reference
+        if changed {
+            *previous = Some(value.clone());
+            *previous_step = Some(step.clone());
+        // otherwise, we want to test if the n iterations/evaluations have passed between the previous step and now
+        } else {
+            if (step - previous_step.unwrap()) >= self.n as u32 {
+                stagnation = true;
+                *previous_step = Some(step.clone());
+            }
+        }
+        Ok(stagnation)
     }
 }

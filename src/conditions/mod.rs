@@ -14,7 +14,7 @@ pub mod common;
 pub mod cro;
 pub mod logical;
 
-pub use common::{ChangeOf, EqualToN, EveryN, LessThanN, OptimumReached, RandomChance};
+pub use common::{ChangeOf, EqualToN, EveryN, LessThanN, OptimumReached, RandomChance, StagnationForN};
 pub use logical::{And, Not, Or};
 
 /// Trait to represent a condition *component* for loops or branches.
