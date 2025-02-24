@@ -595,7 +595,7 @@ where
 /// use mahf::lens::common::BestObjectiveValueLens;
 /// use mahf::lens::ValueOf;
 /// # use mahf::Problem;///
-/// # 
+/// #
 /// use mahf::state::common::Iterations;
 ///
 /// fn example<P: Problem>() -> Configuration<P> {
@@ -640,7 +640,7 @@ impl<L: AnyLens, S: AnyLens> StagnationForN<L, S> {
 }
 
 impl<S: AnyLens> StagnationForN<ValueOf<Iterations>, S> {
-    /// Creates a new `StagnationForN` that evaluates to `true` at exactly `n` [`Iterations`] when 
+    /// Creates a new `StagnationForN` that evaluates to `true` at exactly `n` [`Iterations`] when
     /// there are no changes to the observed value.
     pub fn iterations<P>(n: usize, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Box<dyn Condition<P>>
     where
@@ -672,7 +672,7 @@ where
         // get previous value and last step of change for comparison
         let mut previous = state.try_borrow_value_mut::<Previous<S::Target>>()?;
         let mut previous_step = state.try_borrow_value_mut::<Previous<L::Target>>()?;
-        
+
         let mut stagnation = false;
         // get if the value changed
         let changed = if let Some(previous) = &*previous {
@@ -680,7 +680,7 @@ where
             } else {
                 true
             };
-        
+
         // if it changed, we want to set the new value and the current iterations/evaluations as the new reference
         if changed {
             *previous = Some(value.clone());

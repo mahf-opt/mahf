@@ -1,19 +1,17 @@
 //! Selection components for Differential Evolution (DE).
 
+use better_any::{Tid, TidAble};
+use derive_more::{Deref, DerefMut};
 use eyre::{ensure, ContextCompat};
+use rand::prelude::IteratorRandom;
+use rand::Rng;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    component::ExecResult,
-    components::{
-        selection::{functional as f, selection, Selection},
-        Component,
-    },
-    problems::SingleObjectiveProblem,
-    state::random::Random,
-    Individual, Problem, State,
-};
+use crate::{component::ExecResult, components::{
+    selection::{functional as f, selection, Selection},
+    Component,
+}, problems::SingleObjectiveProblem, state::random::Random, CustomState, Individual, Problem, State};
 
 /// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.
 ///
@@ -189,3 +187,99 @@ impl<P: SingleObjectiveProblem> Component<P> for DECurrentToBest {
         selection(self, problem, state)
     }
 }
+
+/// Selects individuals in the form [current, pbest, `y * 2 - 1` random] for every individual in the population, keeping the order.
+///
+/// Originally proposed for, and used as selection in [`de`], specifically SHADE.
+///
+/// [`de`]: crate::heuristics::de
+///
+/// # Dependencies
+///
+/// This component is meant to be used together with [`DEMutation`], as it initializes the population
+/// in a representation necessary to perform this special mutation.
+///
+/// [`DEMutation`]: crate::components::mutation::de::DEMutation
+#[derive(Clone, Serialize, Deserialize)]
+pub struct SHADECurrentToPBest {
+    // Number of difference vectors ∈ {1, 2}.
+    y: u32,
+    // Minimum value of p ∈ [0,1].
+    p_min: f64,
+    // Maximum number of individuals that can be added through `DEKeepParentsArchive`.
+    // Set to 0 if no archive is configured.
+    max_archive: usize,
+}
+
+impl SHADECurrentToPBest {
+    pub fn from_params(y: u32, p_min: f64, max_archive: usize) -> ExecResult<Self> {
+        ensure!(
+            [1, 2].contains(&y),
+            "`y` needs to be one of {{1, 2}}, but was {}",
+            y
+        );
+        Ok(Self { y, p_min, max_archive })
+    }
+
+    pub fn new<P: SingleObjectiveProblem>(y: u32, p_min: f64, max_archive: usize) -> ExecResult<Box<dyn Component<P>>> {
+        Ok(Box::new(Self::from_params(y , p_min, max_archive)?))
+    }
+}
+
+impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
+            .take(state.populations().current().len() + self.max_archive).collect::<Vec<_>>();
+        state.insert(IndividualP(p));
+        Ok(())
+    }
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let mut populations = state.populations_mut();
+        let mut rng = state.random_mut();
+        let current = populations.current();
+        let size = (self.y * 2 - 1) as usize;
+        let ps = state.get_value::<IndividualP>();
+        let mut sorted = current.clone().iter().collect::<Vec<_>>();
+        sorted.sort_unstable_by_key(|i| *i.objective());
+        let pop_size = current.len() as f64;
+        
+        let mut pbests = Vec::new();
+        for p in ps {
+            let max_index = (p * pop_size) as usize;
+            let random_index = &mut rng.gen_range(0..=max_index);
+            pbests.push(sorted[*random_index]);
+        }
+        
+        let selection: Vec<_> = current
+            .iter()
+            .zip(pbests)
+            .flat_map(|(individual, pbest)| {
+                let mut selection = vec![individual, pbest];
+
+                // Sample only individuals randomly that are not `individual`
+                let remaining_population: Vec<_> =
+                    current.iter().filter(|&i| i != individual).collect();
+
+                selection.extend(remaining_population.choose_multiple(&mut *rng, size));
+                selection
+            })
+            .collect();
+        
+        let cloned_selection = selection.into_iter().cloned().collect();
+        populations.push(cloned_selection);
+
+        // generate new probabilities for next iteration
+        let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
+            .take(state.populations().current().len() + self.max_archive).collect::<Vec<_>>();
+        state.set_value::<IndividualP>(p);
+        Ok(())
+    }
+}
+
+/// The vector of selection parameters p for SHADE.
+#[derive(Default, Tid, Deref, DerefMut)]
+pub struct IndividualP(
+    pub Vec<f64>,
+);
+
+impl CustomState<'_> for IndividualP {}
