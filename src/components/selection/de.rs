@@ -12,6 +12,8 @@ use crate::{component::ExecResult, components::{
     selection::{functional as f, selection, Selection},
     Component,
 }, problems::SingleObjectiveProblem, state::random::Random, CustomState, Individual, Problem, State};
+use crate::components::archive::DEKeepParentsArchive;
+use crate::prelude::StateReq;
 
 /// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.
 ///
@@ -229,17 +231,24 @@ impl SHADECurrentToPBest {
 impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
-            .take(state.populations().current().len() + self.max_archive).collect::<Vec<_>>();
+            .take(state.populations().current().len()).collect::<Vec<_>>();
         state.insert(IndividualP(p));
         Ok(())
     }
-    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+
+    // For now, this operator requires an DEKeepParentsArchive to be present, even if it's empty.
+    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+        state_req.require::<Self, DEKeepParentsArchive<P>>()?;
+        Ok(())
+    }
+    
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
         let current = populations.current();
         let size = (self.y * 2 - 1) as usize;
         let ps = state.get_value::<IndividualP>();
-        let mut sorted = current.clone().iter().collect::<Vec<_>>();
+        let mut sorted = current.iter().collect::<Vec<_>>();
         sorted.sort_unstable_by_key(|i| *i.objective());
         let pop_size = current.len() as f64;
         
@@ -250,27 +259,56 @@ impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
             pbests.push(sorted[*random_index]);
         }
         
-        let selection: Vec<_> = current
-            .iter()
-            .zip(pbests)
-            .flat_map(|(individual, pbest)| {
-                let mut selection = vec![individual, pbest];
+        // For now, this operator requires an DEKeepParentsArchive to be present, even if it's empty.
+        let archive = state.borrow::<DEKeepParentsArchive<P>>();
+        let archived_population = archive.parents();
+        
+        let selection: Vec<_> = if self.max_archive == 0 { 
+            current
+                .iter()
+                .zip(pbests)
+                .flat_map(|(individual, pbest)| {
+                    let mut selection = vec![individual, pbest];
+    
+                    // Sample only individuals randomly that are not `individual`
+                    let remaining_population: Vec<_> =
+                        current.iter().filter(|&i| i != individual).collect();
+                    selection.extend(remaining_population.choose_multiple(&mut *rng, size));
+                    selection
+                })
+                .collect()
+            } else {
+            current
+                .iter()
+                .zip(pbests)
+                .flat_map(|(individual, pbest)| {
+                    let mut selection = vec![individual, pbest];
 
-                // Sample only individuals randomly that are not `individual`
-                let remaining_population: Vec<_> =
-                    current.iter().filter(|&i| i != individual).collect();
+                    // Sample only individuals randomly that are not `individual`
+                    let remaining_population: Vec<_> =
+                        current.iter().filter(|&i| i != individual).collect();
+                    selection.extend(remaining_population.choose_multiple(&mut *rng, size-1));
 
-                selection.extend(remaining_population.choose_multiple(&mut *rng, size));
-                selection
-            })
-            .collect();
+                    // Additionally sample one individual from the combination with the archive
+                    let mut combined_population: Vec<&Individual<P>> = Vec::new();
+                    for i in archived_population {
+                        combined_population.push(&i);
+                    }
+                    for j in remaining_population {
+                        combined_population.push(j);
+                    }
+                    selection.extend(combined_population.choose_multiple(&mut *rng, 1));
+                    selection
+                })
+                .collect()
+            };
         
         let cloned_selection = selection.into_iter().cloned().collect();
         populations.push(cloned_selection);
 
         // generate new probabilities for next iteration
         let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
-            .take(state.populations().current().len() + self.max_archive).collect::<Vec<_>>();
+            .take(state.populations().current().len()).collect::<Vec<_>>();
         state.set_value::<IndividualP>(p);
         Ok(())
     }

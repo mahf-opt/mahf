@@ -278,12 +278,12 @@ impl<P: SingleObjectiveProblem> DEKeepParentsArchive<P> {
         
     }
 
-    /// Returns a reference to the elitists.
+    /// Returns a reference to the archived parents.
     pub fn parents(&self) -> &[Individual<P>] {
         &self.0
     }
 
-    /// Returns a mutable reference to the elitists.
+    /// Returns a mutable reference to the archived parents.
     pub fn parents_mut(&mut self) -> &mut [Individual<P>] {
         &mut self.0
     }
@@ -292,7 +292,7 @@ impl<P: SingleObjectiveProblem> DEKeepParentsArchive<P> {
 /// Updates the [`DEKeepParentsArchive`] with the current population, keeping `max_archive` parents.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DEKeepParentsArchiveUpdate {
-    /// The number of elitists to keep in the archive.
+    /// The number of parents to keep in the archive.
     pub max_archive: usize,
 }
 
@@ -329,49 +329,6 @@ where
         state
             .borrow_mut::<DEKeepParentsArchive<P>>()
             .update(o, p, self.max_archive);
-        Ok(())
-    }
-}
-
-/// Inserts the elitists from the [`ElitistArchive`] into the population.
-///
-/// It won't add duplicates to the archive.
-#[derive(Clone, Serialize, Deserialize)]
-pub struct DEKeepParentsArchiveIntoPopulation;
-
-impl DEKeepParentsArchiveIntoPopulation {
-    pub fn from_params() -> Self {
-        Self
-    }
-
-    pub fn new<P>() -> Box<dyn Component<P>>
-    where
-        P: SingleObjectiveProblem,
-    {
-        Box::new(Self::from_params())
-    }
-}
-
-impl<P> Component<P> for DEKeepParentsArchiveIntoPopulation
-where
-    P: SingleObjectiveProblem,
-{
-    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
-        state_req.require::<Self, DEKeepParentsArchive<P>>()?;
-        Ok(())
-    }
-
-    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let archive = state.borrow::<DEKeepParentsArchive<P>>();
-        let mut populations = state.populations_mut();
-        let population = populations.current_mut();
-
-        for parent in archive.parents() {
-            if !population.contains(parent) {
-                population.push(parent.clone());
-            }
-        }
-
         Ok(())
     }
 }
