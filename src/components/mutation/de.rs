@@ -1,14 +1,15 @@
 //! Mutation components for Differential Evolution (DE).
 
+use std::marker::PhantomData;
+use better_any::{Tid, TidAble};
 use color_eyre::Section;
+use derive_more::{Deref, DerefMut};
 use eyre::{ensure, eyre};
 use itertools::{multizip, Itertools};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    component::ExecResult, components::Component, population::AsSolutionsMut,
-    problems::VectorProblem, utils::with_index, State,
-};
+use crate::{component::ExecResult, components::Component, population::AsSolutionsMut, problems::VectorProblem, utils::with_index, CustomState, State};
+use crate::component::AnyComponent;
 
 /// Applies the special DE mutation, similar to an arithmetic crossover.
 ///
@@ -26,7 +27,7 @@ use crate::{
 pub struct DEMutation {
     /// Number of difference vectors ∈ {1, 2}.
     pub y: u32,
-    /// Difference vector scaling ∈ (0, 2].
+    /// Difference vector scaling ∈ (0, 2], values for each individual in the population.
     pub f: f64,
 }
 
@@ -57,6 +58,12 @@ impl<P> Component<P> for DEMutation
 where
     P: VectorProblem<Element = f64>,
 {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let length = state.populations().current().len();
+        state.insert(SHADEParamF::<Self>::new(vec![self.f; length]));
+        Ok(())
+    }
+    
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let population = populations.current_mut();
@@ -69,6 +76,8 @@ where
         }
 
         let mut solutions = population.as_solutions_mut();
+        
+        let f_vector = state.get_value::<SHADEParamF<Self>>();
 
         for chunk in solutions.chunks_exact_mut(size) {
             match chunk {
@@ -81,10 +90,10 @@ where
                         .collect();
 
                     for [solution1, solution2] in pairs {
-                        for (x, s1, s2) in
-                            multizip((base.iter_mut(), solution1.iter(), solution2.iter()))
+                        for (x, s1, s2, f) in
+                            multizip((base.iter_mut(), solution1.iter(), solution2.iter(), f_vector.iter()))
                         {
-                            *x += self.f * (s1 - s2);
+                            *x += f * (s1 - s2);
                         }
                     }
                 }
@@ -97,3 +106,20 @@ where
         Ok(())
     }
 }
+
+/// F as vector for values for every individual in the population as used in JADE and SHADE.
+#[derive(Clone, Deref, DerefMut, Tid)]
+pub struct SHADEParamF<T: AnyComponent + 'static>(
+    #[deref]
+    #[deref_mut]
+    Vec<f64>,
+    PhantomData<T>,
+);
+
+impl<T: AnyComponent> SHADEParamF<T> {
+    pub fn new(f: Vec<f64>) -> Self {
+        Self(f, PhantomData)
+    }
+}
+
+impl<T: AnyComponent> CustomState<'_> for SHADEParamF<T> {}

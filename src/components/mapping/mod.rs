@@ -53,6 +53,7 @@ use crate::{
 };
 
 pub mod common;
+pub mod de;
 pub mod sa;
 
 pub use common::{Linear, Polynomial, RandomRange};

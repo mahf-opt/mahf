@@ -237,7 +237,7 @@ impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
     }
 
     // For now, this operator requires an DEKeepParentsArchive to be present, even if it's empty.
-    fn require(&self, problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
+    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, DEKeepParentsArchive<P>>()?;
         Ok(())
     }

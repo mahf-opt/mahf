@@ -1,17 +1,16 @@
 //! Recombination components for Differential Evolution (DE).
 
+use std::marker::PhantomData;
+use better_any::{Tid, TidAble};
+use derive_more::{Deref, DerefMut};
 use eyre::ContextCompat;
 use itertools::multizip;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    component::ExecResult,
-    components::Component,
-    population::{AsSolutions, AsSolutionsMut},
-    problems::VectorProblem,
-    Problem, State,
-};
+use crate::{component::ExecResult, components::Component, population::{AsSolutions, AsSolutionsMut}, problems::VectorProblem, CustomState, Problem, State};
+use crate::component::AnyComponent;
+use crate::components::mutation::de::SHADEParamF;
 
 /// Performs a binomial crossover, combining two individuals from two populations at the same index.
 ///
@@ -48,9 +47,17 @@ impl<P> Component<P> for DEBinomialCrossover
 where
     P: Problem + VectorProblem<Element = f64>,
 {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let length = state.populations().current().len();
+        state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
+        Ok(())
+    }
+    
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
+        
+        let cr_vector = state.get_value::<SHADEParamCR<Self>>();
 
         let mut mutations = populations
             .try_pop()
@@ -59,11 +66,11 @@ where
             .get_current()
             .wrap_err("base population is missing")?;
 
-        for (mutation, base) in multizip((mutations.as_solutions_mut(), bases.as_solutions())) {
+        for (mutation, base, cr) in multizip((mutations.as_solutions_mut(), bases.as_solutions(), cr_vector)) {
             let index = rng.gen_range(0..problem.dimension());
 
             for i in 0..problem.dimension() {
-                if rng.gen::<f64>() <= self.pc || i == index {
+                if rng.gen::<f64>() <= cr || i == index {
                     mutation[i] = base[i];
                 }
             }
@@ -109,14 +116,22 @@ impl<P> Component<P> for DEExponentialCrossover
 where
     P: Problem + VectorProblem<Element = f64>,
 {
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let length = state.populations().current().len();
+        state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
+        Ok(())
+    }
+    
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
 
+        let cr_vector = state.get_value::<SHADEParamCR<Self>>();
+
         let mut mutations = populations.pop();
         let bases = populations.current();
 
-        for (mutation, base) in multizip((mutations.as_solutions_mut(), bases.as_solutions())) {
+        for (mutation, base, cr) in multizip((mutations.as_solutions_mut(), bases.as_solutions(), cr_vector)) {
             let index = rng.gen_range(0..problem.dimension());
             let mut i = index;
 
@@ -124,7 +139,7 @@ where
                 mutation[i] = base[i];
                 i = (i + 1) % problem.dimension();
 
-                if rng.gen::<f64>() > self.pc || i == index {
+                if rng.gen::<f64>() > cr || i == index {
                     break;
                 }
             }
@@ -134,3 +149,20 @@ where
         Ok(())
     }
 }
+
+/// CR as vector for values for every individual in the population as used in JADE and SHADE.
+#[derive(Clone, Deref, DerefMut, Tid)]
+pub struct SHADEParamCR<T: AnyComponent + 'static>(
+    #[deref]
+    #[deref_mut]
+    Vec<f64>,
+    PhantomData<T>,
+);
+
+impl<T: AnyComponent> SHADEParamCR<T> {
+    pub fn new(cr: Vec<f64>) -> Self {
+        Self(cr, PhantomData)
+    }
+}
+
+impl<T: AnyComponent> CustomState<'_> for SHADEParamCR<T> {}
