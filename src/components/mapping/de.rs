@@ -49,7 +49,56 @@ impl<I: Identifier> SHADEHistoryCR<I> {
 
 impl<I: Identifier> CustomState<'_> for SHADEHistoryCR<I> {}
 
-/// Adapation of current F and CR values to be used in the respective iteration.
+/// Initialise adaptation strategy.
+#[derive(Clone, Serialize)]
+pub struct SHADEAdaptationInit<I: Identifier = Global> {
+    pub history: usize,
+    id: PhantomId<I>
+}
+
+impl<I: Identifier> SHADEAdaptationInit<I> {
+    pub fn from_params(history: usize) -> ExecResult<Self> {
+        Ok(Self {
+            history,
+            id: PhantomId::default(),
+        })
+    }
+
+    pub fn new_with_id<P>(history: usize) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    {
+        Ok(Box::new(Self::from_params(history)?))
+    }
+}
+
+impl SHADEAdaptationInit<Global> {
+    pub fn new<P>(history: usize) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    {
+        Self::new_with_id(history)
+    }
+}
+
+impl<P, I> Component<P> for SHADEAdaptationInit<I>
+where
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    I: Identifier,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let length = state.populations().current().len();
+        state.insert(SHADEParamF::<Self>::new(vec![0.0; length]));
+        state.insert(SHADEParamCR::<Self>::new(vec![0.0; length]));
+        Ok(())
+    }
+
+    fn execute(&self, _problem: &P, _state: &mut State<P>) -> ExecResult<()> {
+        Ok(())
+    }
+}
+
+/// Adaptation of current F and CR values to be used in the respective iteration.
 #[derive(Clone, Serialize)]
 pub struct SHADEAdaptation<I: Identifier = Global> {
     pub history: usize,

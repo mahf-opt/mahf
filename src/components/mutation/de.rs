@@ -59,8 +59,10 @@ where
     P: VectorProblem<Element = f64>,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let length = state.populations().current().len();
-        state.insert(SHADEParamF::<Self>::new(vec![self.f; length]));
+        if !state.contains::<SHADEParamF::<Self>>() {
+            let length = state.populations().current().len();
+            state.insert(SHADEParamF::<Self>::new(vec![self.f; length]));
+        }
         Ok(())
     }
     
