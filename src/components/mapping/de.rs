@@ -93,7 +93,10 @@ where
         Ok(())
     }
 
-    fn execute(&self, _problem: &P, _state: &mut State<P>) -> ExecResult<()> {
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        // Initialise the history with all 0.5 for the specified lengths.
+        state.insert(SHADEHistoryF::<I>::new(vec![0.5; self.history]));
+        state.insert(SHADEHistoryCR::<I>::new(vec![0.5; self.history]));
         Ok(())
     }
 }
@@ -136,9 +139,6 @@ where
     I: Identifier,
 {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        // Initialise the history with all 0.5 for the specified lengths.
-        state.insert(SHADEHistoryF::<I>::new(vec![0.5; self.history]));
-        state.insert(SHADEHistoryCR::<I>::new(vec![0.5; self.history]));
         let mut current_fs = state.borrow_value_mut::<SHADEParamF<I>>();
         let mut current_crs = state.borrow_value_mut::<SHADEParamCR<I>>();
         let history_fs = state.borrow_value_mut::<SHADEHistoryF<I>>();
