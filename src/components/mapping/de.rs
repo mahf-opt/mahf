@@ -186,11 +186,20 @@ impl<I: Identifier> SHADEAdaptationHistoryUpdate<I> {
         Ok(Self {k: 1, id: PhantomId::default()})
     }
 
-    pub fn new<P>() -> ExecResult<Box<dyn Component<P>>>
+    pub fn new_with_id<P>() -> ExecResult<Box<dyn Component<P>>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Ok(Box::new(Self::from_params()?))
+    }
+}
+
+impl SHADEAdaptationHistoryUpdate<Global> {
+    pub fn new<P>() -> ExecResult<Box<dyn Component<P>>>
+        where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    {
+        Self::new_with_id()
     }
 }
 
