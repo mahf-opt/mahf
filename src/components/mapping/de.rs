@@ -2,18 +2,12 @@
 
 use std::marker::PhantomData;
 use better_any::{Tid, TidAble};
-use derivative::Derivative;
 use derive_more::{Deref, DerefMut};
-use eyre::ensure;
 use rand::distributions::{Distribution, Uniform};
 use rand_distr::{Cauchy, Normal};
 use serde::Serialize;
-use crate::{component::ExecResult, components::{
-    mapping::{mapping, Mapping},
-    Component,
-}, lens::{AnyLens, ValueLens}, state::random::Random, CustomState, Problem, SingleObjectiveProblem, State};
+use crate::{component::ExecResult, components::Component, CustomState,SingleObjectiveProblem, State};
 use crate::component::AnyComponent;
-use crate::components::archive::DEKeepParentsArchive;
 use crate::components::mutation::de::SHADEParamF;
 use crate::components::recombination::de::SHADEParamCR;
 use crate::identifier::{Global, Identifier, PhantomId};
@@ -75,6 +69,15 @@ impl<I: Identifier> SHADEAdaptation<I> {
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Ok(Box::new(Self::from_params(history)?))
+    }
+}
+
+impl SHADEAdaptation<Global> {
+    pub fn new<P>(history: usize) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    {
+        Self::new_with_id(history)
     }
 }
 
