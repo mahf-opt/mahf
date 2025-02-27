@@ -299,7 +299,7 @@ impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
             };
 
         // generate new probabilities for next iteration
-        let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
+        let p = std::iter::repeat_with(|| rng.gen_range(self.p_min..=0.2))
             .take(current.len()).collect::<Vec<_>>();
         state.set_value::<IndividualP>(p);
         
