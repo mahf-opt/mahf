@@ -52,6 +52,7 @@ impl<I: Identifier> CustomState<'_> for SHADEHistoryCR<I> {}
 /// Initialise adaptation strategy.
 #[derive(Clone, Serialize)]
 pub struct SHADEAdaptationInit<I: Identifier = Global> {
+    /// Defines the number of entries in the history of mean F and CR values.
     pub history: usize,
     id: PhantomId<I>
 }
@@ -86,13 +87,18 @@ where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     I: Identifier,
 {
-    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let length = state.populations().current().len();
-        state.insert(SHADEParamF::<Self>::new(vec![0.0; length]));
-        state.insert(SHADEParamCR::<Self>::new(vec![0.0; length]));
-        // Initialise the history with all 0.5 for the specified lengths.
+    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(SHADEParamF::<Self>::new(Vec::new()));
+        state.insert(SHADEParamCR::<Self>::new(Vec::new()));
+        // Initialise the history with all 0.5 for the specified length.
         state.insert(SHADEHistoryF::<I>::new(vec![0.5; self.history]));
         state.insert(SHADEHistoryCR::<I>::new(vec![0.5; self.history]));
+        Ok(())
+    }
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        let length = state.populations().current().len();
+        state.set_value::<SHADEParamF::<Self>>(vec![0.0; length]);
+        state.set_value::<SHADEParamCR::<Self>>(vec![0.0; length]);
         Ok(())
     }
 }
@@ -100,32 +106,30 @@ where
 /// Adaptation of current F and CR values to be used in the respective iteration.
 #[derive(Clone, Serialize)]
 pub struct SHADEAdaptation<I: Identifier = Global> {
-    pub history: usize,
     id: PhantomId<I>
 }
 
 impl<I: Identifier> SHADEAdaptation<I> {
-    pub fn from_params(history: usize) -> ExecResult<Self> {
+    pub fn from_params() -> ExecResult<Self> {
         Ok(Self {
-            history,
             id: PhantomId::default(),
         })
     }
 
-    pub fn new_with_id<P>(history: usize) -> ExecResult<Box<dyn Component<P>>>
+    pub fn new_with_id<P>() -> ExecResult<Box<dyn Component<P>>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
-        Ok(Box::new(Self::from_params(history)?))
+        Ok(Box::new(Self::from_params()?))
     }
 }
 
 impl SHADEAdaptation<Global> {
-    pub fn new<P>(history: usize) -> ExecResult<Box<dyn Component<P>>>
+    pub fn new<P>() -> ExecResult<Box<dyn Component<P>>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
-        Self::new_with_id(history)
+        Self::new_with_id()
     }
 }
 
@@ -134,43 +138,6 @@ where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     I: Identifier,
 {
-    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let mut current_fs = state.borrow_value_mut::<SHADEParamF<I>>();
-        let mut current_crs = state.borrow_value_mut::<SHADEParamCR<I>>();
-        let history_fs = state.borrow_value_mut::<SHADEHistoryF<I>>();
-        let history_crs = state.borrow_value_mut::<SHADEHistoryCR<I>>();
-
-        let mut rng = state.random_mut();
-
-        // set the initial values of the F and CR to be used in the first iteration.
-        for i in 0..current_fs.len() {
-            let distribution = Cauchy::new(history_fs[0], 0.1).unwrap();
-            let mut random_new = distribution.sample(&mut *rng);
-            if random_new > 1.0 {
-                random_new = 1.0;
-            } else {
-                while random_new <= 0.0 {
-                    random_new = distribution.sample(&mut *rng);
-                    if random_new > 1.0 {
-                        random_new = 1.0;
-                    }
-                }
-            }
-            current_fs[i] = random_new;
-        }
-        for i in 0..current_crs.len() {
-            let distribution = Normal::new(history_crs[0], 0.1).unwrap();
-            let mut random_new = distribution.sample(&mut *rng);
-            if random_new > 1.0 {
-                random_new = 1.0;
-            } else if random_new < 0.0 { 
-                random_new = 0.0;
-            }
-            current_crs[i] = random_new;
-        }
-        Ok(())
-    }
-
     fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, SHADEParamF<I>>()?;
         state_req.require::<Self, SHADEParamCR<I>>()?;
@@ -312,6 +279,9 @@ where
             // Calculate weighted mean for CR
             cr_history[k] = scr_values.iter().zip(&weights).map(|(cr, w)| w * cr).sum::<f64>();
             *counter += 1;
+            if *counter >= f_history.len() {
+                *counter = 1;
+            }
         }
         
         Ok(())
