@@ -58,15 +58,11 @@ impl<P> Component<P> for DEMutation
 where
     P: VectorProblem<Element = f64>,
 {
-    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         if !state.contains::<SHADEParamF::<Self>>() {
             let length = state.populations().current().len();
             state.insert(SHADEParamF::<Self>::new(vec![self.f; length]));
         }
-        Ok(())
-    }
-    
-    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let population = populations.current_mut();
 

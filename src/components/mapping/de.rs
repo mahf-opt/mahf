@@ -86,14 +86,10 @@ where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     I: Identifier,
 {
-    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let length = state.populations().current().len();
         state.insert(SHADEParamF::<Self>::new(vec![0.0; length]));
         state.insert(SHADEParamCR::<Self>::new(vec![0.0; length]));
-        Ok(())
-    }
-
-    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         // Initialise the history with all 0.5 for the specified lengths.
         state.insert(SHADEHistoryF::<I>::new(vec![0.5; self.history]));
         state.insert(SHADEHistoryCR::<I>::new(vec![0.5; self.history]));
@@ -178,6 +174,8 @@ where
     fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
         state_req.require::<Self, SHADEParamF<I>>()?;
         state_req.require::<Self, SHADEParamCR<I>>()?;
+        state_req.require::<Self, SHADEHistoryF<I>>()?;
+        state_req.require::<Self, SHADEHistoryCR<I>>()?;
         Ok(())
     }
     

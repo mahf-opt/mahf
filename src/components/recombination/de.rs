@@ -47,15 +47,11 @@ impl<P> Component<P> for DEBinomialCrossover
 where
     P: Problem + VectorProblem<Element = f64>,
 {
-    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         if !state.contains::<SHADEParamCR::<Self>>() {
             let length = state.populations().current().len();
             state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
         }
-        Ok(())
-    }
-    
-    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
         
@@ -118,13 +114,11 @@ impl<P> Component<P> for DEExponentialCrossover
 where
     P: Problem + VectorProblem<Element = f64>,
 {
-    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        let length = state.populations().current().len();
-        state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
-        Ok(())
-    }
-    
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        if !state.contains::<SHADEParamCR::<Self>>() {
+            let length = state.populations().current().len();
+            state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
+        }
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
 

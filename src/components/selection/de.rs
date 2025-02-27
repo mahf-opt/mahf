@@ -208,30 +208,32 @@ pub struct SHADECurrentToPBest {
     y: u32,
     // Minimum value of p ∈ [0,1].
     p_min: f64,
+    // Population size to initialize `IndividualP` as vec with p for each individual.
+    pop_size: usize,
     // Maximum number of individuals that can be added through `DEKeepParentsArchive`.
     // Set to 0 if no archive is configured.
     max_archive: usize,
 }
 
 impl SHADECurrentToPBest {
-    pub fn from_params(y: u32, p_min: f64, max_archive: usize) -> ExecResult<Self> {
+    pub fn from_params(y: u32, p_min: f64, pop_size: usize, max_archive: usize) -> ExecResult<Self> {
         ensure!(
             [1, 2].contains(&y),
             "`y` needs to be one of {{1, 2}}, but was {}",
             y
         );
-        Ok(Self { y, p_min, max_archive })
+        Ok(Self { y, p_min, pop_size, max_archive })
     }
 
-    pub fn new<P: SingleObjectiveProblem>(y: u32, p_min: f64, max_archive: usize) -> ExecResult<Box<dyn Component<P>>> {
-        Ok(Box::new(Self::from_params(y , p_min, max_archive)?))
+    pub fn new<P: SingleObjectiveProblem>(y: u32, p_min: f64, pop_size: usize, max_archive: usize) -> ExecResult<Box<dyn Component<P>>> {
+        Ok(Box::new(Self::from_params(y , p_min, pop_size, max_archive)?))
     }
 }
 
 impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
     fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
-            .take(state.populations().current().len()).collect::<Vec<_>>();
+            .take(self.pop_size).collect::<Vec<_>>();
         state.insert(IndividualP(p));
         Ok(())
     }
