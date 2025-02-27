@@ -11,7 +11,6 @@ use crate::component::AnyComponent;
 use crate::components::mutation::de::SHADEParamF;
 use crate::components::recombination::de::SHADEParamCR;
 use crate::identifier::{Global, Identifier, PhantomId};
-use crate::prelude::StateReq;
 use crate::problems::LimitedVectorProblem;
 
 
@@ -87,9 +86,9 @@ where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     I: Identifier,
 {
-    fn init(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        state.insert(SHADEParamF::<Self>::new(Vec::new()));
-        state.insert(SHADEParamCR::<Self>::new(Vec::new()));
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(SHADEParamF::<I>::new(Vec::new()));
+        state.insert(SHADEParamCR::<I>::new(Vec::new()));
         // Initialise the history with all 0.5 for the specified length.
         state.insert(SHADEHistoryF::<I>::new(vec![0.5; self.history]));
         state.insert(SHADEHistoryCR::<I>::new(vec![0.5; self.history]));
@@ -97,8 +96,8 @@ where
     }
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let length = state.populations().current().len();
-        state.set_value::<SHADEParamF::<Self>>(vec![0.0; length]);
-        state.set_value::<SHADEParamCR::<Self>>(vec![0.0; length]);
+        state.set_value::<SHADEParamF::<I>>(vec![0.0; length]);
+        state.set_value::<SHADEParamCR::<I>>(vec![0.0; length]);
         Ok(())
     }
 }

@@ -6,11 +6,11 @@ use derive_more::{Deref, DerefMut};
 use eyre::ContextCompat;
 use itertools::multizip;
 use rand::Rng;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::{component::ExecResult, components::Component, population::{AsSolutions, AsSolutionsMut}, problems::VectorProblem, CustomState, Problem, State};
 use crate::component::AnyComponent;
-use crate::components::mutation::de::SHADEParamF;
+use crate::identifier::{Global, Identifier, PhantomId};
 
 /// Performs a binomial crossover, combining two individuals from two populations at the same index.
 ///
@@ -25,37 +25,48 @@ use crate::components::mutation::de::SHADEParamF;
 /// # Errors
 ///
 /// Returns an `Err` if there are less than two populations on the stack.
-#[derive(Clone, Serialize, Deserialize)]
-pub struct DEBinomialCrossover {
+#[derive(Clone, Serialize)]
+pub struct DEBinomialCrossover<I: Identifier = Global> {
     pc: f64,
+    id: PhantomId<I>,
 }
 
-impl DEBinomialCrossover {
+impl<I: Identifier> DEBinomialCrossover<I> {
     pub fn from_params(pc: f64) -> Self {
-        Self { pc }
+        Self { pc, id: PhantomId::default(), }
     }
 
-    pub fn new<P>(pc: f64) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(pc: f64) -> ExecResult<Box<dyn Component<P>>>
     where
         P: Problem + VectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(pc))
+        Ok(Box::new(Self::from_params(pc)))
     }
 }
 
-impl<P> Component<P> for DEBinomialCrossover
+impl DEBinomialCrossover<Global> {
+    pub fn new<P>(pc: f64) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: Problem + VectorProblem<Element = f64>,
+    {
+        Self::new_with_id(pc)
+    }
+}
+
+impl<P, I> Component<P> for DEBinomialCrossover<I>
 where
     P: Problem + VectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        if !state.contains::<SHADEParamCR::<Self>>() {
+        if !state.contains::<SHADEParamCR::<I>>() {
             let length = state.populations().current().len();
-            state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
+            state.insert(SHADEParamCR::<I>::new(vec![self.pc; length]));
         }
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
         
-        let cr_vector = state.get_value::<SHADEParamCR<Self>>();
+        let cr_vector = state.get_value::<SHADEParamCR<I>>();
 
         let mut mutations = populations
             .try_pop()
@@ -92,37 +103,48 @@ where
 /// # Errors
 ///
 /// Returns an `Err` if there are less than two populations on the stack.
-#[derive(Clone, Serialize, Deserialize)]
-pub struct DEExponentialCrossover {
+#[derive(Clone, Serialize)]
+pub struct DEExponentialCrossover<I: Identifier = Global> {
     pc: f64,
+    id: PhantomId<I>,
 }
 
-impl DEExponentialCrossover {
+impl<I: Identifier> DEExponentialCrossover<I> {
     pub fn from_params(pc: f64) -> Self {
-        Self { pc }
+        Self { pc, id: PhantomId::default(), }
     }
 
-    pub fn new<P>(pc: f64) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(pc: f64) -> ExecResult<Box<dyn Component<P>>>
     where
         P: Problem + VectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(pc))
+        Ok(Box::new(Self::from_params(pc)))
     }
 }
 
-impl<P> Component<P> for DEExponentialCrossover
+impl DEExponentialCrossover<Global> {
+    pub fn new<P>(pc: f64) -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: Problem + VectorProblem<Element = f64>,
+    {
+        Self::new_with_id(pc)
+    }
+}
+
+impl<P, I> Component<P> for DEExponentialCrossover<I>
 where
     P: Problem + VectorProblem<Element = f64>,
+    I: Identifier,
 {
     fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
-        if !state.contains::<SHADEParamCR::<Self>>() {
+        if !state.contains::<SHADEParamCR::<I>>() {
             let length = state.populations().current().len();
-            state.insert(SHADEParamCR::<Self>::new(vec![self.pc; length]));
+            state.insert(SHADEParamCR::<I>::new(vec![self.pc; length]));
         }
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();
 
-        let cr_vector = state.get_value::<SHADEParamCR<Self>>();
+        let cr_vector = state.get_value::<SHADEParamCR<I>>();
 
         let mut mutations = populations.pop();
         let bases = populations.current();

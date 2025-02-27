@@ -60,7 +60,7 @@ where
                     .wrap_err("failed to construct DE selection")?,
                 mutation: mutation::de::DEMutation::new(y, f)
                     .wrap_err("failed to construct DE mutation")?,
-                crossover: recombination::de::DEBinomialCrossover::new(pc),
+                crossover: recombination::de::DEBinomialCrossover::new(pc)?,
                 constraints: boundary::Saturation::new(),
                 replacement: replacement::KeepBetterAtIndex::new(),
             },
