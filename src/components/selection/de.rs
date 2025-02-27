@@ -237,13 +237,6 @@ impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
         state.insert(IndividualP(p));
         Ok(())
     }
-
-    // For now, this operator requires an DEKeepParentsArchive to be present, even if it's empty.
-    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
-        state_req.require::<Self, DEKeepParentsArchive<P>>()?;
-        Ok(())
-    }
-    
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let mut rng = state.random_mut();

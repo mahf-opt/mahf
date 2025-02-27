@@ -138,14 +138,6 @@ where
     P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     I: Identifier,
 {
-    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
-        state_req.require::<Self, SHADEParamF<I>>()?;
-        state_req.require::<Self, SHADEParamCR<I>>()?;
-        state_req.require::<Self, SHADEHistoryF<I>>()?;
-        state_req.require::<Self, SHADEHistoryCR<I>>()?;
-        Ok(())
-    }
-    
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         // Draw new F and CR in each iteration after the history has been updated.
         let mut current_fs = state.borrow_value_mut::<SHADEParamF<I>>();
@@ -226,12 +218,6 @@ where
         state.insert(HistoryCounter::<Self>::new(self.k));
         Ok(())
     }
-    fn require(&self, _problem: &P, state_req: &StateReq<P>) -> ExecResult<()> {
-        state_req.require::<Self, SHADEHistoryF<I>>()?;
-        state_req.require::<Self, SHADEHistoryCR<I>>()?;
-        Ok(())
-    }
-
     fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
         let mut populations = state.populations_mut();
         let offspring = populations.pop();
