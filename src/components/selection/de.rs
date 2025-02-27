@@ -297,14 +297,16 @@ impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
                 })
                 .collect()
             };
-        
-        let cloned_selection = selection.into_iter().cloned().collect();
-        populations.push(cloned_selection);
 
         // generate new probabilities for next iteration
         let p = std::iter::repeat_with(|| state.random_mut().gen_range(self.p_min..=0.2))
-            .take(state.populations().current().len()).collect::<Vec<_>>();
+            .take(current.len()).collect::<Vec<_>>();
         state.set_value::<IndividualP>(p);
+        
+        // push selection to population stack
+        let cloned_selection = selection.into_iter().cloned().collect();
+        populations.push(cloned_selection);
+        
         Ok(())
     }
 }
