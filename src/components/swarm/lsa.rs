@@ -131,6 +131,15 @@ where
                 }
             });
         }
+        
+        // Apply cosine correction
+        for new_s in new_solutions.iter_mut() {
+            new_s.iter_mut().zip(problem.domain()).for_each(|(s, d)| {
+                if *s > d.start || *s < d.end {
+                    *s = d.start + (d.end - d.start) * s.cos();
+                }
+            })
+        }
 
         state.populations_mut().push(new_solutions.into_individuals());
         Ok(())

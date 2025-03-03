@@ -8,10 +8,9 @@ use crate::{
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
-use crate::components::selection;
 use crate::population::IntoIndividuals;
 
-/// Updates the positions of particles according to the nuclear reaction mechanism proposed for the
+/// Updates the positions of particles similar to the nuclear reaction mechanism proposed for the
 /// Nuclear Fission-Nuclear Fusion (NFNF/N2F) algorithm.
 #[derive(Clone, Serialize)]
 pub struct NuclearReactionMechanism<I: Identifier = Global> {
@@ -111,18 +110,16 @@ where
         };
         
         // Calculate equivalent to center of mass
-        // EPSILON is necessary because exponent gets too large for increasing iterations
         let inverse_fitness_sum = objective_values
             .iter()
-            .map(|o| (best_objective / o).powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON)
+            .map(|o| best_objective / o)
             .sum::<f64>();
         
-        // EPSILON is necessary because exponent gets too large for increasing iterations
         let mut positions = Vec::new();
         for (o, i) in xs.iter().enumerate() {
             let weighted_position = i.solution()
                 .iter()
-                .map(|x| ((best_objective / objective_values[o]).powf(rho.powi((state.iterations() - 1) as i32)) + f64::EPSILON) * x)
+                .map(|x| (best_objective / objective_values[o]) * x)
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }

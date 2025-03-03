@@ -15,7 +15,7 @@ use crate::components::selection;
 use crate::population::IntoIndividuals;
 use crate::prelude::selection::selection;
 
-/// Updates the positions of particles according to the cyclic universe mechanism proposed for the
+/// Updates the positions of particles similar to the cyclic universe mechanism proposed for the
 /// Big Bang - Big Crunch (BBBC) algorithm.
 #[derive(Clone, Serialize)]
 pub struct CyclicUniverseMechanism<I: Identifier = Global> {
