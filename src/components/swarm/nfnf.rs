@@ -18,8 +18,6 @@ pub struct NuclearReactionMechanism<I: Identifier = Global> {
     pub new_pop: u32,
     /// Magnification factor.
     pub mu: f64,
-    /// Amplification factor.
-    pub rho: f64,
     /// Type of termination criterion counter.
     pub termination_type: String,
     /// Termination criterion.
@@ -28,37 +26,34 @@ pub struct NuclearReactionMechanism<I: Identifier = Global> {
 }
 
 impl<I: Identifier> NuclearReactionMechanism<I> {
-    pub fn from_params(new_pop: u32, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Self {
+    pub fn from_params(new_pop: u32, mu: f64, termination_type: String, termination_value: usize) -> Self {
         Self {
             new_pop,
             mu,
-            rho,
             termination_type,
             termination_value,
             id: PhantomId::default(),
         }
     }
 
-    pub fn new_with_id<P>(new_pop: u32, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(new_pop: u32, mu: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Box::new(Self::from_params(new_pop,
                                    mu,
-                                   rho,
                                    termination_type,
                                    termination_value))
     }
 }
 
 impl NuclearReactionMechanism<Global> {
-    pub fn new<P>(new_pop: u32, mu: f64, rho: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
+    pub fn new<P>(new_pop: u32, mu: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
         Self::new_with_id(new_pop,
                           mu,
-                          rho,
                           termination_type,
                           termination_value)
     }
@@ -82,7 +77,7 @@ where
 
         // prepare parameters
         let &Self {
-            new_pop, mu, rho, termination_value, ..
+            new_pop, mu, termination_value, ..
         } = self;
 
         // Calculate magnification exponent
