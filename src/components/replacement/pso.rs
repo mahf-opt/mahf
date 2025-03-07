@@ -95,7 +95,8 @@ where
         let mut indices = (0..parents.len()).collect::<Vec<_>>();
         indices.sort_unstable_by_key(|&i| *parents[i].objective());
         // split vec of indices to keep only the n_worst indices in remove_indices
-        let mut remove_indices = indices.split_off(self.n_worst as usize);
+        let split_point = parents.len() - self.n_worst as usize;
+        let mut remove_indices = indices.split_off(split_point);
         // Sort and reverse the remaining indices to be able to remove those individuals from the
         // parents without changing the index
         remove_indices.sort();
