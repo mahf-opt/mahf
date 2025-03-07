@@ -1,3 +1,4 @@
+use eyre::ensure;
 use itertools::izip;
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
@@ -140,6 +141,13 @@ where
                 }
             })
         }
+        
+        ensure!(
+            new_solutions.len() == new_pop as usize,
+            "In LSA: more new solutions generated than specified ({} vs. {})",
+            new_solutions.len(),
+            new_pop
+        );
 
         state.populations_mut().push(new_solutions.into_individuals());
         Ok(())

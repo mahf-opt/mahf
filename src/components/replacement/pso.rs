@@ -15,7 +15,7 @@ use crate::{
 use crate::components::swarm::pso::{ParticleVelocities};
 use crate::prelude::StateReq;
 
-/// Replaces the [`n_worst`] individuals in a PSO population.
+/// Replaces the [`n_worst`] individuals in a PSO population with the same number of offspring.
 /// 
 /// Keeps the former [`ParticleVelocities`] associated to the respective individuals.
 /// Generates new random [`ParticleVelocities`] for the offspring.
@@ -78,8 +78,8 @@ where
         );
 
         ensure!(
-            offspring.len() >= self.n_worst as usize,
-            "In PSO replacement: more offspring to replace than removed from parents ({} vs. {})",
+            offspring.len() == self.n_worst as usize,
+            "In PSO replacement: not the same offspring to replace than removed from parents ({} vs. {})",
             offspring.len(),
             self.n_worst as usize
         );
@@ -126,7 +126,7 @@ where
     }
 }
 
-/// Replaces the [`n_best`] individuals in a PSO population.
+/// Replaces the [`n_best`] individuals in a PSO population with the same number of offspring.
 ///
 /// Keeps the former [`ParticleVelocities`] associated to the respective individuals.
 /// Generates new random [`ParticleVelocities`] for the offspring.
@@ -189,8 +189,8 @@ where
         );
 
         ensure!(
-            offspring.len() >= self.n_best as usize,
-            "In PSO replacement: more offspring to replace than removed from parents ({} vs. {})",
+            offspring.len() == self.n_best as usize,
+            "In PSO replacement: not the same offspring to replace than removed from parents ({} vs. {})",
             offspring.len(),
             self.n_best as usize
         );
@@ -236,7 +236,7 @@ where
     }
 }
 
-/// Replaces [`n_random`] individuals in a PSO population.
+/// Replaces [`n_random`] individuals in a PSO population with the same number of offspring.
 ///
 /// Keeps the former [`ParticleVelocities`] associated to the respective individuals.
 /// Generates new random [`ParticleVelocities`] for the offspring.
@@ -299,8 +299,8 @@ where
         );
 
         ensure!(
-            offspring.len() >= self.n_random as usize,
-            "In PSO replacement: more offspring to replace than removed from parents ({} vs. {})",
+            offspring.len() == self.n_random as usize,
+            "In PSO replacement: not the same offspring to replace than removed from parents ({} vs. {})",
             offspring.len(),
             self.n_random as usize
         );
