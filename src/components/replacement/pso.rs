@@ -95,12 +95,18 @@ where
         let mut indices = (0..parents.len()).collect::<Vec<_>>();
         indices.sort_unstable_by_key(|&i| *parents[i].objective());
         // split vec of indices to keep only the n_worst indices in remove_indices
-        let split_point = parents.len() - self.n_worst as usize;
-        let mut remove_indices = indices.split_off(split_point);
+        let mut remove_indices = indices.split_off(self.n_worst as usize);
         // Sort and reverse the remaining indices to be able to remove those individuals from the
         // parents without changing the index
         remove_indices.sort();
         let sorted_indices = remove_indices.iter().rev();
+
+        ensure!(
+            sorted_indices.len() == self.n_worst as usize,
+            "In PSO replacement: not the same sorted indices as specified ({} vs. {})",
+            sorted_indices.len(),
+            self.n_worst as usize
+        );
         
         // remove every individual and velocity from respective Vec that is indicated by index
         for i in sorted_indices {
@@ -206,12 +212,19 @@ where
         let mut indices = (0..parents.len()).collect::<Vec<_>>();
         indices.sort_unstable_by_key(|&i| *parents[i].objective());
         // split vec of indices to keep only the n_best indices in _remove_indices
-        let mut _remove_indices = indices.split_off(self.n_best as usize);
+        let _remove_indices = indices.split_off(self.n_best as usize);
         // Sort and reverse the remaining indices to be able to remove those individuals from the
         // parents without changing the index
         indices.sort();
         let sorted_indices = indices.iter().rev();
 
+        ensure!(
+            sorted_indices.len() == self.n_best as usize,
+            "In PSO replacement: not the same sorted indices as specified ({} vs. {})",
+            sorted_indices.len(),
+            self.n_best as usize
+        );
+        
         // remove every individual and velocity from respective Vec that is indicated by index
         for i in sorted_indices {
             parents.remove(*i);
@@ -316,12 +329,12 @@ where
         let mut rng = state.random_mut();
         let mut indices = (0..parents.len()).collect::<Vec<_>>();
         indices.shuffle(&mut *rng);
-        // split vec of indices to keep only the n_random indices in remove_indices
-        let mut remove_indices = indices.split_off(self.n_random as usize);
+        // split vec of indices to keep only the n_random indices
+        let _redundant_indices = indices.split_off(self.n_random as usize);
         // Sort and reverse the remaining indices to be able to remove those individuals from the
         // parents without changing the index
-        remove_indices.sort();
-        let sorted_indices = remove_indices.iter().rev();
+        indices.sort();
+        let sorted_indices = indices.iter().rev();
 
         ensure!(
             sorted_indices.len() == self.n_random as usize,
