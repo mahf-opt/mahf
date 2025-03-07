@@ -323,6 +323,13 @@ where
         remove_indices.sort();
         let sorted_indices = remove_indices.iter().rev();
 
+        ensure!(
+            sorted_indices.len() == self.n_random as usize,
+            "In PSO replacement: not the same sorted indices as specified ({} vs. {})",
+            sorted_indices.len(),
+            self.n_random as usize
+        );
+        
         // remove every individual and velocity from respective Vec that is indicated by index
         for i in sorted_indices {
             parents.remove(*i);
