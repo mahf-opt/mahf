@@ -3,7 +3,6 @@
 use std::cell::Ref;
 
 use better_any::{Tid, TidAble};
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -270,7 +269,7 @@ impl<P: SingleObjectiveProblem> DEKeepParentsArchive<P> {
             }
         }
         
-        self.0.extend_from_slice(&*archive_additions);
+        self.0.extend_from_slice(&archive_additions);
         let length = self.0.len();
         if length > max_archive {
             self.0.drain(0..(length - max_archive));

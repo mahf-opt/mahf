@@ -1,22 +1,20 @@
-use std::f64::EPSILON;
 use rand::distributions::{Distribution, Uniform};
-use rand_distr::Normal;
 use serde::Serialize;
 
 use crate::{
     component::ExecResult,
     components::Component,
     identifier::{Global, Identifier, PhantomId},
-    population::{AsSolutionsMut, BestIndividual},
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
 use crate::components::selection;
 use crate::population::IntoIndividuals;
-use crate::prelude::selection::selection;
 
+/// Cyclic Universe Mechanism - New Population Generation Mechanism (NPGM)
 /// Updates the positions of particles similar to the cyclic universe mechanism proposed for the
 /// Big Bang - Big Crunch (BBBC) algorithm.
+/// Aimed at enhancing exploration, especially in swarm-based algorithms.
 #[derive(Clone, Serialize)]
 pub struct CyclicUniverseMechanism<I: Identifier = Global> {
     /// Number of new individuals to generate.
@@ -66,7 +64,7 @@ where
         let xs = state.populations_mut().pop();
         
         // Shift fitness values to always be > 0
-        let (_max, min) = selection::functional::objective_bounds(&*xs).unwrap();
+        let (_max, min) = selection::functional::objective_bounds(&xs).unwrap();
         let objective_values: Vec<_> = if min > 0.0 {
             xs.iter().map(|i| i.objective().value()).collect()
         } else {

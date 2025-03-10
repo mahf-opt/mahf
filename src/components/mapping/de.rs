@@ -167,11 +167,7 @@ where
         for i in 0..current_crs.len() {
             let distribution = Normal::new(history_crs[random_history], 0.1).unwrap();
             let mut random_new = distribution.sample(&mut *rng);
-            if random_new > 1.0 {
-                random_new = 1.0;
-            } else if random_new < 0.0 {
-                random_new = 0.0;
-            }
+            random_new = random_new.clamp(0.0, 1.0);
             current_crs[i] = random_new;
         }
         Ok(())
@@ -226,11 +222,11 @@ where
         populations.push(parents);
         populations.push(offspring);
 
-        let mut current_fs = state.get_value::<SHADEParamF<I>>();
-        let mut current_crs = state.get_value::<SHADEParamCR<I>>();
+        let current_fs = state.get_value::<SHADEParamF<I>>();
+        let current_crs = state.get_value::<SHADEParamCR<I>>();
         let mut f_history = state.get_value::<SHADEHistoryF<I>>();
         let mut cr_history = state.get_value::<SHADEHistoryCR<I>>();
-        let mut k = state.get_value::<HistoryCounter<Self>>();
+        let k = state.get_value::<HistoryCounter<Self>>();
         let mut counter = state.borrow_value_mut::<HistoryCounter<Self>>();
 
 
@@ -246,7 +242,7 @@ where
         }
 
         // update the memory
-        if indices.len() == 0 {
+        if indices.is_empty() {
             f_history[k] = f_history[k - 1];
             cr_history[k] = cr_history[k - 1];
             *counter = 1usize;

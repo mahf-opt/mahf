@@ -623,12 +623,27 @@ pub struct StagnationForN<L: AnyLens, S: AnyLens> {
 
 impl<L: AnyLens, S: AnyLens> StagnationForN<L, S> {
     /// Constructs a new `StagnationForN` with the given `n`, `step_lens` and `stagnation_lens`.
-    pub fn from_params(n: usize, step_lens: L, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Self {
-        Self { n, step_lens, stagnation_lens, checker }
+    pub fn from_params(
+        n: usize,
+        step_lens: L,
+        stagnation_lens: S,
+        checker: Box<dyn EqualityChecker<S::Target>>,
+    ) -> Self {
+        Self {
+            n,
+            step_lens,
+            stagnation_lens,
+            checker,
+        }
     }
 
     /// Constructs a new `StagnationForN` with the given `n`, `step_lens` and `stagnation_lens`.
-    pub fn new<P>(n: usize, step_lens: L, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Box<dyn Condition<P>>
+    pub fn new<P>(
+        n: usize,
+        step_lens: L,
+        stagnation_lens: S,
+        checker: Box<dyn EqualityChecker<S::Target>>,
+    ) -> Box<dyn Condition<P>>
     where
         P: Problem,
         L: Lens<P, Target = u32>,
@@ -642,13 +657,22 @@ impl<L: AnyLens, S: AnyLens> StagnationForN<L, S> {
 impl<S: AnyLens> StagnationForN<ValueOf<Iterations>, S> {
     /// Creates a new `StagnationForN` that evaluates to `true` at exactly `n` [`Iterations`] when
     /// there are no changes to the observed value.
-    pub fn iterations<P>(n: usize, stagnation_lens: S, checker: Box<dyn EqualityChecker<S::Target>>) -> Box<dyn Condition<P>>
+    pub fn iterations<P>(
+        n: usize,
+        stagnation_lens: S,
+        checker: Box<dyn EqualityChecker<S::Target>>,
+    ) -> Box<dyn Condition<P>>
     where
         P: Problem,
         S: Lens<P>,
         S::Target: AnyFloatLike + Clone + Send,
     {
-        Box::new(Self::from_params(n, ValueOf::<Iterations>::new(), stagnation_lens, checker))
+        Box::new(Self::from_params(
+            n,
+            ValueOf::<Iterations>::new(),
+            stagnation_lens,
+            checker,
+        ))
     }
 }
 
@@ -676,21 +700,19 @@ where
         let mut stagnation = false;
         // get if the value changed
         let changed = if let Some(previous) = &*previous {
-                self.checker.eq(&value, previous)
-            } else {
-                true
-            };
+            self.checker.eq(&value, previous)
+        } else {
+            true
+        };
 
         // if it changed, we want to set the new value and the current iterations/evaluations as the new reference
         if changed {
-            *previous = Some(value.clone());
-            *previous_step = Some(step.clone());
+            *previous = Some(value);
+            *previous_step = Some(step);
         // otherwise, we want to test if the n iterations/evaluations have passed between the previous step and now
-        } else {
-            if (step - previous_step.unwrap()) >= self.n as u32 {
-                stagnation = true;
-                *previous_step = Some(step.clone());
-            }
+        } else if (step - previous_step.unwrap()) >= self.n as u32 {
+            stagnation = true;
+            *previous_step = Some(step);
         }
         Ok(stagnation)
     }

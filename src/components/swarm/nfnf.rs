@@ -1,6 +1,7 @@
 use rand::distributions::{Distribution, Uniform};
 use serde::Serialize;
 
+use crate::population::IntoIndividuals;
 use crate::{
     component::ExecResult,
     components::Component,
@@ -8,10 +9,11 @@ use crate::{
     problems::LimitedVectorProblem,
     SingleObjectiveProblem, State,
 };
-use crate::population::IntoIndividuals;
 
+/// Nuclear Reaction Mechanism - Gbest-guided Population Generation Mechanism (GPGM)
 /// Updates the positions of particles similar to the nuclear reaction mechanism proposed for the
 /// Nuclear Fission-Nuclear Fusion (NFNF/N2F) algorithm.
+/// Aimed at enhancing exploration, especially in swarm-based algorithms.
 #[derive(Clone, Serialize)]
 pub struct NuclearReactionMechanism<I: Identifier = Global> {
     /// Number of new individuals to generate.
@@ -26,7 +28,12 @@ pub struct NuclearReactionMechanism<I: Identifier = Global> {
 }
 
 impl<I: Identifier> NuclearReactionMechanism<I> {
-    pub fn from_params(new_pop: u32, mu: f64, termination_type: String, termination_value: usize) -> Self {
+    pub fn from_params(
+        new_pop: u32, 
+        mu: f64, 
+        termination_type: String, 
+        termination_value: usize,
+    ) -> Self {
         Self {
             new_pop,
             mu,
@@ -36,26 +43,35 @@ impl<I: Identifier> NuclearReactionMechanism<I> {
         }
     }
 
-    pub fn new_with_id<P>(new_pop: u32, mu: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
+    pub fn new_with_id<P>(
+        new_pop: u32, 
+        mu: f64, 
+        termination_type: String, 
+        termination_value: usize,
+    ) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
-        Box::new(Self::from_params(new_pop,
-                                   mu,
-                                   termination_type,
-                                   termination_value))
+        Box::new(Self::from_params(
+            new_pop,
+            mu,
+            termination_type,
+            termination_value
+        ))
     }
 }
 
 impl NuclearReactionMechanism<Global> {
-    pub fn new<P>(new_pop: u32, mu: f64, termination_type: String, termination_value: usize) -> Box<dyn Component<P>>
+    pub fn new<P>(
+        new_pop: u32, 
+        mu: f64, 
+        termination_type: String, 
+        termination_value: usize,
+    ) -> Box<dyn Component<P>>
     where
         P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
     {
-        Self::new_with_id(new_pop,
-                          mu,
-                          termination_type,
-                          termination_value)
+        Self::new_with_id(new_pop, mu, termination_type, termination_value)
     }
 }
 
@@ -77,15 +93,18 @@ where
 
         // prepare parameters
         let &Self {
-            new_pop, mu, termination_value, ..
+            new_pop,
+            mu,
+            termination_value,
+            ..
         } = self;
 
         // Calculate magnification exponent
         let mut m_exponent = 0.0;
         if self.termination_type.as_str() == "iterations" {
-            m_exponent = - (state.iterations() as f64 / termination_value as f64);
+            m_exponent = -(state.iterations() as f64 / termination_value as f64);
         } else if self.termination_type.as_str() == "evaluations" {
-            m_exponent = - (state.evaluations() as f64 / termination_value as f64);
+            m_exponent = -(state.evaluations() as f64 / termination_value as f64);
         } else {
             println!("Invalid termination type");
         }
@@ -96,7 +115,10 @@ where
         let objective_values: Vec<_> = if min > 0.0 {
             xs.iter().map(|i| i.objective().value()).collect()
         } else {
-            xs.iter().map(|i| i.objective().value() + min.abs() + f64::EPSILON).collect()
+            xs
+                .iter()
+                .map(|i| i.objective().value() + min.abs() + f64::EPSILON)
+                .collect()
         };
         let best_objective = if min > 0.0 {
             min
@@ -109,17 +131,19 @@ where
             .iter()
             .map(|o| best_objective / o)
             .sum::<f64>();
-        
+
         let mut positions = Vec::new();
         for (o, i) in xs.iter().enumerate() {
-            let weighted_position = i.solution()
+            let weighted_position = i
+                .solution()
                 .iter()
                 .map(|x| (best_objective / objective_values[o]) * x)
                 .collect::<Vec<f64>>();
             positions.push(weighted_position);
         }
 
-        let sum_positions = positions.iter()
+        let sum_positions = positions
+            .iter()
             .map(|v| v.iter()) // Convert each vector into an iterator
             .fold(None, |acc: Option<Vec<f64>>, v_iter| {
                 Some(match acc {
@@ -129,9 +153,13 @@ where
                         acc_vec
                     }
                 })
-            }).unwrap_or_default();
+            })
+            .unwrap_or_default();
 
-        let center = sum_positions.iter().map(|p| p / inverse_fitness_sum).collect::<Vec<f64>>();
+        let center = sum_positions
+            .iter()
+            .map(|p| p / inverse_fitness_sum)
+            .collect::<Vec<f64>>();
 
         // Generate new candidate solutions (new_pop specifies how many)
         let mut new_solutions = Vec::new();
@@ -139,12 +167,16 @@ where
             let new_ind = center
                 .iter()
                 .zip(problem.domain())
-                .map(|(c, p)| c + distribution.sample(&mut *rng) * (p.end - p.start) * mu.powf(m_exponent))
+                .map(|(c, p)| {
+                    c + distribution.sample(&mut *rng) * (p.end - p.start) * mu.powf(m_exponent)
+                })
                 .collect::<Vec<f64>>();
             new_solutions.push(new_ind);
         }
         
-        state.populations_mut().push(new_solutions.into_individuals());
+        state
+            .populations_mut()
+            .push(new_solutions.into_individuals());
         Ok(())
     }
 }

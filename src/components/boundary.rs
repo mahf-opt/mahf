@@ -230,3 +230,53 @@ where
         boundary_constraint(self, problem, state)
     }
 }
+
+/// The amount exceeding the boundary is relocated inwards.
+/// 
+/// Given the bounds \[a, b\], the relocation is performed as `a + (b - a) cos(x)`
+#[derive(Clone, Serialize, Deserialize)]
+pub struct CosineCorrection;
+
+impl CosineCorrection {
+    pub fn from_params() -> Self {
+        Self
+    }
+
+    pub fn new<P>() -> Box<dyn Component<P>>
+    where
+        P: Problem + LimitedVectorProblem<Element = f64>,
+    {
+        Box::new(Self::from_params())
+    }
+}
+
+impl<P> BoundaryConstraint<P> for CosineCorrection
+where
+    P: LimitedVectorProblem<Element = f64>,
+{
+    fn constrain(&self, solution: &mut P::Encoding, problem: &P, _rng: &mut Random) {
+        for (x, range) in izip!(solution, problem.domain()) {
+            let a = range.start;
+            let b = range.end;
+
+            let mut x_temp = *x;
+            while !range.contains(&x_temp) {
+                x_temp = match x_temp {
+                    v if v < a || v > b => a + (b - a) * v.cos(),
+                    v => v,
+                };
+            }
+
+            *x = x_temp;
+        }
+    }
+}
+
+impl<P> Component<P> for CosineCorrection
+where
+    P: LimitedVectorProblem<Element = f64>,
+{
+    fn execute(&self, problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        boundary_constraint(self, problem, state)
+    }
+}

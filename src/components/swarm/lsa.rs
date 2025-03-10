@@ -15,8 +15,10 @@ use crate::{
 use crate::components::initialization::functional::random_spread;
 use crate::population::IntoIndividuals;
 
-/// Updates the positions of particles according to the negatively charged stepped leader mechanism
+/// Negatively Charged Stepped Leader Mechanism - Population Dispersion Mechanism (PDM)
+/// Updates the positions of particles similar to the negatively charged stepped leader mechanism
 /// proposed for the Lightning Search Algorithm (LSA).
+/// Aimed at enhancing exploration, especially in swarm-based algorithms.
 #[derive(Clone, Serialize)]
 pub struct NegativelyChargedSteppedLeader<I: Identifier = Global> {
     /// Number of new individuals to generate.
@@ -70,7 +72,7 @@ where
         // Set center solution
         let mut leader_solution = Vec::new();
         if self.leader.as_str() == "random_new" {
-            leader_solution = random_spread(&problem.domain(), 1, &mut *rng)[0].clone();
+            leader_solution = random_spread(&problem.domain(), 1, &mut rng)[0].clone();
         } else if self.leader.as_str() == "best" {
             leader_solution = state.best_individual().unwrap().solution().clone();
         } else if self.leader.as_str() == "random_solution" {
@@ -136,7 +138,7 @@ where
         // Apply cosine correction
         for new_s in new_solutions.iter_mut() {
             new_s.iter_mut().zip(problem.domain()).for_each(|(s, d)| {
-                if *s > d.start || *s < d.end {
+                if *s < d.start || *s > d.end {
                     *s = d.start + (d.end - d.start) * s.cos();
                 }
             })

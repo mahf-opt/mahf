@@ -21,7 +21,9 @@ use crate::prelude::StateReq;
 /// Generates new random [`ParticleVelocities`] for the offspring.
 #[derive(Clone, Serialize)]
 pub struct ReplaceNWorstPSO<I: Identifier = Global> {
+    /// Number of individuals to replace.
     pub n_worst: u32,
+    /// Maximum velocity of PSO to initialise new individuals.
     pub v_max: f64,
     id: PhantomId<I>,
 }
@@ -139,7 +141,9 @@ where
 /// Generates new random [`ParticleVelocities`] for the offspring.
 #[derive(Clone, Serialize)]
 pub struct ReplaceNBestPSO<I: Identifier = Global> {
+    /// Number of individuals to replace.
     pub n_best: u32,
+    /// Maximum velocity of PSO to initialise new individuals.
     pub v_max: f64,
     id: PhantomId<I>,
 }
@@ -256,7 +260,9 @@ where
 /// Generates new random [`ParticleVelocities`] for the offspring.
 #[derive(Clone, Serialize)]
 pub struct ReplaceNRandomPSO<I: Identifier = Global> {
+    /// Number of individuals to replace.
     pub n_random: u32,
+    /// Maximum velocity of PSO to initialise new individuals.
     pub v_max: f64,
     id: PhantomId<I>,
 }

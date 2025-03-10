@@ -15,8 +15,10 @@ use crate::{
 use crate::components::initialization::functional::random_spread;
 use crate::population::IntoIndividuals;
 
-/// Updates the positions of particles according to the mine explosion dynamics proposed for the
+/// Mine Explosion Dynamics - Solutions Replacement Mechanism (SRM)
+/// Updates the positions of particles similar to the mine explosion dynamics proposed for the
 /// Mine Blast Algorithm (MBA).
+/// Aimed at enhancing exploration, especially in swarm-based algorithms.
 #[derive(Clone, Serialize)]
 pub struct MineExplosionDynamics<I: Identifier = Global> {
     /// Number of new individuals to generate.
@@ -71,7 +73,7 @@ where
         // Set center solution
         let mut center_solution = Vec::new();
         if self.center.as_str() == "random_new" {
-            center_solution = random_spread(&problem.domain(), 1, &mut *rng)[0].clone();
+            center_solution = random_spread(&problem.domain(), 1, &mut rng)[0].clone();
         } else if self.center.as_str() == "best" { 
             center_solution = state.best_individual().unwrap().solution().clone();
         } else if self.center.as_str() == "random_solution" { 
@@ -87,7 +89,7 @@ where
         } = self;
 
         // get distances as difference between upper and lower bound in every dimension
-        let mut distances = problem
+        let distances = problem
             .domain()
             .iter()
             .map(|p| (p.end - p.start).abs())

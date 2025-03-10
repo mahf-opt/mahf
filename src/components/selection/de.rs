@@ -3,7 +3,6 @@
 use better_any::{Tid, TidAble};
 use derive_more::{Deref, DerefMut};
 use eyre::{ensure, ContextCompat};
-use rand::prelude::IteratorRandom;
 use rand::Rng;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -13,7 +12,6 @@ use crate::{component::ExecResult, components::{
     Component,
 }, problems::SingleObjectiveProblem, state::random::Random, CustomState, Individual, Problem, State};
 use crate::components::archive::DEKeepParentsArchive;
-use crate::prelude::StateReq;
 
 /// Selects `y * 2 + 1` random unique individuals for every individual in the population, keeping the order.
 ///
@@ -287,7 +285,7 @@ impl<P: SingleObjectiveProblem> Component<P> for SHADECurrentToPBest {
                     // Additionally sample one individual from the combination with the archive
                     let mut combined_population: Vec<&Individual<P>> = Vec::new();
                     for i in archived_population {
-                        combined_population.push(&i);
+                        combined_population.push(i);
                     }
                     for j in remaining_population {
                         combined_population.push(j);
