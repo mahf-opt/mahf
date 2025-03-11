@@ -150,7 +150,7 @@ where
             let b = range.end;
 
             let mut x_temp = *x;
-            while !range.contains(&x_temp) {
+            while x_temp < a || x_temp > b  {
                 x_temp = match x_temp {
                     v if v < a => a + (a - v),
                     v if v > b => b - (v - b),
@@ -209,7 +209,7 @@ where
             let dist = Normal::new(0., (b - a) / 3.).unwrap();
 
             let mut new_x = *x;
-            while !range.contains(&new_x) {
+            while new_x < a || new_x > b {
                 new_x = match new_x {
                     v if v < a => a + dist.sample(rng).abs(),
                     v if v > b => b - dist.sample(rng).abs(),
@@ -260,7 +260,7 @@ where
             let b = range.end;
 
             let mut x_temp = *x;
-            while !range.contains(&x_temp) {
+            while x_temp < a || x_temp > b {
                 x_temp = match x_temp {
                     v if v < a || v > b => a + (b - a) * v.cos(),
                     v => v,
