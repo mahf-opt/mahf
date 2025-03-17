@@ -126,7 +126,13 @@ where
                 means.iter(),
                 std_devs.iter(),
             ).for_each(|(s, rp, mean, std)| {
-                let adjustment = Exp::new(*rp).unwrap().sample(&mut *rng) + Normal::new(*mean, *std).unwrap().sample(&mut *rng);
+                // in case the entire population has converged to a single point, the std would be 0,
+                // so we cannot sample and just use the mean
+                let adjustment = if *std > 0.0 {
+                    Exp::new(*rp).unwrap().sample(&mut *rng) + Normal::new(*mean, *std).unwrap().sample(&mut *rng)
+                } else {
+                    Exp::new(*rp).unwrap().sample(&mut *rng) + mean
+                };
                 if *s < 0.0 {
                     *s -= adjustment;
                 } else {
