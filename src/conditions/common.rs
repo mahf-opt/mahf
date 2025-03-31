@@ -407,7 +407,7 @@ where
             (a, b) => a - b,
         };
 
-        diff >= self.threshold
+        diff <= self.threshold
     }
 }
 
@@ -502,7 +502,7 @@ where
         } else {
             true
         };
-
+        
         if changed {
             *previous = Some(current.clone());
         }
