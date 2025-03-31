@@ -498,7 +498,7 @@ where
         let mut previous = state.try_borrow_value_mut::<Previous<L::Target>>()?;
 
         let changed = if let Some(previous) = &*previous {
-            self.checker.eq(&*current, previous)
+            ! self.checker.eq(&*current, previous)
         } else {
             true
         };
@@ -700,7 +700,7 @@ where
         let mut stagnation = false;
         // get if the value changed
         let changed = if let Some(previous) = &*previous {
-            self.checker.eq(&value, previous)
+            ! self.checker.eq(&value, previous)
         } else {
             true
         };
