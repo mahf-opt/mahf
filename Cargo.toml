@@ -1,7 +1,11 @@
 [package]
 name = "mahf"
 version = "0.1.0"
-authors = ["Leopold Luley <git@leopoldluley.de>", "Helena Stegherr <helena.stegherr@uni-a.de>", "Jonathan Wurth <jonathan.wurth@uni-a.de>"]
+authors = [
+    "Leopold Luley <git@leopoldluley.de>",
+    "Helena Stegherr <helena.stegherr@uni-a.de>",
+    "Jonathan Wurth <jonathan.wurth@uni-a.de>",
+]
 edition = "2021"
 description = "A framework for modular construction and evaluation of metaheuristics."
 readme = "README.md"
@@ -12,27 +16,27 @@ categories = ["science", "algorithms"]
 
 [dependencies]
 better_any = { version = "0.2.0", features = ["derive"] }
-thiserror = "1.0.40"
-eyre = "0.6.8"
-color-eyre = "0.6.2"
+thiserror = "2.0.12"
+eyre = "0.6.12"
+color-eyre = "0.6.3"
 trait-set = "0.3.0"
-serde = { version = "1.0.160", features = ["derive"] }
-erased-serde = "0.3.25"
-derive_more = { version = "0.99.17", features = ["deref", "deref_mut", "add", "mul", "not"] }
+serde = { version = "1.0.219", features = ["derive"] }
+erased-serde = "0.4.6"
+derive_more = { version = "2.0.1", features = ["deref", "deref_mut", "add", "mul", "not"] }
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 rand_distr = "0.4.3"
-dyn-clone = "1.0.11"
+dyn-clone = "1.0.19"
 derivative = "2.2.0"
-ciborium = "0.2.0"
-serde_json = "1.0.96"
-rayon = "1.7.0"
-test-case = "3.1.0"
+ciborium = "0.2.2"
+serde_json = "1.0.140"
+rayon = "1.10.0"
+test-case = "3.3.1"
 float_eq = "1.0.1"
 contracts = "0.6.3"
 itertools = "0.10.5"
 ron = "=0.8.0"
-indicatif = { version = "0.17.4", features = ["rayon"] }
+indicatif = { version = "0.17.11", features = ["rayon"] }
 statrs = "0.16"
 
 [dev-dependencies]
