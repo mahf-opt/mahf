@@ -13,13 +13,13 @@
 //! # Key Concepts
 //!
 //! - `Problem`: The [`Problem`] trait (hierarchy) provides information about the problem
-//! to components. Traits built upon [`Problem`] (e.g. [`VectorProblem`]) allow making
-//! *any* information accessible to components, while being as generic as possible.
+//!   to components. Traits built upon [`Problem`] (e.g. [`VectorProblem`]) allow making
+//!   *any* information accessible to components, while being as generic as possible.
 //! - `Individual`: An [`Individual`] is an encoded solution to the problem along with an associated
-//! (optional) objective value, which qualifies how "good" of a solution it is to the problem.
-//! In single-objective optimization, this objective value is also referred to as "fitness".
+//!   (optional) objective value, which qualifies how "good" of a solution it is to the problem.
+//!   In single-objective optimization, this objective value is also referred to as "fitness".
 //! - `Evaluate`: The [`Evaluate`] trait allows evaluating [`Individual`]s according to some
-//! objective function.
+//!   objective function.
 //!
 //! # Usage
 //!

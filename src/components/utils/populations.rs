@@ -89,7 +89,7 @@ impl<P: SingleObjectiveProblem> Component<P> for SplitPopulationByObjectiveValue
         // but there are still exactly two chunks in total.
         let (lower, upper) = population
             .into_iter()
-            .chunks((n + 1) / 2)
+            .chunks(n.div_ceil(2))
             .into_iter()
             .map(|c| c.collect_vec())
             .collect_tuple::<(_, _)>()

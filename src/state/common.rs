@@ -57,7 +57,7 @@ impl<'a, P: Problem, I: Identifier> Evaluator<'a, P, I> {
     }
 }
 
-impl<'a, P: Problem, I: Identifier> Default for Evaluator<'a, P, I>
+impl<P: Problem, I: Identifier> Default for Evaluator<'_, P, I>
 where
     Box<dyn Evaluate<Problem = P>>: Default,
 {

@@ -105,7 +105,6 @@ impl<P: Problem> Configuration<P> {
     ///     .build();
     /// # ga
     /// # }
-
     /// ```
     pub fn builder() -> ConfigurationBuilder<P> {
         ConfigurationBuilder::new()

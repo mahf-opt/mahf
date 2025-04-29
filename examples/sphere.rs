@@ -36,7 +36,7 @@ impl problems::VectorProblem for Sphere {
 
 impl problems::LimitedVectorProblem for Sphere {
     fn domain(&self) -> Vec<Range<Self::Element>> {
-        std::iter::repeat(-1.0..1.0).take(self.dim).collect()
+        vec![-1.0..1.0; self.dim]
     }
 }
 

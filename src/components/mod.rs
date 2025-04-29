@@ -39,10 +39,10 @@ pub use control_flow::{Block, Branch, Loop, Scope};
 /// `Component`s define three phases:
 /// - `initialize` (optional): Used to initialize custom state, and is only called once*.
 /// - `require` (optional): Used to check if the custom state was properly initialized in the
-/// `initialize` phase, and is only called once*.
-/// Specifically used to check if necessary custom state initialized by other components is present.
+///   `initialize` phase, and is only called once*.
+///   Specifically used to check if necessary custom state initialized by other components is present.
 /// - `execute`: Executes the functionality the component constitutes.
-/// This phase is usually called in a loop during the optimization process.
+///   This phase is usually called in a loop during the optimization process.
 ///
 /// *More complex control flow might reinitialize components during execution, which means that
 /// `initialize` and `require` get called multiple times.
