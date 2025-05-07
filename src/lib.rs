@@ -78,8 +78,8 @@
 //!
 //! Optimization [`problems`] are represented by the [`Problem`] and [`Evaluate`] traits:
 //! - [`Problem`] and subtraits offer a way to provide any problem-specific information to
-//!  components and allow them to be as generic as possible by only specifying the
-//!  minimal trait bounds they need to function
+//!   components and allow them to be as generic as possible by only specifying the
+//!   minimal trait bounds they need to function
 //! - [`Evaluate`] provides means of evaluating the objective function, e.g. in parallel
 //!
 //! Optimizing some problem is then as easy as calling [`Configuration::optimize`].

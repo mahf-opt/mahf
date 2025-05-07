@@ -229,7 +229,7 @@ pub struct RandomIter<'a> {
     rng: &'a mut Random,
 }
 
-impl<'a> Iterator for RandomIter<'a> {
+impl Iterator for RandomIter<'_> {
     type Item = Random;
 
     fn next(&mut self) -> Option<Self::Item> {

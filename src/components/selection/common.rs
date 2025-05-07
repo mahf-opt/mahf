@@ -108,9 +108,7 @@ impl<P: Problem> Selection<P> for CloneSingle {
         _rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
         let single = population.into_single_ref()?;
-        Ok(std::iter::repeat(single)
-            .take(self.num_selected as usize)
-            .collect())
+        Ok(std::iter::repeat_n(single, self.num_selected as usize).collect())
     }
 }
 

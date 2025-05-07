@@ -65,12 +65,14 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
     // by the `total` for normalizing divides by zero.
     if all_eq(&weights) {
         return Some(
-            std::iter::repeat(if normalize {
-                1.0 / population.len() as f64
-            } else {
-                1.0
-            })
-            .take(population.len())
+            std::iter::repeat_n(
+                if normalize {
+                    1.0 / population.len() as f64
+                } else {
+                    1.0
+                },
+                population.len(),
+            )
             .collect(),
         );
     }
