@@ -392,7 +392,11 @@ impl<P: SingleObjectiveProblem> Selection<P> for LinearRank {
         population: &'a [Individual<P>],
         rng: &mut Random,
     ) -> ExecResult<Vec<&'a Individual<P>>> {
-        let weights = f::reverse_rank(population);
+        // Best individual has rank 1, worst has rank n.
+        let ranking = f::reverse_rank(population);
+        let max_rank = ranking.iter().max().cloned().unwrap_or(0);
+        // Best individual has weight n, worst has weight 1.
+        let weights: Vec<_> = ranking.iter().map(|i| max_rank - i + 1).collect();
         let selection = f::sample_population_weighted(population, &weights, self.num_selected, rng)
             .wrap_err("sampling from population failed")?;
         Ok(selection)
@@ -442,7 +446,7 @@ impl<P: SingleObjectiveProblem> Selection<P> for ExponentialRank {
         let factor = (self.base - 1.0) / (self.base.powi(max_rank as i32) - 1.0);
         let weights: Vec<_> = ranking
             .iter()
-            .map(|i| factor * (self.base.powi((max_rank - i) as i32)))
+            .map(|i| factor * (self.base.powi(*i as i32)))
             .collect();
         let selection = f::sample_population_weighted(population, &weights, self.num_selected, rng)
             .wrap_err("sampling from population failed")?;

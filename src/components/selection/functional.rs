@@ -53,12 +53,6 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
 
     let weights: Vec<_> = population.iter().map(|i| i.objective().value()).collect();
 
-    // Positive objective values can be directly used as weights after reversing.
-    if min > 0.0 {
-        // Add an offset to allow the worst to have a weight of `offset`, and not zero.
-        return Some(weights.iter().map(|o| max - o + offset).collect());
-    }
-
     // Explicitly handle uniform weights here to avoid having a sum of 0 later.
     // When all weights are identical, subtracting the `min` otherwise produces
     // weights all zero, which is not supported by most sampling methods, and dividing
@@ -77,13 +71,19 @@ pub fn proportional_weights<P: SingleObjectiveProblem>(
         );
     }
 
-    // Shift all values to be `>= 0` using `o - min`, where `min` is guaranteed to be `<= 0`.
-    // Subtract from the shifted best `(max - min)` to reverse weights for minimization.
-    // Add an offset to allow the worst to have a weight of `offset`, and not zero.
-    let shifted_weights: Vec<_> = weights
-        .iter()
-        .map(|o| (max - min) - (o - min) + offset)
-        .collect();
+    // Positive objective values can be directly used as weights after reversing.
+    let shifted_weights = if min > 0.0 {
+        // Add an offset to allow the worst to have a weight of `offset`, and not zero.
+        weights.iter().map(|o| max - o + offset).collect()
+    } else {
+        // Shift all values to be `>= 0` using `o - min`, where `min` is guaranteed to be `<= 0`.
+        // Subtract from the shifted best `(max - min)` to reverse weights for minimization.
+        // Add an offset to allow the worst to have a weight of `offset`, and not zero.
+        weights
+            .iter()
+            .map(|o| (max - min) - (o - min) + offset)
+            .collect()
+    };
 
     if !normalize {
         return Some(shifted_weights);
