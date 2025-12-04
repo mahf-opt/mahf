@@ -2,24 +2,20 @@
 //!
 //! This module contains components for Particle Swarm Optimization (PSO) or components that are PSO-like.
 
+use std::cell::Ref;
 use std::marker::PhantomData;
 
 use better_any::{Tid, TidAble};
+use derivative::Derivative;
 use derive_more::{Deref, DerefMut};
-use eyre::{ensure, ContextCompat, WrapErr};
+use eyre::{ensure, eyre, ContextCompat, WrapErr};
 use itertools::multizip;
 use rand::Rng;
 use serde::Serialize;
 
-use crate::{
-    component::{AnyComponent, ExecResult},
-    components::{Block, Component},
-    identifier::{Global, Identifier, PhantomId},
-    population::{AsSolutions, AsSolutionsMut, BestIndividual},
-    problems::{LimitedVectorProblem, SingleObjectiveProblem},
-    state::StateReq,
-    CustomState, Individual, Problem, State,
-};
+use crate::{component::{AnyComponent, ExecResult}, components::{Block, Component}, identifier::{Global, Identifier, PhantomId}, population::{AsSolutions, AsSolutionsMut, BestIndividual}, problems::{LimitedVectorProblem, SingleObjectiveProblem}, state::StateReq, CustomState, Individual, Problem, SingleObjective, State};
+use crate::lens::{AnyLens, Lens, LensRef};
+use crate::logging::extractor::{EntryExtractor, EntryName};
 
 /// The velocity vectors of the particles in the population.
 #[derive(Deref, DerefMut, Tid)]
@@ -310,20 +306,75 @@ where
 
 /// Represents a single best particle in the search space.
 #[derive(Deref, DerefMut, Tid)]
-pub struct BestParticle<P: Problem + 'static, I: Identifier + 'static = Global>(
+pub struct BestParticle<P: Problem + 'static, I: Identifier + 'static = Global> (
     #[deref]
     #[deref_mut]
     Option<Individual<P>>,
     PhantomData<I>,
-);
+    );
 
 impl<P: Problem, I: Identifier> BestParticle<P, I> {
     pub fn new(value: Option<Individual<P>>) -> Self {
-        Self(value, PhantomData)
+        Self (value, PhantomData)
     }
 }
 
 impl<P: Problem, I: Identifier> CustomState<'_> for BestParticle<P, I> {}
+
+/// Lens for extracting the objective of the [`BestParticle`].
+#[derive(Serialize, Derivative)]
+#[serde(bound = "")]
+#[derivative(Default(bound = ""), Clone(bound = ""))]
+pub struct BestParticleLens<P>(#[serde(skip)] PhantomData<fn() -> P>);
+
+impl<P> BestParticleLens<P>
+where
+    P: Problem,
+    Self: Lens<P, Target = SingleObjective>,
+{
+    /// Constructs the lens.
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<P: Problem> AnyLens for BestParticleLens<P> {
+    type Target = SingleObjective;
+}
+
+impl<P> EntryName for BestParticleLens<P> {
+    fn entry_name() -> &'static str {
+        "BestParticleValue"
+    }
+}
+
+impl<P> BestParticleLens<P>
+where
+    P: SingleObjectiveProblem,
+    Self: Lens<P>,
+    <Self as AnyLens>::Target: Serialize + Send,
+{
+    /// Constructs the lens for logging entries.
+    pub fn entry() -> Box<dyn EntryExtractor<P>> {
+        Box::<Self>::default()
+    }
+}
+
+impl<P: SingleObjectiveProblem> Lens<P> for BestParticleLens<P>
+{
+    fn get(&self, problem: &P, state: &State<P>) -> ExecResult<Self::Target> {
+        self.get_ref(problem, state).map(|target| target.clone())
+    }
+}
+
+impl<P: SingleObjectiveProblem> LensRef<P> for BestParticleLens<P> {
+    fn get_ref<'a>(&self, _problem: &P, state: &'a State<P>) -> ExecResult<Ref<'a, Self::Target>> {
+        Ref::filter_map(state.try_borrow::<BestParticle<P>>()?, |best| {
+            best.as_ref().map(|i| i.objective())
+        })
+            .map_err(|_| eyre!("no best individual found yet"))
+    }
+}
 
 /// Initializes and updates the [`BestParticle`] using the best individual from the population.
 #[derive(Clone, Serialize)]
@@ -367,7 +418,6 @@ where
             (current, Some(candidate)) => *current = Some(candidate),
             _ => {}
         }
-
         Ok(())
     }
 }
