@@ -473,3 +473,45 @@ impl ParticleSwarmUpdate<Global> {
         Self::new_with_id()
     }
 }
+
+/// Resets the global best particle.
+///
+/// Intended for usage in combination with restart strategies.
+#[derive(Clone, Serialize)]
+pub struct GlobalBestReset<I: Identifier = Global>(PhantomId<I>);
+
+impl<I: Identifier> GlobalBestReset<I> {
+    pub fn from_params() -> ExecResult<Self> {
+        Ok(Self(PhantomId::default()))
+    }
+
+    pub fn new_with_id<P>() -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    {
+        Ok(Box::new(Self::from_params()?))
+    }
+}
+
+impl GlobalBestReset<Global> {
+    pub fn new<P>() -> ExecResult<Box<dyn Component<P>>>
+    where
+        P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>, { Self::new_with_id() }
+}
+impl<P, I> Component<P> for GlobalBestReset<I>
+where
+    P: SingleObjectiveProblem + LimitedVectorProblem<Element = f64>,
+    I: Identifier,
+{
+    fn init(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state
+            .entry::<BestParticle<P, I>>()
+            .or_insert(BestParticle::<P, I>::new(None));
+        Ok(())
+    }
+
+    fn execute(&self, _problem: &P, state: &mut State<P>) -> ExecResult<()> {
+        state.insert(BestParticle::<P, I>::new(None));
+        Ok(())
+    }
+}
